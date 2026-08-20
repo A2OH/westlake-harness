@@ -1,0 +1,9 @@
+env.sh
+*.apk
+*.dex
+*.so
+*.jar
+*.jpeg
+*.png
+out/
+scratch/
