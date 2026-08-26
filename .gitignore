@@ -1,5 +1,7 @@
 env.sh
 *.apk
+*.xapk
+*.apkm
 *.dex
 *.so
 *.jar
@@ -7,3 +9,11 @@ env.sh
 *.png
 out/
 scratch/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+benchmark/*/apks/
+benchmark/*/runtime-index.json
+benchmark/*/runtime-watchlist.json
+benchmark/*/runtime-evidence*.json

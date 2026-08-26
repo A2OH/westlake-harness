@@ -29,10 +29,13 @@ public class FindSites {
                             hits++;
                             StringBuilder ps = new StringBuilder();
                             for (CharSequence p : mr.getParameterTypes()) ps.append(p);
+                            int registerCount = ins instanceof FiveRegisterInstruction
+                                ? ((FiveRegisterInstruction) ins).getRegisterCount()
+                                : ((RegisterRangeInstruction) ins).getRegisterCount();
                             System.out.printf("HIT %s.%s  @0x%x  %s->%s(%s)%s  opcode=%s regs=%d%n",
                                 c.getType(), m.getName(), addr,
                                 t, mr.getName(), ps, mr.getReturnType(),
-                                ins.getOpcode(), ((FiveRegisterInstruction) ins).getRegisterCount());
+                                ins.getOpcode(), registerCount);
                         }
                     }
                     addr += ins.getCodeUnits();

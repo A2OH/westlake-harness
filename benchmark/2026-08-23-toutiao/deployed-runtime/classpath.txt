@@ -1,0 +1,11 @@
+# Exact ordered boot classpath pulled from /data/local/tmp/asx/fw on 2026-08-23.
+${WESTLAKE_RUNTIME_ROOT}/jars/core-oj.jar
+${WESTLAKE_RUNTIME_ROOT}/jars/core-libart.jar
+${WESTLAKE_RUNTIME_ROOT}/jars/core-icu4j.jar
+${WESTLAKE_RUNTIME_ROOT}/jars/okhttp.jar
+${WESTLAKE_RUNTIME_ROOT}/jars/bouncycastle.jar
+${WESTLAKE_RUNTIME_ROOT}/jars/apache-xml.jar
+${WESTLAKE_RUNTIME_ROOT}/jars/adapter-mainline-stubs.jar
+${WESTLAKE_RUNTIME_ROOT}/jars/framework.jar
+${WESTLAKE_RUNTIME_ROOT}/jars/adapter-runtime-bcp.jar
+${WESTLAKE_RUNTIME_ROOT}/jars/oh-adapter-framework.jar

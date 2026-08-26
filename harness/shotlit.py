@@ -16,7 +16,9 @@ def analyse(path):
     im = Image.open(path).convert("RGB")
     w, h = im.size
     small = im.resize((min(w, 300), min(h, 480)))
-    px = list(small.getdata())
+    # Pillow 14 removes getdata(); retain compatibility with both old and new releases.
+    get_pixels = getattr(small, "get_flattened_data", small.getdata)
+    px = list(get_pixels())
     sw, sh = small.size
     lum = [(3 * r + 6 * g + b) // 10 for (r, g, b) in px]
     n = len(lum)

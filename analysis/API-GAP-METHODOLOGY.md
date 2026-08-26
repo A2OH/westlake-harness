@@ -1,16 +1,22 @@
 # Static API-gap analysis for stock APKs — stop exploring in the dark
 
-**2026-08-19.** Companion to `BIONIC-MUSL-PLAN.md` (which classifies the **native/libc** boundary).
-This document does the same for the **Java/Android API** boundary.
+**2026-08-19; revised 2026-08-24.** Companion to `BIONIC-MUSL-PLAN.md` (which classifies the
+**native/libc** boundary). This document does the same for the **Java/Android API** boundary.
 
 ---
 
 ## 1. The core claim
 
-**A stock APK already contains the complete list of platform APIs it can ever touch.** Every class,
-method and field a dex can reference is in its reference pool. The port's BCP jars contain the
-complete list of what we actually provide. The gap is a **set subtraction we can compute before the
-app is launched even once**.
+**A stock APK contains a statically enumerable upper bound on the platform APIs in its packaged
+dex.** Every direct class, method and field reference in those dex files is in their reference
+pools. The port's BCP jars contain the definitions we currently provide, so a **set subtraction
+before launch** gives a comprehensive structural-candidate list for that packaged code.
+
+That subtraction does **not** tell us which references will execute, which are optional or dead,
+or which absences block a user-visible scenario. It also cannot cover computed reflection or code
+downloaded later. A static absence is therefore a **compatibility candidate**, not automatically a
+runtime gap and never automatically a blocker. Runtime evidence and scenario coverage supply those
+two stronger conclusions.
 
 We have done this before and it worked. §506 (`tools/FindClassRefs.java`) enumerated everything
 ExoPlayer could call on `android.media.AudioTrack`, bound them in one pass, and collapsed a
@@ -50,14 +56,19 @@ Each of those cost this project days. All four were statically visible.
    refs.txt  ────────────► 3. SUBTRACT ◄──────  defs.txt
                                 │
                                 ▼
-                          candidate gaps
+                     structural candidates
                                 │
                      4. CLASSIFY (J0..J5, §3)
                                 │
-                     5. GATE BY SEVERITY (§4)
+                     5. BUILD RUNTIME WATCHLIST
                                 │
                                 ▼
-                   ranked worklist, per-class repair
+                    instrumented scenario runs
+                                │
+                     6. CORRELATE + GATE (§4)
+                                │
+                                ▼
+              reached gaps / blockers / coverage unknowns
 ```
 
 **Step 1 — references.** Restrict to platform namespaces only:
@@ -76,7 +87,8 @@ generalise it to emit every platform reference with a call count.
 - class present, **method/field not in it** → missing member (this is the `ColorMatrix` case)
 - method present and `native`, **no exported symbol in the bridge** → unbound native
 
-**Step 4/5** are §3 and §4 below.
+**Steps 4–6** are §3 and §4 below. Preserve APK, runtime-lock, boot-JAR and loaded-runtime hashes
+with every runtime trace; evidence from a different artifact epoch cannot promote a candidate.
 
 ---
 
@@ -87,8 +99,8 @@ Deliberately parallel to `BIONIC-MUSL-PLAN.md`'s native Class 0/1/2a/2b/3.
 | Class | Definition | How to detect statically | Repair strategy | Cost |
 |---|---|---|---|---|
 | **J0** | Present and real | defined, non-trivial body | none | — |
-| **J1** | **Absent, genuinely invoked** | not in BCP; reference appears as a real `invoke-*` operand | implement it — port the AOSP source | high |
-| **J2** | **Absent, only PROBED for existence** | referenced *only* as a `const-string` fed to `Class.forName`/`findClass`, usually inside try/catch | ✅ **presence-only stub** — an empty class with the right name | **trivial** |
+| **J1** | **Absent, directly referenced** | not in BCP; reference appears as a real `invoke-*` operand | confirm runtime reachability, then port the AOSP source | high |
+| **J2** | **Absent, only PROBED for existence** | referenced *only* as a `const-string` fed to `Class.forName`/`findClass`, usually inside try/catch | preserve Android/platform identity; add a presence stub only when the class should exist on this platform | **trivial–high** |
 | **J3** | **Present but HOLLOW** | defined, but body empty / `return null,0,false` only / member missing entirely | implement the specific member | low–medium |
 | **J4** | **Unbound native** | declared `native` in a BCP class, no matching exported symbol in the bridge | export the symbol from the bridge (native Class-1 move; ART resolves by `dlsym`) | low |
 | **J5** | **Present but semantically WRONG** | ⛔ not statically detectable | differential test vs real Android | high |
@@ -101,9 +113,11 @@ crash-driven debugging**. The app never calls a method on the class; it only ask
 exists, to decide which code path to take. A missing class therefore produces *no* error at the
 missing class — it silently selects the wrong path, and the failure appears far away.
 
-`Class.forName` probes are cheap to satisfy (an empty class with the right FQN) and cheap to find
-statically (string constants passed to `forName`/`findClass`). **Scan for these first — best
-effort-to-value ratio in the whole method.**
+`Class.forName` probes are cheap to find statically (string constants passed to
+`forName`/`findClass`), but they are not all supposed to succeed. A standard Android class missing
+from this runtime can justify a presence stub. An OEM probe such as a MIUI, Flyme or Qualcomm class
+normally **must remain absent** on a non-OEM platform; adding it selects a false device-specific
+path. Scan these early, then validate the expected presence semantics before adapting anything.
 
 ### Why J3 is the silent killer
 
@@ -126,10 +140,24 @@ diff is clean, stop looking for missing APIs.
 
 ---
 
-## 4. Severity gating — what makes the list actionable
+## 4. Runtime correlation and severity gating
 
-A raw diff over a 21-dex APK yields hundreds of entries, most never executed. Rank by *where the
-gap is reached*, not by what it is:
+A raw diff over a 21-dex APK yields hundreds of entries, many of which never execute in a tested
+scenario. Keep four claims separate:
+
+| Claim | Required evidence |
+|---|---|
+| **Structural candidate** | APK reference is absent or hollow in the content-locked runtime |
+| **Runtime-reached gap** | matching execution reaches it and produces a terminal Java/JNI failure or demonstrated wrong semantics |
+| **Scenario blocker** | the reached gap causes the scenario's functional failure |
+| **Validated adaptation** | the failure disappears after a generic fix and the target plus control apps still pass |
+
+An unobserved candidate remains **coverage unknown**, not disproved. Conversely, a primary JNI
+lookup miss is not terminal evidence: later `RegisterNatives` or `dlsym` resolution may satisfy it.
+Do not implement candidates merely to reduce the scan count.
+
+Rank confirmed or strongly reachable gaps by *where the gap is reached*, not just by reference
+count:
 
 | Sev | Condition | Why it matters |
 |---|---|---|
@@ -138,9 +166,16 @@ gap is reached*, not by what it is:
 | **S2** | reached inside a `try/catch` | app silently degrades — the J2/J3 pattern |
 | **S3** | not reachable from the launch path | ignore until a feature needs it |
 
-Existing tooling covers this: `FindCallers.java` for reachability, `FindCatch.java` for catch
-context, and the runtime's own `Tolerating clinit failure for L...;` log lines to confirm S0
-empirically. On Toutiao that log went 12 → 9 across two fixes and is a direct S0 worklist.
+Existing tooling contributes evidence: `FindCallers.java` approximates static reachability,
+`FindCatch.java` identifies catch context, and the runtime's own
+`Tolerating clinit failure for L...;` lines confirm execution empirically. Static call graphs are
+still incomplete around reflection, callbacks, native transitions and dynamic loading, so they do
+not replace instrumented runs. On Toutiao the tolerated-clinit count went 12 → 9 across two fixes
+and produced a useful S0 worklist; the count alone did not prove those fixes were feed blockers.
+
+There is no single "fully run" that proves all candidates either. Build a scenario matrix covering
+launch, feed, detail, media, login, sharing, notifications, downloads, network states and relevant
+remote configurations. Union evidence across those runs while preserving the same content lock.
 
 ---
 
@@ -157,8 +192,9 @@ State these up front so the method isn't over-trusted:
    loads.
 3. **J5 semantic wrongness** is fundamentally out of reach statically — it needs a differential
    against real Android (Tier 1 of `PORTING-PLAYBOOK.md`).
-4. **Over-approximation.** The reference pool lists far more than any single run executes. This is
-   why §4 gating is not optional — without it the output is noise.
+4. **Over-approximation.** The reference pool lists far more than any scenario executes. This is
+   why §4 correlation is not optional: static analysis maps the compatibility surface, while
+   runtime evidence determines relevance and impact.
 5. **Native side is a different surface.** For prebuilt `.so`, the authoritative input is
    `llvm-nm -D -u lib.so`, not the dex. See `BIONIC-MUSL-PLAN.md`.
 
@@ -200,8 +236,8 @@ is wrong. Only then point it at a new APK.
 
 ## 8. The one-line summary
 
-The dex knows what the app needs; the jars know what we have; **subtract before you launch**, sort
-by where the gap is reached, and apply the cheapest repair that class allows — a **presence stub**
-for a probe, a **real method** for a hollow class, an **exported symbol** for a native. Reserve
-runtime exploration for the two things static analysis genuinely cannot see: semantic wrongness,
-and our own ABI boundaries.
+The dex maps what packaged code may request and the jars map what we provide: **subtract before
+launch, but do not confuse the result with executed requirements**. Correlate candidates with
+content-locked runtime evidence, prioritize demonstrated scenario impact, preserve correct Android
+presence semantics, and validate each generic repair with target and control apps. Static scanning
+builds the map; scenario coverage tells us which roads the app actually takes.

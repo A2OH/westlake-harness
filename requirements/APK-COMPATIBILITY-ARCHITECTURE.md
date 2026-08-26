@@ -219,7 +219,7 @@ upper runtime is still broken.
 If the canary succeeds in `control_android_backend` but fails in
 `target_ohos_backend`, the failing backend family is the real target.
 
-See [WESTLAKE-CONTROLLED-CUTOFF-VALIDATION.md]($OHOS_ROOT/WESTLAKE-CONTROLLED-CUTOFF-VALIDATION.md)
+See `$OHOS_ROOT/WESTLAKE-CONTROLLED-CUTOFF-VALIDATION.md`
 for the concrete stage ladder.
 
 ## Why This Is Not "Fake"
