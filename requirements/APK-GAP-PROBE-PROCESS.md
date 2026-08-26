@@ -6,8 +6,8 @@ Primary objective: scan and probe hundreds, eventually thousands, of APKs to ide
 
 Related architecture:
 
-- [WESTLAKE-APK-COMPATIBILITY-ARCHITECTURE.md](./WESTLAKE-APK-COMPATIBILITY-ARCHITECTURE.md)
-- [WESTLAKE-APK-GAP-PROBE-REVIEW.md](./WESTLAKE-APK-GAP-PROBE-REVIEW.md)
+- [APK-COMPATIBILITY-ARCHITECTURE.md](./APK-COMPATIBILITY-ARCHITECTURE.md)
+- [APK-GAP-PROBE-REVIEW.md](../analysis/APK-GAP-PROBE-REVIEW.md)
 - `$BRIDGE_ARM64/BIONIC-MUSL-PLAN.md`
 
 Version 0.2 incorporates the detector-first corrections from the critical review: existence probes, member-level/hollow detection, static-initializer severity, marker semantics, platform-self-skew, re-entrant code scanning, within-process controls, non-reproducible runtime components, split presentation stages, small-corpus scoring suppression, and executable known-answer fixtures.

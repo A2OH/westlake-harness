@@ -1,0 +1,31 @@
+{
+  "schema_version": "westlake-toutiao-scan-lock/v1",
+  "generated_at": "2026-08-23T22:42:08-07:00",
+  "apk": {
+    "package": "com.ss.android.article.news",
+    "version_name": "13.9.0",
+    "version_code": "13900",
+    "bytes": 138641340,
+    "md5": "cc99caaaa3baffbb100118753fa1d130",
+    "sha256": "a1112a0c941f865847c2fab9138cf815735268fbfcd41d697412fb80992c7395",
+    "device_path": "/data/local/tmp/asx/toutiao.apk",
+    "host_path": "/home/dspfac/bridge-build-arm64/toutiao.apk"
+  },
+  "runtime": {
+    "runtime_lock_id": "sha256:96366a206a3fe68c5b78a68fafc9addc63932d8ecee1ee166ab802ea62322b2b",
+    "target_abi": "arm64-v8a",
+    "class_count": 38316,
+    "device_boot_classpath_root": "/data/local/tmp/asx/fw",
+    "bridge_device_path": "/data/local/tmp/asx/liboh_adapter_bridge.so",
+    "bridge_md5": "77de9978da7d1d49e48e49510acf2311",
+    "bridge_sha256": "17566eb4aebd209a3e669b20e9db268cb19c8e3424900346654212f44f03cb2e"
+  },
+  "live_run": {
+    "run_id": "toutiao-live-25055",
+    "child_pid": 25055,
+    "scenario": "launch-feed-view-tree-native-load",
+    "jit_live": true,
+    "feed_titles_in_saved_view_tree": 5,
+    "child_log_sha256": "b5a9c50c1e173e7f96a5698987497df06b185698b4454dd6aab46db7ba6f437c"
+  }
+}

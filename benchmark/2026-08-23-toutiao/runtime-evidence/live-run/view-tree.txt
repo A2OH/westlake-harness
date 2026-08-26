@@ -1,0 +1,35 @@
+==== root[0] ====
+DecorView id=- rect=[0,0 1200x1920] c=0 en=1 f=0 ftm=0 itm=1 
+LinearLayout id=- rect=[0,0 1200x1920] c=0 en=1 f=0 ftm=0 itm=1 
+FrameLayout id=- rect=[0,0 1200x1920] c=0 en=1 f=0 ftm=0 itm=1 
+FitWindowsLinearLayout id=ah2 rect=[0,0 1200x1920] c=0 en=1 f=0 ftm=0 itm=1 
+ContentFrameLayout id=content rect=[0,0 1200x1920] c=0 en=1 f=0 ftm=0 itm=1 
+LinearLayout id=dj2 rect=[0,0 1200x1920] c=0 en=1 f=0 ftm=0 itm=1 
+SSTabHost id=tabhost rect=[0,0 1200x1920] c=0 en=1 f=0 ftm=1 itm=1 
+FrameLayout id=exb rect=[0,0 1200x1821] c=0 en=1 f=0 ftm=0 itm=1 
+StreamViewPager id=ao rect=[0,0 1200x1821] c=0 en=1 f=0 ftm=0 itm=1 
+FrameLayout id=kfq rect=[0,0 1200x1821] c=0 en=1 f=0 ftm=0 itm=1 
+FrameLayout id=a6u rect=[0,0 1200x1821] c=0 en=1 f=0 ftm=1 itm=1 
+FeedCommonRefreshView id=joe rect=[0,0 1200x1821] c=0 en=1 f=0 ftm=0 itm=1 
+FeedCommonRecyclerView id=- rect=[0,-1093 1200x1821] c=0 en=1 f=0 ftm=1 itm=1 
+FeedItemRootLinerLayout id=bos rect=[0,-1093 1200x103] c=1 en=1 f=0 ftm=0 itm=1 
+FrameLayout id=b7d rect=[0,-1093 792x70] c=0 en=1 f=0 ftm=0 itm=1 
+FeedTitleTextView id=l23 rect=[36,-1075 720x52] c=0 en=1 f=0 ftm=0 itm=1 "时政微观察丨从这些生动比喻感悟正确政绩观"
+NewInfoLayout id=fwz rect=[36,-1023 1128x33] c=0 en=1 f=0 ftm=0 itm=1 
+FeedItemRootLinerLayout id=bos rect=[0,-990 1200x94] c=1 en=1 f=0 ftm=0 itm=1 
+FrameLayout id=b7d rect=[0,-990 576x61] c=0 en=1 f=0 ftm=0 itm=1 
+FeedTitleTextView id=l23 rect=[36,-981 504x52] c=0 en=1 f=0 ftm=0 itm=1 "“发挥好支部的战斗堡垒作用”"
+NewInfoLayout id=fwz rect=[36,-929 1128x33] c=0 en=1 f=0 ftm=0 itm=1 
+FeedItemRootLinerLayout id=bos rect=[0,-896 1200x94] c=1 en=1 f=0 ftm=0 itm=1 
+FrameLayout id=b7d rect=[0,-896 823x61] c=0 en=1 f=0 ftm=0 itm=1 
+FeedTitleTextView id=l23 rect=[36,-887 751x52] c=0 en=1 f=0 ftm=0 itm=1 "超级买家+超级卖家 “数”看中国双向链接全球"
+NewInfoLayout id=fwz rect=[36,-835 1128x33] c=0 en=1 f=0 ftm=0 itm=1 
+FeedItemRootLinerLayout id=bos rect=[0,-802 1200x94] c=1 en=1 f=0 ftm=0 itm=1 
+FrameLayout id=b7d rect=[0,-802 360x61] c=0 en=1 f=0 ftm=0 itm=1 
+FeedTitleTextView id=l23 rect=[36,-793 288x52] c=0 en=1 f=0 ftm=0 itm=1 "有效扩大国内需求"
+NewInfoLayout id=fwz rect=[36,-741 1128x33] c=0 en=1 f=0 ftm=0 itm=1 
+FeedItemRootLinerLayout id=bos rect=[0,-708 1200x112] c=1 en=1 f=0 ftm=0 itm=1 
+FrameLayout id=b7d rect=[0,-708 756x61] c=0 en=1 f=0 ftm=0 itm=1 
+FeedTitleTextView id=l23 rect=[36,-699 684x52] c=0 en=1 f=0 ftm=0 itm=1 "在长江的终点，一群人守着一个物种的起点"
+NewInfoLayout id=fwz rect=[36,-647 1128x33] c=0 en=1 f=0 ftm=0 itm=1 
+==== end ====

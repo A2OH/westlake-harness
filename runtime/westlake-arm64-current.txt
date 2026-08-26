@@ -1,0 +1,12 @@
+# Ordered kBootClasspath snapshot used by bridge-build-arm64/build_fw_bootimg.sh.
+# Paths are intentionally external to this method repository; snapshot-runtime hashes every input.
+${BRIDGE_ARM64}/corejars/core-oj.jar
+${BRIDGE_ARM64}/corejars/core-libart.jar
+${BRIDGE_ARM64}/fwjars/core-icu4j.jar
+${BRIDGE_ARM64}/fwjars/okhttp.jar
+${BRIDGE_ARM64}/fwjars/bouncycastle.jar
+${BRIDGE_ARM64}/fwjars/apache-xml.jar
+${BRIDGE_ARM64}/fwjars/adapter-mainline-stubs.jar
+${BRIDGE_ARM64}/corejars/framework.jar
+${BRIDGE_ARM64}/fwjars/adapter-runtime-bcp.jar
+${BRIDGE_ARM64}/fwjars/oh-adapter-framework.jar

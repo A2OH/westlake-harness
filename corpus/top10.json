@@ -1,0 +1,92 @@
+{
+  "schema_version": "westlake-corpus/v0.1",
+  "name": "Similarweb global Google Play top-free third-party benchmark",
+  "observed_at": "2026-08-20",
+  "ranking_source": "https://www.similarweb.com/top-apps/google/top-free/",
+  "selection": {
+    "rule": "First ten ranked third-party installable applications in chart order",
+    "excluded": "Google platform applications/services and OEM/system applications",
+    "reason": "The benchmark targets stock third-party APK compatibility, not components tied to Google Mobile Services or one OEM system image."
+  },
+  "download": {
+    "source": "APKPure",
+    "tool": "EFF apkeep 1.0.0",
+    "tool_url": "https://github.com/EFForg/apkeep/releases/tag/1.0.0",
+    "tool_sha256": "a23579a3ba366d25a6d69848189b983d65662f4ecf4b9e11e16510811659de4e",
+    "retrieved_at": "2026-08-20",
+    "note": "APK/XAPK files are benchmark inputs and are not committed; downloads.lock.json records exact hashes and versions."
+  },
+  "apps": [
+    {
+      "eligible_rank": 1,
+      "chart_rank": 4,
+      "name": "Facebook",
+      "package": "com.facebook.katana",
+      "play_url": "https://play.google.com/store/apps/details?id=com.facebook.katana"
+    },
+    {
+      "eligible_rank": 2,
+      "chart_rank": 8,
+      "name": "Messenger",
+      "package": "com.facebook.orca",
+      "play_url": "https://play.google.com/store/apps/details?id=com.facebook.orca"
+    },
+    {
+      "eligible_rank": 3,
+      "chart_rank": 10,
+      "name": "Instagram",
+      "package": "com.instagram.android",
+      "play_url": "https://play.google.com/store/apps/details?id=com.instagram.android"
+    },
+    {
+      "eligible_rank": 4,
+      "chart_rank": 12,
+      "name": "Amazon Shopping",
+      "package": "com.amazon.mShop.android.shopping",
+      "play_url": "https://play.google.com/store/apps/details?id=com.amazon.mShop.android.shopping"
+    },
+    {
+      "eligible_rank": 5,
+      "chart_rank": 15,
+      "name": "TikTok",
+      "package": "com.zhiliaoapp.musically",
+      "play_url": "https://play.google.com/store/apps/details?id=com.zhiliaoapp.musically"
+    },
+    {
+      "eligible_rank": 6,
+      "chart_rank": 18,
+      "name": "WhatsApp Messenger",
+      "package": "com.whatsapp",
+      "play_url": "https://play.google.com/store/apps/details?id=com.whatsapp"
+    },
+    {
+      "eligible_rank": 7,
+      "chart_rank": 21,
+      "name": "Cash App",
+      "package": "com.squareup.cash",
+      "play_url": "https://play.google.com/store/apps/details?id=com.squareup.cash"
+    },
+    {
+      "eligible_rank": 8,
+      "chart_rank": 22,
+      "name": "Discord",
+      "package": "com.discord",
+      "play_url": "https://play.google.com/store/apps/details?id=com.discord"
+    },
+    {
+      "eligible_rank": 9,
+      "chart_rank": 23,
+      "name": "Snapchat",
+      "package": "com.snapchat.android",
+      "play_url": "https://play.google.com/store/apps/details?id=com.snapchat.android"
+    },
+    {
+      "eligible_rank": 10,
+      "chart_rank": 24,
+      "name": "Yahoo Mail",
+      "package": "com.yahoo.mobile.client.android.mail",
+      "play_url": "https://play.google.com/store/apps/details?id=com.yahoo.mobile.client.android.mail"
+    }
+  ]
+}
+

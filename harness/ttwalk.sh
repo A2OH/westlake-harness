@@ -11,7 +11,11 @@
 #
 # usage: ttwalk.sh [launch|vt|tap <x> <y>|shot <name>|walk]
 set -uo pipefail
-H=$HDC
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+HDC_CMD=("$HDC")
+if [ -n "${BOARD_SERIAL:-}" ] && [ "$BOARD_SERIAL" != "<your-board-serial>" ]; then
+  HDC_CMD+=("-t" "$BOARD_SERIAL")
+fi
 SP=$WL_SCRATCH
 SHOTS=$SP/shots; mkdir -p "$SHOTS"
 ASX=/data/service/el1/public/appspawnx
@@ -25,7 +29,7 @@ if [ "$TOUCH_ENQUEUE" != "0" ]; then
   TOUCH_ENQUEUE_ENV=WL_TOUCH_ENQUEUE=1
 fi
 
-dev() { $H shell "$1" 2>/dev/null | tr -d '\r'; }
+dev() { "${HDC_CMD[@]}" shell "$1" 2>/dev/null | tr -d '\r'; }
 childlog() { dev 'ls -t '"$ASX"'/adapter_child_*.stderr 2>/dev/null | head -1'; }
 walkpid()  { dev 'cat /data/local/tmp/asx/walkpid 2>/dev/null'; }
 tapch()    { echo "/data/local/tmp/noice_tap.$(walkpid)"; }
@@ -35,15 +39,18 @@ awake() { dev "power-shell timeout -o 3600000 >/dev/null 2>&1; power-shell wakeu
 shot() {  # shot <name> -> capture + quantify
   local n=$1
   dev "power-shell wakeup >/dev/null 2>&1; snapshot_display -f /data/local/tmp/s.jpeg >/dev/null 2>&1" >/dev/null
-  ( cd "$SHOTS" && $H file recv /data/local/tmp/s.jpeg ./"$n".jpeg >/dev/null 2>&1 )
-  python3 "$SP/shotlit.py" "$SHOTS/$n.jpeg" 2>/dev/null | tail -1
+  if ! ( cd "$SHOTS" && "${HDC_CMD[@]}" file recv /data/local/tmp/s.jpeg ./"$n".jpeg >/dev/null 2>&1 ); then
+    echo "${n}.jpeg                         ERR  capture receive failed"
+    return 1
+  fi
+  python3 "$SCRIPT_DIR/shotlit.py" "$SHOTS/$n.jpeg" 2>/dev/null | tail -1
 }
 
 vt() {  # dump the view tree; prints the widget lines emitted by this dump only
   # NOTE: the tag is "[N/OH_InputBridge] VT" where N varies per run, so match with a
   # wildcard, not a literal 'OH_InputBridge:'. Getting this wrong makes a WORKING
   # side-channel look dead (it reported 0 widgets while the dialog was right there).
-  local C N; C=$(childlog); N=$(dev "wc -l < $C" | tr -d ' ')
+  local C N; C=$(childlog); N=$(dev "wc -l < $C" | tr -d ' '); N=$((N + 1))
   dev "echo 'v' > $(tapch)"; sleep 8
   dev "tail -n +$N $C | grep -a 'OH_InputBridge. VT'" | sed -E 's/.*VT +//'
 }

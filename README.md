@@ -45,7 +45,13 @@ The core claim of this repo:
 | `analysis/BIONIC-MUSL-PLAN.md` | The **native/libc** boundary taxonomy (`C0`–`C3`) that the Java-side classes extend. |
 | `analysis/PORTING-PLAYBOOK.md` | Four investigation tiers, and which to run first. |
 | `evidence/TOUTIAO-BRINGUP-HANDOFF.md` | The empirical base: a full app bring-up with fixes, **nine refuted hypotheses**, build hazards, and harness notes. |
-| `harness/` | `ttwalk.sh` (launch/drive/measure), `shotlit.py` (quantify a capture), `tools/` (dexlib2 analysers — the building blocks of the detectors). |
+| `harness/westlake_gap/` | Production static scanner: ordered runtime index, multidex/split APK inventory, member resolution, `C8`/`C9` detection, ELF/JNI evidence, gap registry, and report. |
+| `runtime/TRACE-EVIDENCE.md` | Native/reflection watchlists, structured event envelope, ART hook points, and evidence-promotion rules. |
+| `harness/` | `ttwalk.sh` (launch/drive/measure), `shotlit.py` (quantify a capture), and older focused dexlib2 investigation tools. |
+| `tests/` | Executable known-answer fixture for `ColorMatrix.set`, a Conscrypt existence probe, and an unbound vendor native. |
+| `corpus/` | Reproducible top-ten selection plus exact download hashes. APK/XAPK binaries are deliberately ignored. |
+| `benchmark/2026-08-20/` | Completed ten-app benchmark report, deduplicated registry, and runtime lock. |
+| `benchmark/2026-08-21/` | ABI-aware redo against the current ARM64 runtime lock; the prior benchmark remains preserved. |
 
 ---
 
@@ -102,19 +108,102 @@ These are in the process spec as hard rules. They exist because each was learned
 
 ---
 
-## Getting started
+## Current implementation
 
-1. Read `requirements/APK-GAP-PROBE-PROCESS.md` §1–§4 (purpose, principle, hard rules, taxonomy).
-2. Read `analysis/APK-GAP-PROBE-REVIEW.md` for what the process still gets wrong and why.
-3. Implement **Milestone 0** — three detectors over a three-APK calibration corpus:
-   - `C8` existence-probe scan (`const-string` → `Class.forName`/`findClass`, with no invoke)
-   - `C9` member-level resolution and hollow-body scan
-   - DEX-native → registered/exported JNI join
-4. Gate on the **known-answer fixtures**: the detectors must independently rediscover the documented
-   hollow class, the probe-only class and the unbound natives — and must **not** report the runtime
-   invariant or the ABI-skew defects, which are not APK gaps.
+Milestone 0 static detection is implemented. The scanner:
 
-Miss the first three and the extractor is wrong. Report the last two and the scope is wrong.
+- hashes and indexes an ordered boot classpath, honoring first-definition-wins for duplicate classes;
+- scans every supplied DEX across APK, XAPK, and APKM base/split containers;
+- resolves classes, methods, and fields through superclass/interface inheritance;
+- traces direct string-register flows into `Class.forName`, `findClass`, and `loadClass`;
+- flags directly absent contracts separately from small constant/no-op body heuristics;
+- inventories target-ABI ELF dependencies, symbols, build IDs, JNI exports, and `JNI_OnLoad` evidence;
+- recovers relocation-backed static `JNINativeMethod` tables and correlates them with DEX-native
+  contracts and same-DEX `System.loadLibrary` provenance;
+- resolves APK and runtime-bridge JNI exports separately, and reports unavailable/mismatched ABIs
+  instead of borrowing evidence from another architecture;
+- keeps unresolved dynamic JNI registration out of the published gap count;
+- emits per-APK JSON, a deduplicated registry, and a Markdown portfolio report;
+- generates runtime watchlists and joins structured or legacy Westlake JNI/class-load traces into an
+  evidence ledger with safe terminal/non-terminal state transitions.
+
+The executable fixture must pass before portfolio use:
+
+```bash
+PYTHONPATH=harness python3 -m unittest discover -s tests -v
+```
+
+## Ten-app benchmark
+
+The completed [2026-08-20 report](benchmark/2026-08-20/REPORT.md) scans the first ten third-party
+apps in Similarweb's global Google Play top-free chart after excluding Google/OEM system components.
+The exact selection is in `corpus/top10.json`; `corpus/downloads.lock.json` records versions,
+container/split counts, byte sizes, SHA-256 hashes, retrieval date, and the pinned downloader.
+
+Headline static results against the preserved Westlake runtime lock:
+
+- **1,586** unique Java gap candidates;
+- **594** directly absent classes, methods, or fields;
+- **408** probe-only absence candidates requiring the strict `C8` runtime gate;
+- **584** hollow-body heuristic candidates requiring AOSP/manual review;
+- **32,736** unresolved native/reflection records retained as evidence but excluded from gap totals.
+
+The most pervasive direct gaps are the hollow networking surface (`ConnectivityManager`,
+`NetworkCapabilities`, and `NetworkInfo`), followed by Wi-Fi/MediaStore coverage and the known
+constructor-only `ColorMatrix` class. These are static prevalence results, not launch blockers;
+runtime `P0`–`P8` probes are still required for reachability and severity.
+
+### ABI-aware redo
+
+The [2026-08-21 report](benchmark/2026-08-21/REPORT.md) preserves the Java result but corrects the
+native evidence model. Of 49,941 DEX native declarations, 12,692 resolve to target-ABI APK exports,
+2 resolve to runtime-bridge exports, and 6,516 belong to three ARMv7-only containers and are now
+reported as ABI-unavailable instead of borrowing their 32-bit symbols. The remaining executable
+ARM64 trace queue is 30,731 records, split into static registration-table, load-scoped, and
+unattributed states.
+
+The headline `CU` count rises from 32,736 to 37,330 because the old number was artificially low by
+4,596 wrong-ABI export matches; two newly recognized bridge matches offset that by two. The
+[redo note](benchmark/2026-08-21/REDO.md) gives the full accounting and links the separate verified
+[ARMv7 supplement](benchmark/2026-08-21-armv7/README.md). Results from the two runtime locks are not
+merged.
+
+## Reproduce the benchmark
+
+Install the scanner in an isolated Python environment:
+
+```bash
+python3 -m pip install -e .
+```
+
+Download EFF `apkeep` 1.0.0, verify its published SHA-256
+`a23579a3ba366d25a6d69848189b983d65662f4ecf4b9e11e16510811659de4e`, then fetch and lock the
+corpus without committing the app binaries:
+
+```bash
+python3 scripts/fetch_corpus.py --apkeep /path/to/apkeep-1.0.0
+```
+
+Point `BRIDGE_ARM64` at the active build, state the ABI explicitly, and run:
+
+```bash
+export BRIDGE_ARM64=/path/to/bridge-build-arm64
+TARGET_ABI=arm64-v8a scripts/run_benchmark.sh benchmark/$(date +%F)
+```
+
+Verify that every downloaded hash, per-app scan, runtime ID, and registry invariant matches:
+
+```bash
+python3 scripts/verify_benchmark.py --benchmark benchmark/2026-08-20
+```
+
+`runtime-lock.json` hashes every boot JAR and bridge ELF. Results from different lock IDs must never
+be merged silently. Per-APK detailed scans and the 39 MB runtime index are generated locally and
+ignored; the compact lock, registry, and report are retained.
+
+For the runtime pass that resolves dynamic JNI registration and caller-keyed reflection outcomes,
+follow [`runtime/TRACE-EVIDENCE.md`](runtime/TRACE-EVIDENCE.md). Run legacy logs against one APK scan
+at a time; structured events carry package, APK hash, runtime lock, run, and scenario provenance.
 
 ---
 
