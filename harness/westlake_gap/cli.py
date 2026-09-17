@@ -8,9 +8,11 @@ import os
 import sys
 from pathlib import Path
 
+from .nativeprov import analyze_library
 from .report import aggregate, markdown_report
 from .scanner import (
     build_runtime_index,
+    read_elf,
     read_json,
     refresh_scan_summary,
     scan_apk,
@@ -70,11 +72,43 @@ def parser() -> argparse.ArgumentParser:
     ingest.add_argument("--scenario", required=True)
     ingest.add_argument("--out", required=True, type=Path)
     ingest.add_argument("--report-out", type=Path, help="write a concise Markdown evidence report")
+
+    native = commands.add_parser(
+        "native-surface",
+        help="component provenance and per-method platform-surface reach for packaged ELFs",
+    )
+    native.add_argument("input", type=Path, help="a .so file, or a directory of .so files")
+    native.add_argument("--out", required=True, type=Path)
+    native.add_argument("--objdump", help="aarch64-capable llvm-objdump; the NDK ships one")
+    native.add_argument("--abi", help="ABI label recorded with each library")
     return root
 
 
 def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
+    if args.command == "native-surface":
+        libraries = (
+            sorted(path for path in args.input.rglob("*.so") if path.is_file())
+            if args.input.is_dir()
+            else [args.input]
+        )
+        if not libraries:
+            raise SystemExit(f"no .so inputs found in {args.input}")
+        results = []
+        for index, library in enumerate(libraries, 1):
+            record = read_elf(path=library, abi=args.abi)
+            results.append(analyze_library(library, record, objdump=args.objdump))
+            print(f"[{index}/{len(libraries)}] {library.name}", flush=True)
+        write_json(args.out, {"libraries": results, "library_count": len(results)})
+        coupled = sum(
+            1
+            for item in results
+            for method in item.get("method_reach", {}).get("methods", ())
+            if method["platform_coupled"]
+        )
+        methods = sum(len(item.get("method_reach", {}).get("methods", ())) for item in results)
+        print(f"{len(results)} libraries, {methods} registered methods, {coupled} platform-coupled -> {args.out}")
+        return 0
     if args.command == "trace-watchlist":
         scans = [read_json(path) for path in args.scan]
         write_json(args.out, build_watchlist(scans))
