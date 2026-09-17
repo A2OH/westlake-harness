@@ -1,0 +1,35 @@
+{
+  "schema_version": "westlake-corpus/v0.1",
+  "name": "X-first calibration and Weibo generalization candidates",
+  "observed_at": "2026-08-22",
+  "selection": {
+    "rule": "X is the initial stock-app calibration target; Weibo is the second-stage generalization target.",
+    "reason": "Compare deterministic stock launch reachability before building API-specific white-box probes."
+  },
+  "download": {
+    "source": "APKPure",
+    "tool": "EFF apkeep 1.0.0",
+    "tool_url": "https://github.com/EFForg/apkeep/releases/tag/1.0.0",
+    "tool_sha256": "a23579a3ba366d25a6d69848189b983d65662f4ecf4b9e11e16510811659de4e",
+    "retrieved_at": "2026-08-22",
+    "note": "Candidate binaries are ignored; the generated download lock records exact artifact identity."
+  },
+  "apps": [
+    {
+      "eligible_rank": 1,
+      "chart_rank": null,
+      "name": "X",
+      "package": "com.twitter.android",
+      "version": "12.17.0-release.0",
+      "play_url": "https://play.google.com/store/apps/details?id=com.twitter.android"
+    },
+    {
+      "eligible_rank": 2,
+      "chart_rank": null,
+      "name": "Weibo",
+      "package": "com.sina.weibo",
+      "version": "16.8.1",
+      "play_url": "https://play.google.com/store/apps/details?id=com.sina.weibo"
+    }
+  ]
+}

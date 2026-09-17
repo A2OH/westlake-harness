@@ -17,3 +17,8 @@ benchmark/*/apks/
 benchmark/*/runtime-index.json
 benchmark/*/runtime-watchlist.json
 benchmark/*/runtime-evidence*.json
+*.stderr
+*.so.*
+*.jar.*
+benchmark/*/apks-host-runtime/
+benchmark/*/host-runtime-index.json

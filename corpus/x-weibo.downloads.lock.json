@@ -1,0 +1,893 @@
+{
+  "artifacts": [
+    {
+      "bytes": 294210259,
+      "chart_rank": null,
+      "container_format": "xapk",
+      "eligible_rank": 1,
+      "filename": "com.twitter.android@12.17.0-release.0@arm64-v8a.xapk",
+      "name": "X",
+      "native_abis": [
+        "arm64-v8a"
+      ],
+      "native_libraries": [
+        {
+          "abi": "arm64-v8a",
+          "bytes": 10096,
+          "path": "lib/arm64-v8a/libandroidx.graphics.path.so",
+          "sha256": "41e9a793c43a0f4fddb19e33f346bace464f30f888ba7b9eaf96294ea115bfb6",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 1292904,
+          "path": "lib/arm64-v8a/libc++_shared.so",
+          "sha256": "f4e1e97c1943e60311e47e8b024d78f5b3b7229b3ccc65feb33af83d6025a670",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 18480864,
+          "path": "lib/arm64-v8a/libc2pa_c.so",
+          "sha256": "67288cb1eaabba3fd55ce0785b750d72ff8571b2955fd1077562c4be3117a7cc",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 31600,
+          "path": "lib/arm64-v8a/libc2pa_jni.so",
+          "sha256": "2bbb2d53b32053964febca45afc040f2fb19c3785d4fb55d4e6b299c887cf871",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 864616,
+          "path": "lib/arm64-v8a/libcrashlytics-common.so",
+          "sha256": "2f759a20ed003c50ff4120f7ca3ee56e603bfba6f656fdb617136561bc409ef7",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 222056,
+          "path": "lib/arm64-v8a/libcrashlytics-handler.so",
+          "sha256": "064bb16f99de2ea43e9c4f5dc3e94f411b96fbed709149b266479774da7f3f7c",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 9216,
+          "path": "lib/arm64-v8a/libcrashlytics-trampoline.so",
+          "sha256": "8e30febd455985c25f2083860ed0d91cfbf69eb43d90f887ead8dd53f0e05735",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 231960,
+          "path": "lib/arm64-v8a/libcrashlytics.so",
+          "sha256": "d1f4639c66971f821e356e629fcedbba4ad1395ab0e38d0ca3b5070e7283feb7",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 7112,
+          "path": "lib/arm64-v8a/libdatastore_shared_counter.so",
+          "sha256": "d3e48717c9aa147e0ab21063ba0e8e0211cabf8bf40b222640829519edbf58e1",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 318992,
+          "path": "lib/arm64-v8a/libgifimage.so",
+          "sha256": "e73207ba2c9f852ee270b4fc19515ead7d86b575e3a627731709e8cebd109f1f",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 32696,
+          "path": "lib/arm64-v8a/libimage_processing_util_jni.so",
+          "sha256": "9f37744e492f23c012e86d4a1b95a6ffaf954033fd884e49dafdacef5a42efb0",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 8760,
+          "path": "lib/arm64-v8a/libimagepipeline.so",
+          "sha256": "a709472b19930e7afc52ca6d0759cffeb33f826771fecee71b2c23c09cdfa1ba",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 12280408,
+          "path": "lib/arm64-v8a/libjingle_peerconnection_so.so",
+          "sha256": "17b2559757e475a398b8ec1d4837fe1c4be282e66ec29a0b591db09891418dd6",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 176520,
+          "path": "lib/arm64-v8a/libjnidispatch.so",
+          "sha256": "abc26e994517bcaa3309acdb0a27373864086c7569c89d3087b8626fada9ef06",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 10491928,
+          "path": "lib/arm64-v8a/libjuicebox_sdk_jni.so",
+          "sha256": "08e1fd31ce442d71004a888fae15fb701f4389403e28415b5e0b2265d8a7dc00",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 906056,
+          "path": "lib/arm64-v8a/libliveness_opengl_renderer_jni.so",
+          "sha256": "12b1004c77152f0f8c7a5935081f6cff2cfc02750a3b873b2ccaa20128f81f30",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 11064544,
+          "path": "lib/arm64-v8a/libmlkit_google_ocr_pipeline.so",
+          "sha256": "fa41d509a661e8aa8b3e3ac1a28541f8823f308414fcad733fe26d61feea2646",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 23712,
+          "path": "lib/arm64-v8a/libnative-filters.so",
+          "sha256": "b283e235b7ad3a42358a6519620c2a1f5770764f00a5ac8f8b2705c53076f56e",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 585376,
+          "path": "lib/arm64-v8a/libnative-imagetranscoder.so",
+          "sha256": "23485bbc2cf1ac41cd373eccba1f4439fec37883a216b6e6b391f57c246f5e2a",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 6238808,
+          "path": "lib/arm64-v8a/libopencv_java4.so",
+          "sha256": "6234300e82a19e49b5d73e88e04c7ec60e2102222ae9cc0a219644edcfd09e99",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 498384,
+          "path": "lib/arm64-v8a/libprelude.so",
+          "sha256": "6e58734ef2d63a7b1a6eb5ea5a2736315e0fb8eda4a4ec1896dfe8e429dc1b3d",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 408896,
+          "path": "lib/arm64-v8a/librenderscript-toolkit.so",
+          "sha256": "0c1484835e68b585e28a06a3f9c3d2b287457a0b2eebb857ad6f2e00ae448833",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 6728,
+          "path": "lib/arm64-v8a/libsardine-root-checker.so",
+          "sha256": "206dc6f02dfe198e77a3f05204cc14aa5108647e7c3bcfd65176622eb7fa64d9",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 287144,
+          "path": "lib/arm64-v8a/libsodium.so",
+          "sha256": "e833b443cea30c2e3dde87807391c009fe0c9e1188c6ecfd2c07716ee45a35d3",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 1836232,
+          "path": "lib/arm64-v8a/libsqlite3x.so",
+          "sha256": "a013a7ff1b85dd8ee51a2a6065e4f68d7450b7a81254384feaf6696ee61e4c68",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 501856,
+          "path": "lib/arm64-v8a/libstatic-webp.so",
+          "sha256": "f3d8cee3196bd88b0430ba279405cc37f0b19f394362c1e13a70e7462382bca1",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 4920,
+          "path": "lib/arm64-v8a/libsurface_util_jni.so",
+          "sha256": "a08b9ae9355bd86b0c1ac821747f62f0d54e32026a8937622632d563c076b02d",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 4320528,
+          "path": "lib/arm64-v8a/libtensorflowlite_jni.so",
+          "sha256": "85b97f038170c1c3137ba5e2f70d1435cc2cda5a7b07570e2192a38a0b5bdda8",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 5512,
+          "path": "lib/arm64-v8a/libtoolChecker.so",
+          "sha256": "eeb2317e649e287b836b5e5c30cb07700f9eb900a53c297a3823592f15aa6352",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 2014680,
+          "path": "lib/arm64-v8a/libtwittermedia.so",
+          "sha256": "164ceab2f49a2ad419168b1dba5a0dc4027e418d41788c181cca69f789202bfd",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 272536,
+          "path": "lib/arm64-v8a/libverysdk.so",
+          "sha256": "97834e91b1399aa4b682f29e4df5f4bb4f33720c65d8926b4af70745f0b69751",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 21597896,
+          "path": "lib/arm64-v8a/libxeno_native.so",
+          "sha256": "a711a0294befbb258110ca03713a0c8b2f8d4b57910796c35489478f5df8b663",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 347352,
+          "path": "lib/arm64-v8a/libyoga.so",
+          "sha256": "23e4603de00b28b36132393210e3cd9eb36b7dcda6d9df20421d4970c772a3c8",
+          "split": "config.arm64_v8a.apk"
+        }
+      ],
+      "package": "com.twitter.android",
+      "requested_abi": "arm64-v8a",
+      "requested_version": "12.17.0-release.0",
+      "sha256": "558a30172835845989258ccb22043f055f3fbd734aca9c6c2b938effff1eacb6",
+      "split_artifacts": [
+        {
+          "bytes": 196848001,
+          "filename": "com.twitter.android.apk",
+          "sha256": "5e9c8e4bbb525a2140292f8f96ab6cc0af403dfcd07667b8678aebb44fb52354"
+        },
+        {
+          "bytes": 95636424,
+          "filename": "config.arm64_v8a.apk",
+          "sha256": "c61ca7a0ad940b9dfd5577af028ad51b2a9d1f257da90e694f80bda762eef8b7"
+        },
+        {
+          "bytes": 1155585,
+          "filename": "config.en.apk",
+          "sha256": "0ae52d12988c44c64687f10f6c0c62f5043bc0a592b632fd7774dbb4ab77fe47"
+        },
+        {
+          "bytes": 565963,
+          "filename": "config.hdpi.apk",
+          "sha256": "e6bd8e0787ef4df68d27b271ed226f11e66138cfe5557e55f4e36ee0f832130f"
+        }
+      ],
+      "split_count": 4,
+      "version_code": "312170000",
+      "version_name": "12.17.0-release.0"
+    },
+    {
+      "bytes": 425431222,
+      "chart_rank": null,
+      "container_format": "xapk",
+      "eligible_rank": 2,
+      "filename": "com.sina.weibo@arm64-v8a.xapk",
+      "name": "Weibo",
+      "native_abis": [
+        "arm64-v8a"
+      ],
+      "native_libraries": [
+        {
+          "abi": "arm64-v8a",
+          "bytes": 494080,
+          "path": "lib/arm64-v8a/libCtaApiLib.so",
+          "sha256": "04aebac34b08627f24bd5823e93cf091ef07698b6754af7e1a58fadc652b6628",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 5765144,
+          "path": "lib/arm64-v8a/libMCPlayer.so",
+          "sha256": "c8766d90a2a941ca3bce65478a83ff2fadf815e330bb38774a9397138811f01c",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 3953752,
+          "path": "lib/arm64-v8a/libMNN.so",
+          "sha256": "44429e0cd705e34fc0f83aad022eedb7749a873811fa97d01170114784831fe7",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 11829440,
+          "path": "lib/arm64-v8a/libMortredRtc.so",
+          "sha256": "77c5319409c0eaec0188de0ec3eb5efbeb8c63972b84685553cc1e0f76439d32",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 1197680,
+          "path": "lib/arm64-v8a/libWBLivePublisher.so",
+          "sha256": "2ab166f9addde28d4a0bbfed0e0283083b96c6417abe7c8c6a1d142db6997928",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 23808,
+          "path": "lib/arm64-v8a/libaccount.so",
+          "sha256": "e1a085e3d7dddaf6c1def065550f5370955d806c15bedc87549626d632ffd97c",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 172768,
+          "path": "lib/arm64-v8a/libadcheck.so",
+          "sha256": "13b4996123553850ef11f4840c9804ae1d20b5aef831dbff6e3e3e353ea2919f",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 412448,
+          "path": "lib/arm64-v8a/libagora-core.so",
+          "sha256": "ddf6643a3b79e6c84685ec113298445dac5785e5e18f99f8347708f6268343b2",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 1708416,
+          "path": "lib/arm64-v8a/libagora-ffmpeg.so",
+          "sha256": "de65fa896f901b398522b2e001ecc8421a930d6b75795bd917815730bcfd5333",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 14817376,
+          "path": "lib/arm64-v8a/libagora-rtc-sdk.so",
+          "sha256": "78f4e6d983f10acdb89b84e4594ae7fe5392068e58198bc95dba6a280dc71a1f",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 182352,
+          "path": "lib/arm64-v8a/libagora-soundtouch.so",
+          "sha256": "64566e4d96341ffdb50fbb23ffefd234bbac76b34f6a8b41aa394ccde76e9988",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 674544,
+          "path": "lib/arm64-v8a/libagora_fdkaac.so",
+          "sha256": "e9173deb7a7509c1537b64f7c28afb4b0604eb99bf30b690fcd56dd373b8699b",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 330512,
+          "path": "lib/arm64-v8a/libagora_mpg123.so",
+          "sha256": "a42661045a24296141a596a679e6f310c88b8b33ba2c32b510689e1a6e61f826",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 320768,
+          "path": "lib/arm64-v8a/libaliyunaf.so",
+          "sha256": "9d657475d5c222e0ab3db15a3cdf8ab97371a4a88cc27f5d8d6a1d94189bb061",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 268408,
+          "path": "lib/arm64-v8a/libapm-agora-raw-data.so",
+          "sha256": "c6958bcc38aa05c274e14a69e64e85c48676ab6cb0368ce39fc60b0bf0d72055",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 9454488,
+          "path": "lib/arm64-v8a/libapp.so",
+          "sha256": "b8bbd069db07525111b6c0fb1a28c11aac9dea397eb2ca6764713deaaf7a5bb1",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 828592,
+          "path": "lib/arm64-v8a/libaqts.so",
+          "sha256": "064df10b834f6653bee3fed84ddb0af0bbc0c8dc7c2c6af0b73b4f6c43114acc",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 2061248,
+          "path": "lib/arm64-v8a/libbarcode.so",
+          "sha256": "40a576d0c688cac4373bbeb7fad1c47b5e3f09b3a9785be24a4dc46fad630794",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 1253536,
+          "path": "lib/arm64-v8a/libc++_shared.so",
+          "sha256": "97176175c08bbd4af66836d290195797fff6c82e7b6261814fbe955f2f7ea02a",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 387968,
+          "path": "lib/arm64-v8a/libcmark_native.so",
+          "sha256": "6b977d1e80b38c11cd3fc89e28f10841339983313cad31a4b16b89ee16fa39ce",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 954624,
+          "path": "lib/arm64-v8a/libcrash_dump.so",
+          "sha256": "f89c7d94729f746f9412d04d553f5379a994c3a6ef7eb2ac7efb94195e053ef9",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 8480144,
+          "path": "lib/arm64-v8a/libcronet.131.0.6778.103.so",
+          "sha256": "e20691035d61e143e8034a2b24a774b2eaea19b0eef501530a3c124c85222609",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 1030104,
+          "path": "lib/arm64-v8a/libcsgface.so",
+          "sha256": "713ecea49e8c6f756f4eb24157ee128928a32e464178694f3c949216ff0e7212",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 516600,
+          "path": "lib/arm64-v8a/libdexvmp.so",
+          "sha256": "c6d3145930f11eaad144fd06fb40be49bec95f3d19ceaab399d587f7576b8547",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 530192,
+          "path": "lib/arm64-v8a/libduktape.so",
+          "sha256": "e0db0fb42180efa41a00bd3e0f6539cdb83de176e44bf76bd110b38f0e11c2b7",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 113496,
+          "path": "lib/arm64-v8a/libdumper.so",
+          "sha256": "0ff7b20cfb8e5c6b705511b73620bd3d5bbbc3cb0443cfcf64a6436c296981e6",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 1826360,
+          "path": "lib/arm64-v8a/libecdnvod_jni.so",
+          "sha256": "87cfea6076607993296d1910ceef7b4a955322a25f325624e83445dc74706be1",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 96072,
+          "path": "lib/arm64-v8a/libed25519.so",
+          "sha256": "874165998d077b68c184feb4af3fd7128412c17e1923f8485c36d6d6fea86b32",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 177624,
+          "path": "lib/arm64-v8a/libentryexpro.so",
+          "sha256": "de3223daa80a4b61c121071ca37141ccf82854ec2e945c7142ac7d61e0a5436e",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 1161456,
+          "path": "lib/arm64-v8a/libffavc.so",
+          "sha256": "1e214164a6c153f74f25018c1625f3e71d1d5ba601f6592c4dd89385dcc4b0bc",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 13787680,
+          "path": "lib/arm64-v8a/libffmpeg.so",
+          "sha256": "c7bab36192c094ced488722e104c7958826e17e2a3e027d5ec128d1fd0a0147a",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 1560232,
+          "path": "lib/arm64-v8a/libfinauthlivenessv5Ex.so",
+          "sha256": "cc5efb2f858c9c9b60823ebe4bbe0ffbfedf2646fd20c7540efa961f333c4757",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 11321288,
+          "path": "lib/arm64-v8a/libflutter.so",
+          "sha256": "8ad7c6f6c437b82ead32415cfcf15fc50a356270867579ca8e2546c00edb3fe4",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 646744,
+          "path": "lib/arm64-v8a/libfusioneditor.so",
+          "sha256": "9529722fe0dd49f068c23600aafd0973a3c04a55cd7d0a655884bc369ab90c55",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 1185664,
+          "path": "lib/arm64-v8a/libgpufilterengine.so",
+          "sha256": "8a65ce66059cfafc430b2f6e76ab55492f2e97c3425f0cc67dd8651b3e5a9b2f",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 439472,
+          "path": "lib/arm64-v8a/libhardquicken.so",
+          "sha256": "1175f07d0a60030228cfa039e0b609dcf67f170f217e783d1bad92142ba6ed14",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 3973512,
+          "path": "lib/arm64-v8a/libhttpdns.so",
+          "sha256": "7499baffc10cc631cf1212d49c563af56686868ecd98ad1d007dddc54cb4e6ca",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 29008,
+          "path": "lib/arm64-v8a/libimage_processing_util_jni.so",
+          "sha256": "3e0071afcdc7e321f839e196d266014182f18d0988e4455acc9857a085b2184e",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 1115568,
+          "path": "lib/arm64-v8a/libimgreduce.so",
+          "sha256": "24468045882ce7d7642cf785778fd74ac2bddc2bfff0db6aa04cde3347444f78",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 104384,
+          "path": "lib/arm64-v8a/libjsbridgev8.so",
+          "sha256": "93125886e81bfa400f4cce76f556f04f89c0b9ef6edba77c3c7955e14bff52df",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 22280,
+          "path": "lib/arm64-v8a/libkk-duktape.so",
+          "sha256": "e20943ade3fb51b5dcff1fb95402156d7202ebe80859fc7eb63cbc8b40cd13ba",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 5752,
+          "path": "lib/arm64-v8a/libluckymoneyjni.so",
+          "sha256": "9e4841a3e4aa34550df1ff3a3e883cdbcc09341b277f975d2f7d17346f7edc5d",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 4106304,
+          "path": "lib/arm64-v8a/libmediafusion.so",
+          "sha256": "320381463d21f866d151482bee2b8e54b38a99e1ea1cf8e88c83d33e2650ae62",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 225192,
+          "path": "lib/arm64-v8a/libmediapro.so",
+          "sha256": "1b81f3a4b6b5950bf4c11156040be7f056beab397d1815a7e70b9d805c7c44ee",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 597000,
+          "path": "lib/arm64-v8a/libmmkv.so",
+          "sha256": "3850acf55b2c29bd3a3714ac84b7ab6ef402fedc61d9646209dd273d604d1bd1",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 329920,
+          "path": "lib/arm64-v8a/libndkCameraEx.so",
+          "sha256": "41f893bbd9bd61145f94be8609c16659a0d06b150afca116cc4e04050581cfbc",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 3259400,
+          "path": "lib/arm64-v8a/libosmss3rd-0.0.4.so",
+          "sha256": "ad6dc06365cfb8ababf6cca3836ecef90d4b01e205d5756a308df2c58cbd630c",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 995688,
+          "path": "lib/arm64-v8a/libosmss3rdc-0.0.1.so",
+          "sha256": "8042aca997a4cbcde612fe7d91fb9241efe6337242084d570c88ad21c5dc85f5",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 3763880,
+          "path": "lib/arm64-v8a/libpag.so",
+          "sha256": "1f2b4c0794a13b8aaef164fea82f480a7e37f0879c31168ae9e97a08362f505c",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 3856,
+          "path": "lib/arm64-v8a/libpatchtools.so",
+          "sha256": "1ae999dbfc3d54624bb740027c2d8f4bee2f507e9d0cf20c61e0bc0eb5ea538c",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 132960,
+          "path": "lib/arm64-v8a/libprotobuf.so",
+          "sha256": "e4feb7b74d5934cfcd3c2400815315af254db149462c3813cddfad45958aceac",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 97992,
+          "path": "lib/arm64-v8a/libshadowhook.so",
+          "sha256": "000bec488ac8a861457a2e31766f7937ab6a14decee04348c8a674ec6201ca78",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 1112,
+          "path": "lib/arm64-v8a/libshadowhook_nothing.so",
+          "sha256": "ac8dd4f051ff8054f1ab491c4f549718f390f5d5594f95675f4af4279685660a",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 413296,
+          "path": "lib/arm64-v8a/libslib.so",
+          "sha256": "df75ae033d2ffdbb872f7cc0499d40f8c11d609fa6c9a06fba40619dd365004f",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 1275664,
+          "path": "lib/arm64-v8a/libspatialphoto.so",
+          "sha256": "95e08e31b9f84e4bfba5479221c01bb447682744528fd1d333cad3b774b2f982",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 5940696,
+          "path": "lib/arm64-v8a/libst_mobile.so",
+          "sha256": "0ad3721c32dcc7ea19f7c9648f6fc47e61989bed4ecf6579cfad2906c0952a26",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 4832,
+          "path": "lib/arm64-v8a/libsurface_util_jni.so",
+          "sha256": "ee3f0d56f81cc0a301db32dc4fd51274c3216733b4c40172768e38bc5049a265",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 325440,
+          "path": "lib/arm64-v8a/libtnet-4.0.0.so",
+          "sha256": "5a14fa30eb2b782a2d3cc9d2a86f5db828d6da4ece02d1a7bfdd701d4deef003",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 1372656,
+          "path": "lib/arm64-v8a/libtoyger.so",
+          "sha256": "215050bb4c8f5fc8828f65dbd79e9148ad4dc41a5018ffac462b606b0add4542",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 64648,
+          "path": "lib/arm64-v8a/libvad_jni.so",
+          "sha256": "1daa5cb30baa45e7b9fb365c519fb94975a77c83cf2a779e7023a30b581ddebf",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 7360872,
+          "path": "lib/arm64-v8a/libwb3dmodel.so",
+          "sha256": "f615c077d699857e868fbc066f3963052053cc14c4957e66cfc40a74506e7479",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 734200,
+          "path": "lib/arm64-v8a/libwb_js_engine.so",
+          "sha256": "f63273f15ad785eb60a9162b22e6dae5e0da5081f46b51d36a64d887ab277f3e",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 1152296,
+          "path": "lib/arm64-v8a/libwb_layout_eng.so",
+          "sha256": "0f4c9764e88e595210e59b5f5d73cab43b85f67e0a5d296e63e313f9c9522e97",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 2092696,
+          "path": "lib/arm64-v8a/libwbface_effect.so",
+          "sha256": "cf9483448bd4628e749c036b93dab4a5f6441609dfe6be7e735f583a87732edd",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 1389352,
+          "path": "lib/arm64-v8a/libwbmediadownloader.so",
+          "sha256": "857b567a0f391d2f4fdd71e3bba1244b2d598590e70cfc3ae51f5b273a992140",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 70888,
+          "path": "lib/arm64-v8a/libwbxzlib.so",
+          "sha256": "c916fbec539dacde0f9989b04fb61b4b690a7681490d26a2edf9ec65e6b981af",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 104904,
+          "path": "lib/arm64-v8a/libwbzstd.so",
+          "sha256": "02ece6a6352fbecf02fdcef994e572f015a41fcf8bc48df8f17596300f9ee72b",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 470336,
+          "path": "lib/arm64-v8a/libwebp.so",
+          "sha256": "78bd7fef4374a6ad23de0ee0311674a87c7ad9c979bbb563004948faa54a3db0",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 1191400,
+          "path": "lib/arm64-v8a/libweexcore.so",
+          "sha256": "4a55432adc6159b2056691b6d59b1a372f7fad7f3b45aae20a1662e14951785e",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 4840,
+          "path": "lib/arm64-v8a/libweexjsb.so",
+          "sha256": "6c3280b6545b4958acbd5d37b3ed15e2a255b03aea8dced04ebe11fb00398560",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 437664,
+          "path": "lib/arm64-v8a/libweexjss.so",
+          "sha256": "64058213cb07613172d27618cbb14d3e763aad656e9d628cca7f1bd904e9b5d7",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 4840,
+          "path": "lib/arm64-v8a/libweexjst.so",
+          "sha256": "6c3280b6545b4958acbd5d37b3ed15e2a255b03aea8dced04ebe11fb00398560",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 94712,
+          "path": "lib/arm64-v8a/libwind.so",
+          "sha256": "864f47dbc71e8346f57ca2fca2a875c110be525961084b867893047971b834f3",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 99224,
+          "path": "lib/arm64-v8a/libwisedetect.so",
+          "sha256": "3dd441429ccc1088a98dc5c7904d211671ab065baa31f1244bb573dc4e97b33d",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 3475776,
+          "path": "lib/arm64-v8a/libwlog.so",
+          "sha256": "ad620ea861c2782368489a7f09ac271c6799e6ede3e0c3ee84e4208507c2c7e1",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 690192,
+          "path": "lib/arm64-v8a/libydetssdk.so",
+          "sha256": "9a5c35a0c70c69ac54d3b77cd626756eb59cc44948f74e06a4e0cb7d7699b7bf",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 310736,
+          "path": "lib/arm64-v8a/libyoga.so",
+          "sha256": "a6dbd39d144c5c0a3344a4b55ebc09da36a9fd794d5c6b070932ceaa1032e793",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 432376,
+          "path": "lib/arm64-v8a/libyuv.so",
+          "sha256": "a40f9f7813a415b33abcf8967ffc93dbd804967257c3c1106618b3c5db536ee3",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 110128,
+          "path": "lib/arm64-v8a/libziparchive-private.so",
+          "sha256": "7f86ca8e255825c256e6697ea228447a0bfd9bf0c0f2b1b2b1070bb7f55dcf21",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 1812136,
+          "path": "lib/arm64-v8a/libzk.so",
+          "sha256": "475d4fdee1dbfdbfd275ab6e1d5c0ffba5dbe65e795df5c50f366914de276550",
+          "split": "config.arm64_v8a.apk"
+        },
+        {
+          "abi": "arm64-v8a",
+          "bytes": 462008,
+          "path": "lib/arm64-v8a/libzkfv_tj.so",
+          "sha256": "6bd4dd6a9b0107c73b9dfd947b6024675089514d8e05a2f45ecedbc7e7e33b33",
+          "split": "config.arm64_v8a.apk"
+        }
+      ],
+      "package": "com.sina.weibo",
+      "requested_abi": "arm64-v8a",
+      "requested_version": "16.8.1",
+      "sha256": "ffb64d2232fc2c85a9995ca988cf63292ce3808892088aaa86724a7b3e70c0d4",
+      "split_artifacts": [
+        {
+          "bytes": 242374756,
+          "filename": "com.sina.weibo.apk",
+          "sha256": "4754e3462645b16dcabcf5662373ef5dc89bdcacb3ead968aa13e42f73625eca"
+        },
+        {
+          "bytes": 151333191,
+          "filename": "config.arm64_v8a.apk",
+          "sha256": "5020b45d3972a1e25e279e9c029678c9760c3b32dac5c7ff542934c6c15eee97"
+        },
+        {
+          "bytes": 31600456,
+          "filename": "google_assets.apk",
+          "sha256": "58fa18988cd4ab28435fa072560514aa45dbd40102b482581133ab698375b6d7"
+        }
+      ],
+      "split_count": 3,
+      "version_code": "8113",
+      "version_name": "16.8.1"
+    }
+  ],
+  "corpus_manifest_sha256": "69d004436545add118bbb4016e57f38aae358102fd0f905322f87ca31ec35d09",
+  "download_source": {
+    "note": "Candidate binaries are ignored; the generated download lock records exact artifact identity.",
+    "retrieved_at": "2026-08-22",
+    "source": "APKPure",
+    "tool": "EFF apkeep 1.0.0",
+    "tool_sha256": "a23579a3ba366d25a6d69848189b983d65662f4ecf4b9e11e16510811659de4e",
+    "tool_url": "https://github.com/EFForg/apkeep/releases/tag/1.0.0"
+  },
+  "generated_at": "2026-08-23T03:05:56+00:00",
+  "requested_abi": "arm64-v8a",
+  "schema_version": "westlake-download-lock/v0.2"
+}
