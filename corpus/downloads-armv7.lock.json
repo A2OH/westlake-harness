@@ -1,0 +1,58 @@
+{
+  "schema_version": "westlake-download-lock/v0.2",
+  "generated_at": "2026-08-22T03:30:35+00:00",
+  "requested_abi": "armeabi-v7a",
+  "corpus_manifest_sha256": "93bf25923702a39da31f1f2e84019df3adcb6bc5bef20dfd7faee5432adeeaa5",
+  "download_source": {
+    "source": "APKPure",
+    "retrieved_at": "2026-08-20",
+    "tool": "EFF apkeep 1.0.0",
+    "tool_url": "https://github.com/EFForg/apkeep/releases/tag/1.0.0",
+    "tool_sha256": "a23579a3ba366d25a6d69848189b983d65662f4ecf4b9e11e16510811659de4e",
+    "note": "ABI-specific subset derived without modifying the preserved ten-app download lock."
+  },
+  "artifacts": [
+    {
+      "chart_rank": 12,
+      "eligible_rank": 4,
+      "name": "Amazon Shopping",
+      "package": "com.amazon.mShop.android.shopping",
+      "filename": "com.amazon.mShop.android.shopping.xapk",
+      "version_code": "1241319416",
+      "version_name": "32.12.4.100",
+      "container_format": "xapk",
+      "split_count": 3,
+      "bytes": 159652785,
+      "sha256": "5fc1affc6c17744564f1a13d152719189d169115da217447758aedbae089edf1",
+      "native_abis": ["armeabi-v7a"]
+    },
+    {
+      "chart_rank": 22,
+      "eligible_rank": 8,
+      "name": "Discord",
+      "package": "com.discord",
+      "filename": "com.discord.xapk",
+      "version_code": "341013",
+      "version_name": "341.13 - Stable",
+      "container_format": "xapk",
+      "split_count": 20,
+      "bytes": 153540987,
+      "sha256": "bece68a55c303e8cc8f15383ecd5c25880973b82e9f77141e0bb5c59d2cbbccb",
+      "native_abis": ["armeabi-v7a"]
+    },
+    {
+      "chart_rank": 24,
+      "eligible_rank": 10,
+      "name": "Yahoo Mail",
+      "package": "com.yahoo.mobile.client.android.mail",
+      "filename": "com.yahoo.mobile.client.android.mail.xapk",
+      "version_code": "1976487",
+      "version_name": "26.32.1",
+      "container_format": "xapk",
+      "split_count": 17,
+      "bytes": 203945044,
+      "sha256": "057457209a8f68233b59c663f08dcd0e2e8fe02891a00ac7cd0c9748a519c5ee",
+      "native_abis": ["armeabi-v7a"]
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.westlake.probe.providers"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <uses-sdk android:minSdkVersion="28" android:targetSdkVersion="34" />
+
+    <!-- These are package-visibility queries, not ContentProvider components. -->
+    <queries>
+        <provider android:authorities="org.westlake.query.badge.one" />
+        <provider android:authorities="org.westlake.query.badge.two" />
+    </queries>
+
+    <application
+        android:name=".ProbeApplication"
+        android:allowBackup="false"
+        android:label="Westlake Provider Manifest Probe"
+        android:theme="@android:style/Theme.Material.Light.NoActionBar">
+
+        <provider
+            android:name=".MainProbeProvider"
+            android:authorities="org.westlake.probe.providers.main"
+            android:exported="false" />
+
+        <!-- Android starts this only in the named secondary process. -->
+        <provider
+            android:name=".RemoteProbeProvider"
+            android:authorities="org.westlake.probe.providers.remote"
+            android:exported="false"
+            android:process=":remote" />
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

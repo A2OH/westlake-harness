@@ -1,0 +1,12 @@
+# Legacy ARMv7 runtime snapshot used only for the ABI-separated supplemental scan.
+# Do not merge its Java gap results with the current ARM64 runtime lock.
+${WESTLAKE_ARMV7_V3HBC}/jars/core-oj.jar
+${WESTLAKE_ARMV7_V3HBC}/jars/core-libart.jar
+${WESTLAKE_ARMV7_V3HBC}/jars/core-icu4j.jar
+${WESTLAKE_ARMV7_V3HBC}/jars/okhttp.jar
+${WESTLAKE_ARMV7_V3HBC}/jars/bouncycastle.jar
+${WESTLAKE_ARMV7_V3HBC}/jars/apache-xml.jar
+${WESTLAKE_ARMV7_V3HBC}/jars/adapter-mainline-stubs.jar
+${WESTLAKE_ARMV7_V3HBC}/jars/framework.jar
+${WESTLAKE_ARMV7_V3HBC}/jars/oh-adapter-runtime.jar
+${WESTLAKE_ARMV7_V3HBC}/jars/oh-adapter-framework.jar

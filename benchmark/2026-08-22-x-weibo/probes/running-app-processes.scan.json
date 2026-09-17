@@ -1,0 +1,118 @@
+{
+  "apk": {
+    "abis": [],
+    "activities": 1,
+    "app_name": "Westlake Running Processes Probe",
+    "bytes": 12631,
+    "features": [],
+    "filename": "running-app-processes-probe.apk",
+    "main_activities": [
+      ".MainActivity"
+    ],
+    "manifest_available": true,
+    "min_sdk": "28",
+    "native_abi_status": "no-packaged-native-libraries",
+    "native_abis": [],
+    "native_library_entries": 0,
+    "package": "org.westlake.probe.runningprocesses",
+    "path": "/home/dspfac/westlake-harness/probes/running-app-processes/out/running-app-processes-probe.apk",
+    "permissions": [],
+    "providers": 0,
+    "receivers": 0,
+    "services": 0,
+    "sha256": "259cb2c4b3aba8c9d98e4575dd87b1b8e8eea8bc50976e364a174e88d519b302",
+    "signing_certificate_sha256": [
+      "cc75f19b9c330f8df411fffa42d442b855634cd792f175fcab951c1213ea7e17"
+    ],
+    "target_abi": "arm64-v8a",
+    "target_sdk": "34",
+    "version_code": "1",
+    "version_name": "1.0"
+  },
+  "findings": [
+    {
+      "apk_sha256": "259cb2c4b3aba8c9d98e4575dd87b1b8e8eea8bc50976e364a174e88d519b302",
+      "artifact": "framework.jar",
+      "classification": "C9-candidate",
+      "confidence": "direct-static",
+      "dependency": {
+        "layer": "J",
+        "name": "onCreate",
+        "owner": "Landroid/app/Application;",
+        "signature": "()V"
+      },
+      "evidence": [
+        {
+          "descriptor": "()V",
+          "dex": "classes.dex",
+          "method": "onCreate",
+          "offset": 0,
+          "opcode": "invoke-super",
+          "owner": "Lorg/westlake/probe/runningprocesses/ProbeApplication;"
+        }
+      ],
+      "fault_origin": "apk-dependency",
+      "finding_id": "sha256:92b742d11c803a298642bec6b8d58f3c2aa820be2a582d9175088c3a7be03b07",
+      "kind": "hollow_method",
+      "reference_count": 1,
+      "resolved_owner": "Landroid/app/Application;",
+      "runtime_lock_id": "sha256:101c9c5d49eb7371efd1dfb61c0dc4fd332da5d30c9803bd2a06f285fce889ee",
+      "status": "candidate"
+    }
+  ],
+  "generated_at": "2026-08-23T03:34:57+00:00",
+  "inventory": {
+    "declared_native_methods": [],
+    "defined_classes": 2,
+    "dex_entries": [
+      {
+        "bytes": 3688,
+        "name": "classes.dex",
+        "sha256": "9ba27c4d6ad2b617f7adb2fc087ff74fdf88a5bd8d3eaf837f35c2797d9f86a4"
+      }
+    ],
+    "elfs": [],
+    "existence_probes": [],
+    "load_library_calls": [],
+    "native_resolution": {
+      "abi_mismatch_elf_count": 0,
+      "abi_status": "no-packaged-native-libraries",
+      "available_abis": [],
+      "packaged_elf_count": 0,
+      "recovered_registration_entry_count": 0,
+      "selected_packaged_elf_count": 0,
+      "selected_runtime_elf_count": 1,
+      "state_counts": {},
+      "target_abi": "arm64-v8a"
+    },
+    "platform_field_references": 4,
+    "platform_method_references": 25,
+    "platform_type_references": 18
+  },
+  "limitations": [
+    "Static references over-approximate runtime reachability.",
+    "Computed reflection and code downloaded after install are not visible.",
+    "CU native findings may be satisfied through RegisterNatives at runtime.",
+    "Static JNINativeMethod recovery is candidate evidence until runtime registration is observed.",
+    "Presence does not prove semantic, lifecycle, timing, or ABI compatibility."
+  ],
+  "runtime_lock_id": "sha256:101c9c5d49eb7371efd1dfb61c0dc4fd332da5d30c9803bd2a06f285fce889ee",
+  "schema_version": "westlake-apk-gap/v0.2",
+  "summary": {
+    "candidate_count": 1,
+    "direct_absence_count": 0,
+    "finding_count": 1,
+    "findings_by_kind": {
+      "hollow_method": 1
+    },
+    "missing_classes": 0,
+    "native_by_state": {},
+    "native_candidate_count": 0,
+    "native_declaration_count": 0,
+    "native_resolved_count": 0,
+    "native_unresolved_count": 0,
+    "static_scope": "base-and-supplied-splits",
+    "unresolved_by_kind": {},
+    "unresolved_count": 0
+  }
+}
