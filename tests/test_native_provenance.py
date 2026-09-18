@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import shutil
 import subprocess
 import tempfile
@@ -10,6 +11,7 @@ from westlake_gap.nativeprov import (
     attribute_unresolved_imports,
     boundary_platform_types,
     classify_symbols,
+    compare_runtime_capture,
     dynamic_symbol_candidates,
     find_objdump,
     identify_components,
@@ -301,3 +303,71 @@ def _build(clang: str, root: Path, name: str, source_text: str) -> Path | None:
         check=False,
     )
     return target if build.returncode == 0 and target.exists() else None
+
+
+class RuntimeCaptureComparisonTest(unittest.TestCase):
+    """The capture's value is the difference, so both directions are asserted."""
+
+    SURFACE = {
+        "libraries": [
+            {"library": "libknown.so", "method_reach": {"methods": [
+                {"name": "exercised", "signature": "(I)I"},
+                {"name": "neverRun", "signature": "(J)V"},
+            ]}},
+            {"library": "libopaque.so"},
+        ]
+    }
+    CAPTURE = [
+        {"type": "registerNatives", "clazz": "com/example/Known", "methods": [
+            {"name": "exercised", "signature": "(I)I", "lib": "/data/app/x/lib/arm64/libknown.so"},
+        ]},
+        {"type": "registerNatives", "clazz": "?", "methods": [
+            {"name": "hidden", "signature": "()V", "lib": "libopaque.so"},
+        ]},
+        {"type": "registerNatives", "clazz": "?", "methods": [
+            {"name": "downloaded", "signature": "()V", "lib": "libnotinapk.so"},
+        ]},
+        {"type": "dlopen", "path": "/data/data/pkg/files/hotfix-root/install/1/oat/arm64/patch.odex", "ok": True},
+        {"type": "dlopen", "path": "libc.so", "ok": True},
+        {"type": "dlsym", "symbol": "Java_com_example_Known_missing", "resolved": False},
+        {"type": "dlsym", "symbol": "dl_iterate_phdr", "resolved": True},
+    ]
+
+    def test_both_directions_of_the_difference(self) -> None:
+        diff = compare_runtime_capture(self.CAPTURE, self.SURFACE)
+        self.assertEqual(2, diff["static"]["methods"])
+        self.assertEqual(3, diff["runtime"]["methods"])
+        self.assertEqual(3, diff["runtime"]["registration_tables"])
+        self.assertEqual(2, diff["runtime_only_methods"])    # hidden + downloaded
+        self.assertEqual(1, diff["static_only_methods"])     # neverRun
+        self.assertEqual(4, diff["union_methods"])
+
+    def test_library_origin_is_separated(self) -> None:
+        diff = compare_runtime_capture(self.CAPTURE, self.SURFACE)
+        self.assertEqual([{"library": "libnotinapk.so", "methods": 1}], diff["libraries_absent_from_apk"])
+        self.assertEqual([{"library": "libopaque.so", "methods": 1}], diff["libraries_opaque_to_static"])
+
+    def test_dlsym_failures_and_runtime_code_objects_are_kept(self) -> None:
+        diff = compare_runtime_capture(self.CAPTURE, self.SURFACE)
+        self.assertEqual(["Java_com_example_Known_missing"], diff["dlsym_unresolved"])
+        self.assertEqual(1, diff["dlsym_resolved_count"])
+        self.assertEqual(1, len(diff["runtime_loaded_code_objects"]))
+        self.assertIn("patch.odex", diff["runtime_loaded_code_objects"][0])
+
+    def test_real_capture_matches_the_published_report(self) -> None:
+        root = Path(__file__).resolve().parent.parent
+        surface = root / "benchmark/2026-08-23-toutiao/native-analysis/native-surface.json"
+        captures = sorted((root / "benchmark/2026-08-23-toutiao/runtime-evidence/android-baseline").glob("capture-*.jsonl"))
+        if not surface.exists() or not captures:
+            self.skipTest("Toutiao native-analysis evidence is not present")
+        rows = []
+        for path in captures:
+            with path.open(encoding="utf-8") as stream:
+                rows.extend(json.loads(line) for line in stream if line.strip())
+        diff = compare_runtime_capture(rows, json.loads(surface.read_text(encoding="utf-8")))
+        self.assertEqual(1340, diff["static"]["methods"])
+        self.assertEqual(1157, diff["runtime"]["methods"])
+        self.assertEqual(280, diff["runtime_only_methods"])
+        self.assertEqual(463, diff["static_only_methods"])
+        self.assertEqual(5, len(diff["libraries_absent_from_apk"]))
+        self.assertEqual(3, len(diff["libraries_opaque_to_static"]))

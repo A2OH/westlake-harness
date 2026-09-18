@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import argparse
 import copy
+import json
 import os
 import sys
 from pathlib import Path
 
-from .nativeprov import analyze_library
+from .nativeprov import analyze_library, compare_runtime_capture
 from .report import aggregate, markdown_report
 from .scanner import (
     build_runtime_index,
@@ -93,11 +94,31 @@ def parser() -> argparse.ArgumentParser:
     native.add_argument("--out", required=True, type=Path)
     native.add_argument("--objdump", help="aarch64-capable llvm-objdump; the NDK ships one")
     native.add_argument("--abi", help="ABI label recorded with each library")
+
+    capture = commands.add_parser(
+        "native-capture-diff",
+        help="join a runtime JNI capture (harness/jniprobe) to a native-surface scan",
+    )
+    capture.add_argument("--capture", action="append", required=True, type=Path, help="capture JSONL; repeat")
+    capture.add_argument("--surface", required=True, type=Path, help="native-surface.json for the same APK")
+    capture.add_argument("--out", required=True, type=Path)
     return root
 
 
 def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
+    if args.command == "native-capture-diff":
+        rows = []
+        for path in args.capture:
+            with path.open(encoding="utf-8") as stream:
+                rows.extend(json.loads(line) for line in stream if line.strip())
+        diff = compare_runtime_capture(rows, read_json(args.surface))
+        write_json(args.out, diff)
+        print(
+            f"static {diff['static']['methods']} methods / runtime {diff['runtime']['methods']}; "
+            f"runtime-only {diff['runtime_only_methods']}, never-exercised {diff['static_only_methods']} -> {args.out}"
+        )
+        return 0
     if args.command == "native-surface":
         libraries = (
             sorted(path for path in args.input.rglob("*.so") if path.is_file())

@@ -544,3 +544,78 @@ def attribute_unresolved_imports(
         for symbol in method.get("symbols_of_interest_reached", ()):
             attributed.setdefault(symbol, []).append(method["name"])
     return {symbol: sorted(set(names)) for symbol, names in sorted(attributed.items())}
+
+
+_PATCH_PATH_RE = re.compile(r"(hotfix|patch|plugin|\.odex$|\.dex$|/files/|/app_)", re.I)
+
+
+def compare_runtime_capture(
+    capture_rows: Iterable[dict[str, Any]], native_surface: dict[str, Any]
+) -> dict[str, Any]:
+    """Join a runtime JNI capture to the static native-surface scan of the same APK.
+
+    The capture comes from ``harness/jniprobe`` — a Frida agent that hooks
+    ``RegisterNatives``, ``dlopen`` and ``dlsym``. Its value is entirely in the difference:
+    methods only the runtime saw are the surface static reading cannot reach (code delivered
+    after install, libraries whose tables are built at runtime), and methods only the scan
+    saw are the surface this scenario never exercised.
+    """
+    runtime: set[tuple[str, str, str]] = set()
+    by_library: dict[str, set[tuple[str, str]]] = {}
+    classes: set[str] = set()
+    tables = 0
+    opened: set[str] = set()
+    dlsym_failed: set[str] = set()
+    dlsym_ok: set[str] = set()
+
+    for row in capture_rows:
+        kind = row.get("type")
+        if kind == "registerNatives":
+            tables += 1
+            name = row.get("clazz")
+            if name and name != "?":
+                classes.add(name)
+            for method in row.get("methods") or ():
+                library = (method.get("lib") or "?").rsplit("/", 1)[-1]
+                key = (method.get("name") or "", method.get("signature") or "")
+                runtime.add((library, *key))
+                by_library.setdefault(library, set()).add(key)
+        elif kind == "dlopen" and row.get("path"):
+            opened.add(row["path"])
+        elif kind == "dlsym" and row.get("symbol"):
+            (dlsym_ok if row.get("resolved") else dlsym_failed).add(row["symbol"])
+
+    static: set[tuple[str, str, str]] = set()
+    static_by_library: dict[str, set[tuple[str, str]]] = {}
+    packaged = {library["library"] for library in native_surface.get("libraries", ())}
+    for library in native_surface.get("libraries", ()):
+        for method in library.get("method_reach", {}).get("methods", ()):
+            key = (method["name"], method["signature"])
+            static.add((library["library"], *key))
+            static_by_library.setdefault(library["library"], set()).add(key)
+
+    absent = sorted(
+        ({"library": name, "methods": len(methods)} for name, methods in by_library.items() if name not in packaged),
+        key=lambda item: -item["methods"],
+    )
+    opaque = sorted(
+        (
+            {"library": name, "methods": len(methods)}
+            for name, methods in by_library.items()
+            if name in packaged and name not in static_by_library
+        ),
+        key=lambda item: -item["methods"],
+    )
+    return {
+        "static": {"libraries_with_tables": len(static_by_library), "libraries_packaged": len(packaged), "methods": len(static)},
+        "runtime": {"registration_tables": tables, "libraries": len(by_library), "methods": len(runtime), "classes_named": len(classes)},
+        "runtime_only_methods": len(runtime - static),
+        "static_only_methods": len(static - runtime),
+        "union_methods": len(runtime | static),
+        "libraries_absent_from_apk": absent,
+        "libraries_opaque_to_static": opaque,
+        "dlsym_unresolved": sorted(dlsym_failed),
+        "dlsym_resolved_count": len(dlsym_ok),
+        "runtime_loaded_code_objects": sorted(p for p in opened if _PATCH_PATH_RE.search(p)),
+        "libraries_opened": len(opened),
+    }

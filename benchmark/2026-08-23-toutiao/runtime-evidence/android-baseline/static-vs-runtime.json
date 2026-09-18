@@ -1,0 +1,138 @@
+{
+  "dlsym_resolved_count": 22,
+  "dlsym_unresolved": [
+    "JNI_OnLoad",
+    "Java_com_bytedance_compression_zstd_ZstdCompressCtx_compressByteArray0",
+    "Java_com_bytedance_compression_zstd_ZstdCompressCtx_compressByteArray0___3BII_3BII",
+    "Java_com_bytedance_compression_zstd_ZstdCompressCtx_free",
+    "Java_com_bytedance_compression_zstd_ZstdCompressCtx_free__",
+    "Java_com_bytedance_compression_zstd_ZstdCompressCtx_init",
+    "Java_com_bytedance_compression_zstd_ZstdCompressCtx_init__",
+    "Java_com_bytedance_compression_zstd_ZstdCompressCtx_loadCDictFast0",
+    "Java_com_bytedance_compression_zstd_ZstdCompressCtx_loadCDictFast0__Lcom_bytedance_compression_zstd_ZstdDictCompress_2",
+    "Java_com_bytedance_compression_zstd_ZstdCompressCtx_setLevel0",
+    "Java_com_bytedance_compression_zstd_ZstdCompressCtx_setLevel0__I",
+    "Java_com_bytedance_compression_zstd_ZstdCompress_compressBound",
+    "Java_com_bytedance_compression_zstd_ZstdCompress_compressBound__J",
+    "Java_com_bytedance_compression_zstd_ZstdCompress_defaultCompressionLevel",
+    "Java_com_bytedance_compression_zstd_ZstdCompress_defaultCompressionLevel__",
+    "Java_com_bytedance_compression_zstd_ZstdDictCompress_init",
+    "Java_com_bytedance_compression_zstd_ZstdDictCompress_init___3BIII",
+    "Java_com_bytedance_compression_zstd_Zstd_isError",
+    "Java_com_bytedance_compression_zstd_Zstd_isError__J",
+    "Java_com_bytedance_geckox_buffer_impl_MMapBuffer_nRead",
+    "Java_com_bytedance_geckox_buffer_impl_MMapBuffer_nRead__JJ_3BII",
+    "Java_com_bytedance_geckox_buffer_impl_MMapBuffer_nWrite",
+    "Java_com_bytedance_geckox_buffer_impl_MMapBuffer_nWrite__JJ_3BII",
+    "Java_com_bytedance_lynx_webview_glue_Brotli_decompressFile",
+    "Java_com_bytedance_lynx_webview_glue_Brotli_decompressFile__Ljava_lang_String_2Ljava_lang_String_2",
+    "Java_com_bytedance_pitaya_api_bean_nativeobj_micropy_MicPyDict_nativeSetDict",
+    "Java_com_bytedance_pitaya_api_bean_nativeobj_micropy_MicPyDict_nativeSetDict__Ljava_lang_String_2JJJ",
+    "Java_com_bytedance_pitaya_api_bean_nativeobj_micropy_MicPyDict_nativeSetLong",
+    "Java_com_bytedance_pitaya_api_bean_nativeobj_micropy_MicPyDict_nativeSetLong__Ljava_lang_String_2JJJ",
+    "Java_com_bytedance_pitaya_api_bean_nativeobj_micropy_MicPyDict_nativeSetStr",
+    "Java_com_bytedance_pitaya_api_bean_nativeobj_micropy_MicPyDict_nativeSetStr__Ljava_lang_String_2Ljava_lang_String_2JJ",
+    "Java_com_bytedance_zoin_zstd_ZstdInputStream_createDStream",
+    "Java_com_bytedance_zoin_zstd_ZstdInputStream_createDStream__",
+    "Java_com_bytedance_zoin_zstd_ZstdInputStream_decompressStream",
+    "Java_com_bytedance_zoin_zstd_ZstdInputStream_decompressStream__J_3BI_3BI",
+    "Java_com_bytedance_zoin_zstd_ZstdInputStream_freeDStream",
+    "Java_com_bytedance_zoin_zstd_ZstdInputStream_freeDStream__J",
+    "Java_com_bytedance_zoin_zstd_ZstdInputStream_initDStream",
+    "Java_com_bytedance_zoin_zstd_ZstdInputStream_initDStream__J",
+    "Java_com_bytedance_zoin_zstd_ZstdInputStream_recommendedDInSize",
+    "Java_com_bytedance_zoin_zstd_ZstdInputStream_recommendedDInSize__",
+    "Java_com_bytedance_zoin_zstd_Zstd_isError",
+    "Java_com_bytedance_zoin_zstd_Zstd_isError__J"
+  ],
+  "libraries_absent_from_apk": [
+    {
+      "library": "libwcdb.so",
+      "methods": 91
+    },
+    {
+      "library": "libavmdlv2.so",
+      "methods": 66
+    },
+    {
+      "library": "libpreload.so",
+      "methods": 60
+    },
+    {
+      "library": "libcachemodule.so",
+      "methods": 17
+    },
+    {
+      "library": "libwebviewchromium_plat_support.so",
+      "methods": 6
+    }
+  ],
+  "libraries_opaque_to_static": [
+    {
+      "library": "libxbnlog.so",
+      "methods": 19
+    },
+    {
+      "library": "libbdsword.so",
+      "methods": 16
+    },
+    {
+      "library": "libmetasec_ml.so",
+      "methods": 1
+    }
+  ],
+  "libraries_opened": 113,
+  "runtime": {
+    "classes_named": 0,
+    "libraries": 37,
+    "methods": 1157,
+    "registration_tables": 135
+  },
+  "runtime_loaded_code_objects": [
+    "/data/app/~~YCGo0KBynnn7mmbVt-hDag==/com.google.android.webview.beta-xNcuSzO-Gu6q6yLa4swiuw==/oat/arm64/base.odex",
+    "/data/app/~~hIayh_RRTSSbcc3GnYI90A==/com.ss.android.article.news-zCIssHiijIsq-QvEm9ypSA==/lib/arm64/libhotfix-opt.so",
+    "/data/data/com.ss.android.article.news/files/hotfix-root/install/131923/oat/arm64/patch.odex",
+    "/data/data/com.ss.android.article.news/files/hotfix-root/install/132017/oat/arm64/patch.odex",
+    "/data/data/com.ss.android.article.news/files/hotfix-root/install/132041/oat/arm64/patch.odex",
+    "/data/data/com.ss.android.article.news/files/hotfix-root/install/132050/oat/arm64/patch.odex",
+    "/data/data/com.ss.android.article.news/files/hotfix-root/install/132111/oat/arm64/patch.odex",
+    "/data/data/com.ss.android.article.news/files/plugins/com.bytedance.deviceinfo/version-13900500/apk/oat/arm64/base-1.odex",
+    "/data/data/com.ss.android.article.news/files/plugins/com.ss.android.share_token_rule/version-13900500/apk/oat/arm64/base-1.odex",
+    "/data/data/com.ss.android.article.news/files/plugins/com.ss.android.videoaddetail/version-13900500/apk/oat/arm64/base-1.odex",
+    "/data/data/com.ss.android.article.news/files/plugins/com.tt.appbrandplugin/version-13900500/apk/oat/arm64/base-1.odex",
+    "/data/data/com.ss.android.article.news/files/plugins/com.tt.minigameplugin/version-13900500/apk/oat/arm64/base-1.odex",
+    "/data/user/0/com.ss.android.article.news/files/plugins/com.bytedance.deviceinfo/version-13900500/lib/libARTNative.so",
+    "/data/user/0/com.ss.android.article.news/files/plugins/com.bytedance.deviceinfo/version-13900500/lib/libAndroidPitayaCore.so",
+    "/data/user/0/com.ss.android.article.news/files/plugins/com.bytedance.deviceinfo/version-13900500/lib/libBDMicroPythonVM.so",
+    "/data/user/0/com.ss.android.article.news/files/plugins/com.bytedance.deviceinfo/version-13900500/lib/libBDPythonVM.so",
+    "/data/user/0/com.ss.android.article.news/files/plugins/com.bytedance.deviceinfo/version-13900500/lib/libByteAIDT.so",
+    "/data/user/0/com.ss.android.article.news/files/plugins/com.bytedance.deviceinfo/version-13900500/lib/libByteAINN.so",
+    "/data/user/0/com.ss.android.article.news/files/plugins/com.bytedance.deviceinfo/version-13900500/lib/libCepAST.so",
+    "/data/user/0/com.ss.android.article.news/files/plugins/com.bytedance.deviceinfo/version-13900500/lib/libCepEngine.so",
+    "/data/user/0/com.ss.android.article.news/files/plugins/com.bytedance.deviceinfo/version-13900500/lib/libCepProxy.so",
+    "/data/user/0/com.ss.android.article.news/files/plugins/com.bytedance.deviceinfo/version-13900500/lib/libPitayaBdComponent.so",
+    "/data/user/0/com.ss.android.article.news/files/plugins/com.bytedance.deviceinfo/version-13900500/lib/libPitayaDebug.so",
+    "/data/user/0/com.ss.android.article.news/files/plugins/com.bytedance.deviceinfo/version-13900500/lib/libpy-cv-numpycv.so",
+    "/data/user/0/com.ss.android.article.news/files/plugins/com.bytedance.deviceinfo/version-13900500/lib/libpy-numpy.so",
+    "/data/user/0/com.ss.android.article.news/files/plugins/com.bytedance.tt.vmsdkplugin/version-13900500/lib/libnapi_v8.so",
+    "/data/user/0/com.ss.android.article.news/files/plugins/com.bytedance.tt.vmsdkplugin/version-13900500/lib/libquick.so",
+    "/data/user/0/com.ss.android.article.news/files/plugins/com.ss.android.article.plugin.basebusiness/version-13900500/lib/libspeechengine.so",
+    "/data/user/0/com.ss.android.article.news/files/plugins/com.ss.android.im.so/version-13900500/lib/libwcdb.so",
+    "/data/user/0/com.ss.android.article.news/files/plugins/com.ss.android.newbytecert/version-13900500/lib/libaliyunaf.so",
+    "/data/user/0/com.ss.android.article.news/files/plugins/com.ss.ttplugin.medialoader/version-13900500/lib/libavmdlbase.so",
+    "/data/user/0/com.ss.android.article.news/files/plugins/com.ss.ttplugin.medialoader/version-13900500/lib/libavmdlv2.so",
+    "/data/user/0/com.ss.android.article.news/files/plugins/com.ss.ttplugin.medialoader/version-13900500/lib/libcachemodule.so",
+    "/data/user/0/com.ss.android.article.news/files/plugins/com.ss.ttplugin.medialoader/version-13900500/lib/libpreload.so",
+    "/data/user/0/com.ss.android.article.news/files/plugins/com.tt.appbrand.appbrandso/version-13900500/lib/libv8_libfull.cr.so",
+    "/data/user/0/com.ss.android.article.news/files/webview_bytedance/9e45a47c13a0ae42e3b36ea345e7dee9_md5/libttutil.so",
+    "/data/user/0/com.ss.android.article.news/files/webview_bytedance/9e45a47c13a0ae42e3b36ea345e7dee9_md5/libwebviewbytedance.so"
+  ],
+  "runtime_only_methods": 280,
+  "static": {
+    "libraries_packaged": 138,
+    "libraries_with_tables": 60,
+    "methods": 1340
+  },
+  "static_only_methods": 463,
+  "union_methods": 1620
+}

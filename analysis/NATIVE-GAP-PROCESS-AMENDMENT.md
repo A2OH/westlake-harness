@@ -1,6 +1,8 @@
 # Amendment: closing the native half of the subtraction
 
 **Status.** Item 1 and its fixtures are implemented. Items 2–6 are specified here and not yet built.
+Item 3 and the coverage claims in item 6 are now **confirmed empirically** against a real Android
+device — see `benchmark/2026-08-23-toutiao/runtime-evidence/android-baseline/REPORT.md`.
 
 The process spec's core claim is *subtract before you launch*: the DEX lists every platform API the
 app can touch, the runtime lock lists what is provided, subtract, rank, repair. That subtraction is
@@ -78,6 +80,11 @@ that set minus what the runtime exports; each survivor is an `N-C8` candidate ca
 `failure_severity: degraded-behaviour` and `diagnostic_displacement: delayed`. The same strictness
 `C8` demands on the Java side applies: a probed name is a candidate, never a proven marker.
 
+**Confirmed on hardware.** A Frida capture of the same APK on a OnePlus 6T recorded **43 distinct
+symbols that failed to resolve through `dlsym`**, in ART's short-then-mangled pairs
+(`..._init` then `..._init__`). None of them crashed the app. This is the class existing exactly as
+described, and it is why the candidate list is worth generating.
+
 ---
 
 ## 4. Provenance as repair routing *(proposed)*
@@ -113,7 +120,12 @@ queue beside `C10`.
 ## 6. Honest coverage accounting *(partly implemented)*
 
 - **78 of 138 libraries** yield no statically recoverable registration table. Emit an `O-BLIND`
-  finding per library so silence is recorded as blindness, not absence.
+  finding per library so silence is recorded as blindness, not absence. Running the app recovers
+  part of this — three of those libraries handed over 36 methods, `libmetasec_ml.so` among them —
+  because a library must pass its table to `RegisterNatives` to function.
+- **Code delivered after install is not optional to measure.** The same run found five libraries
+  registering 240 methods that are **not in the APK at all**, plus three hotfix `patch.odex`
+  objects. That is 15% of the observed native API surface, invisible to every static scan.
 - The reach walk is **AArch64 only**; the corpus carries an armv7 benchmark. Per-ABI `O-BLIND`
   until the arm32 PLT form is handled.
 - Two metrics for §19: **native resolution coverage** (share of undefined symbols with a decided

@@ -50,10 +50,12 @@ The core claim of this repo:
 | `harness/westlake_gap/` | Production static scanner: ordered runtime index, multidex/split APK inventory, member resolution, `C8`/`C9` detection, ELF/JNI evidence, gap registry, and report. `nativeprov.py` adds component provenance and per-method platform-surface reach (`native-surface`). |
 | `runtime/TRACE-EVIDENCE.md` | Native/reflection watchlists, structured event envelope, ART hook points, and evidence-promotion rules. |
 | `harness/` | `ttwalk.sh` (launch/drive/measure), `shotlit.py` (quantify a capture), and older focused dexlib2 investigation tools. |
+| `harness/jniprobe/` | Frida agent and scenario drivers that record `RegisterNatives`, `dlopen` and `dlsym` from a running app, plus the Frida-17 and Magisk obstacles the first run hit. |
 | `tests/` | Executable known-answer fixtures: `ColorMatrix.set`, a Conscrypt existence probe, an unbound vendor native, and an arm64 JNI library whose platform-coupled and pure methods are known in advance. |
 | `corpus/` | Reproducible top-ten selection plus exact download hashes. APK/XAPK binaries are deliberately ignored. |
 | `benchmark/2026-08-20/` | Completed ten-app benchmark report, deduplicated registry, and runtime lock. |
 | `benchmark/2026-08-21/` | ABI-aware redo against the current ARM64 runtime lock; the prior benchmark remains preserved. |
+| `benchmark/2026-08-23-toutiao/runtime-evidence/android-baseline/` | **Static reading versus running**, on a OnePlus 6T: 280 methods and five whole libraries that no APK scan can see, 43 failing `dlsym` lookups, 463 methods never exercised. |
 | `benchmark/2026-08-23-toutiao/native-analysis/` | Provenance and surface reach over 138 stripped arm64 libraries: 1417 recovered JNI methods, 47% touching no platform surface. |
 
 ---
