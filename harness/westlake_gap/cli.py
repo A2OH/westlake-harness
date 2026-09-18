@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 
 from .nativeprov import analyze_library, compare_runtime_capture
+from .platformapi import annotate, load_platform_index
 from .report import aggregate, markdown_report
 from .scanner import (
     build_runtime_index,
@@ -102,11 +103,44 @@ def parser() -> argparse.ArgumentParser:
     capture.add_argument("--capture", action="append", required=True, type=Path, help="capture JSONL; repeat")
     capture.add_argument("--surface", required=True, type=Path, help="native-surface.json for the same APK")
     capture.add_argument("--out", required=True, type=Path)
+
+    apis = commands.add_parser(
+        "annotate-api-levels",
+        help="tag absence findings with the API level that introduced them, and whether a reference device could reach them",
+    )
+    apis.add_argument("--scan", required=True, type=Path)
+    apis.add_argument(
+        "--platform-jar",
+        action="append",
+        required=True,
+        metavar="API:PATH",
+        help="android.jar for one API level, e.g. 28:/path/android-28/android.jar; repeat",
+    )
+    apis.add_argument("--reference-api", required=True, type=int, help="API level of a device the app is known to run on")
+    apis.add_argument("--out", required=True, type=Path)
     return root
 
 
 def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
+    if args.command == "annotate-api-levels":
+        indexes = {}
+        for spec in args.platform_jar:
+            level, _, path = spec.partition(":")
+            if not path:
+                raise SystemExit(f"--platform-jar expects API:PATH, got {spec!r}")
+            indexes[int(level)] = load_platform_index(Path(path))
+        scan = read_json(args.scan)
+        summary = annotate(scan.get("findings", []), indexes, args.reference_api)
+        scan["api_level_annotation"] = summary
+        write_json(args.out, scan)
+        verdicts = summary["verdicts"]
+        print(
+            f"annotated {summary['annotated']} absence findings against API {args.reference_api}: "
+            + ", ".join(f"{k}={v}" for k, v in sorted(verdicts.items()))
+            + f" -> {args.out}"
+        )
+        return 0
     if args.command == "native-capture-diff":
         rows = []
         for path in args.capture:

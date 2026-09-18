@@ -51,6 +51,7 @@ The core claim of this repo:
 | `harness/westlake_gap/` | Production static scanner: ordered runtime index, multidex/split APK inventory, member resolution, `C8`/`C9` detection, ELF/JNI evidence, gap registry, and report. `nativeprov.py` adds component provenance and per-method platform-surface reach (`native-surface`). |
 | `runtime/TRACE-EVIDENCE.md` | Native/reflection watchlists, structured event envelope, ART hook points, and evidence-promotion rules. |
 | `harness/` | `ttwalk.sh` (launch/drive/measure), `shotlit.py` (quantify a capture), and older focused dexlib2 investigation tools. |
+| `harness/westlake_gap/platformapi.py` | API-level classifier (`annotate-api-levels`): splits an absence list into what a reference device could actually reach, what postdates it, and what was never Android. Cut McDonald's 138 absences to 58. |
 | `harness/jniprobe/` | Frida agent and scenario drivers that record `RegisterNatives`, `dlopen` and `dlsym` from a running app, plus the Frida-17 and Magisk obstacles the first run hit. |
 | `tests/` | Executable known-answer fixtures: `ColorMatrix.set`, a Conscrypt existence probe, an unbound vendor native, and an arm64 JNI library whose platform-coupled and pure methods are known in advance. |
 | `corpus/` | Reproducible top-ten selection plus exact download hashes. APK/XAPK binaries are deliberately ignored. |
