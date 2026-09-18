@@ -111,3 +111,56 @@ recv` reads stdin, so inside a `while read` loop redirect it from `/dev/null`.
 runtime through `dlsym` or `eglGetProcAddress`, and nothing about whether a provided symbol
 *behaves* correctly — `AndroidBitmap_lockPixels` being present is not evidence that its stride and
 format handling match Android's.
+
+---
+
+# In-APK library loading on OpenHarmony — tested, and it fails
+
+**Date.** 2026-09-19, same board.
+
+McDonald's sets `extractNativeLibs="false"` and stores its `.so` entries uncompressed, so Android's
+linker maps them straight out of the APK via `…/base.apk!/lib/arm64-v8a/libfoo.so`. WebView loads the
+same way, in **both** apps. This is the gate flagged in `benchmark/2026-09-18-mcdonalds/REPORT.md`.
+
+## The test
+
+A payload library exporting `westlake_inapk_probe()`, a stored (uncompressed) zip containing it at
+`lib/arm64-v8a/`, and a probe binary calling `dlopen` — all built with the OH SDK's clang for
+`aarch64-linux-ohos` and run on the board.
+
+```
+control, extracted .so:
+  OK    ./libinapk_extracted.so  handle=0x6565…  symbol=found  value=4242
+
+in-APK form:
+  FAIL  ./fake.apk!/lib/arm64-v8a/libinapk.so
+        dlerror: Error loading shared library …: No error information
+  FAIL  /data/local/tmp/wltest/fake.apk!/lib/arm64-v8a/libinapk.so
+        dlerror: Error loading shared library …: No error information
+```
+
+The control proves the harness and the payload are sound. **OH's dynamic loader does not understand
+the `zip!/member` form** — musl treats the whole string as a filesystem path, which does not exist.
+Nothing in the deployed Westlake stack advertises handling it either.
+
+## Consequence
+
+On Android the chain is `System.loadLibrary` → `DexPathList.findLibrary` → a `…apk!/lib/<abi>/…`
+path → bionic's linker maps the member out of the zip. `libart.so` on the board still carries
+`nativeLibraryDirectories`, so the Java half of that chain is present; the linker half is not.
+
+- **McDonald's ten native libraries cannot load at all.** No lifecycle theory is needed to explain a
+  missing UI.
+- **WebView cannot load** in either app, since the provider APK is loaded the same way.
+- Toutiao is unaffected in its own libraries only because it ships them compressed and the installer
+  extracts them.
+
+## The cheap fix, consistent with "make it work first"
+
+Extract at deploy time rather than teaching a linker to map zip members: when installing an APK
+whose libraries are stored uncompressed, unpack them into the app's private lib directory and point
+`nativeLibraryDirectories` there. It costs page sharing and some disk, and it is a deploy-step
+change rather than a loader change.
+
+Mapping zip members properly in the loader is the correct long-term answer and is not needed to get
+either app running.
