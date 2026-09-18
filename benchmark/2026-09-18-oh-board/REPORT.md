@@ -164,3 +164,52 @@ change rather than a loader change.
 
 Mapping zip members properly in the loader is the correct long-term answer and is not needed to get
 either app running.
+
+---
+
+# McDonald's native libraries on the board: from zero to eight of ten
+
+**Date.** 2026-09-19. Two changes, each proven with the same `dlopen` probe against the real
+launch-time preload set (`libwebview_bionic_shim.so`, `libbionic_abi_shim.so`, `libandroid.so`)
+and library path.
+
+| Step | Libraries loading | What blocked the rest |
+|---|---|---|
+| before | **0 of 10** | not on disk — OH cannot map `apk!/lib/…` |
+| `prepare_app` stages splits and extracts stored libraries | 0 of 10 | 13 bionic-private symbols |
+| shim covers the 13 | **8 of 10** | one missing soname, one packer trap |
+
+**The thirteen** — none are Android APIs the app called; they are what bionic's headers compile
+ordinary C into, which musl names differently or provides only as macros:
+
+```
+__sF (6 libs)          __pthread_cleanup_push/_pop (2/1)   __system_property_foreach/_find_nth (2/2)
+isnan / isinf (1)      __get_h_errno (1)                   ASensor* ×4, ALooper_pollAll (libandroid)
+```
+
+Measuring them needed the *complete* preload set: musl's lazy resolution reports one missing
+symbol per library, so each fix reveals the next, and a bare `dlopen` without `libandroid.so` and
+`libbionic_abi_shim.so` in the process over-reports by the symbols those two already provide.
+
+**The two that remain are not symbol problems.**
+
+- `libpanorenderer.so` — needs the soname `libGLESv1_CM.so`. OH ships it as
+  `/vendor/lib64/chipsetsdk/libGLESv1_impl.so`; an alias closes it. VR pano viewer, not on the
+  login path.
+- `libakamaibmp.so` — relocates fully with the new shim, then **SIGILL inside its own `DT_INIT`**.
+  That entry saves all thirty registers and branches into a 0x79a88-byte section named `.pb`: a
+  packer stub that unpacks the real library before any app code runs, importing `mprotect`, `mmap`,
+  `getauxval`, `dl_iterate_phdr`, `sigaction`. It is detecting the host and refusing. Same class as
+  Toutiao's `libmetasec_ml.so`, and it will not be fixed with a symbol. Akamai Bot Manager **loads
+  at startup** on Android, so this decides whether McDonald's reaches its login screen regardless
+  of everything else.
+
+**Where the changes live.** Loader side: `manifest` PR #10 (`split-apk-native-staging`). Symbol
+side: `westlake` PR #8 (`bionic-shim-mcdonalds-residue`). Neither merged — they change what every
+launch stages and preloads, and that call belongs to the runtime owners.
+
+**Correction to the strategy document.** The welding list had four items; it needed five. The
+app's own prebuilt `.so` files are bionic-linked binaries that cannot be rebuilt, so their libc
+imports must be *translated* at a boundary no other cut removes. Shipping bionic instead would
+mean two libcs in one process — the `N-C3` case — because everything above the app is already
+musl-built and working. The shim is the right branch and the surface is small.
