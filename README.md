@@ -44,6 +44,7 @@ The core claim of this repo:
 | `analysis/API-GAP-METHODOLOGY.md` | The static gap-analysis method in condensed form: pipeline, taxonomy, limits, validation gate. |
 | `analysis/BIONIC-MUSL-PLAN.md` | The **native/libc** boundary taxonomy (`C0`–`C3`) that the Java-side classes extend. |
 | `analysis/PORTING-PLAYBOOK.md` | Four investigation tiers, and which to run first. |
+| `analysis/AOSP-PACKAGING-STRATEGY.md` | **Package AOSP, weld the bottom** — where to cut the native stack, nested SurfaceFlinger, binder findings, and the MVP plan against Toutiao and McDonald's. |
 | `analysis/NATIVE-GAP-PROCESS-AMENDMENT.md` | **Amendment closing the native half of the subtraction**: native import resolution, blast radius, `N-C8` probe-only absence, provenance-driven repair routing, `N-C9` hollow shims, coverage accounting. |
 | `analysis/NATIVE-PROVENANCE-AND-SURFACE.md` | **Native side of the same subtraction**: which upstream component a stripped `.so` contains, and which Android surfaces each registered JNI method reaches. |
 | `evidence/TOUTIAO-BRINGUP-HANDOFF.md` | The empirical base: a full app bring-up with fixes, **nine refuted hypotheses**, build hazards, and harness notes. |
@@ -56,6 +57,7 @@ The core claim of this repo:
 | `benchmark/2026-08-20/` | Completed ten-app benchmark report, deduplicated registry, and runtime lock. |
 | `benchmark/2026-08-21/` | ABI-aware redo against the current ARM64 runtime lock; the prior benchmark remains preserved. |
 | `benchmark/2026-08-23-toutiao/native-analysis/ANDROID11-RESOLUTION.md` | **99.7% of 3415 native imports decided** against stock Android 11, and the IFUNC parser defect that finding exposed. |
+| `benchmark/2026-09-18-mvp-target/` | The Android-specific platform contract of both MVP apps: 206 symbols, of which 48 are ours to implement. |
 | `benchmark/2026-08-23-toutiao/runtime-evidence/android-baseline/` | **Static reading versus running**, on a OnePlus 6T: 280 methods and five whole libraries that no APK scan can see, 43 failing `dlsym` lookups, 463 methods never exercised. |
 | `benchmark/2026-08-23-toutiao/native-analysis/` | Provenance and surface reach over 138 stripped arm64 libraries: 1417 recovered JNI methods, 47% touching no platform surface. |
 
