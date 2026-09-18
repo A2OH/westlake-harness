@@ -49,6 +49,51 @@ the nine startup providers. The launch-path question the scan was run to answer 
 from this output — that is amendment item 2 (blast radius) on the Java side, and it is the reason
 the device run below matters more than the scan.
 
+## 2b. Filtered by API level — 138 absences become 58
+
+The phone runs this app at **SDK 30**. Anything introduced after that cannot exist there, so the
+app already tolerates its absence. `westlake-apk-gap annotate-api-levels` applies that filter
+against the platform jars:
+
+| Verdict | Count | Meaning |
+|---|---|---|
+| **required** | **58** | declared at API ≤ 30 — the app can really reach it |
+| `newer-than-reference` | 23 | introduced after API 30; absent on the 6T too |
+| `absent-from-platform` | 48 | never an Android API |
+| `member-not-in-indexed-jars` | 9 | class exists, member newer than the newest jar supplied |
+
+The 48 that were never Android are `java.beans`, `javax.activation`, `javax.naming`,
+`javax.script`, `javax.security.sasl`, `java.awt.Image`, `java.lang.Module` — JavaSE classes reached
+by libraries with a desktop code path — plus ten `com.android.tools.lint.*` classes (a build-time
+API shipped inside a library by mistake) and the old `android.support.annotation` compile-time
+annotations. None of them can ever execute.
+
+The 23 newer ones are the twelve `android.adservices.*` Privacy Sandbox classes (API 34) and
+scattered API 31-34 members.
+
+**The 58 that remain concentrate almost entirely in one place:**
+
+| Area | Findings | Examples |
+|---|---|---|
+| **WiFi** | **38** | `WifiManager.getScanResults/getConnectionInfo/getConfiguredNetworks/getDhcpInfo/isWifiEnabled`, `WifiInfo.getBSSID/getSSID/getMacAddress/getRssi`, `ScanResult.BSSID/SSID/level/frequency`, `WifiConfiguration`, `WifiEnterpriseConfig`, `WifiP2pManager` |
+| networking | 13 | `NsdManager` + 3 listeners + `NsdServiceInfo`, `DhcpInfo`, `TrafficStats.getTotalRx/TxBytes`, `ConnectivityManager.getDefaultProxy` |
+| media / content | 5 | `MediaStore$Images$Media.getBitmap/insertImage/EXTERNAL_CONTENT_URI` |
+| bluetooth | 2 | `BluetoothAdapter.getBondedDevices`, `BluetoothDevice.getAddress` |
+
+On top of that, `WifiManager` and `WifiInfo` are the 4th and 6th largest **hollow** classes — 15 and
+10 methods present but stubbed. Part of the WiFi surface is not missing, it is answering with
+nothing, which is harder to notice and worse to debug.
+
+### Why WiFi is the risk, not the volume
+
+`libakamaibmp.so` (Akamai Bot Manager) is one of only two app libraries that load at startup, and
+Forter's fraud SDK owns two of the nine startup content providers. SSID, BSSID, scan results and MAC
+are textbook device fingerprinting inputs. Stubs do not crash these SDKs — they make the session
+look wrong to a backend, which is the same shape as Toutiao's `device_register` blocker: no crash,
+no missing symbol, just a service declining to proceed.
+
+Capture what these return on the 6T before implementing, so "plausible" has a reference.
+
 ## 3. Android baseline — it works, and barely touches native code
 
 The app reaches `com.mcdonalds.account.activity.LoginRegistrationActivity` with a real sign-in
