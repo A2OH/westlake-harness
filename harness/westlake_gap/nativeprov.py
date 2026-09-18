@@ -277,20 +277,34 @@ def _plt_map(disassembly: str, jump_slots: dict[int, str]) -> dict[int, str]:
 
 
 def _call_graph(disassembly: str, extra_entries: Iterable[int]) -> tuple[dict[int, set[int]], set[int]]:
-    edges: list[tuple[int, int]] = []
+    """Direct call graph from ``bl``, plus ``b`` tail calls into known function entries.
+
+    At -O2 a function whose last act is another call compiles to an unconditional ``b``, not
+    ``bl``. Ignoring those loses whole subtrees. A ``b`` is treated as a tail call only when
+    its target is itself a function entry (a PLT stub or something else calls it), which
+    leaves ordinary intra-function branches out of the graph.
+    """
+    call_edges: list[tuple[int, int]] = []
+    branch_edges: list[tuple[int, int]] = []
     targets: set[int] = set()
     for line in disassembly.splitlines():
-        call = re.match(r"^\s*([0-9a-f]+):\s+bl\s+0x([0-9a-f]+)", line)
-        if not call:
+        instruction = re.match(r"^\s*([0-9a-f]+):\s+(bl|b)\s+0x([0-9a-f]+)", line)
+        if not instruction:
             continue
-        source, destination = int(call.group(1), 16), int(call.group(2), 16)
-        edges.append((source, destination))
-        targets.add(destination)
+        source, destination = int(instruction.group(1), 16), int(instruction.group(3), 16)
+        if instruction.group(2) == "bl":
+            call_edges.append((source, destination))
+            targets.add(destination)
+        else:
+            branch_edges.append((source, destination))
     entries = sorted(targets | set(extra_entries))
+    entry_set = set(entries)
     graph: dict[int, set[int]] = {}
-    for source, destination in edges:
+    for source, destination in call_edges + [
+        edge for edge in branch_edges if edge[1] in entry_set
+    ]:
         index = bisect_right(entries, source) - 1
-        if index >= 0:
+        if index >= 0 and entries[index] != destination:
             graph.setdefault(entries[index], set()).add(destination)
     return graph, targets
 
@@ -301,13 +315,19 @@ def method_surface_reach(
     jump_slots: dict[int, str],
     objdump: str | None = None,
     node_budget: int = 50_000,
+    symbols_of_interest: Iterable[str] | None = None,
 ) -> dict[str, Any]:
     """Per-JNI-method reachable platform surfaces, as a lower bound.
 
     Direct ``bl`` edges only. Every result carries ``basis`` so no caller can mistake this
     for a complete call graph, and any method reaching ``dlopen``/``dlsym`` is flagged
     ``dynamic_resolution`` — its clean verdict is unproven, not proven.
+
+    ``symbols_of_interest`` attributes named imports — typically the ones no provider
+    resolves — to the methods that reach them, which is what turns a missing symbol into a
+    list of app-facing methods that break.
     """
+    wanted = set(symbols_of_interest or ())
     tool = find_objdump(objdump)
     if not tool:
         return {"supported": False, "reason": "no aarch64-capable llvm-objdump found", "methods": []}
@@ -340,19 +360,20 @@ def method_surface_reach(
             stack.extend(graph.get(address, ()))
         grouped = classify_symbols(imports)
         costs = {cost for name in grouped for _, _, cost in [next(s for s in _SURFACES if s[0] == name)]}
-        methods.append(
-            {
-                "name": entry["name"],
-                "signature": entry["signature"],
-                "function_vaddr": start,
-                "functions_reached": len(seen),
-                "boundary_platform_types": boundary_platform_types(entry["signature"]),
-                "surfaces": grouped,
-                "platform_coupled": "platform" in costs or bool(boundary_platform_types(entry["signature"])),
-                "dynamic_resolution": "dynamic-load" in grouped,
-                "truncated": truncated,
-            }
-        )
+        record = {
+            "name": entry["name"],
+            "signature": entry["signature"],
+            "function_vaddr": start,
+            "functions_reached": len(seen),
+            "boundary_platform_types": boundary_platform_types(entry["signature"]),
+            "surfaces": grouped,
+            "platform_coupled": "platform" in costs or bool(boundary_platform_types(entry["signature"])),
+            "dynamic_resolution": "dynamic-load" in grouped,
+            "truncated": truncated,
+        }
+        if wanted:
+            record["symbols_of_interest_reached"] = sorted(imports & wanted)
+        methods.append(record)
     return {
         "supported": True,
         "objdump": tool,
@@ -417,3 +438,109 @@ def analyze_library(path: Path, elf_record: dict[str, Any], objdump: str | None 
             "methods": [],
         }
     return result
+
+
+#: Symbol families that are part of the C++ runtime's own internal linkage rather than a
+#: platform contract. They resolve from whichever libc++ wins the namespace, so an absence
+#: here is an ``N-C3`` ordering question, not a missing shim.
+_CXX_INTERNAL_RE = re.compile(r"^(_ZTI|_ZTS|_ZTV|_ZNSt|_ZNKSt|_ZSt|__cxa_|__gxx_|_Unwind_)")
+
+
+def resolve_native_imports(
+    elf_records: Sequence[dict[str, Any]],
+    apk_exports: dict[str, Any],
+    bridge_exports: dict[str, Any],
+    system_exports: dict[str, Any],
+    system_index_available: bool,
+) -> list[dict[str, Any]]:
+    """Resolve every packaged ELF's undefined symbols against what the runtime provides.
+
+    This is the native half of the subtraction the DEX side already performs. One record per
+    symbol, aggregating the libraries that import it, so the canonical gap deduplicates across
+    a corpus on the symbol itself.
+
+    **Absence is only claimed when it can be.** With no deployed system libraries in the
+    runtime lock, every ``libc`` import would otherwise read as missing; in that state each
+    unresolved symbol is ``CU`` with a state naming the missing index, never ``N-C1``.
+    """
+    importers: dict[str, list[dict[str, Any]]] = {}
+    weak: set[str] = set()
+    for record in elf_records:
+        undefined = record.get("undefined_symbols") or ()
+        record_weak = set(record.get("undefined_weak_symbols") or ())
+        weak |= record_weak
+        for symbol in undefined:
+            importers.setdefault(symbol, []).append(
+                {
+                    "elf": record["name"],
+                    "elf_sha256": record.get("sha256"),
+                    "weak": symbol in record_weak,
+                }
+            )
+
+    results: list[dict[str, Any]] = []
+    for symbol, sources in sorted(importers.items()):
+        providers: list[dict[str, Any]] = []
+        scope = None
+        for label, table in (
+            ("PLATFORM_SYSTEM", system_exports),
+            ("PLATFORM_BRIDGE", bridge_exports),
+            ("APP_BUNDLED", apk_exports),
+        ):
+            if symbol in table:
+                providers.extend({"scope": label, **item} for item in table[symbol][:8])
+                scope = scope or label
+        strong_importers = [item for item in sources if not item["weak"]]
+        if providers:
+            state, classification = "provider-resolved", "C0"
+        elif not strong_importers:
+            state, classification = "weak-undefined-unresolved", "N-C5-candidate"
+        elif _CXX_INTERNAL_RE.match(symbol):
+            state, classification = "cxx-runtime-internal", "CU"
+        elif not system_index_available:
+            state, classification = "runtime-system-index-unavailable", "CU"
+        else:
+            state, classification = "no-provider", "N-C1-candidate"
+        results.append(
+            {
+                "symbol": symbol,
+                "state": state,
+                "classification": classification,
+                "provider_scope": scope,
+                "providers": providers[:8],
+                "importing_libraries": sources[:16],
+                "importing_library_count": len(sources),
+                "weak_only": not strong_importers,
+                "surface": (surface_of(symbol) or (None, None))[0],
+            }
+        )
+    return results
+
+
+def attribute_unresolved_imports(
+    library_path: Path,
+    elf_record: dict[str, Any],
+    symbols: Iterable[str],
+    objdump: str | None = None,
+) -> dict[str, list[str]]:
+    """Map unresolved symbols to the registered JNI methods that reach them.
+
+    Turns "this library is missing 12 symbols" into "these app-facing methods break". The
+    walk is the same direct-call lower bound as :func:`method_surface_reach`, so an empty
+    result means *not proven to reach*, never *proven not to reach*.
+    """
+    wanted = set(symbols)
+    entries = list(elf_record.get("jni_registration_entries") or ())
+    if not wanted or not entries or elf_record.get("machine") not in ARM64_MACHINES:
+        return {}
+    data = library_path.read_bytes()
+    reach = method_surface_reach(
+        library_path, entries, jump_slot_map(data), objdump=objdump, symbols_of_interest=wanted
+    )
+    if not reach.get("supported"):
+        return {}
+    attributed: dict[str, list[str]] = {}
+    for method in reach["methods"]:
+        for symbol in method.get("symbols_of_interest_reached", ()):
+            attributed.setdefault(symbol, []).append(method["name"])
+    return {symbol: sorted(set(names)) for symbol, names in sorted(attributed.items())}

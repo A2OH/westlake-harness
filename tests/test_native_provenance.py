@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 
 from westlake_gap.nativeprov import (
+    attribute_unresolved_imports,
     boundary_platform_types,
     classify_symbols,
     dynamic_symbol_candidates,
@@ -14,6 +15,7 @@ from westlake_gap.nativeprov import (
     identify_components,
     jump_slot_map,
     method_surface_reach,
+    resolve_native_imports,
     surface_of,
 )
 from westlake_gap.native import recover_jni_registration_entries
@@ -182,3 +184,120 @@ def _find_ndk_clang() -> str | None:
 
 if __name__ == "__main__":
     unittest.main()
+
+
+IMPORT_FIXTURE = """
+#include <jni.h>
+
+extern jint westlake_fixture_present(jint value);
+extern jint westlake_fixture_absent(jint value);
+
+__attribute__((noinline)) static jint calls_absent(JNIEnv *env, jclass cls, jint value) {
+    return westlake_fixture_absent(value);
+}
+
+__attribute__((noinline)) static jint calls_present(JNIEnv *env, jclass cls, jint value) {
+    return westlake_fixture_present(value);
+}
+
+static const JNINativeMethod kMethods[] = {
+    {"callsAbsent", "(I)I", (void *) calls_absent},
+    {"callsPresent", "(I)I", (void *) calls_present},
+};
+
+JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
+    JNIEnv *env = 0;
+    if ((*vm)->GetEnv(vm, (void **) &env, JNI_VERSION_1_6) != JNI_OK) {
+        return JNI_ERR;
+    }
+    jclass cls = (*env)->FindClass(env, "fixture/Imports");
+    if (cls) {
+        (*env)->RegisterNatives(env, cls, kMethods, 2);
+    }
+    return JNI_VERSION_1_6;
+}
+"""
+
+SYSTEM_FIXTURE = """
+int westlake_fixture_present(int value) { return value + 1; }
+"""
+
+
+class NativeImportResolutionFixture(unittest.TestCase):
+    """Known answer: one import the runtime provides, one it does not."""
+
+    def test_missing_import_becomes_one_finding_naming_its_reaching_method(self) -> None:
+        clang = _find_ndk_clang()
+        if not clang or not find_objdump():
+            self.skipTest("an aarch64 NDK clang and llvm-objdump are required")
+
+        with tempfile.TemporaryDirectory(prefix="westlake-native-import-") as temp:
+            root = Path(temp)
+            app = _build(clang, root, "libapp.so", IMPORT_FIXTURE)
+            system = _build(clang, root, "libwestlakefixture.so", SYSTEM_FIXTURE)
+            if not app or not system:
+                self.skipTest("fixture libraries did not build")
+
+            app_record = read_elf(path=app, abi="arm64-v8a")
+            system_record = read_elf(path=system, abi="arm64-v8a")
+            self.assertIn("westlake_fixture_absent", app_record["undefined_symbols"])
+            self.assertIn("westlake_fixture_present", system_record["exported_symbols"])
+
+            system_exports = {
+                symbol: [{"elf": system_record["name"], "symbol": symbol}]
+                for symbol in system_record["exported_symbols"]
+            }
+            resolved = {
+                item["symbol"]: item
+                for item in resolve_native_imports([app_record], {}, {}, system_exports, True)
+            }
+
+            self.assertEqual("C0", resolved["westlake_fixture_present"]["classification"])
+            self.assertEqual("PLATFORM_SYSTEM", resolved["westlake_fixture_present"]["provider_scope"])
+
+            missing = resolved["westlake_fixture_absent"]
+            self.assertEqual("N-C1-candidate", missing["classification"])
+            self.assertEqual("no-provider", missing["state"])
+            self.assertEqual(
+                ["N-C1-candidate"],
+                sorted({item["classification"] for item in resolved.values() if item["classification"] != "C0"}),
+            )
+
+            attributed = attribute_unresolved_imports(app, app_record, ["westlake_fixture_absent"])
+            self.assertEqual(["callsAbsent"], attributed["westlake_fixture_absent"])
+
+    def test_absence_is_not_claimed_without_a_system_index(self) -> None:
+        record = {
+            "name": "lib/arm64-v8a/libapp.so",
+            "sha256": "0" * 64,
+            "undefined_symbols": ["AndroidBitmap_lockPixels"],
+            "undefined_weak_symbols": [],
+        }
+        resolved = resolve_native_imports([record], {}, {}, {}, False)
+        self.assertEqual("CU", resolved[0]["classification"])
+        self.assertEqual("runtime-system-index-unavailable", resolved[0]["state"])
+
+    def test_weak_undefined_symbols_are_optional_not_missing(self) -> None:
+        record = {
+            "name": "lib/arm64-v8a/libapp.so",
+            "sha256": "0" * 64,
+            "undefined_symbols": ["__cxa_thread_atexit_impl"],
+            "undefined_weak_symbols": ["__cxa_thread_atexit_impl"],
+        }
+        resolved = resolve_native_imports([record], {}, {}, {}, True)
+        self.assertEqual("N-C5-candidate", resolved[0]["classification"])
+        self.assertTrue(resolved[0]["weak_only"])
+
+
+def _build(clang: str, root: Path, name: str, source_text: str) -> Path | None:
+    source = root / f"{name}.c"
+    source.write_text(source_text, encoding="utf-8")
+    target = root / name
+    build = subprocess.run(
+        [clang, "-O2", "-shared", "-fPIC", "-nostdlib", "-Wl,--no-undefined-version",
+         "-o", str(target), str(source)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return target if build.returncode == 0 and target.exists() else None

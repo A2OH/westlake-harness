@@ -32,6 +32,7 @@ from .native import (
     library_filename,
     recover_jni_registration_entries,
 )
+from .nativeprov import attribute_unresolved_imports, resolve_native_imports
 
 
 SCHEMA_VERSION = "westlake-apk-gap/v0.2"
@@ -287,6 +288,7 @@ def read_elf(
         needed = sorted(set(re.findall(r"\(NEEDED\).*\[([^]]+)\]", text)))
         exports: set[str] = set()
         undefined: set[str] = set()
+        undefined_weak: set[str] = set()
         for line in text.splitlines():
             parts = line.split()
             if len(parts) < 8 or not parts[0].rstrip(":").isdigit():
@@ -296,6 +298,9 @@ def read_elf(
                 continue
             if ndx == "UND":
                 undefined.add(name)
+                if parts[4] == "WEAK":
+                    # A weak undefined symbol is allowed to stay unresolved by design.
+                    undefined_weak.add(name)
             elif parts[4] in {"GLOBAL", "WEAK"}:
                 exports.add(name)
         raw = data if data is not None else path.read_bytes()
@@ -315,6 +320,7 @@ def read_elf(
             "needed": needed,
             "exported_symbols": sorted(exports),
             "undefined_symbols": sorted(undefined),
+            "undefined_weak_symbols": sorted(undefined_weak),
             "jni_exports": sorted(name for name in exports if name.startswith("Java_")),
             "has_jni_onload": "JNI_OnLoad" in exports,
             "jni_registration_entries": registration_entries,
@@ -340,6 +346,7 @@ def build_runtime_index(
     artifacts: Iterable[Path],
     bridge_libraries: Iterable[Path] = (),
     target_abi: str | None = None,
+    system_libraries: Iterable[Path] = (),
 ) -> dict[str, Any]:
     """Index the exact boot-classpath order. The first definition of a duplicate class wins."""
     quiet_androguard()
@@ -368,6 +375,7 @@ def build_runtime_index(
         artifact_records.append(record)
 
     elf_records = [read_elf(path=path.resolve(), label=path.name) for path in bridge_libraries]
+    system_records = [read_elf(path=path.resolve(), label=path.name) for path in system_libraries]
     inferred_abis = {record["abi"] for record in elf_records if record.get("abi")}
     if target_abi is None and len(inferred_abis) == 1:
         target_abi = next(iter(inferred_abis))
@@ -379,6 +387,7 @@ def build_runtime_index(
         {
             "boot_classpath": [record["sha256"] for record in artifact_records],
             "bridge_libraries": [record["sha256"] for record in elf_records],
+            "system_libraries": [record["sha256"] for record in system_records],
             "target_abi": target_abi,
         },
         sort_keys=True,
@@ -390,6 +399,7 @@ def build_runtime_index(
         "target_abi": target_abi,
         "boot_classpath": artifact_records,
         "bridge_libraries": elf_records,
+        "system_libraries": system_records,
         "class_count": len(classes),
         "duplicate_class_count": len(duplicates),
         "duplicates": dict(sorted(duplicates.items())),
@@ -772,6 +782,62 @@ def _append_elf_records(
             )
 
 
+def _read_archive_member(path: Path, record: dict[str, Any]) -> bytes | None:
+    """Read one packaged ELF back out of the APK, including from a nested split archive."""
+    entry = record.get("archive_entry")
+    if not entry:
+        return None
+    try:
+        with zipfile.ZipFile(path) as archive:
+            inner = record.get("split_apk")
+            if not inner:
+                return archive.read(entry)
+            with archive.open(inner) as stream:
+                with zipfile.ZipFile(io.BytesIO(stream.read())) as nested:
+                    return nested.read(entry)
+    except (KeyError, OSError, zipfile.BadZipFile):
+        return None
+
+
+def _attribute_native_imports(
+    path: Path, selected_elfs: list[dict[str, Any]], unresolved: list[dict[str, Any]]
+) -> str:
+    """Attach the JNI methods that reach each unresolved symbol, in place.
+
+    Attribution is a direct-call lower bound: a symbol with no reaching method is *not
+    proven to reach one*, never proven unreachable.
+    """
+    wanted: dict[str, set[str]] = defaultdict(set)
+    for item in unresolved:
+        for source in item["importing_libraries"]:
+            wanted[source["elf"]].add(item["symbol"])
+    records = {record["name"]: record for record in selected_elfs}
+    attributed: dict[str, dict[str, list[str]]] = {}
+    analyzed = 0
+    with tempfile.TemporaryDirectory(prefix="westlake-native-reach-") as temp:
+        for label, symbols in sorted(wanted.items()):
+            record = records.get(label)
+            if not record or not record.get("jni_registration_entries"):
+                continue
+            blob = _read_archive_member(path, record)
+            if blob is None:
+                continue
+            destination = Path(temp) / f"{record.get('sha256', label)[:24]}.so"
+            destination.write_bytes(blob)
+            attributed[label] = attribute_unresolved_imports(destination, record, symbols)
+            analyzed += 1
+    for item in unresolved:
+        reaching = [
+            {"elf": label, "method": method}
+            for label, by_symbol in sorted(attributed.items())
+            for method in by_symbol.get(item["symbol"], ())
+        ]
+        if reaching:
+            item["reaching_methods"] = reaching
+        item["attribution_basis"] = "direct-bl-lower-bound"
+    return f"analyzed {analyzed} of {len(wanted)} importing libraries"
+
+
 def _single_elf_abi(records: Iterable[dict[str, Any]]) -> str | None:
     abis = {record["abi"] for record in records if record.get("abi")}
     return next(iter(abis)) if len(abis) == 1 else None
@@ -824,6 +890,7 @@ def scan_apk(
     runtime: dict[str, Any],
     include_elf: bool = True,
     target_abi: str | None = None,
+    native_reach: bool = False,
 ) -> dict[str, Any]:
     inventory = inventory_dex(path)
     resolver = RuntimeResolver(runtime)
@@ -842,9 +909,15 @@ def scan_apk(
             for record in runtime.get("bridge_libraries", [])
             if not record.get("abi") or record.get("abi") == target_abi
         ]
+        selected_system_elfs = [
+            record
+            for record in runtime.get("system_libraries", [])
+            if not record.get("abi") or record.get("abi") == target_abi
+        ]
     else:
         selected_elfs = list(elf_records)
         selected_runtime_elfs = list(runtime.get("bridge_libraries", []))
+        selected_system_elfs = list(runtime.get("system_libraries", []))
     if available_abis and target_abi and target_abi not in available_abis:
         abi_status = "target-abi-unavailable"
     elif available_abis and target_abi and not selected_elfs:
@@ -1047,6 +1120,43 @@ def scan_apk(
                 )
             )
 
+    system_exports = _symbol_sources(selected_system_elfs)
+    system_index_available = bool(selected_system_elfs)
+    native_imports = resolve_native_imports(
+        selected_elfs, apk_exports, runtime_exports, system_exports, system_index_available
+    )
+    unresolved_imports = [item for item in native_imports if item["classification"] != "C0"]
+    reach_state = "not-requested"
+    if native_reach and unresolved_imports:
+        reach_state = _attribute_native_imports(path, selected_elfs, unresolved_imports)
+    for item in unresolved_imports:
+        findings.append(
+            finding(
+                identity["sha256"], runtime["runtime_lock_id"], "native_import", item["classification"],
+                "native-import", item["symbol"], None,
+                layer="N", state=item["state"], target_abi=target_abi,
+                provider_scope=item["provider_scope"],
+                surface=item["surface"],
+                importing_libraries=item["importing_libraries"],
+                importing_library_count=item["importing_library_count"],
+                reaching_methods=item.get("reaching_methods", []),
+                reaching_method_count=len(item.get("reaching_methods", [])),
+                attribution_basis=item.get("attribution_basis"),
+            )
+        )
+    if not system_index_available and any(
+        record.get("undefined_symbols") for record in selected_elfs
+    ):
+        findings.append(
+            finding(
+                identity["sha256"], runtime["runtime_lock_id"], "native_import_coverage", "O-BLIND",
+                "native-import", "runtime-system-library-index", None,
+                layer="O", state="runtime-system-index-unavailable", target_abi=target_abi,
+                fault_origin="observation-system",
+                unresolved_symbol_count=len(unresolved_imports),
+            )
+        )
+
     findings.sort(key=lambda x: (x["kind"], x["dependency"]["owner"], x["dependency"].get("name") or "", x["dependency"].get("signature") or ""))
     result = {
         "schema_version": SCHEMA_VERSION,
@@ -1063,6 +1173,8 @@ def scan_apk(
             "load_library_calls": inventory.load_libraries,
             "declared_native_methods": native_findings,
             "elfs": elf_records,
+            "native_imports": native_imports,
+            "native_import_attribution": reach_state,
             "native_resolution": {
                 "target_abi": target_abi,
                 "abi_status": abi_status,
