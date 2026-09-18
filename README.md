@@ -58,6 +58,7 @@ The core claim of this repo:
 | `benchmark/2026-08-20/` | Completed ten-app benchmark report, deduplicated registry, and runtime lock. |
 | `benchmark/2026-08-21/` | ABI-aware redo against the current ARM64 runtime lock; the prior benchmark remains preserved. |
 | `benchmark/2026-08-23-toutiao/native-analysis/ANDROID11-RESOLUTION.md` | **99.7% of 3415 native imports decided** against stock Android 11, and the IFUNC parser defect that finding exposed. |
+| `benchmark/2026-09-18-oh-board/` | **First resolution against the deployed OpenHarmony runtime**: 90% of both apps' native imports resolve; the real gap is 58 symbols in five clusters, led by `__sF` at 40 importing libraries. |
 | `benchmark/2026-09-18-mcdonalds/` | Cheap validation of the second MVP app: in-APK library loading is required (WebView needs it too), the gap list, and a working Android baseline that touches only six native methods. |
 | `benchmark/2026-09-18-mvp-target/` | The Android-specific platform contract of both MVP apps: 206 symbols, of which 48 are ours to implement. |
 | `benchmark/2026-08-23-toutiao/runtime-evidence/android-baseline/` | **Static reading versus running**, on a OnePlus 6T: 280 methods and five whole libraries that no APK scan can see, 43 failing `dlsym` lookups, 463 methods never exercised. |

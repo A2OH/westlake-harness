@@ -1,0 +1,1568 @@
+{
+ "board": {
+  "os": "OpenHarmony 6.1.0.31",
+  "api": 23,
+  "abi": "arm64-v8a",
+  "indexed_libraries": 76,
+  "exported_symbols": 896414
+ },
+ "apps": {
+  "toutiao": {
+   "symbols": 3415,
+   "resolved": 3077,
+   "missing": [
+    {
+     "symbol": "AAssetManager_fromJava",
+     "importers": 3,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "AAssetManager_open",
+     "importers": 3,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "AAsset_close",
+     "importers": 3,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "AAsset_getBuffer",
+     "importers": 1,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "AAsset_getLength",
+     "importers": 3,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "AAsset_read",
+     "importers": 2,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "ASensorEventQueue_disableSensor",
+     "importers": 1,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "ASensorEventQueue_enableSensor",
+     "importers": 1,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "ASensorEventQueue_getEvents",
+     "importers": 1,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "ASensorManager_createEventQueue",
+     "importers": 1,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "ASensorManager_destroyEventQueue",
+     "importers": 1,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "ASensorManager_getDefaultSensor",
+     "importers": 1,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "ASensorManager_getInstance",
+     "importers": 1,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "SL_IID_ANDROIDCONFIGURATION",
+     "importers": 2,
+     "surface": "audio"
+    },
+    {
+     "symbol": "SL_IID_ANDROIDSIMPLEBUFFERQUEUE",
+     "importers": 2,
+     "surface": "audio"
+    },
+    {
+     "symbol": "_Z11Init_F0InstRP14F0DetectionObjiff",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_Z14Destroy_F0InstRP14F0DetectionObj",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_Z14Process_F0InstRP14F0DetectionObjPKsmRNSt6__ndk16vectorINS4_4pairIffEENS4_9allocatorIS7_EEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_Z14napi_attach_v8P10napi_env__N2v85LocalINS1_7ContextEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_Z14napi_detach_v8P10napi_env__",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_Z15Init_VolumeInstRP18VolumeDetectionObji",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_Z18Destroy_VolumeInstRP18VolumeDetectionObj",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_Z18Process_VolumeInstRP18VolumeDetectionObjPKsmRNSt6__ndk16vectorINS4_4pairIffEENS4_9allocatorIS7_EEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v810CpuProfile6DeleteEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v811ArrayBuffer15GetBackingStoreEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v811ArrayBuffer15NewBackingStoreEPvmPFvS1_mS1_ES1_",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v811ArrayBuffer3NewEPNS_7IsolateENSt6__ndk110shared_ptrINS_12BackingStoreEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v811ArrayBuffer3NewEPNS_7IsolateEm",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v811ArrayBuffer9Allocator19NewDefaultAllocatorEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v811CpuProfiler13StopProfilingENS_5LocalINS_6StringEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v811CpuProfiler14StartProfilingENS_5LocalINS_6StringEEEb",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v811CpuProfiler19SetSamplingIntervalEi",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v811CpuProfiler3NewEPNS_7IsolateENS_22CpuProfilingNamingModeENS_23CpuProfilingLoggingModeE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v811CpuProfiler7DisposeEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v811HandleScope12CreateHandleEPNS_8internal7IsolateEm",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v811HandleScopeC1EPNS_7IsolateE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v811HandleScopeD1Ev",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v811HandleScopeD2Ev",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v812BackingStore12EmptyDeleterEPvmS1_",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v812BackingStoreD1Ev",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v812api_internal12ToLocalEmptyEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v812api_internal13DisposeGlobalEPm",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v812api_internal17FromJustIsNothingEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v812api_internal18GlobalizeReferenceEPNS_8internal7IsolateEPm",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v812api_internal8MakeWeakEPmPvPFvRKNS_16WeakCallbackInfoIvEEENS_16WeakCallbackTypeE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v812api_internal9ClearWeakEPm",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v814ObjectTemplate10SetHandlerERKNS_33NamedPropertyHandlerConfigurationE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v814ObjectTemplate11NewInstanceENS_5LocalINS_7ContextEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v814ObjectTemplate21SetInternalFieldCountEi",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v814ObjectTemplate24SetCallAsFunctionHandlerEPFvRKNS_20FunctionCallbackInfoINS_5ValueEEEENS_5LocalIS2_EE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v814ObjectTemplate3NewEPNS_7IsolateENS_5LocalINS_16FunctionTemplateEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v814ScriptCompiler10CachedDataC1EPKhiNS1_12BufferPolicyE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v814ScriptCompiler10CachedDataD1Ev",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v814ScriptCompiler15CreateCodeCacheENS_5LocalINS_13UnboundScriptEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v814ScriptCompiler20CompileUnboundScriptEPNS_7IsolateEPNS0_6SourceENS0_14CompileOptionsENS0_13NoCacheReasonE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v814ScriptCompiler20ConsumeCodeCacheTaskD1Ev",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v814ScriptCompiler7CompileENS_5LocalINS_7ContextEEEPNS0_6SourceENS0_14CompileOptionsENS0_13NoCacheReasonE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v820EscapableHandleScope6EscapeEPm",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v820EscapableHandleScopeC1EPNS_7IsolateE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v82V810InitializeEi",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v82V813InitializeICUEPKc",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v82V818InitializePlatformEPNS_8PlatformE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v82V818SetFlagsFromStringEPKcm",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v85Array3NewEPNS_7IsolateEi",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v85Proxy9GetTargetEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v86Number3NewEPNS_7IsolateEd",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v86Object10HasPrivateENS_5LocalINS_7ContextEEENS1_INS_7PrivateEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v86Object10SetPrivateENS_5LocalINS_7ContextEEENS1_INS_7PrivateEEENS1_INS_5ValueEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v86Object12GetPrototypeEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v86Object12SetPrototypeENS_5LocalINS_7ContextEEENS1_INS_5ValueEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v86Object14CallAsFunctionENS_5LocalINS_7ContextEEENS1_INS_5ValueEEEiPS5_",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v86Object16GetPropertyNamesENS_5LocalINS_7ContextEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v86Object17CallAsConstructorENS_5LocalINS_7ContextEEEiPNS1_INS_5ValueEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v86Object18InternalFieldCountEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v86Object32SetAlignedPointerInInternalFieldEiPv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v86Object38SlowGetAlignedPointerFromInternalFieldEi",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v86Object3GetENS_5LocalINS_7ContextEEENS1_INS_5ValueEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v86Object3GetENS_5LocalINS_7ContextEEEj",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v86Object3HasENS_5LocalINS_7ContextEEENS1_INS_5ValueEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v86Object3NewEPNS_7IsolateE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v86Object3SetENS_5LocalINS_7ContextEEENS1_INS_5ValueEEES5_",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v86Object3SetENS_5LocalINS_7ContextEEEjNS1_INS_5ValueEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v86Script3RunENS_5LocalINS_7ContextEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v86Script7CompileENS_5LocalINS_7ContextEEENS1_INS_6StringEEEPNS_12ScriptOriginE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v86String11NewFromUtf8EPNS_7IsolateEPKcNS_13NewStringTypeEi",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v86String9Utf8ValueC1EPNS_7IsolateENS_5LocalINS_5ValueEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v86String9Utf8ValueD1Ev",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v87Context10GetIsolateEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v87Context3NewEPNS_7IsolateEPNS_22ExtensionConfigurationENS_10MaybeLocalINS_14ObjectTemplateEEENS5_INS_5ValueEEENS_33DeserializeInternalFieldsCallbackEPNS_14MicrotaskQueueE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v87Context4ExitEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v87Context5EnterEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v87Context6GlobalEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v87Isolate12CreateParamsC1EPNS_8PlatformE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v87Isolate12CreateParamsD1Ev",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v87Isolate14ThrowExceptionENS_5LocalINS_5ValueEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v87Isolate17GetCurrentContextEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v87Isolate17UpdateMaxHeapSizeEm",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v87Isolate21LowMemoryNotificationEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v87Isolate3NewERKNS0_12CreateParamsE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v87Isolate41SetCaptureStackTraceForUncaughtExceptionsEbiNS_10StackTrace17StackTraceOptionsE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v87Isolate4ExitEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v87Isolate5EnterEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v87Isolate7DisposeEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v87Private3NewEPNS_7IsolateENS_5LocalINS_6StringEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v88TryCatchC1EPNS_7IsolateE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v88TryCatchD1Ev",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v88platform18NewDefaultPlatformEiNS0_15IdleTaskSupportENS0_21InProcessStackDumpingENSt6__ndk110unique_ptrINS_17TracingControllerENS3_14default_deleteIS5_EEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN2v89Exception5ErrorENS_5LocalINS_6StringEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN3art10LockedFile4OpenEPKcibPNSt3__112basic_stringIcNS3_11char_traitsIcEENS3_9allocatorIcEEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN3art14ArenaAllocator17AllocFromNewArenaEj",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN3art14ArenaAllocator19AllocWithMemoryToolEjNS_14ArenaAllocKindE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN3art22ProfileCompilationInfo11DexFileData16SetMethodHotnessEjNS0_13MethodHotness4FlagE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN3art22ProfileCompilationInfo14FindOrAddDexPcEPNS_7SafeMapItNS0_9DexPcDataENSt3__14lessItEENS_21ArenaAllocatorAdapterINS3_4pairIKtS2_EEEEEEj",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN3art22ProfileCompilationInfo19GetOrAddDexFileDataERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEEjj",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN3art22ProfileCompilationInfo24ProfileFilterFnAcceptAllERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEEj",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN3art22ProfileCompilationInfo4LoadEibRKNSt3__18functionIFbRKNS1_12basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEEjEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN3art22ProfileCompilationInfo9DexPcData8AddClassEtRKNS_3dex9TypeIndexE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN3art24ArenaAllocatorMemoryTool18DoMakeInaccessibleEPvj",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN3art3dexlsERNSt3__113basic_ostreamIcNS1_11char_traitsIcEEEERKNS0_9TypeIndexE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i10js_args_vaE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i10js_booleanE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i10js_catcherE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i10js_get_argE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i10js_new_arrE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i10js_set_subE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i10js_to_boolE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i11js_ctx_exitE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i11js_eval_utfE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i11js_functionE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i11js_isObjectE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i11js_isStringE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i12js_ctx_enterE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i12js_dup_valueE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i12js_get_fieldE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i12js_get_tokenE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i12js_is_caughtE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i12js_set_fieldE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i12js_set_tokenE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i12js_throw_newE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i12js_to_doubleE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i13js_create_ctxE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i13js_ctx_globalE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i13js_ctx_keeperE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i13js_free_valueE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i13js_global_getE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i13js_isFunctionE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i13js_new_objectE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i13js_string_utfE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i14js_destroy_ctxE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i15js_global_clearE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i15js_global_resetE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i15js_isTypedArrayE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i15js_release_utf8E",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i16js_get_exceptionE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i16js_isArrayBufferE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i16js_release_scopeE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i16js_release_utf16E",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i17js_ctx_keeper_getE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i17js_finalizer_wrapE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i17js_new_typedarrayE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i18js_global_is_emptyE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i18js_new_arraybufferE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i18js_release_catcherE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i18js_typedarray_typeE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i19js_alloc_typedarrayE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i19js_arraybuffer_dataE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i20js_typedarray_bufferE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i21js_release_ctx_keeperE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i24js_typedarray_bytelengthE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i24js_typedarray_byteoffsetE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i25js_arraybuffer_bytelengthE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i5js_gcE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i7js_callE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i7js_evalE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i7js_nullE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i7js_utf8E",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i8js_scopeE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i8js_throwE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i8js_utf16E",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i9js_numberE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN4lynx1i9js_returnE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN6mammon10EqualizerXC1Eii",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN6mammon15AecMicSelectionC1Eii",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN6mammon16NoiseSuppressionC1Eii",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN6mammon3BusC1ERKNSt6__ndk112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEEPPfii",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN6mammon3BusC1ERKNSt6__ndk112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEEPfii",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN6mammon3BusC1Ev",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN6mammon3BusD1Ev",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN6mammon3BusaSERKS0_",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN6mammon5Echo25resetEiffff",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN6mammon5Echo27processEfPf",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN6mammon5Echo2C1Eiffff",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN6mammon5Echo2D1Ev",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN6mammon6Reverb10setDryGainEf",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN6mammon6Reverb10setWetGainEf",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN6mammon6Reverb11setRoomSizeEf",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN6mammon6Reverb14setStereoDepthEf",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN6mammon6Reverb6setDryEf",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN6mammon6Reverb6setWetEf",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN6mammon6Reverb7processEPfS1_i",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN6mammon6Reverb7setDampEf",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN6mammon6ReverbC1Eiifffffffbb",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN6mammon6ReverbD1Ev",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZN7android4base13StringAppendVEPNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEEPKcSt9__va_list",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v810CpuProfile10GetEndTimeEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v810CpuProfile12GetStartTimeEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v810CpuProfile14GetTopDownRootEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v810CpuProfile15GetSamplesCountEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v810CpuProfile18GetSampleTimestampEi",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v810CpuProfile9GetSampleEi",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v811ArrayBuffer10ByteLengthEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v812BackingStore4DataEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v812ScriptOrigin24VerifyHostDefinedOptionsEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v814CpuProfileNode11GetScriptIdEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v814CpuProfileNode13GetLineNumberEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v814CpuProfileNode15GetColumnNumberEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v814CpuProfileNode16GetChildrenCountEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v814CpuProfileNode18GetFunctionNameStrEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v814CpuProfileNode24GetScriptResourceNameStrEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v814CpuProfileNode8GetChildEi",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v814CpuProfileNode9GetNodeIdEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v85Array6LengthEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v85Value10IsFunctionEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v85Value11NumberValueENS_5LocalINS_7ContextEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v85Value11Uint32ValueENS_5LocalINS_7ContextEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v85Value12BooleanValueEPNS_7IsolateE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v85Value12StrictEqualsENS_5LocalIS0_EE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v85Value13IsArrayBufferEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v85Value14IsStringObjectEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v85Value6EqualsENS_5LocalINS_7ContextEEENS1_IS0_EE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v85Value7IsArrayEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v85Value7IsProxyEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v85Value8IsNumberEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v85Value8IsObjectEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v85Value8IsSymbolEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v85Value8IsUint32Ev",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v85Value8ToObjectENS_5LocalINS_7ContextEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v85Value8ToStringENS_5LocalINS_7ContextEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v85Value9IsBooleanEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v88TryCatch9ExceptionEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK2v88TryCatch9HasCaughtEv",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK3art16ArtDexFileLoader4OpenEPKcRKNSt3__112basic_stringIcNS3_11char_traitsIcEENS3_9allocatorIcEEEEbbPS9_PNS3_6vectorINS3_10unique_ptrIKNS_7DexFileENS3_14default_deleteISG_EEEENS7_ISJ_EEEE",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZNK3art7DexFile10FindTypeIdEPKc",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZTv0_n12_NSt3__113basic_istreamIcNS_11char_traitsIcEEED0Ev",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_ZTv0_n12_NSt3__113basic_istreamIcNS_11char_traitsIcEEED1Ev",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_Znaj",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "_Znwj",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "__FD_CLR_chk",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "__FD_ISSET_chk",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "__FD_SET_chk",
+     "importers": 2,
+     "surface": null
+    },
+    {
+     "symbol": "__aeabi_memclr",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "__aeabi_memclr4",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "__aeabi_memcpy",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "__aeabi_memmove",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "__aeabi_memset",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "__cmsg_nxthdr",
+     "importers": 2,
+     "surface": null
+    },
+    {
+     "symbol": "__libc_init",
+     "importers": 3,
+     "surface": null
+    },
+    {
+     "symbol": "__openat_2",
+     "importers": 1,
+     "surface": "file"
+    },
+    {
+     "symbol": "__register_atfork",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "__sF",
+     "importers": 40,
+     "surface": null
+    },
+    {
+     "symbol": "__system_property_find",
+     "importers": 1,
+     "surface": "sysprop"
+    },
+    {
+     "symbol": "__system_property_read",
+     "importers": 1,
+     "surface": "sysprop"
+    },
+    {
+     "symbol": "_ctype_",
+     "importers": 2,
+     "surface": null
+    },
+    {
+     "symbol": "audio_fading_create",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "audio_fading_curve_exp",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "audio_fading_curve_linear",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "audio_fading_curve_log",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "audio_fading_destroy",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "audio_fading_process_interleaving",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "audio_fading_seek",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "audio_fading_set_content_duration",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "audio_fading_set_fadein_curve",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "audio_fading_set_fadein_duration",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "audio_fading_set_fadeout_curve",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "audio_fading_set_fadeout_duration",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "xp_get_current_backtrace",
+     "importers": 2,
+     "surface": null
+    },
+    {
+     "symbol": "xp_init_basic_env",
+     "importers": 2,
+     "surface": null
+    },
+    {
+     "symbol": "xp_pretty_method",
+     "importers": 2,
+     "surface": null
+    }
+   ]
+  },
+  "mcdonalds": {
+   "symbols": 592,
+   "resolved": 532,
+   "missing": [
+    {
+     "symbol": "AAssetManager_fromJava",
+     "importers": 2,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "AAssetManager_open",
+     "importers": 2,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "AAsset_close",
+     "importers": 2,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "AAsset_getBuffer",
+     "importers": 2,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "AAsset_getLength",
+     "importers": 2,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "ALooper_pollAll",
+     "importers": 1,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "ASensorEventQueue_disableSensor",
+     "importers": 1,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "ASensorEventQueue_enableSensor",
+     "importers": 1,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "ASensorEventQueue_getEvents",
+     "importers": 1,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "ASensorEventQueue_setEventRate",
+     "importers": 1,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "ASensorManager_createEventQueue",
+     "importers": 1,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "ASensorManager_destroyEventQueue",
+     "importers": 1,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "ASensorManager_getDefaultSensor",
+     "importers": 1,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "ASensorManager_getInstance",
+     "importers": 1,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "ASensorManager_getSensorList",
+     "importers": 1,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "ASensor_getMinDelay",
+     "importers": 1,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "ASensor_getName",
+     "importers": 1,
+     "surface": "libandroid"
+    },
+    {
+     "symbol": "__FD_SET_chk",
+     "importers": 2,
+     "surface": null
+    },
+    {
+     "symbol": "__cmsg_nxthdr",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "__get_h_errno",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "__pthread_cleanup_pop",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "__pthread_cleanup_push",
+     "importers": 2,
+     "surface": null
+    },
+    {
+     "symbol": "__register_atfork",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "__sF",
+     "importers": 6,
+     "surface": null
+    },
+    {
+     "symbol": "__system_property_find",
+     "importers": 1,
+     "surface": "sysprop"
+    },
+    {
+     "symbol": "__system_property_find_nth",
+     "importers": 2,
+     "surface": "sysprop"
+    },
+    {
+     "symbol": "__system_property_foreach",
+     "importers": 2,
+     "surface": "sysprop"
+    },
+    {
+     "symbol": "__system_property_read",
+     "importers": 3,
+     "surface": "sysprop"
+    },
+    {
+     "symbol": "_ctype_",
+     "importers": 2,
+     "surface": null
+    },
+    {
+     "symbol": "isinf",
+     "importers": 1,
+     "surface": null
+    },
+    {
+     "symbol": "isnan",
+     "importers": 1,
+     "surface": null
+    }
+   ]
+  }
+ }
+}
