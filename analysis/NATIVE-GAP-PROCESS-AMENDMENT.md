@@ -49,6 +49,20 @@ each one is `CU`, and the scan emits an `O-BLIND` coverage finding naming the mi
 `libandroid`, `libjnigraphics`, `libEGL` and friends. **Until an operator supplies those, this
 detector is honest and nearly silent — which is the correct failure mode.**
 
+**Measured once the index exists.** Seventeen libraries pulled from a stock Android 11 device
+decided **3,405 of 3,415 undefined symbols (99.7%)**: 3,133 resolved — 913 by the platform, 2,220
+by the app's own libraries — 259 with no provider, 13 weak-optional, 10 C++ runtime internals. The
+259 are not platform gaps: 167 of them are imported by libraries naming one of four sonames that
+neither the APK nor Android supplies, i.e. code delivered after install. See
+`benchmark/2026-08-23-toutiao/native-analysis/ANDROID11-RESOLUTION.md`.
+
+That exercise also exposed a defect nothing else could have: `read_elf` parsed `readelf -Ws` by
+column, and an IFUNC prints its type as `<OS specific>: 10` — three tokens where every other symbol
+has one. Every IFUNC export was dropped, which on Android arm64 is the entire optimized libc string
+and memory family, so the first run reported `strlen` as missing for 103 libraries. Symbol reading
+now uses pyelftools against `.dynsym`. **A detector that had never been pointed at a real platform
+index was wrong in a way no amount of review would have caught.**
+
 ---
 
 ## 2. Blast radius instead of symbol counts *(implemented for the native half)*

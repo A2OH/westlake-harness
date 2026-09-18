@@ -22,3 +22,7 @@ benchmark/*/runtime-evidence*.json
 *.jar.*
 benchmark/*/apks-host-runtime/
 benchmark/*/host-runtime-index.json
+
+# Reference system libraries pulled from a device are vendor binaries, not ours.
+android11-syslibs/
+*-syslibs/
