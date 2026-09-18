@@ -286,24 +286,10 @@ def read_elf(
         soname = _match_value(text, r"\(SONAME\).*\[([^]]+)\]")
         build_id = _match_value(text, r"Build ID:\s*([0-9a-fA-F]+)")
         needed = sorted(set(re.findall(r"\(NEEDED\).*\[([^]]+)\]", text)))
-        exports: set[str] = set()
-        undefined: set[str] = set()
-        undefined_weak: set[str] = set()
-        for line in text.splitlines():
-            parts = line.split()
-            if len(parts) < 8 or not parts[0].rstrip(":").isdigit():
-                continue
-            ndx, name = parts[6], parts[7].split("@", 1)[0]
-            if not name:
-                continue
-            if ndx == "UND":
-                undefined.add(name)
-                if parts[4] == "WEAK":
-                    # A weak undefined symbol is allowed to stay unresolved by design.
-                    undefined_weak.add(name)
-            elif parts[4] in {"GLOBAL", "WEAK"}:
-                exports.add(name)
         raw = data if data is not None else path.read_bytes()
+        exports, undefined, undefined_weak = _dynamic_symbols(raw)
+        if exports is None:
+            exports, undefined, undefined_weak = _dynamic_symbols_from_text(text)
         registration_entries, registration_error = recover_jni_registration_entries(raw)
         machine_abi = abi_from_machine(machine)
         record = {
@@ -335,6 +321,67 @@ def read_elf(
                 os.unlink(temp_name)
             except FileNotFoundError:
                 pass
+
+
+def _dynamic_symbols(data: bytes) -> tuple[set[str] | None, set[str], set[str]]:
+    """Read .dynsym directly.
+
+    readelf's text output is not column-stable: an IFUNC prints its type as
+    ``<OS specific>: 10``, which is three whitespace-separated tokens where every other
+    symbol has one, shifting the bind and name columns. On Android arm64 the optimized libc
+    string and memory routines are all IFUNCs, so a column parser silently drops `strlen`,
+    `strcmp`, `memcpy` and friends from a library's exports — and then reports every caller
+    of them as a missing symbol.
+    """
+    exports: set[str] = set()
+    undefined: set[str] = set()
+    undefined_weak: set[str] = set()
+    try:
+        from elftools.elf.elffile import ELFFile
+        from elftools.elf.sections import SymbolTableSection
+
+        elf = ELFFile(io.BytesIO(data))
+        section = elf.get_section_by_name(".dynsym")
+        if not isinstance(section, SymbolTableSection):
+            return None, undefined, undefined_weak
+        for symbol in section.iter_symbols():
+            name = (symbol.name or "").split("@", 1)[0]
+            if not name:
+                continue
+            bind = symbol["st_info"]["bind"]
+            if symbol["st_shndx"] == "SHN_UNDEF":
+                undefined.add(name)
+                if bind == "STB_WEAK":
+                    # A weak undefined symbol is allowed to stay unresolved by design.
+                    undefined_weak.add(name)
+            elif bind in {"STB_GLOBAL", "STB_WEAK"}:
+                exports.add(name)
+        return exports, undefined, undefined_weak
+    except Exception:
+        return None, undefined, undefined_weak
+
+
+def _dynamic_symbols_from_text(text: str) -> tuple[set[str], set[str], set[str]]:
+    """Fallback column parse of ``readelf -Ws`` for inputs pyelftools cannot open."""
+    exports: set[str] = set()
+    undefined: set[str] = set()
+    undefined_weak: set[str] = set()
+    for line in text.splitlines():
+        parts = line.split()
+        if len(parts) < 8 or not parts[0].rstrip(":").isdigit():
+            continue
+        if parts[3].startswith("<OS") and len(parts) >= 10:
+            parts = [*parts[:3], "IFUNC", *parts[6:]]
+        ndx, name = parts[6], parts[7].split("@", 1)[0]
+        if not name:
+            continue
+        if ndx == "UND":
+            undefined.add(name)
+            if parts[4] == "WEAK":
+                undefined_weak.add(name)
+        elif parts[4] in {"GLOBAL", "WEAK"}:
+            exports.add(name)
+    return exports, undefined, undefined_weak
 
 
 def _match_value(text: str, pattern: str) -> str | None:

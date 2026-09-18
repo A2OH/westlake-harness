@@ -21,7 +21,7 @@ from westlake_gap.nativeprov import (
     surface_of,
 )
 from westlake_gap.native import recover_jni_registration_entries
-from westlake_gap.scanner import read_elf
+from westlake_gap.scanner import _dynamic_symbols_from_text, read_elf
 
 
 class BoundaryTypingTest(unittest.TestCase):
@@ -371,3 +371,36 @@ class RuntimeCaptureComparisonTest(unittest.TestCase):
         self.assertEqual(463, diff["static_only_methods"])
         self.assertEqual(5, len(diff["libraries_absent_from_apk"]))
         self.assertEqual(3, len(diff["libraries_opaque_to_static"]))
+
+
+class IfuncSymbolParsingTest(unittest.TestCase):
+    """readelf prints an IFUNC's type as three tokens, which shifts every later column.
+
+    On Android arm64 the optimized libc string and memory routines are all IFUNCs, so a
+    column parser drops `strlen`, `strcmp` and `memcpy` from libc's exports and then reports
+    every caller of them as a missing symbol.
+    """
+
+    READELF = """
+Symbol table '.dynsym' contains 4 entries:
+   Num:    Value          Size Type    Bind   Vis      Ndx Name
+     0: 0000000000000000     0 NOTYPE  LOCAL  DEFAULT  UND
+     1: 00000000000b3578    12 <OS specific>: 10 GLOBAL DEFAULT   14 strlen@@LIBC
+     2: 00000000000b4000    24 FUNC    GLOBAL DEFAULT   14 malloc@@LIBC
+     3: 0000000000000000     0 FUNC    WEAK   DEFAULT  UND __cxa_thread_atexit_impl
+"""
+
+    def test_ifunc_exports_survive_the_text_fallback(self) -> None:
+        exports, undefined, weak = _dynamic_symbols_from_text(self.READELF)
+        self.assertIn("strlen", exports)
+        self.assertIn("malloc", exports)
+        self.assertEqual({"__cxa_thread_atexit_impl"}, undefined)
+        self.assertEqual({"__cxa_thread_atexit_impl"}, weak)
+
+    def test_real_library_exports_ifuncs(self) -> None:
+        libc = Path("/mnt/c/Users/dspfa/wl-probe/android11-syslibs/libc.so")
+        if not libc.exists():
+            self.skipTest("Android 11 reference libc.so is not present")
+        record = read_elf(path=libc, abi="arm64-v8a")
+        for symbol in ("strlen", "strcmp", "memcpy", "memchr"):
+            self.assertIn(symbol, record["exported_symbols"], symbol)
