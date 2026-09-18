@@ -14,11 +14,11 @@ over the 138 arm64 libraries in `input/toutiao.apk`. Every library in that APK i
 | libraries scanned | 138 |
 | libraries yielding a `RegisterNatives` table | 60 |
 | registered methods recovered | 1417 |
-| methods reaching no platform surface | 878 (62%) |
-| methods reaching `dlopen`/`dlsym` — verdict unproven | 227 (16%) |
-| platform-coupled methods | 68 (5%) |
+| methods reaching no platform surface | 659 (47%) |
+| methods reaching `dlopen`/`dlsym` — verdict unproven | 279 (20%) |
+| platform-coupled methods | 175 (12%) |
 | libraries containing an identifiable upstream component | 33 |
 
-Per-method results are a **lower bound**: direct `bl` edges only, `"basis":
-"direct-bl-lower-bound"`. Read `analysis/NATIVE-PROVENANCE-AND-SURFACE.md` for the method, the two
+Per-method results are a **lower bound**: direct `bl` edges plus `b` tail calls into known
+function entries, `"basis": "direct-bl-lower-bound"`. Read `analysis/NATIVE-PROVENANCE-AND-SURFACE.md` for the method, the two
 blind spots, and what the numbers do and do not license.

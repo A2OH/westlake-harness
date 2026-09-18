@@ -44,6 +44,7 @@ The core claim of this repo:
 | `analysis/API-GAP-METHODOLOGY.md` | The static gap-analysis method in condensed form: pipeline, taxonomy, limits, validation gate. |
 | `analysis/BIONIC-MUSL-PLAN.md` | The **native/libc** boundary taxonomy (`C0`–`C3`) that the Java-side classes extend. |
 | `analysis/PORTING-PLAYBOOK.md` | Four investigation tiers, and which to run first. |
+| `analysis/NATIVE-GAP-PROCESS-AMENDMENT.md` | **Amendment closing the native half of the subtraction**: native import resolution, blast radius, `N-C8` probe-only absence, provenance-driven repair routing, `N-C9` hollow shims, coverage accounting. |
 | `analysis/NATIVE-PROVENANCE-AND-SURFACE.md` | **Native side of the same subtraction**: which upstream component a stripped `.so` contains, and which Android surfaces each registered JNI method reaches. |
 | `evidence/TOUTIAO-BRINGUP-HANDOFF.md` | The empirical base: a full app bring-up with fixes, **nine refuted hypotheses**, build hazards, and harness notes. |
 | `harness/westlake_gap/` | Production static scanner: ordered runtime index, multidex/split APK inventory, member resolution, `C8`/`C9` detection, ELF/JNI evidence, gap registry, and report. `nativeprov.py` adds component provenance and per-method platform-surface reach (`native-surface`). |
@@ -53,7 +54,7 @@ The core claim of this repo:
 | `corpus/` | Reproducible top-ten selection plus exact download hashes. APK/XAPK binaries are deliberately ignored. |
 | `benchmark/2026-08-20/` | Completed ten-app benchmark report, deduplicated registry, and runtime lock. |
 | `benchmark/2026-08-21/` | ABI-aware redo against the current ARM64 runtime lock; the prior benchmark remains preserved. |
-| `benchmark/2026-08-23-toutiao/native-analysis/` | Provenance and surface reach over 138 stripped arm64 libraries: 1417 recovered JNI methods, 62% touching no platform surface. |
+| `benchmark/2026-08-23-toutiao/native-analysis/` | Provenance and surface reach over 138 stripped arm64 libraries: 1417 recovered JNI methods, 47% touching no platform surface. |
 
 ---
 

@@ -34,7 +34,14 @@ def parser() -> argparse.ArgumentParser:
     runtime = commands.add_parser("snapshot-runtime", help="index an ordered boot classpath")
     runtime.add_argument("--jar", action="append", default=[], type=Path, help="BCP JAR in load order; repeat")
     runtime.add_argument("--classpath-file", type=Path, help="ordered JAR paths; blank/comment lines ignored")
-    runtime.add_argument("--bridge", action="append", default=[], type=Path, help="bridge/system ELF; repeat")
+    runtime.add_argument("--bridge", action="append", default=[], type=Path, help="bridge ELF; repeat")
+    runtime.add_argument(
+        "--system-lib",
+        action="append",
+        default=[],
+        type=Path,
+        help="deployed system ELF the app links against (libc, liblog, libandroid, libjnigraphics, ...); repeat",
+    )
     runtime.add_argument("--target-abi", help="Android ABI represented by the runtime, e.g. arm64-v8a")
     runtime.add_argument("--out", required=True, type=Path)
     runtime.add_argument("--summary-out", type=Path, help="write the runtime lock without the class index")
@@ -50,6 +57,11 @@ def parser() -> argparse.ArgumentParser:
     scan.add_argument("--out", required=True, type=Path)
     scan.add_argument("--target-abi", help="override the runtime target ABI")
     scan.add_argument("--no-elf", action="store_true", help="skip packaged ELF symbol inventory")
+    scan.add_argument(
+        "--native-reach",
+        action="store_true",
+        help="attribute unresolved native imports to the JNI methods that reach them (needs llvm-objdump)",
+    )
 
     bench = commands.add_parser("benchmark", help="scan a directory and create portfolio outputs")
     bench.add_argument("input", type=Path, help="directory containing APK files")
@@ -147,10 +159,12 @@ def main(argv: list[str] | None = None) -> int:
                     jars.append(Path(expanded))
         if not jars:
             raise SystemExit("snapshot-runtime requires --jar or --classpath-file")
-        for path in [*jars, *args.bridge]:
+        for path in [*jars, *args.bridge, *args.system_lib]:
             if not path.is_file():
                 raise SystemExit(f"input does not exist: {path}")
-        value = build_runtime_index(jars, args.bridge, target_abi=args.target_abi)
+        value = build_runtime_index(
+            jars, args.bridge, target_abi=args.target_abi, system_libraries=args.system_lib
+        )
         write_json(args.out, value)
         if args.summary_out:
             summary = _runtime_summary(value)
@@ -165,6 +179,7 @@ def main(argv: list[str] | None = None) -> int:
             runtime,
             include_elf=not args.no_elf,
             target_abi=args.target_abi,
+            native_reach=args.native_reach,
         )
         write_json(args.out, value)
         print(f"{value['apk'].get('package')}: {value['summary']['finding_count']} findings -> {args.out}")

@@ -104,10 +104,11 @@ and the reach splits them cleanly:
 
 | Method group | Functions reached | Surfaces | Reading |
 |---|---|---|---|
-| `nativeDocAI*Release` | 3 | none | frees a handle; pure C |
-| `nativeDocAIInit*` | 8 | `__android_log` | loads a model; logging is the only tie |
-| `nativeDocAICrop/Deblur/Demoire/Dewarp/Delight/Definger` | 57–69 | `AndroidBitmap_*`, `pthread`, `dlopen`, log | the coupled set, and only through pixel access |
-| `nativeVideoOclSr*` | 2–5 | none directly | work dispatched elsewhere; see blind spot 1 |
+| `nativeVideoOclSr*` | 2–5 | none | nothing reached directly; see blind spot 1 |
+| `nativeDocAIInit*` / `nativeDocAI*Release` | 7–8 | `__android_log` | model load and handle free; logging is the only tie |
+| `nativeDocAIScan/Crop/Deblur/Demoire/Dewarp/Delight/Definger` | 57–69 | `AndroidBitmap_*`, `pthread`, `dlopen`, log | the coupled set, and only through pixel access |
+
+5 of the 26 reach nothing at all, 14 reach only logging, and 7 are platform-coupled.
 
 Every method follows `Init → process → Release`, `Init` returning a `long` handle and taking two
 model-file paths, `process` taking that handle plus a `Bitmap`. That is a GPU document-scanner
@@ -124,32 +125,32 @@ Measured over all 138 arm64 libraries in `benchmark/2026-08-23-toutiao`
 
 | Result | Methods | Share |
 |---|---|---|
-| reach no platform surface at all | 878 | 62% |
-| reach `dlopen`/`dlsym` — verdict unproven | 227 | 16% |
-| platform-coupled (surface reached **or** platform type at the boundary) | 68 | 5% |
+| reach no platform surface at all | 659 | 47% |
+| reach `dlopen`/`dlsym` — verdict unproven | 279 | 20% |
+| platform-coupled (surface reached **or** platform type at the boundary) | 175 | 12% |
 | carry an `android/*` type across the boundary | 47 | 3% |
 
 The coupling concentrates in a small, enumerable set:
 
 | Surface | Methods | Share | Cost class | Porting implication |
 |---|---|---|---|---|
-| `pthread` | 414 | 29% | portable | POSIX, not Android |
-| `__android_log` | 262 | 18% | shim | a few lines |
-| `dlopen`/`dlsym` | 227 | 16% | **blind** | read the string table before believing any verdict |
-| file I/O | 190 | 13% | portable | check path assumptions |
-| `fork`/`prctl`/`ptrace` | 165 | 12% | integrity | anti-tamper; expect active resistance |
-| `__system_property` | 69 | 5% | identity | device identity; needs a decided replacement |
-| sockets | 52 | 4% | portable | |
-| `AndroidBitmap_*` | 31 | 2% | **platform** | genuine graphics coupling |
-| `libandroid` (`AAsset`, `ALooper`) | 16 | 1% | **platform** | asset and looper semantics |
-| GLES/EGL | 15 | 1% | **platform** | genuine, and the expensive kind |
+| `pthread` | 592 | 42% | portable | POSIX, not Android |
+| `__android_log` | 528 | 37% | shim | a few lines |
+| `fork`/`prctl`/`ptrace` | 333 | 24% | integrity | anti-tamper; expect active resistance |
+| file I/O | 284 | 20% | portable | check path assumptions |
+| `dlopen`/`dlsym` | 279 | 20% | **blind** | read the string table before believing any verdict |
+| `__system_property` | 203 | 14% | identity | device identity; needs a decided replacement |
+| `libandroid` (`AAsset`, `ALooper`) | 122 | 9% | **platform** | asset and looper semantics |
+| sockets | 74 | 5% | portable | |
+| `AndroidBitmap_*` | 34 | 2% | **platform** | genuine graphics coupling |
+| GLES/EGL | 16 | 1% | **platform** | genuine, and the expensive kind |
 
 At the boundary the platform types are equally concentrated: `Bitmap` on 29 methods, `Surface` on
 9, `Context` on 6, and a long tail of two or one.
 
 This ranks native work the way the `C0`–`C10` classes rank Java work: most of it is not
 Android-specific, the part that is, is small enough to enumerate — and the honest headline is that
-**16% of methods cannot be ruled clean at all** until their `dlsym` strings are read.
+**20% of methods cannot be ruled clean at all** until their `dlsym` strings are read.
 
 Provenance over the same corpus: 33 of 138 libraries contain an identifiable upstream component,
 most often the NDK C++ runtime (9), bytehook/xHook (4), then mpg123, zstd, libjpeg-turbo, QuickJS,
@@ -162,8 +163,10 @@ FFmpeg and OpenSSL at two each.
 - **AArch64 only.** The reach walk needs an aarch64-capable `llvm-objdump`; the NDK ships one,
   Ubuntu's binutils does not. Other machines return `supported: false` with a reason, never a
   silent empty result.
-- **Direct `bl` edges only.** Function pointers, virtual dispatch, callbacks and task queues are
-  not followed. Lower bound, always.
+- **Direct `bl` edges and `b` tail calls into known function entries.** Function pointers, virtual
+  dispatch, callbacks and task queues are not followed. Lower bound, always. Tail calls were
+  missed in the first run; see the correction table in `NATIVE-GAP-PROCESS-AMENDMENT.md` for how
+  much that moved the figures.
 - **Obfuscation defeats table recovery.** `libEncryptor.so` and `libmetasec_ml.so` yield no
   registration entries; `libdexvmp.so` is a VM-based obfuscator. Libraries that decrypt their
   payload at load time need a running process, not static reading.
