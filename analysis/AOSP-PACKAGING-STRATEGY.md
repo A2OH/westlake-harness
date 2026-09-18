@@ -50,8 +50,16 @@ Read the includes, not the symbol names.
 | OpenSL ES | `frameworks/wilhelm` (160 files) | audio HAL | **audio** |
 | EGL / GLES | — | vendor driver | **never ship; use OH's** |
 
-So the welding surface is four things: **buffer allocation, window/present, sync fences, audio.**
-Everything above them is AOSP source we already hold and currently hand-shim.
+So the welding surface is five things: **buffer allocation, window/present, sync fences, audio —
+and libc ABI.** The fifth is easy to miss. The NDK platform libraries are AOSP *source* and come out
+of the OH toolchain speaking musl. The app's own prebuilt `.so` files do not: they were compiled
+against bionic's headers and import bionic-private names (`__sF`, `__errno`, `__pthread_cleanup_push`,
+`__FD_SET_chk`) that no cut below them can rebuild away. Those must be translated. Measured on the
+board, the whole residue for McDonald's ten libraries was thirteen symbols — see
+`benchmark/2026-09-18-oh-board/REPORT.md`. Shipping bionic instead would put two libcs in one
+process, since everything above the app is already musl-built; the shim is the right branch.
+
+Everything above the welds is AOSP source we already hold and currently hand-shim.
 
 ## 4. Nested SurfaceFlinger
 
