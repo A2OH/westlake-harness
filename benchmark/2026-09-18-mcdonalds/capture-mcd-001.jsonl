@@ -1,0 +1,24 @@
+{"message": "RegisterNatives hook installed at 0x7a57cf3120", "type": "status"}
+{"message": "native hooks installed", "type": "status"}
+{"path": "/data/app/~~TBRbL6UvoYsvOxkrTFTAsA==/com.mcdonalds.app-bQ_y42sAZtVMzYAwFvPiig==/split_config.arm64_v8a.apk!/lib/arm64-v8a/librealm-jni.so", "ok": true, "via": "android_dlopen_ext", "type": "dlopen"}
+{"path": "eglSubDriverAndroid.so", "ok": false, "via": "dlopen", "type": "dlopen"}
+{"path": "/vendor/lib64/egl/eglSubDriverAndroid.so", "ok": true, "via": "dlopen", "type": "dlopen"}
+{"path": "/vendor/lib64/hw/gralloc.sdm845.so", "ok": true, "via": "android_dlopen_ext", "type": "dlopen"}
+{"path": "libEGL_adreno.so", "ok": true, "via": "dlopen", "type": "dlopen"}
+{"path": "/vendor/lib64/hw/android.hardware.graphics.mapper@2.0-impl-qti-display.so", "ok": true, "via": "android_dlopen_ext", "type": "dlopen"}
+{"path": "libadreno_utils.so", "ok": true, "via": "dlopen", "type": "dlopen"}
+{"path": "/data/app/~~TBRbL6UvoYsvOxkrTFTAsA==/com.mcdonalds.app-bQ_y42sAZtVMzYAwFvPiig==/split_config.arm64_v8a.apk!/lib/arm64-v8a/libakamaibmp.so", "ok": true, "via": "android_dlopen_ext", "type": "dlopen"}
+{"path": "/data/app/~~YCGo0KBynnn7mmbVt-hDag==/com.google.android.webview.beta-xNcuSzO-Gu6q6yLa4swiuw==/oat/arm64/base.odex", "ok": true, "via": "android_dlopen_ext", "type": "dlopen"}
+{"path": "libwebviewchromium.so", "ok": true, "via": "android_dlopen_ext", "type": "dlopen"}
+{"path": "/data/app/~~YCGo0KBynnn7mmbVt-hDag==/com.google.android.webview.beta-xNcuSzO-Gu6q6yLa4swiuw==/base.apk!/lib/arm64-v8a/libwebviewchromium.so", "ok": true, "via": "android_dlopen_ext", "type": "dlopen"}
+{"path": "/system/lib64/libwebviewchromium_plat_support.so", "ok": true, "via": "android_dlopen_ext", "type": "dlopen"}
+{"clazz": "?", "count": 1, "methods": [{"name": "nativeGetFunctionTable", "signature": "()J", "lib": "libwebviewchromium_plat_support.so", "offset": "0x20a4"}], "type": "registerNatives"}
+{"clazz": "?", "count": 3, "methods": [{"name": "nativeCreateGLFunctor", "signature": "(J)J", "lib": "libwebviewchromium_plat_support.so", "offset": "0x2688"}, {"name": "nativeDestroyGLFunctor", "signature": "(J)V", "lib": "libwebviewchromium_plat_support.so", "offset": "0x26bc"}, {"name": "nativeSetChromiumAwDrawGLFunction", "signature": "(J)V", "lib": "libwebviewchromium_plat_support.so", "offset": "0x26d4"}], "type": "registerNatives"}
+{"clazz": "?", "count": 2, "methods": [{"name": "nativeGetDrawSWFunctionTable", "signature": "()J", "lib": "libwebviewchromium_plat_support.so", "offset": "0x2a0c"}, {"name": "nativeGetDrawGLFunctionTable", "signature": "()J", "lib": "libwebviewchromium_plat_support.so", "offset": "0x2a34"}], "type": "registerNatives"}
+{"path": "libc.so", "ok": true, "via": "dlopen", "type": "dlopen"}
+{"path": "libandroid.so", "ok": true, "via": "dlopen", "type": "dlopen"}
+{"path": "libGLESv2.so", "ok": true, "via": "dlopen", "type": "dlopen"}
+{"path": "libEGL.so", "ok": true, "via": "dlopen", "type": "dlopen"}
+{"path": "libGLESv2_adreno.so", "ok": true, "via": "dlopen", "type": "dlopen"}
+{"path": "libGLESv1_CM_adreno.so", "ok": true, "via": "dlopen", "type": "dlopen"}
+{"message": "dlsym hook installed", "type": "status"}
