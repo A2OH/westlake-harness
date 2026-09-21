@@ -6,11 +6,11 @@ Provider: Westlake `jobscheduler-service-stub` @ `c279d162c1` (+9 uncommitted fi
 
 | Category | How it reaches OH | Rows | Gaps | Effort profile |
 |---|---|---|---|---|
-| Java framework API | APK dex references − Westlake boot jars, filtered by API level | 25 | 25 | 14×verify, 7×S, 3×M, 1×L |
+| Java framework API | APK dex references − Westlake boot jars, filtered by API level | 17 | 17 | 16×verify, 1×S |
 | System services | getSystemService name → AOSP fetcher/binder → Westlake provision → OH subsystem | 33 | 23 | 1×verify, 10×S, 11×M, 1×L |
 | Package manager & manifest | manifest features and PackageManager calls → Westlake PM semantics | 21 | 19 | 1×verify, 12×S, 6×M |
-| Java APIs called from native code | JNIEnv FindClass/Get*ID names in packaged .so → Westlake boot jars | 6 | 1 | 1×S |
-| Native platform symbols | packaged .so imports → OpenHarmony plus the NDK Westlake packages (package / libc-abi / weld / absence) | 3 | 3 | 1×XS, 1×S, 1×M |
+| Java APIs called from native code | JNIEnv FindClass/Get*ID names in packaged .so → Westlake boot jars | 6 | 0 | — |
+| Native platform symbols | packaged .so imports → OpenHarmony plus the NDK Westlake packages (package / libc-abi / weld / absence) | 3 | 2 | 1×S, 1×M |
 | Native loading & packaging | how the libraries are packaged → what the OH linker can map | 1 | 0 | — |
 | Process sandbox & policy | objects the code creates → what OH SELinux lets an app create | 2 | 2 | 1×M, 1×OH |
 | External services & SDK behaviour | SDKs that expect Google services or probe the device | 5 | 5 | 4×verify, 1×M |
@@ -21,15 +21,13 @@ Effort: **XS** hours: configuration, labelling, or forwarding one symbol; **S** 
 
 Recorded on real Android with full method tracing: 44451 methods executed (25957 of them the app's own), app libraries loaded: libakamaibmp.so, librealm-jni.so, librealmc.so.
 
-**47 of the 78 open gaps were touched on this path; 31 were not.**
+**43 of the 68 open gaps were touched on this path; 25 were not.**
 
 | Gap | Category | Verdict | Effort | How we know |
 |---|---|---|---|---|
 | Create fifo_file in app data | Process sandbox & policy | denied | OH | loaded: librealm-jni.so, librealmc.so |
-| WiFi | Java framework API | missing | L | 2 members executed, 0 more referenced by executed methods, of 38 |
 | phone | System services | inert | L | 3 of 13 requesting methods ran; TelephonyManager code executed |
 | Google Play services | External services & SDK behaviour | absent | M | 1979 of its methods executed |
-| Networking | Java framework API | missing | M | 2 members executed, 1 more referenced by executed methods, of 31 |
 | PackageManager.queryBroadcastReceivers | Package manager & manifest | stub | M | referenced |
 | PackageManager.queryIntentContentProviders | Package manager & manifest | stub | M | executed |
 | PackageManager.queryIntentServices | Package manager & manifest | stub | M | executed |
@@ -43,11 +41,8 @@ Recorded on real Android with full method tracing: 44451 methods executed (25957
 | uimode | System services | null | M | 1 of 19 requesting methods ran; UiModeManager code executed |
 | user | System services | hollow | M | 1 of 8 requesting methods ran; UserManager code executed |
 | wifi | System services | null | M | 0 of 5 requesting methods ran; WifiManager code executed |
-| Views & windows | Java framework API | missing | S | 10 members executed, 0 more referenced by executed methods, of 77 |
 | Java library | Java framework API | missing | S | 10 members executed, 0 more referenced by executed methods, of 44 |
-| Bluetooth | Java framework API | missing | S | 0 members executed, 3 more referenced by executed methods, of 5 |
-| Job scheduling | Java framework API | missing | S | 1 members executed, 0 more referenced by executed methods, of 1 |
-| bionic libc ABI: 14 symbols to translate onto musl | Native platform symbols | missing | S | loaded: libakamaibmp.so, librealm-jni.so, librealmc.so |
+| bionic libc ABI: 10 symbols to translate onto musl | Native platform symbols | missing | S | loaded: libakamaibmp.so |
 | PackageManager.getComponentEnabledSetting | Package manager & manifest | stub | S | executed |
 | PackageManager.getInstalledApplications | Package manager & manifest | stub | S | executed |
 | PackageManager.getInstallerPackageName | Package manager & manifest | stub | S | executed |
@@ -65,6 +60,7 @@ Recorded on real Android with full method tracing: 44451 methods executed (25957
 | Firebase component discovery (MlKitComponentDiscoveryService) | External services & SDK behaviour | partial | verify | 28 of its methods executed |
 | Akamai Bot Manager | External services & SDK behaviour | refused | verify | libakamaibmp.so loaded |
 | Forter fraud SDK | External services & SDK behaviour | environment-sensitive | verify | 310 of its methods executed |
+| Views & windows | Java framework API | hollow-candidate | verify | 10 members executed, 0 more referenced by executed methods, of 73 |
 | Graphics | Java framework API | hollow-candidate | verify | 4 members executed, 0 more referenced by executed methods, of 30 |
 | App framework | Java framework API | hollow-candidate | verify | 7 members executed, 0 more referenced by executed methods, of 23 |
 | OS services | Java framework API | hollow-candidate | verify | 1 members executed, 0 more referenced by executed methods, of 4 |
@@ -96,31 +92,23 @@ _APK dex references − Westlake boot jars, filtered by API level_
 
 | Item | Verdict | Class | Effort | On path | OH touchpoint | Shim / evidence |
 |---|---|---|---|---|---|---|
-| WiFi | missing | C4 | L | yes | communication/wifi | implement the members over communication/wifi<br>android.net.wifi.ScanResult.BSSID, android.net.wifi.ScanResult.SSID, android.net.wifi.ScanResult.capabilities |
-| Networking | missing | C4 | M | yes | netmanager | implement the members over netmanager<br>android.net.ConnectivityManager.getDefaultProxy, android.net.DhcpInfo, android.net.LinkAddress.getAddress |
-| Network service discovery (mDNS) | missing | C4 | M | – | netmanager/mdns | implement the members over netmanager/mdns<br>android.net.nsd.NsdManager, android.net.nsd.NsdManager$DiscoveryListener, android.net.nsd.NsdManager$RegistrationListener |
-| Media store | missing | C4 | M | – | multimedia/media_library | implement the members over multimedia/media_library<br>android.provider.MediaStore$Images$Media.EXTERNAL_CONTENT_URI, android.provider.MediaStore$Images$Media.getBitmap, android.provider.MediaStore$Images$Media.insertImage |
-| Views & windows | missing | C4 | S | yes | window_manager / render_service | implement the members over window_manager / render_service<br>android.view.View.setContentSensitivity, android.view.View.setFrameContentVelocity, android.view.inputmethod.EditorInfo.setStylusHandwritingEnabled |
 | Java library | missing | C1/C5 | S | yes | none (library code inside Westlake) | port from AOSP, or confirm the caller tolerates absence<br>java.lang.ClassLoader.getUnnamedModule |
-| Bluetooth | missing | C4 | S | yes | communication/bluetooth | implement the members over communication/bluetooth<br>android.bluetooth.BluetoothAdapter.getBondedDevices, android.bluetooth.BluetoothDevice.getAddress |
-| Package manager | missing | C4 | S | – | bundle_framework | implement the members over bundle_framework<br>android.content.pm.SigningInfo.getPublicKeys, android.content.pm.SigningInfo.getSchemeVersion |
-| Job scheduling | missing | C4 | S | yes | resourceschedule/work_scheduler | implement the members over resourceschedule/work_scheduler<br>android.app.job.JobInfo$Builder.setTraceTag |
-| Biometrics | missing | C4 | S | – | useriam | implement the members over useriam<br>android.hardware.biometrics.BiometricPrompt$CryptoObject.getOperationHandle |
-| Text | missing | C1/C5 | S | – | none (library code inside Westlake) | port from AOSP, or confirm the caller tolerates absence<br>android.text.StaticLayout$Builder.setUseBoundsForWidth |
+| Views & windows | hollow-candidate | C9 | verify | yes | window_manager / render_service | check each hollow body against AOSP<br>android.view.ActionProvider.hasSubMenu, android.view.ActionProvider.isVisible, android.view.ActionProvider.onPerformDefaultAction |
 | Graphics | hollow-candidate | C9 | verify | yes | render_service / graphic_2d | check each hollow body against AOSP<br>android.graphics.Canvas.disableZ, android.graphics.Canvas.enableZ, android.graphics.Canvas.getMaximumBitmapHeight |
 | App framework | hollow-candidate | C9 | verify | yes | ability_runtime | check each hollow body against AOSP<br>android.app.ActionBar.setHomeActionContentDescription, android.app.ActionBar.setHomeAsUpIndicator, android.app.Activity.onActivityResult |
 | Other Android | hollow-candidate | C9 | verify | – | unmapped | check each hollow body against AOSP<br>android.animation.Animator.cancel, android.animation.Animator.end, android.animation.Animator.setTarget |
 | WebView | hollow-candidate | C9 | verify | – | web (ArkWeb) or bundled Chromium | check each hollow body against AOSP<br>android.webkit.HttpAuthHandler.proceed, android.webkit.SslErrorHandler.cancel, android.webkit.SslErrorHandler.proceed |
 | Camera | hollow-candidate | C9 | verify | – | multimedia/camera_framework | check each hollow body against AOSP<br>android.hardware.camera2.CameraCaptureSession$CaptureCallback.onCaptureBufferLost, android.hardware.camera2.CameraCaptureSession$CaptureCallback.onCaptureCompleted, android.hardware.camera2.CameraCaptureSession$CaptureCallback.onCaptureFailed |
+| Networking | hollow-candidate | C9 | verify | – | netmanager | check each hollow body against AOSP<br>android.net.ConnectivityManager$NetworkCallback.onAvailable, android.net.ConnectivityManager$NetworkCallback.onCapabilitiesChanged, android.net.ConnectivityManager$NetworkCallback.onLinkPropertiesChanged |
 | OS services | hollow-candidate | C9 | verify | yes | various system abilities | check each hollow body against AOSP<br>android.os.AsyncTask.onPostExecute, android.os.AsyncTask.onPreExecute, android.os.Binder.isBinderAlive |
 | Widgets | hollow-candidate | C9 | verify | yes | none (library code inside Westlake) | check each hollow body against AOSP<br>android.widget.AbsListView.layoutChildren, android.widget.BaseAdapter.isEnabled, android.widget.TextView.onTextChanged |
 | Content & intents | hollow-candidate | C9 | verify | yes | ability_runtime | check each hollow body against AOSP<br>android.content.Context.getAttributionTag, android.content.Context.isRestricted |
 | Location | hollow-candidate | C9 | verify | – | location | check each hollow body against AOSP<br>android.location.GnssMeasurementsEvent$Callback.onGnssMeasurementsReceived, android.location.GnssMeasurementsEvent$Callback.onStatusChanged |
 | Media | hollow-candidate | C9 | verify | – | multimedia | check each hollow body against AOSP<br>android.media.AudioTrack.getMaxVolume, android.media.AudioTrack.getMinVolume |
 | Java extensions | hollow-candidate | C9 | verify | – | none (library code inside Westlake) | check each hollow body against AOSP<br>javax.security.auth.Destroyable.isDestroyed |
+| Media store | hollow-candidate | C9 | verify | – | multimedia/media_library | check each hollow body against AOSP<br>android.provider.MediaStore.getPickImagesMaxLimit |
 | Utilities | hollow-candidate | C9 | verify | – | none (library code inside Westlake) | check each hollow body against AOSP<br>android.util.LruCache.entryRemoved |
 | Other | probe-only | C8 | verify | – | unmapped | confirm the probed class should (not) exist on this platform<br>No default CameraXConfig.Provider specified in meta-data. The most likely cause is you did not include a default implementation in your build such as 'camera-camera2'., androidx.window.extensions.WindowExtensions, androidx.window.extensions.WindowExtensionsProvider |
-| Privacy Sandbox | probe-only | C8 | verify | – | none (library code inside Westlake) | confirm the probed class should (not) exist on this platform<br>android.adservices.measurement.MeasurementManager |
 
 ## System services
 
@@ -196,9 +184,9 @@ _JNIEnv FindClass/Get*ID names in packaged .so → Westlake boot jars_
 
 | Item | Verdict | Class | Effort | On path | OH touchpoint | Shim / evidence |
 |---|---|---|---|---|---|---|
-| libpanorenderer.so → 36 classes, 213 members | hollow | C9 | S | – | netmanager | implement or un-hollow the members the library calls back into<br>android.net.TrafficStats.setThreadStatsTag(I)V |
 | libandroidx.graphics.path.so → 1 classes, 1 members | supplied | C0 | none | – | through the Java framework | none<br>e.g. android/graphics/Path |
 | libmlkit_google_ocr_pipeline.so → 3 classes, 2 members | supplied | C0 | none | – | through the Java framework | none<br>e.g. android/os/Environment, java/io/File, java/lang/IllegalArgumentException |
+| libpanorenderer.so → 36 classes, 213 members | supplied | C0 | none | – | through the Java framework | none<br>e.g. android/content/Context, android/content/pm/PackageManager, android/content/res/Configuration, android/content/res/Resources |
 | librealm-jni.so → 18 classes, 40 members | supplied | C0 | none | yes | through the Java framework | none<br>e.g. java/lang/ArrayIndexOutOfBoundsException, java/lang/Boolean, java/lang/ClassNotFoundException, java/lang/Double |
 | librealmc.so → 12 classes, 38 members | supplied | C0 | none | yes | through the Java framework | none<br>e.g. java/io/IOException, java/lang/ArithmeticException, java/lang/IllegalArgumentException, java/lang/IllegalStateException |
 | libsqliteJni.so → 2 classes, 0 members | supplied | C0 | none | – | through the Java framework | none<br>e.g. android/database/SQLException, java/lang/OutOfMemoryError |
@@ -210,8 +198,8 @@ _packaged .so imports → OpenHarmony plus the NDK Westlake packages (package / 
 | Item | Verdict | Class | Effort | On path | OH touchpoint | Shim / evidence |
 |---|---|---|---|---|---|---|
 | NDK weld · sensors: 11 symbols | missing | C4 | M | – | sensors | AOSP NDK source above, sensors below<br>open: ASensorEventQueue_disableSensor, ASensorEventQueue_enableSensor, ASensorEventQueue_getEvents, ASensorEventQueue_setEventRate, ASensorManager_createEventQueue, ASensorManager_destroyEventQueue, ASensorManager_getDefaultSensor, ASensorManager_getInstance |
-| bionic libc ABI: 14 symbols to translate onto musl | missing | C1/C2 | S | yes | OH musl libc | bionic-ABI shim: forward or translate; never ship a second libc<br>open: __system_property_read |
-| NDK package: 6 symbols compiled from AOSP source | missing | C1 | XS | – | none beyond what Westlake already provides | compile the AOSP source (asset_manager.cpp, looper.cpp) and deploy it<br>open: AAssetManager_fromJava, AAssetManager_open, AAsset_close, AAsset_getBuffer, AAsset_getLength, ALooper_pollAll |
+| bionic libc ABI: 10 symbols to translate onto musl | missing | C1/C2 | S | yes | OH musl libc | bionic-ABI shim: forward or translate; never ship a second libc<br>open: __system_property_read |
+| 10 symbols provided since the import resolution was taken | supplied | C0 | none | yes |  | none |
 
 ## Native loading & packaging
 
@@ -245,7 +233,7 @@ _SDKs that expect Google services or probe the device_
 ## Limits of this map
 
 - 54 service requests use computed names and are not resolved statically.
-- Java absences excluded by API level: {'newer-than-reference': 23, 'absent-from-platform': 48}.
+- Java absences excluded by API level: {'absent-from-platform': 46}.
 - Native code calling back into Java was matched from library strings against a reference android.jar; names built at runtime or encrypted are invisible.
 - `supplied` means the provider source answers the contract; `verify` rows need their conformance probe on the board.
 - Semantic mismatches (right name, wrong behaviour) remain invisible until a probe or the Android baseline compares them.

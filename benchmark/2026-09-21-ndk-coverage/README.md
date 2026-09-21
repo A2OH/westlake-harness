@@ -16,6 +16,12 @@ system libraries and the 68 Westlake runtime libraries pulled from the board on 
 | Westlake live libraries (`liblog`, parts of `libandroid`, `libnativewindow`, `libjnigraphics`, `libnativehelper`) | 117 | 2.6% |
 | Missing | 1,719 | 38.6% |
 
+**Against the source build** (`source-build/`, the 48 libraries McDonald's actually runs on, pulled
+from the board's framework stage): Westlake supplies **307** symbols, not 117. `libjnigraphics` is
+complete (39/39), the binder NDK is 104/107, `liblog` 18/18, `libandroid` 79/323. Missing drops to
+1,529: 395 package, 220 libc ABI, 309 truthful absence, 605 behind nine welds (the services weld is
+nearly closed). The figures below describe the legacy payload in `/data/local/tmp/asx`.
+
 ## What the missing 1,719 take
 
 | Strategy | Symbols | What it is |

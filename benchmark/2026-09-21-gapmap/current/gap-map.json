@@ -99,8 +99,7 @@
   ],
   "notes": {
     "java_excluded_by_api_level": {
-      "absent-from-platform": 48,
-      "newer-than-reference": 23
+      "absent-from-platform": 46
     },
     "native_upcalls_scanned": true,
     "service_requests_with_computed_names": 54
@@ -138,273 +137,18 @@
       "category": "java-api",
       "confidence": "static",
       "counts": {
-        "hollow": 0,
-        "missing": 38,
+        "hollow": 73,
+        "missing": 0,
         "probe": 0
       },
-      "effort": "L",
+      "effort": "verify",
       "examples": [
-        "android.net.wifi.ScanResult.BSSID",
-        "android.net.wifi.ScanResult.SSID",
-        "android.net.wifi.ScanResult.capabilities",
-        "android.net.wifi.ScanResult.frequency",
-        "android.net.wifi.ScanResult.level",
-        "android.net.wifi.ScanResult.timestamp"
-      ],
-      "id": "java:WiFi",
-      "item": "WiFi",
-      "members": [
-        {
-          "kind": "missing_class",
-          "name": null,
-          "owner": "Landroid/net/wifi/WifiConfiguration$KeyMgmt;",
-          "signature": null
-        },
-        {
-          "kind": "missing_class",
-          "name": null,
-          "owner": "Landroid/net/wifi/WifiEnterpriseConfig;",
-          "signature": null
-        },
-        {
-          "kind": "missing_class",
-          "name": null,
-          "owner": "Landroid/net/wifi/WifiManager$MulticastLock;",
-          "signature": null
-        },
-        {
-          "kind": "missing_class",
-          "name": null,
-          "owner": "Landroid/net/wifi/p2p/WifiP2pManager;",
-          "signature": null
-        },
-        {
-          "kind": "missing_field",
-          "name": "BSSID",
-          "owner": "Landroid/net/wifi/ScanResult;",
-          "signature": "Ljava/lang/String;"
-        },
-        {
-          "kind": "missing_field",
-          "name": "SSID",
-          "owner": "Landroid/net/wifi/ScanResult;",
-          "signature": "Ljava/lang/String;"
-        },
-        {
-          "kind": "missing_field",
-          "name": "capabilities",
-          "owner": "Landroid/net/wifi/ScanResult;",
-          "signature": "Ljava/lang/String;"
-        },
-        {
-          "kind": "missing_field",
-          "name": "frequency",
-          "owner": "Landroid/net/wifi/ScanResult;",
-          "signature": "I"
-        },
-        {
-          "kind": "missing_field",
-          "name": "level",
-          "owner": "Landroid/net/wifi/ScanResult;",
-          "signature": "I"
-        },
-        {
-          "kind": "missing_field",
-          "name": "timestamp",
-          "owner": "Landroid/net/wifi/ScanResult;",
-          "signature": "J"
-        },
-        {
-          "kind": "missing_field",
-          "name": "venueName",
-          "owner": "Landroid/net/wifi/ScanResult;",
-          "signature": "Ljava/lang/CharSequence;"
-        },
-        {
-          "kind": "missing_field",
-          "name": "SSID",
-          "owner": "Landroid/net/wifi/WifiConfiguration;",
-          "signature": "Ljava/lang/String;"
-        },
-        {
-          "kind": "missing_field",
-          "name": "allowedKeyManagement",
-          "owner": "Landroid/net/wifi/WifiConfiguration;",
-          "signature": "Ljava/util/BitSet;"
-        },
-        {
-          "kind": "missing_field",
-          "name": "enterpriseConfig",
-          "owner": "Landroid/net/wifi/WifiConfiguration;",
-          "signature": "Landroid/net/wifi/WifiEnterpriseConfig;"
-        },
-        {
-          "kind": "missing_field",
-          "name": "hiddenSSID",
-          "owner": "Landroid/net/wifi/WifiConfiguration;",
-          "signature": "Z"
-        },
-        {
-          "kind": "missing_method",
-          "name": "getHttpProxy",
-          "owner": "Landroid/net/wifi/WifiConfiguration;",
-          "signature": "()Landroid/net/ProxyInfo;"
-        },
-        {
-          "kind": "missing_method",
-          "name": "getBSSID",
-          "owner": "Landroid/net/wifi/WifiInfo;",
-          "signature": "()Ljava/lang/String;"
-        },
-        {
-          "kind": "missing_method",
-          "name": "getFrequency",
-          "owner": "Landroid/net/wifi/WifiInfo;",
-          "signature": "()I"
-        },
-        {
-          "kind": "missing_method",
-          "name": "getIpAddress",
-          "owner": "Landroid/net/wifi/WifiInfo;",
-          "signature": "()I"
-        },
-        {
-          "kind": "missing_method",
-          "name": "getLinkSpeed",
-          "owner": "Landroid/net/wifi/WifiInfo;",
-          "signature": "()I"
-        },
-        {
-          "kind": "missing_method",
-          "name": "getMacAddress",
-          "owner": "Landroid/net/wifi/WifiInfo;",
-          "signature": "()Ljava/lang/String;"
-        },
-        {
-          "kind": "missing_method",
-          "name": "getNetworkId",
-          "owner": "Landroid/net/wifi/WifiInfo;",
-          "signature": "()I"
-        },
-        {
-          "kind": "missing_method",
-          "name": "getRssi",
-          "owner": "Landroid/net/wifi/WifiInfo;",
-          "signature": "()I"
-        },
-        {
-          "kind": "missing_method",
-          "name": "getSSID",
-          "owner": "Landroid/net/wifi/WifiInfo;",
-          "signature": "()Ljava/lang/String;"
-        },
-        {
-          "kind": "missing_method",
-          "name": "calculateSignalLevel",
-          "owner": "Landroid/net/wifi/WifiManager;",
-          "signature": "(II)I"
-        },
-        {
-          "kind": "missing_method",
-          "name": "createMulticastLock",
-          "owner": "Landroid/net/wifi/WifiManager;",
-          "signature": "(Ljava/lang/String;)Landroid/net/wifi/WifiManager$MulticastLock;"
-        },
-        {
-          "kind": "missing_method",
-          "name": "getConfiguredNetworks",
-          "owner": "Landroid/net/wifi/WifiManager;",
-          "signature": "()Ljava/util/List;"
-        },
-        {
-          "kind": "missing_method",
-          "name": "getConnectionInfo",
-          "owner": "Landroid/net/wifi/WifiManager;",
-          "signature": "()Landroid/net/wifi/WifiInfo;"
-        },
-        {
-          "kind": "missing_method",
-          "name": "getDhcpInfo",
-          "owner": "Landroid/net/wifi/WifiManager;",
-          "signature": "()Landroid/net/DhcpInfo;"
-        },
-        {
-          "kind": "missing_method",
-          "name": "getScanResults",
-          "owner": "Landroid/net/wifi/WifiManager;",
-          "signature": "()Ljava/util/List;"
-        },
-        {
-          "kind": "missing_method",
-          "name": "is5GHzBandSupported",
-          "owner": "Landroid/net/wifi/WifiManager;",
-          "signature": "()Z"
-        },
-        {
-          "kind": "missing_method",
-          "name": "isDeviceToApRttSupported",
-          "owner": "Landroid/net/wifi/WifiManager;",
-          "signature": "()Z"
-        },
-        {
-          "kind": "missing_method",
-          "name": "isEnhancedPowerReportingSupported",
-          "owner": "Landroid/net/wifi/WifiManager;",
-          "signature": "()Z"
-        },
-        {
-          "kind": "missing_method",
-          "name": "isP2pSupported",
-          "owner": "Landroid/net/wifi/WifiManager;",
-          "signature": "()Z"
-        },
-        {
-          "kind": "missing_method",
-          "name": "isPreferredNetworkOffloadSupported",
-          "owner": "Landroid/net/wifi/WifiManager;",
-          "signature": "()Z"
-        },
-        {
-          "kind": "missing_method",
-          "name": "isScanAlwaysAvailable",
-          "owner": "Landroid/net/wifi/WifiManager;",
-          "signature": "()Z"
-        },
-        {
-          "kind": "missing_method",
-          "name": "isTdlsSupported",
-          "owner": "Landroid/net/wifi/WifiManager;",
-          "signature": "()Z"
-        },
-        {
-          "kind": "missing_method",
-          "name": "isWifiEnabled",
-          "owner": "Landroid/net/wifi/WifiManager;",
-          "signature": "()Z"
-        }
-      ],
-      "observed": {
-        "evidence": "2 members executed, 0 more referenced by executed methods, of 38",
-        "on_path": true
-      },
-      "oh_touchpoint": "communication/wifi",
-      "shim": "implement the members over communication/wifi",
-      "shim_class": "C4",
-      "verdict": "missing"
-    },
-    {
-      "category": "java-api",
-      "confidence": "static",
-      "counts": {
-        "hollow": 74,
-        "missing": 3,
-        "probe": 0
-      },
-      "effort": "S",
-      "examples": [
-        "android.view.View.setContentSensitivity",
-        "android.view.View.setFrameContentVelocity",
-        "android.view.inputmethod.EditorInfo.setStylusHandwritingEnabled"
+        "android.view.ActionProvider.hasSubMenu",
+        "android.view.ActionProvider.isVisible",
+        "android.view.ActionProvider.onPerformDefaultAction",
+        "android.view.ActionProvider.onPrepareSubMenu",
+        "android.view.ActionProvider.overridesItemVisibility",
+        "android.view.GestureDetector$SimpleOnGestureListener.onFling"
       ],
       "id": "java:Views & windows",
       "item": "Views & windows",
@@ -604,12 +348,6 @@
         {
           "kind": "hollow_method",
           "name": "getJumpTapTimeout",
-          "owner": "Landroid/view/ViewConfiguration;",
-          "signature": "()I"
-        },
-        {
-          "kind": "hollow_method",
-          "name": "getKeyRepeatDelay",
           "owner": "Landroid/view/ViewConfiguration;",
           "signature": "()I"
         },
@@ -852,250 +590,16 @@
           "name": "previewHandwritingGesture",
           "owner": "Landroid/view/inputmethod/InputConnection;",
           "signature": "(Landroid/view/inputmethod/PreviewableHandwritingGesture;Landroid/os/CancellationSignal;)Z"
-        },
-        {
-          "kind": "missing_method",
-          "name": "setContentSensitivity",
-          "owner": "Landroid/view/View;",
-          "signature": "(I)V"
-        },
-        {
-          "kind": "missing_method",
-          "name": "setFrameContentVelocity",
-          "owner": "Landroid/view/View;",
-          "signature": "(F)V"
-        },
-        {
-          "kind": "missing_method",
-          "name": "setStylusHandwritingEnabled",
-          "owner": "Landroid/view/inputmethod/EditorInfo;",
-          "signature": "(Z)V"
         }
       ],
       "observed": {
-        "evidence": "10 members executed, 0 more referenced by executed methods, of 77",
+        "evidence": "10 members executed, 0 more referenced by executed methods, of 73",
         "on_path": true
       },
       "oh_touchpoint": "window_manager / render_service",
-      "shim": "implement the members over window_manager / render_service",
-      "shim_class": "C4",
-      "verdict": "missing"
-    },
-    {
-      "category": "java-api",
-      "confidence": "static",
-      "counts": {
-        "hollow": 22,
-        "missing": 8,
-        "probe": 1
-      },
-      "effort": "M",
-      "examples": [
-        "android.net.ConnectivityManager.getDefaultProxy",
-        "android.net.DhcpInfo",
-        "android.net.LinkAddress.getAddress",
-        "android.net.TrafficStats.clearThreadStatsTag",
-        "android.net.TrafficStats.getMobileRxBytes",
-        "android.net.TrafficStats.getMobileTxBytes"
-      ],
-      "id": "java:Networking",
-      "item": "Networking",
-      "members": [
-        {
-          "kind": "existence_probe",
-          "name": null,
-          "owner": "Landroid/net/ProxyProperties;",
-          "signature": null
-        },
-        {
-          "kind": "hollow_method",
-          "name": "onAvailable",
-          "owner": "Landroid/net/ConnectivityManager$NetworkCallback;",
-          "signature": "(Landroid/net/Network;)V"
-        },
-        {
-          "kind": "hollow_method",
-          "name": "onCapabilitiesChanged",
-          "owner": "Landroid/net/ConnectivityManager$NetworkCallback;",
-          "signature": "(Landroid/net/Network;Landroid/net/NetworkCapabilities;)V"
-        },
-        {
-          "kind": "hollow_method",
-          "name": "onLinkPropertiesChanged",
-          "owner": "Landroid/net/ConnectivityManager$NetworkCallback;",
-          "signature": "(Landroid/net/Network;Landroid/net/LinkProperties;)V"
-        },
-        {
-          "kind": "hollow_method",
-          "name": "onLost",
-          "owner": "Landroid/net/ConnectivityManager$NetworkCallback;",
-          "signature": "(Landroid/net/Network;)V"
-        },
-        {
-          "kind": "hollow_method",
-          "name": "isActiveNetworkMetered",
-          "owner": "Landroid/net/ConnectivityManager;",
-          "signature": "()Z"
-        },
-        {
-          "kind": "hollow_method",
-          "name": "getDomains",
-          "owner": "Landroid/net/LinkProperties;",
-          "signature": "()Ljava/lang/String;"
-        },
-        {
-          "kind": "hollow_method",
-          "name": "getHttpProxy",
-          "owner": "Landroid/net/LinkProperties;",
-          "signature": "()Landroid/net/ProxyInfo;"
-        },
-        {
-          "kind": "hollow_method",
-          "name": "getInterfaceName",
-          "owner": "Landroid/net/LinkProperties;",
-          "signature": "()Ljava/lang/String;"
-        },
-        {
-          "kind": "hollow_method",
-          "name": "getPrivateDnsServerName",
-          "owner": "Landroid/net/LinkProperties;",
-          "signature": "()Ljava/lang/String;"
-        },
-        {
-          "kind": "hollow_method",
-          "name": "isPrivateDnsActive",
-          "owner": "Landroid/net/LinkProperties;",
-          "signature": "()Z"
-        },
-        {
-          "kind": "hollow_method",
-          "name": "getLinkDownstreamBandwidthKbps",
-          "owner": "Landroid/net/NetworkCapabilities;",
-          "signature": "()I"
-        },
-        {
-          "kind": "hollow_method",
-          "name": "getLinkUpstreamBandwidthKbps",
-          "owner": "Landroid/net/NetworkCapabilities;",
-          "signature": "()I"
-        },
-        {
-          "kind": "hollow_method",
-          "name": "getTransportInfo",
-          "owner": "Landroid/net/NetworkCapabilities;",
-          "signature": "()Landroid/net/TransportInfo;"
-        },
-        {
-          "kind": "hollow_method",
-          "name": "getSubtype",
-          "owner": "Landroid/net/NetworkInfo;",
-          "signature": "()I"
-        },
-        {
-          "kind": "hollow_method",
-          "name": "getSubtypeName",
-          "owner": "Landroid/net/NetworkInfo;",
-          "signature": "()Ljava/lang/String;"
-        },
-        {
-          "kind": "hollow_method",
-          "name": "isRoaming",
-          "owner": "Landroid/net/NetworkInfo;",
-          "signature": "()Z"
-        },
-        {
-          "kind": "hollow_method",
-          "name": "canBeSatisfiedBy",
-          "owner": "Landroid/net/NetworkRequest;",
-          "signature": "(Landroid/net/NetworkCapabilities;)Z"
-        },
-        {
-          "kind": "hollow_method",
-          "name": "getHost",
-          "owner": "Landroid/net/ProxyInfo;",
-          "signature": "()Ljava/lang/String;"
-        },
-        {
-          "kind": "hollow_method",
-          "name": "getPort",
-          "owner": "Landroid/net/ProxyInfo;",
-          "signature": "()I"
-        },
-        {
-          "kind": "hollow_method",
-          "name": "setThreadStatsTag",
-          "owner": "Landroid/net/TrafficStats;",
-          "signature": "(I)V"
-        },
-        {
-          "kind": "hollow_method",
-          "name": "isSupportedSocket",
-          "owner": "Landroid/net/ssl/SSLSockets;",
-          "signature": "(Ljavax/net/ssl/SSLSocket;)Z"
-        },
-        {
-          "kind": "hollow_method",
-          "name": "setUseSessionTickets",
-          "owner": "Landroid/net/ssl/SSLSockets;",
-          "signature": "(Ljavax/net/ssl/SSLSocket;Z)V"
-        },
-        {
-          "kind": "missing_class",
-          "name": null,
-          "owner": "Landroid/net/DhcpInfo;",
-          "signature": null
-        },
-        {
-          "kind": "missing_method",
-          "name": "getDefaultProxy",
-          "owner": "Landroid/net/ConnectivityManager;",
-          "signature": "()Landroid/net/ProxyInfo;"
-        },
-        {
-          "kind": "missing_method",
-          "name": "getAddress",
-          "owner": "Landroid/net/LinkAddress;",
-          "signature": "()Ljava/net/InetAddress;"
-        },
-        {
-          "kind": "missing_method",
-          "name": "clearThreadStatsTag",
-          "owner": "Landroid/net/TrafficStats;",
-          "signature": "()V"
-        },
-        {
-          "kind": "missing_method",
-          "name": "getMobileRxBytes",
-          "owner": "Landroid/net/TrafficStats;",
-          "signature": "()J"
-        },
-        {
-          "kind": "missing_method",
-          "name": "getMobileTxBytes",
-          "owner": "Landroid/net/TrafficStats;",
-          "signature": "()J"
-        },
-        {
-          "kind": "missing_method",
-          "name": "getTotalRxBytes",
-          "owner": "Landroid/net/TrafficStats;",
-          "signature": "()J"
-        },
-        {
-          "kind": "missing_method",
-          "name": "getTotalTxBytes",
-          "owner": "Landroid/net/TrafficStats;",
-          "signature": "()J"
-        }
-      ],
-      "observed": {
-        "evidence": "2 members executed, 1 more referenced by executed methods, of 31",
-        "on_path": true
-      },
-      "oh_touchpoint": "netmanager",
-      "shim": "implement the members over netmanager",
-      "shim_class": "C4",
-      "verdict": "missing"
+      "shim": "check each hollow body against AOSP",
+      "shim_class": "C9",
+      "verdict": "hollow-candidate"
     },
     {
       "category": "java-api",
@@ -2200,213 +1704,59 @@
       "category": "java-api",
       "confidence": "static",
       "counts": {
-        "hollow": 0,
-        "missing": 5,
-        "probe": 0
+        "hollow": 4,
+        "missing": 0,
+        "probe": 1
       },
-      "effort": "M",
+      "effort": "verify",
       "examples": [
-        "android.net.nsd.NsdManager",
-        "android.net.nsd.NsdManager$DiscoveryListener",
-        "android.net.nsd.NsdManager$RegistrationListener",
-        "android.net.nsd.NsdManager$ResolveListener",
-        "android.net.nsd.NsdServiceInfo"
+        "android.net.ConnectivityManager$NetworkCallback.onAvailable",
+        "android.net.ConnectivityManager$NetworkCallback.onCapabilitiesChanged",
+        "android.net.ConnectivityManager$NetworkCallback.onLinkPropertiesChanged",
+        "android.net.ConnectivityManager$NetworkCallback.onLost"
       ],
-      "id": "java:Network service discovery (mDNS)",
-      "item": "Network service discovery (mDNS)",
+      "id": "java:Networking",
+      "item": "Networking",
       "members": [
         {
-          "kind": "missing_class",
+          "kind": "existence_probe",
           "name": null,
-          "owner": "Landroid/net/nsd/NsdManager$DiscoveryListener;",
+          "owner": "Landroid/net/ProxyProperties;",
           "signature": null
         },
         {
-          "kind": "missing_class",
-          "name": null,
-          "owner": "Landroid/net/nsd/NsdManager$RegistrationListener;",
-          "signature": null
+          "kind": "hollow_method",
+          "name": "onAvailable",
+          "owner": "Landroid/net/ConnectivityManager$NetworkCallback;",
+          "signature": "(Landroid/net/Network;)V"
         },
         {
-          "kind": "missing_class",
-          "name": null,
-          "owner": "Landroid/net/nsd/NsdManager$ResolveListener;",
-          "signature": null
+          "kind": "hollow_method",
+          "name": "onCapabilitiesChanged",
+          "owner": "Landroid/net/ConnectivityManager$NetworkCallback;",
+          "signature": "(Landroid/net/Network;Landroid/net/NetworkCapabilities;)V"
         },
         {
-          "kind": "missing_class",
-          "name": null,
-          "owner": "Landroid/net/nsd/NsdManager;",
-          "signature": null
+          "kind": "hollow_method",
+          "name": "onLinkPropertiesChanged",
+          "owner": "Landroid/net/ConnectivityManager$NetworkCallback;",
+          "signature": "(Landroid/net/Network;Landroid/net/LinkProperties;)V"
         },
         {
-          "kind": "missing_class",
-          "name": null,
-          "owner": "Landroid/net/nsd/NsdServiceInfo;",
-          "signature": null
+          "kind": "hollow_method",
+          "name": "onLost",
+          "owner": "Landroid/net/ConnectivityManager$NetworkCallback;",
+          "signature": "(Landroid/net/Network;)V"
         }
       ],
       "observed": {
         "evidence": "0 members executed, 0 more referenced by executed methods, of 5",
         "on_path": false
       },
-      "oh_touchpoint": "netmanager/mdns",
-      "shim": "implement the members over netmanager/mdns",
-      "shim_class": "C4",
-      "verdict": "missing"
-    },
-    {
-      "category": "java-api",
-      "confidence": "static",
-      "counts": {
-        "hollow": 0,
-        "missing": 5,
-        "probe": 0
-      },
-      "effort": "M",
-      "examples": [
-        "android.provider.MediaStore$Images$Media.EXTERNAL_CONTENT_URI",
-        "android.provider.MediaStore$Images$Media.getBitmap",
-        "android.provider.MediaStore$Images$Media.insertImage",
-        "android.provider.MediaStore$Images$Thumbnails.EXTERNAL_CONTENT_URI",
-        "android.provider.MediaStore$Video$Thumbnails"
-      ],
-      "id": "java:Media store",
-      "item": "Media store",
-      "members": [
-        {
-          "kind": "missing_class",
-          "name": null,
-          "owner": "Landroid/provider/MediaStore$Video$Thumbnails;",
-          "signature": null
-        },
-        {
-          "kind": "missing_field",
-          "name": "EXTERNAL_CONTENT_URI",
-          "owner": "Landroid/provider/MediaStore$Images$Media;",
-          "signature": "Landroid/net/Uri;"
-        },
-        {
-          "kind": "missing_field",
-          "name": "EXTERNAL_CONTENT_URI",
-          "owner": "Landroid/provider/MediaStore$Images$Thumbnails;",
-          "signature": "Landroid/net/Uri;"
-        },
-        {
-          "kind": "missing_method",
-          "name": "getBitmap",
-          "owner": "Landroid/provider/MediaStore$Images$Media;",
-          "signature": "(Landroid/content/ContentResolver;Landroid/net/Uri;)Landroid/graphics/Bitmap;"
-        },
-        {
-          "kind": "missing_method",
-          "name": "insertImage",
-          "owner": "Landroid/provider/MediaStore$Images$Media;",
-          "signature": "(Landroid/content/ContentResolver;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;"
-        }
-      ],
-      "observed": {
-        "evidence": "0 members executed, 0 more referenced by executed methods, of 5",
-        "on_path": false
-      },
-      "oh_touchpoint": "multimedia/media_library",
-      "shim": "implement the members over multimedia/media_library",
-      "shim_class": "C4",
-      "verdict": "missing"
-    },
-    {
-      "category": "java-api",
-      "confidence": "static",
-      "counts": {
-        "hollow": 3,
-        "missing": 2,
-        "probe": 0
-      },
-      "effort": "S",
-      "examples": [
-        "android.bluetooth.BluetoothAdapter.getBondedDevices",
-        "android.bluetooth.BluetoothDevice.getAddress"
-      ],
-      "id": "java:Bluetooth",
-      "item": "Bluetooth",
-      "members": [
-        {
-          "kind": "hollow_method",
-          "name": "getAddress",
-          "owner": "Landroid/bluetooth/BluetoothAdapter;",
-          "signature": "()Ljava/lang/String;"
-        },
-        {
-          "kind": "hollow_method",
-          "name": "getName",
-          "owner": "Landroid/bluetooth/BluetoothAdapter;",
-          "signature": "()Ljava/lang/String;"
-        },
-        {
-          "kind": "hollow_method",
-          "name": "isEnabled",
-          "owner": "Landroid/bluetooth/BluetoothAdapter;",
-          "signature": "()Z"
-        },
-        {
-          "kind": "missing_method",
-          "name": "getBondedDevices",
-          "owner": "Landroid/bluetooth/BluetoothAdapter;",
-          "signature": "()Ljava/util/Set;"
-        },
-        {
-          "kind": "missing_method",
-          "name": "getAddress",
-          "owner": "Landroid/bluetooth/BluetoothDevice;",
-          "signature": "()Ljava/lang/String;"
-        }
-      ],
-      "observed": {
-        "evidence": "0 members executed, 3 more referenced by executed methods, of 5",
-        "on_path": true
-      },
-      "oh_touchpoint": "communication/bluetooth",
-      "shim": "implement the members over communication/bluetooth",
-      "shim_class": "C4",
-      "verdict": "missing"
-    },
-    {
-      "category": "java-api",
-      "confidence": "static",
-      "counts": {
-        "hollow": 0,
-        "missing": 2,
-        "probe": 0
-      },
-      "effort": "S",
-      "examples": [
-        "android.content.pm.SigningInfo.getPublicKeys",
-        "android.content.pm.SigningInfo.getSchemeVersion"
-      ],
-      "id": "java:Package manager",
-      "item": "Package manager",
-      "members": [
-        {
-          "kind": "missing_method",
-          "name": "getPublicKeys",
-          "owner": "Landroid/content/pm/SigningInfo;",
-          "signature": "()Ljava/util/Collection;"
-        },
-        {
-          "kind": "missing_method",
-          "name": "getSchemeVersion",
-          "owner": "Landroid/content/pm/SigningInfo;",
-          "signature": "()I"
-        }
-      ],
-      "observed": {
-        "evidence": "0 members executed, 0 more referenced by executed methods, of 2",
-        "on_path": false
-      },
-      "oh_touchpoint": "bundle_framework",
-      "shim": "implement the members over bundle_framework",
-      "shim_class": "C4",
-      "verdict": "missing"
+      "oh_touchpoint": "netmanager",
+      "shim": "check each hollow body against AOSP",
+      "shim_class": "C9",
+      "verdict": "hollow-candidate"
     },
     {
       "category": "java-api",
@@ -2504,99 +1854,6 @@
       "shim": "check each hollow body against AOSP",
       "shim_class": "C9",
       "verdict": "hollow-candidate"
-    },
-    {
-      "category": "java-api",
-      "confidence": "static",
-      "counts": {
-        "hollow": 0,
-        "missing": 1,
-        "probe": 0
-      },
-      "effort": "S",
-      "examples": [
-        "android.app.job.JobInfo$Builder.setTraceTag"
-      ],
-      "id": "java:Job scheduling",
-      "item": "Job scheduling",
-      "members": [
-        {
-          "kind": "missing_method",
-          "name": "setTraceTag",
-          "owner": "Landroid/app/job/JobInfo$Builder;",
-          "signature": "(Ljava/lang/String;)Landroid/app/job/JobInfo$Builder;"
-        }
-      ],
-      "observed": {
-        "evidence": "1 members executed, 0 more referenced by executed methods, of 1",
-        "on_path": true
-      },
-      "oh_touchpoint": "resourceschedule/work_scheduler",
-      "shim": "implement the members over resourceschedule/work_scheduler",
-      "shim_class": "C4",
-      "verdict": "missing"
-    },
-    {
-      "category": "java-api",
-      "confidence": "static",
-      "counts": {
-        "hollow": 0,
-        "missing": 1,
-        "probe": 0
-      },
-      "effort": "S",
-      "examples": [
-        "android.hardware.biometrics.BiometricPrompt$CryptoObject.getOperationHandle"
-      ],
-      "id": "java:Biometrics",
-      "item": "Biometrics",
-      "members": [
-        {
-          "kind": "missing_method",
-          "name": "getOperationHandle",
-          "owner": "Landroid/hardware/biometrics/BiometricPrompt$CryptoObject;",
-          "signature": "()J"
-        }
-      ],
-      "observed": {
-        "evidence": "0 members executed, 0 more referenced by executed methods, of 1",
-        "on_path": false
-      },
-      "oh_touchpoint": "useriam",
-      "shim": "implement the members over useriam",
-      "shim_class": "C4",
-      "verdict": "missing"
-    },
-    {
-      "category": "java-api",
-      "confidence": "static",
-      "counts": {
-        "hollow": 0,
-        "missing": 1,
-        "probe": 0
-      },
-      "effort": "S",
-      "examples": [
-        "android.text.StaticLayout$Builder.setUseBoundsForWidth"
-      ],
-      "id": "java:Text",
-      "item": "Text",
-      "members": [
-        {
-          "kind": "missing_method",
-          "name": "setUseBoundsForWidth",
-          "owner": "Landroid/text/StaticLayout$Builder;",
-          "signature": "(Z)Landroid/text/StaticLayout$Builder;"
-        }
-      ],
-      "observed": {
-        "evidence": "0 members executed, 0 more referenced by executed methods, of 1",
-        "on_path": false
-      },
-      "oh_touchpoint": "none (library code inside Westlake)",
-      "shim": "port from AOSP, or confirm the caller tolerates absence",
-      "shim_class": "C1/C5",
-      "verdict": "missing"
     },
     {
       "category": "java-api",
@@ -2745,6 +2002,37 @@
         "on_path": false
       },
       "oh_touchpoint": "none (library code inside Westlake)",
+      "shim": "check each hollow body against AOSP",
+      "shim_class": "C9",
+      "verdict": "hollow-candidate"
+    },
+    {
+      "category": "java-api",
+      "confidence": "static",
+      "counts": {
+        "hollow": 1,
+        "missing": 0,
+        "probe": 0
+      },
+      "effort": "verify",
+      "examples": [
+        "android.provider.MediaStore.getPickImagesMaxLimit"
+      ],
+      "id": "java:Media store",
+      "item": "Media store",
+      "members": [
+        {
+          "kind": "hollow_method",
+          "name": "getPickImagesMaxLimit",
+          "owner": "Landroid/provider/MediaStore;",
+          "signature": "()I"
+        }
+      ],
+      "observed": {
+        "evidence": "0 members executed, 0 more referenced by executed methods, of 1",
+        "on_path": false
+      },
+      "oh_touchpoint": "multimedia/media_library",
       "shim": "check each hollow body against AOSP",
       "shim_class": "C9",
       "verdict": "hollow-candidate"
@@ -3148,37 +2436,6 @@
         "on_path": false
       },
       "oh_touchpoint": "unmapped",
-      "shim": "confirm the probed class should (not) exist on this platform",
-      "shim_class": "C8",
-      "verdict": "probe-only"
-    },
-    {
-      "category": "java-api",
-      "confidence": "static",
-      "counts": {
-        "hollow": 0,
-        "missing": 0,
-        "probe": 1
-      },
-      "effort": "verify",
-      "examples": [
-        "android.adservices.measurement.MeasurementManager"
-      ],
-      "id": "java:Privacy Sandbox",
-      "item": "Privacy Sandbox",
-      "members": [
-        {
-          "kind": "existence_probe",
-          "name": null,
-          "owner": "Landroid/adservices/measurement/MeasurementManager;",
-          "signature": null
-        }
-      ],
-      "observed": {
-        "evidence": "0 members executed, 0 more referenced by executed methods, of 1",
-        "on_path": false
-      },
-      "oh_touchpoint": "none (library code inside Westlake)",
       "shim": "confirm the probed class should (not) exist on this platform",
       "shim_class": "C8",
       "verdict": "probe-only"
@@ -4517,22 +3774,22 @@
       "verdict": "supplied"
     },
     {
-      "app_evidence": "android.net.TrafficStats.setThreadStatsTag(I)V",
+      "app_evidence": "e.g. android/content/Context, android/content/pm/PackageManager, android/content/res/Configuration, android/content/res/Resources",
       "category": "native-upcalls",
       "confidence": "static",
-      "effort": "S",
+      "effort": "none",
       "id": "upcall:libpanorenderer.so",
       "item": "libpanorenderer.so → 36 classes, 213 members",
       "observed": {
         "evidence": "none of its libraries loaded",
         "on_path": false
       },
-      "oh_touchpoint": "netmanager",
-      "provider": "1 hollow in Westlake adapter/stub jars",
-      "shim": "implement or un-hollow the members the library calls back into",
-      "shim_class": "C9",
+      "oh_touchpoint": "through the Java framework",
+      "provider": "every named class and member resolves in the runtime",
+      "shim": "none",
+      "shim_class": "C0",
       "unknown_classes": [],
-      "verdict": "hollow"
+      "verdict": "supplied"
     },
     {
       "app_evidence": "e.g. java/lang/ArrayIndexOutOfBoundsException, java/lang/Boolean, java/lang/ClassNotFoundException, java/lang/Double",
@@ -4592,17 +3849,13 @@
       "category": "native-symbols",
       "confidence": "static",
       "covered_symbols": [
-        "__FD_SET_chk",
-        "__cmsg_nxthdr",
         "__get_h_errno",
         "__pthread_cleanup_pop",
         "__pthread_cleanup_push",
         "__register_atfork",
-        "__sF",
         "__system_property_find",
         "__system_property_find_nth",
         "__system_property_foreach",
-        "_ctype_",
         "isinf",
         "isnan"
       ],
@@ -4613,21 +3866,18 @@
         "libba4e.so",
         "libe448.so",
         "libmlkit_google_ocr_pipeline.so",
-        "libpanorenderer.so",
-        "librealm-jni.so",
-        "librealmc.so",
-        "libsqliteJni.so"
+        "libpanorenderer.so"
       ],
-      "item": "bionic libc ABI: 14 symbols to translate onto musl",
+      "item": "bionic libc ABI: 10 symbols to translate onto musl",
       "observed": {
-        "evidence": "loaded: libakamaibmp.so, librealm-jni.so, librealmc.so",
+        "evidence": "loaded: libakamaibmp.so",
         "on_path": true
       },
       "oh_touchpoint": "OH musl libc",
       "open_symbols": [
         "__system_property_read"
       ],
-      "provider": "13 of 14 exported by the Westlake bionic shim",
+      "provider": "9 of 10 exported by the Westlake bionic shim",
       "shim": "bionic-ABI shim: forward or translate; never ship a second libc",
       "shim_class": "C1/C2",
       "verdict": "missing"
@@ -4635,30 +3885,38 @@
     {
       "category": "native-symbols",
       "confidence": "static",
-      "effort": "XS",
-      "id": "ndk:package",
-      "importing_libraries": [
-        "libmlkit_google_ocr_pipeline.so",
-        "libpanorenderer.so"
-      ],
-      "item": "NDK package: 6 symbols compiled from AOSP source",
-      "observed": {
-        "evidence": "none of its libraries loaded",
-        "on_path": false
-      },
-      "oh_touchpoint": "none beyond what Westlake already provides",
-      "open_symbols": [
+      "covered_symbols": [
         "AAssetManager_fromJava",
         "AAssetManager_open",
         "AAsset_close",
         "AAsset_getBuffer",
         "AAsset_getLength",
-        "ALooper_pollAll"
+        "ALooper_pollAll",
+        "__FD_SET_chk",
+        "__cmsg_nxthdr",
+        "__sF",
+        "_ctype_"
       ],
-      "provider": "built by Westlake (android-ndk15-sources.json) but not deployed on the measured board",
-      "shim": "compile the AOSP source (asset_manager.cpp, looper.cpp) and deploy it",
-      "shim_class": "C1",
-      "verdict": "missing"
+      "effort": "none",
+      "id": "ndk:now-provided",
+      "importing_libraries": [
+        "libakamaibmp.so",
+        "libmlkit_google_ocr_pipeline.so",
+        "libpanorenderer.so",
+        "librealm-jni.so",
+        "librealmc.so",
+        "libsqliteJni.so"
+      ],
+      "item": "10 symbols provided since the import resolution was taken",
+      "observed": {
+        "evidence": "loaded: libakamaibmp.so, librealm-jni.so, librealmc.so",
+        "on_path": true
+      },
+      "oh_touchpoint": "",
+      "provider": "exported on the board measured by ndk-coverage",
+      "shim": "none",
+      "shim_class": "C0",
+      "verdict": "supplied"
     },
     {
       "category": "native-symbols",

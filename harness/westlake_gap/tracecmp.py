@@ -37,6 +37,17 @@ def executed_methods(trace: Path) -> set[str]:
     return out
 
 
+def execution_order(trace: Path) -> dict[str, int]:
+    """Method -> rank of its first execution. A streaming trace emits each method record the first
+    time the method runs, so record order is first-execution order: a ruler along the run. Known
+    failure points on the target platform mark how far along it the port has got."""
+    order: dict[str, int] = {}
+    for cls, name, sig in _METHOD.findall(trace.read_bytes()):
+        key = "L" + cls.decode().replace(".", "/") + ";->" + name.decode() + sig.decode()
+        order.setdefault(key, len(order))
+    return order
+
+
 def compare(graph: Graph, reach: Reachability, executed: set[str]) -> dict[str, Any]:
     """Recall and precision of the static stages against one recorded run."""
     app_executed = set()
@@ -117,3 +128,101 @@ def observe(graph: Graph, executed: set[str], runtime: dict[str, Any] | None = N
         "platform_touch": platform,
         "loaded_app_libraries": sorted(loaded_libraries or []),
     }
+
+
+# Compiler-generated members whose names differ between two builds of the same source: nest-access
+# bridges, desugared lambdas and their holder classes. Absence of one proves nothing.
+_GENERATED = re.compile(r"-\$\$Nest\$|\$\$ExternalSyntheticLambda|\$\$Lambda\$|->lambda\$|\$\$ExternalSynthetic")
+
+
+def jni_tables(library_dir: Path) -> tuple[list[dict[str, Any]], set[str]]:
+    """JNI bindings a set of deployed libraries can supply: registration tables and `Java_*` exports.
+
+    A `JNINativeMethod` table does not name its class, so entries are grouped by table (contiguous
+    24-byte slots) and a class is matched to the table that shares the most of its native methods.
+    """
+    from .native import recover_jni_registration_entries
+    from .ndk import elf_exports, is_variant
+
+    tables, exports = [], set()
+    for path in sorted(library_dir.glob("*.so")):
+        if is_variant(path.name):
+            continue
+        data = path.read_bytes()
+        exports |= {name for name in elf_exports(data) if name.startswith("Java_")}
+        entries, _error = recover_jni_registration_entries(data)
+        entries.sort(key=lambda e: e["table_vaddr"])
+        current: list[dict[str, Any]] = []
+        for entry in entries:
+            if current and entry["table_vaddr"] - current[-1]["table_vaddr"] != 24:
+                tables.append({"library": path.name, "methods": {f"{e['name']}{e['signature']}" for e in current}})
+                current = []
+            current.append(entry)
+        if current:
+            tables.append({"library": path.name, "methods": {f"{e['name']}{e['signature']}" for e in current}})
+    return tables, exports
+
+
+def framework_check(executed: set[str], app_classes: set[str], runtime: dict[str, Any], resolver: Any,
+                    tables: list[dict[str, Any]], jni_exports: set[str], order: dict[str, int] | None = None) -> dict[str, Any]:
+    """Every platform method a real run executed, looked up in the runtime under test.
+
+    The gap map starts from what the *app* references. This starts from what actually *ran*, so it
+    also covers the framework calling itself and its own native code, which is where surprises that
+    no app-side scan can see come from. States: `class-missing`, `member-missing`, `hollow`
+    (placeholder in a Westlake adapter/stub jar), `native-unbound` (declared native in the runtime,
+    no registration table or export supplies it), and the fine ones.
+    """
+    from .nativeupcall import UPSTREAM_JARS, _westlake_owned
+    from .scanner import jni_symbols
+
+    classes = runtime["classes"]
+    by_class_natives: dict[str, set[str]] = {}
+    best_table: dict[str, dict[str, Any] | None] = {}
+
+    def table_for(owner: str, natives: set[str]) -> dict[str, Any] | None:
+        if owner not in best_table:
+            scored = [(len(natives & t["methods"]) / len(t["methods"]), len(natives & t["methods"]), t) for t in tables
+                      if natives & t["methods"]]
+            scored = [item for item in scored if item[0] >= 0.5 or item[1] >= 3]
+            best_table[owner] = max(scored, key=lambda item: (item[1], item[0]))[2] if scored else None
+        return best_table[owner]
+
+    rows, counts = [], {}
+    for key in sorted(executed):
+        owner, _, sig = key.partition("->")
+        if owner in app_classes:
+            continue
+        state, detail = "present", ""
+        if _GENERATED.search(key):
+            state = "compiler-generated"
+        elif owner not in classes:
+            state = "class-missing"
+        else:
+            name, _, rest = sig.partition("(")
+            hit = resolver.resolve_method(owner, name, "(" + rest)
+            if hit is None:
+                state = "member-missing"
+            else:
+                declaring, record = hit
+                artifact = record.get("artifact")
+                if sig in record.get("native_methods", []):
+                    natives = by_class_natives.setdefault(declaring, set(record.get("native_methods", [])))
+                    short, long = jni_symbols(declaring, name, "(" + rest)
+                    table = table_for(declaring, natives)
+                    if short in jni_exports or long in jni_exports:
+                        state, detail = "native-bound", "exported"
+                    elif table is not None and sig in table["methods"]:
+                        state, detail = "native-bound", table["library"]
+                    else:
+                        state = "native-unbound"
+                        detail = f"class table in {table['library']} lacks it" if table else "no registration table or export for this class"
+                elif sig in record.get("hollow_methods", []) and artifact not in UPSTREAM_JARS:
+                    state = "hollow" if _westlake_owned(artifact) else "hollow-candidate"
+                    detail = artifact or ""
+        counts[state] = counts.get(state, 0) + 1
+        if state not in {"present", "native-bound", "compiler-generated"}:
+            rows.append({"method": key, "state": state, "detail": detail, "first_seen": (order or {}).get(key)})
+    rows.sort(key=lambda r: (r["first_seen"] is None, r["first_seen"] or 0))
+    return {"counts": counts, "findings": rows}
+
