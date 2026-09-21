@@ -34,7 +34,8 @@ one place the app touches the platform:
 | **Java framework API** | dex member references, API-level filtered | Westlake boot jars |
 | **System services** *(new)* | `getSystemService(String\|Class)`, `ContextCompat`, `ServiceManager` call sites, with the manager methods called | AOSP `SystemServiceRegistry` + mainline `*FrameworkInitializer` (name → manager → binders, including binders a manager fetches lazily) × Westlake `OHServiceManager`, `AndroidRuntime.cpp` seeds, `AppSpawnXInit` fetcher overrides |
 | **Package manager & manifest** *(new)* | manifest components, `<meta-data>`, `directBootAware`, providers/`initOrder`, splits, processes; `PackageManager` calls | `PackageManagerAdapter` method by method (bridged / stub and what the stub returns); source checks for PMS semantics the source-app path must reproduce |
-| **Native platform symbols** | undefined symbols per packaged `.so` | symbols exported on the OH board, plus the Westlake bionic shim's exports |
+| **Java APIs called from native code** *(new)* | platform class names, member names and JNI signatures in each `.so`'s data strings (`FindClass`/`Get*ID` go through JNIEnv, not imports) | reference `android.jar` + runtime members, kept only when name and signature both occur; resolved against the boot jars. Hollow counts only in Westlake adapter/stub jars; in `framework.jar` it is a candidate; in upstream libcore it is not a gap |
+| **Native platform symbols** | undefined symbols per packaged `.so` | OpenHarmony **plus the NDK Westlake packages** (`--ndk-coverage`): each missing import is classified as package / libc-abi / weld to a named OH subsystem / truthful absence, with the bionic shim's exports and Westlake's build manifests subtracted. Without `--ndk-coverage`, the raw board |
 | **Native loading** | `extractNativeLibs`, split ABI libraries | OH linker capability (board test) and the launcher's extraction |
 | **Process sandbox & policy** *(new)* | native imports and Java calls that create policy-checked objects (`mkfifo`, `symlink`, …) | OH kernel policy for the app domain, **queried live** (`probes/avq.c`), beside the AOSP rule |
 | **External services & SDK behaviour** *(new)* | GMS/Firebase markers, device-probing SDKs | GMS absent on OH; Westlake loader refusal list |
@@ -84,6 +85,18 @@ A row's `confidence` says how far its provider verdict has been established:
 The intended loop is: map → run the probes named by `verify` rows → launch the app as acceptance.
 The launch stops being how gaps are discovered.
 
+## Which gaps are on the path
+
+The map alone left one unknown: after the blockers already fixed, what comes next? The answer is
+recorded rather than launched into. `trace-observe` turns a full ART method trace from a real
+Android device into per-row evidence, and `gap-map --observed` lists the gaps on that path. For
+McDonald's, cold start to the sign-in screen: **47 of 78 open gaps on the path, 31 off it, and all
+8 board failures on it** (`benchmark/2026-09-21-android-baseline/`).
+
+The static alternative, `startup-reach`, was built and measured against the same trace: 84% recall,
+7% precision. Dependency injection defeats a path-insensitive call graph, so it is kept for its
+call-chain explanations and as an upper bound, not as the staging authority.
+
 ## Backtest
 
 `--blockers` replays failures already paid for. Run against the provider **the app actually ran
@@ -117,13 +130,18 @@ uncommitted files are recorded; a map built on a dirty tree says so.
 
 ## Limits
 
-- **Native rows are not yet weighted by reach.** They group missing symbols by surface and name
-  the importing libraries, but do not yet use provenance, per-JNI-method reach or the Android
-  baseline capture (`native-surface`, `native-capture-diff`). So McDonald's 17 open `libandroid`
-  symbols are rated **L** for the whole app, although every one comes from
-  `libmlkit_google_ocr_pipeline.so` or `libpanorenderer.so`, and neither loads before sign-in on
-  the Android baseline. Joining those layers in would make each native row name the JNI methods and
-  Java features it breaks, and whether startup reaches it.
+- **Native rows are not yet weighted by reach.** They are classified by how the NDK supplies them,
+  and name the importing libraries, but do not yet use provenance, per-JNI-method reach or the
+  Android baseline capture (`native-surface`, `native-capture-diff`). McDonald's sensors weld and
+  asset package come only from `libmlkit_google_ocr_pipeline.so` and `libpanorenderer.so`, and
+  neither loads before sign-in on the Android baseline. Joining those layers in would make each
+  native row name the JNI methods and Java features it breaks, and whether startup reaches it.
+- **The NDK weld model is curated** per library and API family (`data/ndk-weld-model.json`), and
+  "provided" means the name is exported, not that it behaves.
+- **Native calls back into Java are matched from strings**, which misses names that are built at
+  runtime, encrypted or tail-merged, and matches a primitive-typed field by name alone. Classes
+  that neither the SDK nor the runtime knows are `CU`: on Toutiao they are ART and old-Android
+  internals probed by runtime-hacking libraries.
 - **Computed service names** (54 of 454 McDonald's requests) are reported as dynamic, not guessed.
 - **Hollow candidates** include bodies that are empty in AOSP too (`AsyncTask.onPostExecute`).
   They stay `verify` until bodies are compared with AOSP source.

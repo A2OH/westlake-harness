@@ -111,6 +111,13 @@ AndroidBitmap_* (3)           OpenSL ES (10)
 That is the whole native platform contract for two very different apps. It fits on one page, which
 is the strongest argument for packaging AOSP rather than authoring it.
 
+**Measured for the entire NDK (2026-09-21).** Beyond what two apps import: of the 4,449 public NDK
+symbols at API 33, OpenHarmony already provides 59% and Westlake's live libraries 3%. The missing
+1,719 are 462 to compile from AOSP source, 226 of libc ABI, 309 of truthful absence, and 710 behind
+ten welds (media, services, audio, camera, input, buffers, window, sensors, power, sync); 165 are
+already built by Westlake and not deployed. See `benchmark/2026-09-21-ndk-coverage/`; the gap map
+now classifies every native gap this way (`gap-map --ndk-coverage`).
+
 ---
 
 # MVP test plan

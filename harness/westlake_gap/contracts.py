@@ -79,9 +79,14 @@ def manifest_facts(path: Path) -> dict[str, Any]:
                 "meta_data": _meta(element),
                 "authorities": _attr(element, "authorities"),
                 "init_order": _attr(element, "initOrder"),
+                "target_activity": _attr(element, "targetActivity"),
             })
+    # A launcher entry may be an <activity-alias>; what starts is its target.
+    targets = {c["name"]: c["target_activity"] for c in components if c["kind"] == "activity-alias" and c["target_activity"]}
+    mains = sorted({targets.get(name, name) for name in (apk.get_main_activities() or [])})
     return {
         "package": apk.get_package(),
+        "main_activities": mains,
         "version_name": apk.get_androidversion_name(),
         "target_sdk": apk.get_target_sdk_version(),
         "splits": splits,

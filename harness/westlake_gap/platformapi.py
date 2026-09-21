@@ -89,6 +89,81 @@ def load_platform_index(jar: Path) -> dict[str, dict[str, set[str]]]:
     return index
 
 
+def _parse_class_detail(data: bytes) -> dict[str, Any] | None:
+    """Return this/super/interfaces and ``(name, descriptor)`` members of one class file."""
+    try:
+        if len(data) < 10 or data[:4] != b"\xca\xfe\xba\xbe":
+            return None
+        pool_count = struct.unpack_from(">H", data, 8)[0]
+        strings: dict[int, str] = {}
+        classes: dict[int, int] = {}
+        offset, index = 10, 1
+        while index < pool_count:
+            tag = data[offset]
+            offset += 1
+            if tag == 1:
+                length = struct.unpack_from(">H", data, offset)[0]
+                offset += 2
+                strings[index] = data[offset:offset + length].decode("utf-8", "replace")
+                offset += length
+            else:
+                width = _CONSTANT_WIDTH.get(tag)
+                if width is None:
+                    return None
+                if tag == 7:
+                    classes[index] = struct.unpack_from(">H", data, offset)[0]
+                offset += width
+            index += 2 if tag in _WIDE_TAGS else 1
+
+        def class_name(idx: int) -> str | None:
+            return strings.get(classes.get(idx, -1)) if idx else None
+
+        this_class, super_class = struct.unpack_from(">HH", data, offset + 2)
+        offset += 6
+        count = struct.unpack_from(">H", data, offset)[0]
+        interfaces = [class_name(struct.unpack_from(">H", data, offset + 2 + 2 * i)[0]) for i in range(count)]
+        offset += 2 + count * 2
+
+        def members() -> list[tuple[str, str, int]]:
+            nonlocal offset
+            total = struct.unpack_from(">H", data, offset)[0]
+            offset += 2
+            out = []
+            for _ in range(total):
+                access, name_index, descriptor_index = struct.unpack_from(">HHH", data, offset)
+                offset += 6
+                out.append((strings.get(name_index, ""), strings.get(descriptor_index, ""), access))
+                attributes = struct.unpack_from(">H", data, offset)[0]
+                offset += 2
+                for _ in range(attributes):
+                    length = struct.unpack_from(">I", data, offset + 2)[0]
+                    offset += 6 + length
+            return out
+
+        fields = members()
+        methods = members()
+        return {"this": class_name(this_class), "super": class_name(super_class),
+                "interfaces": [i for i in interfaces if i], "methods": methods, "fields": fields}
+    except (struct.error, IndexError, UnicodeDecodeError):
+        return None
+
+
+def load_platform_members(jar: Path) -> dict[str, dict[str, Any]]:
+    """Index one ``android.jar`` with descriptors and supertypes: ``android/os/Handler`` -> record.
+
+    Unlike :func:`load_platform_index`, members keep their JNI signatures, which is what native
+    code passes to ``GetMethodID`` and what makes a string match meaningful.
+    """
+    index: dict[str, dict[str, Any]] = {}
+    with zipfile.ZipFile(jar) as archive:
+        for entry in archive.namelist():
+            if entry.endswith(".class"):
+                parsed = _parse_class_detail(archive.read(entry))
+                if parsed and parsed["this"]:
+                    index[parsed["this"]] = parsed
+    return index
+
+
 def introduced_at(
     owner: str, member: str | None, kind: str, indexes: dict[int, dict[str, dict[str, set[str]]]]
 ) -> int | None:

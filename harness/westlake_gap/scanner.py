@@ -991,6 +991,7 @@ def scan_apk(
     include_elf: bool = True,
     target_abi: str | None = None,
     native_reach: bool = False,
+    platform_members: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     inventory = inventory_dex(path)
     resolver = RuntimeResolver(runtime)
@@ -1257,6 +1258,40 @@ def scan_apk(
             )
         )
 
+    # Java framework APIs the packaged native code calls back into through JNIEnv. Needs a reference
+    # android.jar to enumerate candidate members; see nativeupcall.py.
+    native_upcalls: list[dict[str, Any]] = []
+    if platform_members is not None:
+        from .nativeupcall import library_upcalls, resolve_upcalls
+
+        for elf in selected_elfs:
+            blob = _read_archive_member(path, elf)
+            if not blob:
+                continue
+            upcalls = resolve_upcalls(library_upcalls(blob, platform_members, runtime), resolver, platform_members)
+            if not upcalls["classes"]:
+                continue
+            native_upcalls.append({"elf": elf["name"], "soname": elf.get("soname"), **upcalls})
+            evidence = [{"elf": elf["name"], "elf_sha256": elf.get("sha256")}]
+            for cls, state in upcalls["class_states"].items():
+                if state in {"missing", "unknown"}:
+                    findings.append(finding(
+                        identity["sha256"], runtime["runtime_lock_id"], "native_upcall_class",
+                        "C1/C4" if state == "missing" else "CU", f"L{cls};", layer="J",
+                        evidence=evidence, reached_from=elf["name"], state=state,
+                    ))
+            for member in upcalls["members"]:
+                if member["state"] not in {"missing", "hollow", "hollow-candidate"}:
+                    continue
+                hollow = member["state"].startswith("hollow")
+                findings.append(finding(
+                    identity["sha256"], runtime["runtime_lock_id"],
+                    "native_upcall_hollow" if hollow else f"native_upcall_{member['kind']}",
+                    "C9-candidate" if hollow else "C1/C4",
+                    f"L{member['owner']};", member["name"], member["descriptor"], layer="J",
+                    evidence=evidence, reached_from=elf["name"], state=member["state"],
+                ))
+
     findings.sort(key=lambda x: (x["kind"], x["dependency"]["owner"], x["dependency"].get("name") or "", x["dependency"].get("signature") or ""))
     result = {
         "schema_version": SCHEMA_VERSION,
@@ -1272,6 +1307,7 @@ def scan_apk(
             "existence_probes": inventory.probes,
             "load_library_calls": inventory.load_libraries,
             "service_requests": inventory.service_requests,
+            "native_upcalls": native_upcalls if platform_members is not None else None,
             "platform_method_names": _method_names_by_owner(inventory.method_refs),
             "declared_native_methods": native_findings,
             "elfs": elf_records,
