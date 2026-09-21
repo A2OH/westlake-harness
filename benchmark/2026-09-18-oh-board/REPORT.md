@@ -1,6 +1,6 @@
 # First resolution against the deployed OpenHarmony runtime
 
-**Board.** OpenHarmony 6.1.0.31, API 23, aarch64 (`hdc` target `5cdbf6af…`).
+**Board.** OpenHarmony 6.1.0.31, API 23, aarch64 (one `hdc` target).
 **Index.** 76 libraries — OH's `/system/lib64` core, `platformsdk` and `ndk` graphics, plus the whole
 deployed Westlake runtime at `/data/local/tmp/asx` — 896,414 exported symbols.
 **Date.** 2026-09-18.

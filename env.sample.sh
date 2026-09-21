@@ -14,3 +14,6 @@ export HDC="/path/to/hdc"                              # OpenHarmony device clie
 export BOARD_SERIAL="<your-board-serial>"              # target device
 # dexlib2 classpath for harness/tools/*.java
 export DEXLIB_CP="/path/to/smali-dexlib2.jar:/path/to/smali-util.jar:/path/to/guava.jar"
+export ANDROID_SDK_ROOT="$HOME/android-sdk"           # Android SDK: platforms/, build-tools/, ndk/
+export WESTLAKE_DEBUG_KEYSTORE="$HOME/.android/debug.keystore"  # signs the probe APKs
+export WESTLAKE_ANDROID11_SYSLIBS="/path/to/android11-syslibs"  # arm64 system libs pulled from a stock Android 11 device

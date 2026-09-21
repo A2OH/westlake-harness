@@ -15,7 +15,7 @@
     "native_abis": [],
     "native_library_entries": 0,
     "package": "org.westlake.probe.runningprocesses",
-    "path": "/home/dspfac/westlake-harness/probes/running-app-processes/out/running-app-processes-probe.apk",
+    "path": "running-app-processes-probe.apk",
     "permissions": [],
     "providers": 0,
     "receivers": 0,

@@ -18,6 +18,7 @@ rather than silently treated as absence.
 from __future__ import annotations
 
 import re
+import os
 import shutil
 import subprocess
 from bisect import bisect_right
@@ -221,6 +222,21 @@ def dynamic_symbol_candidates(data: bytes, surfaces: Iterable[str] | None = None
     return {surface: sorted(names) for surface, names in sorted(grouped.items())}
 
 
+def android_sdk_roots() -> list[Path]:
+    """Candidate Android SDK roots: ``$ANDROID_HOME``, ``$ANDROID_SDK_ROOT``, then ``~/android-sdk``."""
+    roots = [Path(os.environ[name]) for name in ("ANDROID_HOME", "ANDROID_SDK_ROOT") if os.environ.get(name)]
+    roots.append(Path.home() / "android-sdk")
+    return roots
+
+
+def ndk_toolchain_bins() -> list[Path]:
+    """NDK toolchain ``bin`` directories under every SDK root, newest NDK first."""
+    found: list[Path] = []
+    for root in android_sdk_roots():
+        found.extend(sorted((root / "ndk").glob("*/toolchains/llvm/prebuilt/*/bin"), reverse=True))
+    return found
+
+
 def find_objdump(explicit: str | None = None) -> str | None:
     """Locate an aarch64-capable ``llvm-objdump``; the NDK ships one, binutils often does not."""
     if explicit:
@@ -228,7 +244,7 @@ def find_objdump(explicit: str | None = None) -> str | None:
     found = shutil.which("llvm-objdump")
     if found:
         return found
-    for root in sorted(Path("/home/dspfac/android-sdk/ndk").glob("*/toolchains/llvm/prebuilt/*/bin"), reverse=True):
+    for root in ndk_toolchain_bins():
         candidate = root / "llvm-objdump"
         if candidate.exists():
             return str(candidate)
