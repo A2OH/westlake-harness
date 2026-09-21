@@ -1,0 +1,23 @@
+{
+  "app": "com.mcdonalds.app 26.31.1",
+  "description": "Failures McDonald's hit on the OH board during launch-by-launch bring-up (2026-09-18), in the order they surfaced. Each names the map row that should have flagged it before any launch.",
+  "baseline_westlake_commit": "75d82d5",
+  "blockers": [
+    {"id": "B1", "symptom": "0 of 10 packaged libraries load: the OH linker cannot map lib/arm64-v8a/*.so out of the APK",
+     "fix": "launcher extracts split libraries (manifest #10)", "predicted_by": ["load:in-apk"]},
+    {"id": "B2", "symptom": "libraries fail to link on bionic-only symbols (__sF, __pthread_cleanup_push, __system_property_foreach, isnan, ...)",
+     "fix": "13-symbol bionic shim (westlake 826298c)", "predicted_by": ["sym:bionic libc", "sym:sysprop"]},
+    {"id": "B3", "symptom": "libakamaibmp.so self-traps with an uncatchable SIGILL on load",
+     "fix": "loader refuses the library (westlake cd6ad8b)", "predicted_by": ["env:akamai-bot-manager"]},
+    {"id": "B4", "symptom": "getSystemService(\"jobscheduler\") returns null; WorkManager NPE",
+     "fix": "local JobScheduler fetcher (westlake d6d7c03)", "predicted_by": ["svc:jobscheduler"]},
+    {"id": "B5", "symptom": "density-split drawables not found: split APKs invisible to resources",
+     "fix": "SplitApkResolver + declared split paths (westlake 23075c8, c279d16)", "predicted_by": ["pm:splits"]},
+    {"id": "B6", "symptom": "LocationManager null on splash (AnalyticsHelper)",
+     "fix": "location binder in OHServiceManager (uncommitted, 2026-09-18)", "predicted_by": ["svc:location"]},
+    {"id": "B7", "symptom": "Realm: Failed to create fifo ... Permission denied (13)",
+     "fix": "none yet: board run permissive; policy rule or data_app_el2_file label needed", "predicted_by": ["policy:fifo_file"]},
+    {"id": "B8", "symptom": "Firebase Instance ID component is not present (component discovery found no registrars)",
+     "fix": "direct-boot match defaults in SourcePackageRegistry (uncommitted, 2026-09-18)", "predicted_by": ["pm:component-metadata"]}
+  ]
+}

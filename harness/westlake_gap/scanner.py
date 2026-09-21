@@ -470,6 +470,7 @@ class DexInventory:
     callable_owners: set[str] = field(default_factory=set)
     probes: list[dict[str, Any]] = field(default_factory=list)
     load_libraries: list[dict[str, Any]] = field(default_factory=list)
+    service_requests: list[dict[str, Any]] = field(default_factory=list)
     native_methods: list[dict[str, Any]] = field(default_factory=list)
 
 
@@ -539,6 +540,7 @@ def _inventory_defined_methods(
 
 def _inventory_instructions(dex: DEX, method: Any, caller: dict[str, Any], out: DexInventory) -> None:
     string_regs: dict[int, str] = {}
+    class_regs: dict[int, str] = {}
     for offset, instruction in method.get_instructions_idx():
         name = instruction.get_name()
         try:
@@ -549,12 +551,21 @@ def _inventory_instructions(dex: DEX, method: Any, caller: dict[str, Any], out: 
 
         if name in {"const-string", "const-string/jumbo"} and registers:
             string_regs[registers[0]] = str(instruction.get_string())
+            class_regs.pop(registers[0], None)
+            continue
+        if name == "const-class" and registers:
+            try:
+                class_regs[registers[0]] = str(dex.get_cm_type(int(instruction.get_ref_kind())))
+            except Exception:
+                class_regs.pop(registers[0], None)
+            string_regs.pop(registers[0], None)
             continue
         if name.startswith("move-object") and len(registers) >= 2:
-            if registers[1] in string_regs:
-                string_regs[registers[0]] = string_regs[registers[1]]
-            else:
-                string_regs.pop(registers[0], None)
+            for regs in (string_regs, class_regs):
+                if registers[1] in regs:
+                    regs[registers[0]] = regs[registers[1]]
+                else:
+                    regs.pop(registers[0], None)
             continue
 
         ref_kind: int | None = None
@@ -576,6 +587,7 @@ def _inventory_instructions(dex: DEX, method: Any, caller: dict[str, Any], out: 
                     if len(out.method_sites[key]) < 8:
                         out.method_sites[key].append({**caller, "offset": offset, "opcode": name})
                 _detect_string_call(key, registers, string_regs, caller, offset, out)
+                _detect_service_call(key, registers, string_regs, class_regs, caller, offset, out)
             except (IndexError, TypeError, ValueError):
                 pass
         elif (
@@ -597,6 +609,7 @@ def _inventory_instructions(dex: DEX, method: Any, caller: dict[str, Any], out: 
         # treating an old constant as a later reflective argument while preserving direct flows.
         if registers and not name.startswith(("invoke-", "return", "if-", "iput", "sput", "aput", "throw")):
             string_regs.pop(registers[0], None)
+            class_regs.pop(registers[0], None)
 
 
 def _detect_string_call(
@@ -633,6 +646,46 @@ def _detect_string_call(
                 "descriptor": descriptor_value,
             }
         )
+
+
+# Calls that ask the platform for a service by name or by manager class. The argument register
+# for each: instance getSystemService(String|Class) takes it after `this`; the static forms take it
+# first (ServiceManager) or second (ContextCompat, after the Context).
+_SERVICE_BY_NAME = {"(Ljava/lang/String;)Ljava/lang/Object;"}
+_SERVICE_BY_CLASS = {"(Ljava/lang/Class;)Ljava/lang/Object;"}
+
+
+def _detect_service_call(
+    key: tuple[str, str, str],
+    registers: list[int],
+    string_regs: dict[int, str],
+    class_regs: dict[int, str],
+    caller: dict[str, Any],
+    offset: int,
+    out: DexInventory,
+) -> None:
+    owner, name, descriptor = key
+    request: dict[str, Any] | None = None
+    if name == "getSystemService" and len(registers) >= 2:
+        if descriptor in _SERVICE_BY_NAME:
+            request = {"api": "getSystemService(String)", "service": string_regs.get(registers[1])}
+        elif descriptor in _SERVICE_BY_CLASS:
+            request = {"api": "getSystemService(Class)", "manager_class": class_regs.get(registers[1])}
+        elif descriptor == "(Landroid/content/Context;Ljava/lang/Class;)Ljava/lang/Object;":
+            request = {"api": f"{owner}->getSystemService", "manager_class": class_regs.get(registers[1])}
+    elif owner == "Landroid/os/ServiceManager;" and name in {"getService", "checkService", "getServiceOrThrow"} and registers:
+        request = {"api": f"ServiceManager.{name}", "service": string_regs.get(registers[0]), "binder_direct": True}
+    if request is None:
+        return
+    request["dynamic"] = request.get("service") is None and request.get("manager_class") is None
+    out.service_requests.append({**caller, "offset": offset, "call_owner": owner, **request})
+
+
+def _method_names_by_owner(method_refs: Iterable[tuple[str, str, str]]) -> dict[str, list[str]]:
+    names: dict[str, set[str]] = defaultdict(set)
+    for owner, name, _descriptor in method_refs:
+        names[owner].add(name)
+    return {owner: sorted(values) for owner, values in sorted(names.items())}
 
 
 def jni_mangle(value: str) -> str:
@@ -1218,6 +1271,8 @@ def scan_apk(
             "platform_field_references": len(inventory.field_refs),
             "existence_probes": inventory.probes,
             "load_library_calls": inventory.load_libraries,
+            "service_requests": inventory.service_requests,
+            "platform_method_names": _method_names_by_owner(inventory.method_refs),
             "declared_native_methods": native_findings,
             "elfs": elf_records,
             "native_imports": native_imports,

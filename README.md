@@ -23,14 +23,23 @@ from you**:
   at the missing class. It silently takes the wrong branch, and the failure surfaces in another
   package, naming nothing useful.
 - A **hollow stub** fails only when the app calls the one method that was omitted.
+- A **present name can hide a broken contract**: `JobScheduler` is a complete class but
+  `getSystemService` returns null; `getServiceInfo` is implemented but filters out every component;
+  `mkfifo` resolves in musl but the kernel policy denies the pipe it creates. Each of these passed
+  every name check and failed on the board, one launch at a time.
 
-Each of those cost real time on the hardest app attempted. **All of them were statically visible.**
+Each of those cost real time on the hardest apps attempted. **All of them were statically visible.**
 
 The core claim of this repo:
 
 > The APK's DEX already lists every platform API it can touch. The runtime's boot jars already list
 > what is provided. **Subtract before you launch**, rank by where the gap is reached, and apply the
 > cheapest repair that the gap's class allows.
+
+Subtraction finds missing *names*. The contracts behind names that do resolve (services, package
+manager semantics, kernel policy, library loading) are checked against models extracted from the
+Westlake and OpenHarmony sources, and the result is one **gap map** per APK: every place it touches
+OpenHarmony, the shim each gap needs, and what that shim costs.
 
 ---
 
@@ -46,12 +55,15 @@ The core claim of this repo:
 | `analysis/PORTING-PLAYBOOK.md` | Four investigation tiers, and which to run first. |
 | `analysis/AOSP-PACKAGING-STRATEGY.md` | **Package AOSP, weld the bottom** — where to cut the native stack, nested SurfaceFlinger, binder findings, and the MVP plan against Toutiao and McDonald's. |
 | `analysis/NATIVE-GAP-PROCESS-AMENDMENT.md` | **Amendment closing the native half of the subtraction**: native import resolution, blast radius, `N-C8` probe-only absence, provenance-driven repair routing, `N-C9` hollow shims, coverage accounting. |
+| `analysis/GAP-MAP-METHOD.md` | **The gap map**: one table per APK of every surface where it touches OpenHarmony (Java API, system services, package manager, native symbols and loading, sandbox policy, external SDKs), with verdict, shim class, effort and conformance probe per row, and a backtest against failures already hit on the board. |
 | `analysis/NATIVE-PROVENANCE-AND-SURFACE.md` | **Native side of the same subtraction**: which upstream component a stripped `.so` contains, and which Android surfaces each registered JNI method reaches. |
 | `evidence/TOUTIAO-BRINGUP-HANDOFF.md` | The empirical base: a full app bring-up with fixes, **nine refuted hypotheses**, build hazards, and harness notes. |
 | `harness/westlake_gap/` | Production static scanner: ordered runtime index, multidex/split APK inventory, member resolution, `C8`/`C9` detection, ELF/JNI evidence, gap registry, and report. `nativeprov.py` adds component provenance and per-method platform-surface reach (`native-surface`). |
 | `runtime/TRACE-EVIDENCE.md` | Native/reflection watchlists, structured event envelope, ART hook points, and evidence-promotion rules. |
 | `harness/` | `ttwalk.sh` (launch/drive/measure), `shotlit.py` (quantify a capture), and older focused dexlib2 investigation tools. |
 | `harness/westlake_gap/platformapi.py` | API-level classifier (`annotate-api-levels`): splits an absence list into what a reference device could actually reach, what postdates it, and what was never Android. Cut McDonald's 138 absences to 58. |
+| `harness/westlake_gap/gapmap.py`, `services.py`, `contracts.py` | `gap-map` command. `services.py` joins the APK's `getSystemService` requests with AOSP's registry and what Westlake answers for each binder; `contracts.py` models the package manager and manifest contract; `data/oh-app-data-policy.json` is the OH app-data policy, queried from the kernel. |
+| `probes/avq.c` | Asks the loaded SELinux policy for an access decision through `/sys/fs/selinux/access`; this is how the OH app-data matrix was measured. |
 | `harness/jniprobe/` | Frida agent and scenario drivers that record `RegisterNatives`, `dlopen` and `dlsym` from a running app, plus the Frida-17 and Magisk obstacles the first run hit. |
 | `tests/` | Executable known-answer fixtures: `ColorMatrix.set`, a Conscrypt existence probe, an unbound vendor native, and an arm64 JNI library whose platform-coupled and pure methods are known in advance. |
 | `corpus/` | Reproducible top-ten selection plus exact download hashes. APK/XAPK binaries are deliberately ignored. |
@@ -60,6 +72,7 @@ The core claim of this repo:
 | `benchmark/2026-08-23-toutiao/native-analysis/ANDROID11-RESOLUTION.md` | **99.7% of 3415 native imports decided** against stock Android 11, and the IFUNC parser defect that finding exposed. |
 | `benchmark/2026-09-18-oh-board/` | **First resolution against the deployed OpenHarmony runtime**: 90% of both apps' native imports resolve; the real gap is 58 symbols in five clusters, led by `__sF` at 40 importing libraries. |
 | `benchmark/2026-09-18-mcdonalds/` | Cheap validation of the second MVP app: in-APK library loading is required (WebView needs it too), the gap list, and a working Android baseline that touches only six native methods. |
+| `benchmark/2026-09-21-gapmap/` | **McDonald's gap map and backtest**: against the provider it actually ran on, the map flags 6 of the 8 board failures before any launch; today 76 gaps remain (1×OH, 3×L, 22×M, 30×S, 20×verify). |
 | `benchmark/2026-09-18-mvp-target/` | The Android-specific platform contract of both MVP apps: 206 symbols, of which 48 are ours to implement. |
 | `benchmark/2026-08-23-toutiao/runtime-evidence/android-baseline/` | **Static reading versus running**, on a OnePlus 6T: 280 methods and five whole libraries that no APK scan can see, 43 failing `dlsym` lookups, 463 methods never exercised. |
 | `benchmark/2026-08-23-toutiao/native-analysis/` | Provenance and surface reach over 138 stripped arm64 libraries: 1417 recovered JNI methods, 47% touching no platform surface. |
@@ -119,30 +132,115 @@ These are in the process spec as hard rules. They exist because each was learned
 
 ---
 
-## Current implementation
+## What the harness measures
 
-Milestone 0 static detection is implemented. The scanner:
+One APK in, one map out. Each surface below has an **app side** read from the APK and a **provider
+side** read from the Westlake/OpenHarmony sources or measured on the board, and every provider fact
+carries a `file:line`.
 
-- hashes and indexes an ordered boot classpath, honoring first-definition-wins for duplicate classes;
-- scans every supplied DEX across APK, XAPK, and APKM base/split containers;
-- resolves classes, methods, and fields through superclass/interface inheritance;
-- traces direct string-register flows into `Class.forName`, `findClass`, and `loadClass`;
-- flags directly absent contracts separately from small constant/no-op body heuristics;
-- inventories target-ABI ELF dependencies, symbols, build IDs, JNI exports, and `JNI_OnLoad` evidence;
-- recovers relocation-backed static `JNINativeMethod` tables and correlates them with DEX-native
-  contracts and same-DEX `System.loadLibrary` provenance;
-- resolves APK and runtime-bridge JNI exports separately, and reports unavailable/mismatched ABIs
-  instead of borrowing evidence from another architecture;
-- keeps unresolved dynamic JNI registration out of the published gap count;
-- emits per-APK JSON, a deduplicated registry, and a Markdown portfolio report;
-- generates runtime watchlists and joins structured or legacy Westlake JNI/class-load traces into an
-  evidence ledger with safe terminal/non-terminal state transitions.
+### Java surface
 
-The executable fixture must pass before portfolio use:
+- Indexes an ordered boot classpath (first definition wins) and scans every DEX in APK, XAPK and APKM
+  base/split containers.
+- Resolves classes, methods and fields through inheritance; separates directly absent members from
+  hollow constant/no-op bodies (`C9` candidates).
+- Traces string flows into `Class.forName`/`findClass`/`loadClass`: presence probes (`C8`) that
+  crash-driven debugging cannot find at all.
+- `annotate-api-levels` drops absences a reference device could not reach either (introduced after
+  its API level, or never Android). On McDonald's that turned 138 absences into 58.
+
+### Native surface: the developer's own C/C++
+
+Stripped libraries carry no source and no useful names. The harness does not try to understand
+what the code computes; it measures **where each library crosses into the platform**, because only
+those crossings touch OpenHarmony. Six layers, each answering one question:
+
+| # | Question | How | Detail |
+|---|---|---|---|
+| 1 | What does the library need from the platform? | Undefined dynamic symbols per `.so`, read from the APK and splits (pyelftools, IFUNC-correct), resolved against the **real** system libraries of a stock Android 11 device and of the OH board | [`ANDROID11-RESOLUTION.md`](benchmark/2026-08-23-toutiao/native-analysis/ANDROID11-RESOLUTION.md), [OH board](benchmark/2026-09-18-oh-board/REPORT.md) |
+| 2 | Whose code is inside it? | Component provenance: about 50 upstream components (OpenSSL/BoringSSL, SQLite, Realm, Skia, V8/Hermes, Flutter, Unity, WebRTC, TFLite, …) by version banners and exported-symbol families | [`NATIVE-PROVENANCE-AND-SURFACE.md`](analysis/NATIVE-PROVENANCE-AND-SURFACE.md) |
+| 3 | What can Java call into, even when stripped? | `Java_*` exports plus `RegisterNatives` tables rebuilt from relocations as {name, signature, function} | same |
+| 4 | Which platform surface does each JNI method reach? | Call graph from each JNI entry through PLT stubs to the imports, following tail calls; imports grouped into surfaces (GLES/EGL, Vulkan, `libandroid`, media, audio, binder, sysprop, dynamic load, net, file, thread) | same; blast radius in [`NATIVE-GAP-PROCESS-AMENDMENT.md`](analysis/NATIVE-GAP-PROCESS-AMENDMENT.md) |
+| 5 | What happens when it actually runs? | Frida capture on the Android baseline of `RegisterNatives`, `dlopen`, `dlsym`; `dlsym` name strings found statically | [`harness/jniprobe/`](harness/jniprobe/README.md), [baseline](benchmark/2026-08-23-toutiao/runtime-evidence/android-baseline/) |
+| 6 | Does a resolved symbol actually work on OH? | Policy-checked calls (`mkfifo`, `symlink`, `mknod`, `link`) against the live OH kernel policy; in-APK loading against the OH linker; missing symbols minus the Westlake bionic shim's exports and the loader's refusal list | [`GAP-MAP-METHOD.md`](analysis/GAP-MAP-METHOD.md) |
+
+What it has shown so far:
+
+- Toutiao: 99.7% of 3,415 imports decided against Android 11. That resolution exposed a parser
+  bug that had reported `strlen` and friends missing in 103 libraries.
+- On the OH board, 90% of both apps' imports resolve. The real gap is 58 symbols in five clusters,
+  led by `__sF` in 40 libraries.
+- 1,417 JNI methods were recovered from Toutiao's 138 stripped libraries, and 47% of them touch no
+  platform surface, so they port unchanged.
+- The Android baseline sees 280 methods and 5 libraries that no APK scan can.
+- On McDonald's, Realm's `mkfifo` resolves, but OH denies the pipe it creates.
+
+Provenance decides the repair route. Known open-source code takes its upstream port. The
+developer's own code only needs its **boundary** shimmed, and that boundary is what layers 1, 4 and 6
+enumerate.
+
+### Contracts behind present names
+
+| Surface | App side | Provider side |
+|---|---|---|
+| System services | `getSystemService(String\|Class)`, `ContextCompat`, `ServiceManager` call sites and the manager methods called | AOSP `SystemServiceRegistry` and mainline initializers (name → manager → binders, including lazily fetched ones) × Westlake `OHServiceManager`, runtime seeds, `AppSpawnXInit` overrides → `supplied` / `hollow` / `null` / `inert` / `unresolved` |
+| Package manager & manifest | components, `<meta-data>`, `directBootAware`, providers and `initOrder`, splits, processes; `PackageManager` calls | `PackageManagerAdapter` method by method (bridged, or stub and what it returns); PMS semantics the source-app path must reproduce |
+| Sandbox policy | objects the code creates | OH SELinux decision for the app domain, queried from the loaded kernel policy (`probes/avq.c`, `harness/westlake_gap/data/oh-app-data-policy.json`), beside the AOSP rule |
+| Loading & packaging | `extractNativeLibs`, split ABI libraries | OH linker capability (board test) and the launcher's extraction |
+| External services & SDKs | GMS/Firebase markers; device-probing SDKs | no Google services on OH; the loader's refusal list |
+
+### The output: one gap map per APK
+
+`gap-map` joins all of the above. Every row has a **verdict**, a **shim class** (`C0`–`C10`, `CU`),
+an **effort** tier, the **OH touchpoint**, provider and app evidence, and the **conformance probe**
+(`probes/`) that settles it on the board when one exists:
+
+| Effort | Meaning |
+|---|---|
+| XS / S / M / L | hours / a day / days: a facade over an existing OH capability, sized by what the app calls / weeks: a subsystem or bridge |
+| OH | needs an OpenHarmony platform change: outside Westlake |
+| verify | the source claims it; run the named probe before trusting it |
+
+A row's confidence moves from **static** (APK + provider source) to **probe** (a white-box probe
+passed on the board) to **observed** (the full app on the device). The launch becomes acceptance
+rather than discovery. `--blockers` replays failures already paid for. Against the provider
+McDonald's actually ran on, the map flags **6 of its 8** board failures before any launch
+([benchmark](benchmark/2026-09-21-gapmap/README.md)).
+
+### Commands
+
+| Command | Purpose |
+|---|---|
+| `snapshot-runtime` | index an ordered boot classpath, bridge ELFs and system libraries into a runtime lock |
+| `scan` | Java, native and service inventory of one APK/XAPK/APKM against a runtime index |
+| `annotate-api-levels` | drop absences a reference device could not reach either |
+| `native-surface` | component provenance and per-JNI-method platform-surface reach for packaged ELFs |
+| `native-capture-diff` | join a runtime JNI capture (`harness/jniprobe`) to a `native-surface` scan |
+| `gap-map` | the categorized, effort-rated map; `--blockers` for a backtest or status board |
+| `benchmark`, `trace-watchlist`, `ingest-trace`, `runtime-summary` | portfolio scans and runtime trace evidence |
+
+OH-board symbol resolution is a recipe, not yet a command: pull the board's libraries with `hdc`,
+then call `resolve_native_imports` (see the [board report](benchmark/2026-09-18-oh-board/REPORT.md)).
+
+The known-answer fixtures must pass before any portfolio or map is trusted:
 
 ```bash
-PYTHONPATH=harness python3 -m unittest discover -s tests -v
+PYTHONPATH=harness:tests python3 -m unittest discover -s tests -v
 ```
+
+### Known limits
+
+- **Native rows in the gap map are not yet joined with layers 2, 4 and 5.** The map rates McDonald's
+  17 open `libandroid` symbols **L** for the whole app, but all of them come from
+  `libmlkit_google_ocr_pipeline.so` and `libpanorenderer.so`. On the Android baseline those
+  libraries never load before sign-in. Until the join lands, native effort is not weighted by what
+  the app reaches.
+- Computed service names and computed reflection are reported, not guessed.
+- Hollow-body candidates include bodies that are empty in AOSP too; they stay `verify`.
+- Provider models are extracted from source with patterns and covered by known-answer tests; a
+  large refactor of the provider needs the extractor updated.
+- Semantic mismatches (right name, wrong behaviour) stay invisible until a probe or the Android
+  baseline compares them.
 
 ## Ten-app benchmark
 
