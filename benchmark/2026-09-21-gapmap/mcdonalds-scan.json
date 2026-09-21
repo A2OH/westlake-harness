@@ -27,7 +27,7 @@
     ],
     "native_library_entries": 0,
     "package": "com.mcdonalds.app",
-    "path": "/tmp/claude-1000/-home-dspfac-a2hlab/ba503e44-b0bb-446e-866d-e0566b949cae/scratchpad/gapmap/mcdonalds-26.31.1.xapk",
+    "path": "mcdonalds-26.31.1.xapk",
     "permissions": [
       "android.permission.ACCESS_ADSERVICES_AD_ID",
       "android.permission.ACCESS_ADSERVICES_ATTRIBUTION",
@@ -43367,6 +43367,31 @@
     },
     {
       "apk_sha256": "e338bc0b6f786361ef8c296d73e7eafd1025d0e63270d236108758705d067d33",
+      "classification": "C9-candidate",
+      "confidence": "direct-static",
+      "dependency": {
+        "layer": "J",
+        "name": "setThreadStatsTag",
+        "owner": "Landroid/net/TrafficStats;",
+        "signature": "(I)V"
+      },
+      "evidence": [
+        {
+          "elf": "config.arm64_v8a.apk!lib/arm64-v8a/libpanorenderer.so",
+          "elf_sha256": "61e47088baddf9212a10253cbc15d58d652f692ba5f29c7bba4a469b72e8e459"
+        }
+      ],
+      "fault_origin": "apk-dependency",
+      "finding_id": "sha256:aebfcd57cb3215f634999122916146f48a980d4c50c99d7305b24bef4d228acd",
+      "kind": "native_upcall_hollow",
+      "reached_from": "config.arm64_v8a.apk!lib/arm64-v8a/libpanorenderer.so",
+      "reference_count": 0,
+      "runtime_lock_id": "sha256:96366a206a3fe68c5b78a68fafc9addc63932d8ecee1ee166ab802ea62322b2b",
+      "state": "hollow",
+      "status": "candidate"
+    },
+    {
+      "apk_sha256": "e338bc0b6f786361ef8c296d73e7eafd1025d0e63270d236108758705d067d33",
       "candidate_libraries": [
         {
           "attribution": [
@@ -45880,7 +45905,7 @@
       "target_abi": "arm64-v8a"
     }
   ],
-  "generated_at": "2026-09-21T18:07:07+00:00",
+  "generated_at": "2026-09-21T21:13:11+00:00",
   "inventory": {
     "declared_native_methods": [
       {
@@ -127773,6 +127798,3210 @@
       },
       "target_abi": "arm64-v8a"
     },
+    "native_upcalls": [
+      {
+        "boundary_types": [
+          "android/graphics/Path"
+        ],
+        "class_states": {
+          "android/graphics/Path": "present"
+        },
+        "classes": [
+          "android/graphics/Path"
+        ],
+        "elf": "config.arm64_v8a.apk!lib/arm64-v8a/libandroidx.graphics.path.so",
+        "members": [
+          {
+            "declared_in": "android/graphics/Path",
+            "descriptor": "J",
+            "in_reference": false,
+            "kind": "field",
+            "name": "mNativePath",
+            "owner": "android/graphics/Path",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          }
+        ],
+        "soname": "libandroidx.graphics.path.so"
+      },
+      {
+        "boundary_types": [
+          "android/content/res/AssetManager",
+          "java/io/File",
+          "java/lang/String"
+        ],
+        "class_states": {
+          "android/os/Environment": "present",
+          "java/io/File": "present",
+          "java/lang/IllegalArgumentException": "present"
+        },
+        "classes": [
+          "android/os/Environment",
+          "java/io/File",
+          "java/lang/IllegalArgumentException"
+        ],
+        "elf": "config.arm64_v8a.apk!lib/arm64-v8a/libmlkit_google_ocr_pipeline.so",
+        "members": [
+          {
+            "declared_in": "android/os/Environment",
+            "descriptor": "()Ljava/io/File;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getExternalStorageDirectory",
+            "owner": "android/os/Environment",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/File",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getAbsolutePath",
+            "owner": "java/io/File",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          }
+        ],
+        "soname": "libmlkit_google_ocr_pipeline.so"
+      },
+      {
+        "boundary_types": [
+          "android/content/Context",
+          "android/content/pm/ApplicationInfo",
+          "android/content/pm/PackageInfo",
+          "android/content/pm/PackageManager",
+          "android/content/res/Configuration",
+          "android/content/res/Resources",
+          "android/graphics/Bitmap",
+          "android/graphics/Bitmap$Config",
+          "android/graphics/BitmapFactory$Options",
+          "android/graphics/BitmapRegionDecoder",
+          "android/graphics/Rect",
+          "android/os/Bundle",
+          "android/os/Handler",
+          "android/os/ResultReceiver",
+          "android/view/Surface",
+          "java/io/File",
+          "java/io/InputStream",
+          "java/io/OutputStream",
+          "java/io/PrintWriter",
+          "java/io/Serializable",
+          "java/io/Writer",
+          "java/lang/CharSequence",
+          "java/lang/Class",
+          "java/lang/ClassLoader",
+          "java/lang/Object",
+          "java/lang/Runnable",
+          "java/lang/String",
+          "java/net/URLConnection",
+          "java/security/SecureRandom",
+          "java/text/ParsePosition",
+          "java/util/Date",
+          "java/util/Locale",
+          "java/util/Map",
+          "javax/net/ssl/KeyManager",
+          "javax/net/ssl/SSLContext",
+          "javax/net/ssl/SSLSocketFactory",
+          "javax/net/ssl/TrustManager"
+        ],
+        "class_states": {
+          "android/content/Context": "present",
+          "android/content/pm/PackageManager": "present",
+          "android/content/res/Configuration": "present",
+          "android/content/res/Resources": "present",
+          "android/graphics/Bitmap": "present",
+          "android/graphics/Bitmap$Config": "present",
+          "android/graphics/BitmapFactory": "present",
+          "android/graphics/BitmapFactory$Options": "present",
+          "android/graphics/BitmapRegionDecoder": "present",
+          "android/graphics/Rect": "present",
+          "android/net/TrafficStats": "present",
+          "android/os/Build": "present",
+          "android/os/Build$VERSION": "present",
+          "android/os/Bundle": "present",
+          "android/os/Handler": "present",
+          "java/io/ByteArrayInputStream": "present",
+          "java/io/ByteArrayOutputStream": "present",
+          "java/io/File": "present",
+          "java/io/InputStream": "present",
+          "java/io/OutputStream": "present",
+          "java/io/PrintWriter": "present",
+          "java/io/StringWriter": "present",
+          "java/lang/ClassLoader": "present",
+          "java/lang/Integer": "present",
+          "java/lang/Object": "present",
+          "java/lang/String": "present",
+          "java/lang/Throwable": "present",
+          "java/net/HttpURLConnection": "present",
+          "java/net/URL": "present",
+          "java/text/SimpleDateFormat": "present",
+          "java/util/Date": "present",
+          "java/util/HashMap": "present",
+          "java/util/Locale": "present",
+          "java/util/zip/GZIPInputStream": "present",
+          "javax/net/ssl/HttpsURLConnection": "present",
+          "javax/net/ssl/SSLContext": "present"
+        },
+        "classes": [
+          "android/content/Context",
+          "android/content/pm/PackageManager",
+          "android/content/res/Configuration",
+          "android/content/res/Resources",
+          "android/graphics/Bitmap",
+          "android/graphics/Bitmap$Config",
+          "android/graphics/BitmapFactory",
+          "android/graphics/BitmapFactory$Options",
+          "android/graphics/BitmapRegionDecoder",
+          "android/graphics/Rect",
+          "android/net/TrafficStats",
+          "android/os/Build",
+          "android/os/Build$VERSION",
+          "android/os/Bundle",
+          "android/os/Handler",
+          "java/io/ByteArrayInputStream",
+          "java/io/ByteArrayOutputStream",
+          "java/io/File",
+          "java/io/InputStream",
+          "java/io/OutputStream",
+          "java/io/PrintWriter",
+          "java/io/StringWriter",
+          "java/lang/ClassLoader",
+          "java/lang/Integer",
+          "java/lang/Object",
+          "java/lang/String",
+          "java/lang/Throwable",
+          "java/net/HttpURLConnection",
+          "java/net/URL",
+          "java/text/SimpleDateFormat",
+          "java/util/Date",
+          "java/util/HashMap",
+          "java/util/Locale",
+          "java/util/zip/GZIPInputStream",
+          "javax/net/ssl/HttpsURLConnection",
+          "javax/net/ssl/SSLContext"
+        ],
+        "elf": "config.arm64_v8a.apk!lib/arm64-v8a/libpanorenderer.so",
+        "members": [
+          {
+            "declared_in": "android/content/Context",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "android/content/Context",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/content/Context",
+            "descriptor": "()Landroid/content/res/Resources;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getResources",
+            "owner": "android/content/Context",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/content/Context",
+            "descriptor": "()Landroid/content/pm/PackageManager;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getPackageManager",
+            "owner": "android/content/Context",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/content/Context",
+            "descriptor": "(I)Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getString",
+            "owner": "android/content/Context",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/content/Context",
+            "descriptor": "()Ljava/lang/ClassLoader;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getClassLoader",
+            "owner": "android/content/Context",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/content/Context",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getPackageName",
+            "owner": "android/content/Context",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/content/Context",
+            "descriptor": "()Ljava/io/File;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getFilesDir",
+            "owner": "android/content/Context",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/content/Context",
+            "descriptor": "()Ljava/io/File;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getExternalCacheDir",
+            "owner": "android/content/Context",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/content/Context",
+            "descriptor": "()[Ljava/io/File;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getExternalMediaDirs",
+            "owner": "android/content/Context",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/content/pm/PackageManager",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "android/content/pm/PackageManager",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/content/pm/PackageManager",
+            "descriptor": "(Ljava/lang/String;I)Landroid/content/pm/PackageInfo;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getPackageInfo",
+            "owner": "android/content/pm/PackageManager",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/content/pm/PackageManager",
+            "descriptor": "(Ljava/lang/String;I)Landroid/content/pm/ApplicationInfo;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getApplicationInfo",
+            "owner": "android/content/pm/PackageManager",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/content/pm/PackageManager",
+            "descriptor": "(Ljava/lang/String;)Z",
+            "in_reference": true,
+            "kind": "method",
+            "name": "hasSystemFeature",
+            "owner": "android/content/pm/PackageManager",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/content/pm/PackageManager",
+            "descriptor": "(Ljava/lang/String;I)Z",
+            "in_reference": true,
+            "kind": "method",
+            "name": "hasSystemFeature",
+            "owner": "android/content/pm/PackageManager",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/content/pm/PackageManager",
+            "descriptor": "(Landroid/content/pm/ApplicationInfo;)Ljava/lang/CharSequence;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getApplicationLabel",
+            "owner": "android/content/pm/PackageManager",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/content/pm/PackageManager",
+            "descriptor": "Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "field",
+            "name": "FEATURE_VR_HEADTRACKING",
+            "owner": "android/content/pm/PackageManager",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/content/pm/PackageManager",
+            "descriptor": "Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "field",
+            "name": "FEATURE_VR_MODE",
+            "owner": "android/content/pm/PackageManager",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/content/pm/PackageManager",
+            "descriptor": "Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "field",
+            "name": "FEATURE_VR_MODE_HIGH_PERFORMANCE",
+            "owner": "android/content/pm/PackageManager",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/content/pm/PackageManager",
+            "descriptor": "I",
+            "in_reference": true,
+            "kind": "field",
+            "name": "PERMISSION_DENIED",
+            "owner": "android/content/pm/PackageManager",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/content/res/Configuration",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "android/content/res/Configuration",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/content/res/Configuration",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "toString",
+            "owner": "android/content/res/Configuration",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/content/res/Configuration",
+            "descriptor": "()I",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getLayoutDirection",
+            "owner": "android/content/res/Configuration",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/content/res/Resources",
+            "descriptor": "(I)Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getString",
+            "owner": "android/content/res/Resources",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/content/res/Resources",
+            "descriptor": "()Landroid/content/res/Configuration;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getConfiguration",
+            "owner": "android/content/res/Resources",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/content/res/Resources",
+            "descriptor": "()V",
+            "in_reference": false,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "android/content/res/Resources",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/content/res/Resources",
+            "descriptor": "()Ljava/lang/ClassLoader;",
+            "in_reference": false,
+            "kind": "method",
+            "name": "getClassLoader",
+            "owner": "android/content/res/Resources",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/graphics/Bitmap",
+            "descriptor": "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "createBitmap",
+            "owner": "android/graphics/Bitmap",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/graphics/Bitmap$Config",
+            "descriptor": "(Ljava/lang/String;)Landroid/graphics/Bitmap$Config;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "valueOf",
+            "owner": "android/graphics/Bitmap$Config",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Enum",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "name",
+            "owner": "android/graphics/Bitmap$Config",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Enum",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "toString",
+            "owner": "android/graphics/Bitmap$Config",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Enum",
+            "descriptor": "Ljava/lang/String;",
+            "in_reference": false,
+            "kind": "field",
+            "name": "name",
+            "owner": "android/graphics/Bitmap$Config",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/graphics/BitmapFactory",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "android/graphics/BitmapFactory",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/graphics/BitmapFactory",
+            "descriptor": "([BIILandroid/graphics/BitmapFactory$Options;)Landroid/graphics/Bitmap;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "decodeByteArray",
+            "owner": "android/graphics/BitmapFactory",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/graphics/BitmapFactory$Options",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "android/graphics/BitmapFactory$Options",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/graphics/BitmapFactory$Options",
+            "descriptor": "Z",
+            "in_reference": true,
+            "kind": "field",
+            "name": "inJustDecodeBounds",
+            "owner": "android/graphics/BitmapFactory$Options",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/graphics/BitmapFactory$Options",
+            "descriptor": "I",
+            "in_reference": true,
+            "kind": "field",
+            "name": "inSampleSize",
+            "owner": "android/graphics/BitmapFactory$Options",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/graphics/BitmapFactory$Options",
+            "descriptor": "I",
+            "in_reference": true,
+            "kind": "field",
+            "name": "outHeight",
+            "owner": "android/graphics/BitmapFactory$Options",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/graphics/BitmapFactory$Options",
+            "descriptor": "I",
+            "in_reference": true,
+            "kind": "field",
+            "name": "outWidth",
+            "owner": "android/graphics/BitmapFactory$Options",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/graphics/BitmapRegionDecoder",
+            "descriptor": "([BIIZ)Landroid/graphics/BitmapRegionDecoder;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "newInstance",
+            "owner": "android/graphics/BitmapRegionDecoder",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/graphics/BitmapRegionDecoder",
+            "descriptor": "(Landroid/graphics/Rect;Landroid/graphics/BitmapFactory$Options;)Landroid/graphics/Bitmap;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "decodeRegion",
+            "owner": "android/graphics/BitmapRegionDecoder",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/graphics/BitmapRegionDecoder",
+            "descriptor": "(J)V",
+            "in_reference": false,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "android/graphics/BitmapRegionDecoder",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/graphics/Rect",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "android/graphics/Rect",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/graphics/Rect",
+            "descriptor": "(IIII)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "android/graphics/Rect",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/graphics/Rect",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "toString",
+            "owner": "android/graphics/Rect",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/graphics/Rect",
+            "descriptor": "()I",
+            "in_reference": true,
+            "kind": "method",
+            "name": "width",
+            "owner": "android/graphics/Rect",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/graphics/Rect",
+            "descriptor": "()I",
+            "in_reference": true,
+            "kind": "method",
+            "name": "height",
+            "owner": "android/graphics/Rect",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/net/TrafficStats",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "android/net/TrafficStats",
+            "runtime_artifact": "adapter-mainline-stubs.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/net/TrafficStats",
+            "descriptor": "(I)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "setThreadStatsTag",
+            "owner": "android/net/TrafficStats",
+            "runtime_artifact": "adapter-mainline-stubs.jar",
+            "state": "hollow"
+          },
+          {
+            "declared_in": "android/os/Build",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "android/os/Build",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/os/Build",
+            "descriptor": "Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "field",
+            "name": "DEVICE",
+            "owner": "android/os/Build",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/os/Build",
+            "descriptor": "Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "field",
+            "name": "FINGERPRINT",
+            "owner": "android/os/Build",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/os/Build",
+            "descriptor": "Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "field",
+            "name": "HARDWARE",
+            "owner": "android/os/Build",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/os/Build",
+            "descriptor": "Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "field",
+            "name": "MANUFACTURER",
+            "owner": "android/os/Build",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/os/Build",
+            "descriptor": "Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "field",
+            "name": "MODEL",
+            "owner": "android/os/Build",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/os/Build",
+            "descriptor": "Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "field",
+            "name": "UNKNOWN",
+            "owner": "android/os/Build",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/os/Build",
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/String;",
+            "in_reference": false,
+            "kind": "method",
+            "name": "getString",
+            "owner": "android/os/Build",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/os/Build$VERSION",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "android/os/Build$VERSION",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/os/Build$VERSION",
+            "descriptor": "I",
+            "in_reference": true,
+            "kind": "field",
+            "name": "SDK_INT",
+            "owner": "android/os/Build$VERSION",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/os/Bundle",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "android/os/Bundle",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/os/Bundle",
+            "descriptor": "(I)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "android/os/Bundle",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/os/Bundle",
+            "descriptor": "()Ljava/lang/ClassLoader;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getClassLoader",
+            "owner": "android/os/Bundle",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/os/Bundle",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "clear",
+            "owner": "android/os/Bundle",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/os/Bundle",
+            "descriptor": "(Ljava/lang/String;)Ljava/io/Serializable;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getSerializable",
+            "owner": "android/os/Bundle",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/os/Bundle",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "toString",
+            "owner": "android/os/Bundle",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/os/BaseBundle",
+            "descriptor": "()I",
+            "in_reference": true,
+            "kind": "method",
+            "name": "size",
+            "owner": "android/os/Bundle",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/os/BaseBundle",
+            "descriptor": "(Ljava/lang/String;)I",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getInt",
+            "owner": "android/os/Bundle",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/os/BaseBundle",
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getString",
+            "owner": "android/os/Bundle",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/os/Handler",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "android/os/Handler",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/os/Handler",
+            "descriptor": "(Ljava/lang/Runnable;)Z",
+            "in_reference": true,
+            "kind": "method",
+            "name": "post",
+            "owner": "android/os/Handler",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/os/Handler",
+            "descriptor": "(Ljava/lang/Runnable;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "removeCallbacks",
+            "owner": "android/os/Handler",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/os/Handler",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "toString",
+            "owner": "android/os/Handler",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "android/os/Handler",
+            "descriptor": "(Z)V",
+            "in_reference": false,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "android/os/Handler",
+            "runtime_artifact": "framework.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/ByteArrayInputStream",
+            "descriptor": "([B)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/io/ByteArrayInputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/ByteArrayInputStream",
+            "descriptor": "([BII)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/io/ByteArrayInputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/ByteArrayInputStream",
+            "descriptor": "()I",
+            "in_reference": true,
+            "kind": "method",
+            "name": "read",
+            "owner": "java/io/ByteArrayInputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/ByteArrayInputStream",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "close",
+            "owner": "java/io/ByteArrayInputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/ByteArrayInputStream",
+            "descriptor": "I",
+            "in_reference": true,
+            "kind": "field",
+            "name": "count",
+            "owner": "java/io/ByteArrayInputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/InputStream",
+            "descriptor": "([B)I",
+            "in_reference": true,
+            "kind": "method",
+            "name": "read",
+            "owner": "java/io/ByteArrayInputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/ByteArrayOutputStream",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/io/ByteArrayOutputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/ByteArrayOutputStream",
+            "descriptor": "(I)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/io/ByteArrayOutputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/ByteArrayOutputStream",
+            "descriptor": "(I)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "write",
+            "owner": "java/io/ByteArrayOutputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/ByteArrayOutputStream",
+            "descriptor": "([BII)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "write",
+            "owner": "java/io/ByteArrayOutputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/ByteArrayOutputStream",
+            "descriptor": "()[B",
+            "in_reference": true,
+            "kind": "method",
+            "name": "toByteArray",
+            "owner": "java/io/ByteArrayOutputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/ByteArrayOutputStream",
+            "descriptor": "()I",
+            "in_reference": true,
+            "kind": "method",
+            "name": "size",
+            "owner": "java/io/ByteArrayOutputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/ByteArrayOutputStream",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "toString",
+            "owner": "java/io/ByteArrayOutputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/ByteArrayOutputStream",
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "toString",
+            "owner": "java/io/ByteArrayOutputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/ByteArrayOutputStream",
+            "descriptor": "(I)Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "toString",
+            "owner": "java/io/ByteArrayOutputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/ByteArrayOutputStream",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "close",
+            "owner": "java/io/ByteArrayOutputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/ByteArrayOutputStream",
+            "descriptor": "I",
+            "in_reference": true,
+            "kind": "field",
+            "name": "count",
+            "owner": "java/io/ByteArrayOutputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/OutputStream",
+            "descriptor": "([B)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "write",
+            "owner": "java/io/ByteArrayOutputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/OutputStream",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "flush",
+            "owner": "java/io/ByteArrayOutputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/File",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/io/File",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/File",
+            "descriptor": "(Ljava/lang/String;Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/io/File",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/File",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getAbsolutePath",
+            "owner": "java/io/File",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/File",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "toString",
+            "owner": "java/io/File",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/InputStream",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/io/InputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/InputStream",
+            "descriptor": "()I",
+            "in_reference": true,
+            "kind": "method",
+            "name": "read",
+            "owner": "java/io/InputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/InputStream",
+            "descriptor": "([B)I",
+            "in_reference": true,
+            "kind": "method",
+            "name": "read",
+            "owner": "java/io/InputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/InputStream",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "close",
+            "owner": "java/io/InputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/OutputStream",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/io/OutputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/OutputStream",
+            "descriptor": "(I)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "write",
+            "owner": "java/io/OutputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/OutputStream",
+            "descriptor": "([B)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "write",
+            "owner": "java/io/OutputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/OutputStream",
+            "descriptor": "([BII)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "write",
+            "owner": "java/io/OutputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/OutputStream",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "flush",
+            "owner": "java/io/OutputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/OutputStream",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "close",
+            "owner": "java/io/OutputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/PrintWriter",
+            "descriptor": "(Ljava/io/Writer;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/io/PrintWriter",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/PrintWriter",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/io/PrintWriter",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/PrintWriter",
+            "descriptor": "(Ljava/lang/String;Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/io/PrintWriter",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/PrintWriter",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "flush",
+            "owner": "java/io/PrintWriter",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/PrintWriter",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "close",
+            "owner": "java/io/PrintWriter",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/PrintWriter",
+            "descriptor": "(I)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "write",
+            "owner": "java/io/PrintWriter",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/PrintWriter",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "write",
+            "owner": "java/io/PrintWriter",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/StringWriter",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/io/StringWriter",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/StringWriter",
+            "descriptor": "(I)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/io/StringWriter",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/StringWriter",
+            "descriptor": "(I)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "write",
+            "owner": "java/io/StringWriter",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/StringWriter",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "write",
+            "owner": "java/io/StringWriter",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/StringWriter",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "toString",
+            "owner": "java/io/StringWriter",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/StringWriter",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "flush",
+            "owner": "java/io/StringWriter",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/StringWriter",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "close",
+            "owner": "java/io/StringWriter",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/ClassLoader",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/ClassLoader",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/ClassLoader",
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/Class;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "findClass",
+            "owner": "java/lang/ClassLoader",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/ClassLoader",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": false,
+            "kind": "method",
+            "name": "name",
+            "owner": "java/lang/ClassLoader",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/ClassLoader",
+            "descriptor": "J",
+            "in_reference": false,
+            "kind": "field",
+            "name": "allocator",
+            "owner": "java/lang/ClassLoader",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/ClassLoader",
+            "descriptor": "Ljava/lang/String;",
+            "in_reference": false,
+            "kind": "field",
+            "name": "name",
+            "owner": "java/lang/ClassLoader",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Integer",
+            "descriptor": "(I)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/Integer",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Integer",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/Integer",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Integer",
+            "descriptor": "(I)Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "toString",
+            "owner": "java/lang/Integer",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Integer",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "toString",
+            "owner": "java/lang/Integer",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Integer",
+            "descriptor": "I",
+            "in_reference": false,
+            "kind": "field",
+            "name": "value",
+            "owner": "java/lang/Integer",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/String",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/String",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/String",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/String",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/String",
+            "descriptor": "([BII)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/String",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/String",
+            "descriptor": "([B)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/String",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/String",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "toString",
+            "owner": "java/lang/String",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/String",
+            "descriptor": "(I)Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "valueOf",
+            "owner": "java/lang/String",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/String",
+            "descriptor": "B",
+            "in_reference": false,
+            "kind": "field",
+            "name": "UTF16",
+            "owner": "java/lang/String",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/String",
+            "descriptor": "I",
+            "in_reference": false,
+            "kind": "field",
+            "name": "count",
+            "owner": "java/lang/String",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Throwable",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/Throwable",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Throwable",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/Throwable",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Throwable",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "toString",
+            "owner": "java/lang/Throwable",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Throwable",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "printStackTrace",
+            "owner": "java/lang/Throwable",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Throwable",
+            "descriptor": "(Ljava/io/PrintWriter;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "printStackTrace",
+            "owner": "java/lang/Throwable",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/HttpURLConnection",
+            "descriptor": "(I)Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getHeaderFieldKey",
+            "owner": "java/net/HttpURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/HttpURLConnection",
+            "descriptor": "(I)Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getHeaderField",
+            "owner": "java/net/HttpURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/HttpURLConnection",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "setRequestMethod",
+            "owner": "java/net/HttpURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/HttpURLConnection",
+            "descriptor": "()I",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getResponseCode",
+            "owner": "java/net/HttpURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/HttpURLConnection",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "disconnect",
+            "owner": "java/net/HttpURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/HttpURLConnection",
+            "descriptor": "Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "field",
+            "name": "method",
+            "owner": "java/net/HttpURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/URLConnection",
+            "descriptor": "(I)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "setConnectTimeout",
+            "owner": "java/net/HttpURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/URLConnection",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getContentEncoding",
+            "owner": "java/net/HttpURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/URLConnection",
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getHeaderField",
+            "owner": "java/net/HttpURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/URLConnection",
+            "descriptor": "()Ljava/io/InputStream;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getInputStream",
+            "owner": "java/net/HttpURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/URLConnection",
+            "descriptor": "()Ljava/io/OutputStream;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getOutputStream",
+            "owner": "java/net/HttpURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/URLConnection",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "toString",
+            "owner": "java/net/HttpURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/URLConnection",
+            "descriptor": "(Z)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "setDoOutput",
+            "owner": "java/net/HttpURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/URLConnection",
+            "descriptor": "(J)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "setIfModifiedSince",
+            "owner": "java/net/HttpURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/URLConnection",
+            "descriptor": "(Ljava/lang/String;Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "setRequestProperty",
+            "owner": "java/net/HttpURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/URLConnection",
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getRequestProperty",
+            "owner": "java/net/HttpURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/URL",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/net/URL",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/URL",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getProtocol",
+            "owner": "java/net/URL",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/URL",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "toString",
+            "owner": "java/net/URL",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/URL",
+            "descriptor": "()Ljava/net/URLConnection;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "openConnection",
+            "owner": "java/net/URL",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/URL",
+            "descriptor": "Ljava/lang/String;",
+            "in_reference": false,
+            "kind": "field",
+            "name": "file",
+            "owner": "java/net/URL",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/text/SimpleDateFormat",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/text/SimpleDateFormat",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/text/SimpleDateFormat",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/text/SimpleDateFormat",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/text/SimpleDateFormat",
+            "descriptor": "(Ljava/lang/String;Ljava/text/ParsePosition;)Ljava/util/Date;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "parse",
+            "owner": "java/text/SimpleDateFormat",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/text/DateFormat",
+            "descriptor": "I",
+            "in_reference": true,
+            "kind": "field",
+            "name": "FULL",
+            "owner": "java/text/SimpleDateFormat",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/text/DateFormat",
+            "descriptor": "I",
+            "in_reference": true,
+            "kind": "field",
+            "name": "MEDIUM",
+            "owner": "java/text/SimpleDateFormat",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/Date",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/util/Date",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/Date",
+            "descriptor": "(J)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/util/Date",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/Date",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/util/Date",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/Date",
+            "descriptor": "()J",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getTime",
+            "owner": "java/util/Date",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/Date",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "toString",
+            "owner": "java/util/Date",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/HashMap",
+            "descriptor": "(I)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/util/HashMap",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/HashMap",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/util/HashMap",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/HashMap",
+            "descriptor": "(Ljava/util/Map;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/util/HashMap",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/HashMap",
+            "descriptor": "()I",
+            "in_reference": true,
+            "kind": "method",
+            "name": "size",
+            "owner": "java/util/HashMap",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/HashMap",
+            "descriptor": "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "put",
+            "owner": "java/util/HashMap",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/HashMap",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "clear",
+            "owner": "java/util/HashMap",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/AbstractMap",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "toString",
+            "owner": "java/util/HashMap",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/HashMap",
+            "descriptor": "I",
+            "in_reference": false,
+            "kind": "field",
+            "name": "size",
+            "owner": "java/util/HashMap",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/Locale",
+            "descriptor": "(Ljava/lang/String;Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/util/Locale",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/Locale",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/util/Locale",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/Locale",
+            "descriptor": "()Ljava/util/Locale;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getDefault",
+            "owner": "java/util/Locale",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/Locale",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getLanguage",
+            "owner": "java/util/Locale",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/Locale",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getCountry",
+            "owner": "java/util/Locale",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/Locale",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "toString",
+            "owner": "java/util/Locale",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/Locale",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "toLanguageTag",
+            "owner": "java/util/Locale",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/zip/GZIPInputStream",
+            "descriptor": "(Ljava/io/InputStream;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/util/zip/GZIPInputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/zip/GZIPInputStream",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "close",
+            "owner": "java/util/zip/GZIPInputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/zip/InflaterInputStream",
+            "descriptor": "()I",
+            "in_reference": true,
+            "kind": "method",
+            "name": "read",
+            "owner": "java/util/zip/GZIPInputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/FilterInputStream",
+            "descriptor": "([B)I",
+            "in_reference": true,
+            "kind": "method",
+            "name": "read",
+            "owner": "java/util/zip/GZIPInputStream",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "javax/net/ssl/HttpsURLConnection",
+            "descriptor": "(Ljavax/net/ssl/SSLSocketFactory;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "setSSLSocketFactory",
+            "owner": "javax/net/ssl/HttpsURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/HttpURLConnection",
+            "descriptor": "(I)Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getHeaderFieldKey",
+            "owner": "javax/net/ssl/HttpsURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/HttpURLConnection",
+            "descriptor": "(I)Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getHeaderField",
+            "owner": "javax/net/ssl/HttpsURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/HttpURLConnection",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "setRequestMethod",
+            "owner": "javax/net/ssl/HttpsURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/HttpURLConnection",
+            "descriptor": "()I",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getResponseCode",
+            "owner": "javax/net/ssl/HttpsURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/HttpURLConnection",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "disconnect",
+            "owner": "javax/net/ssl/HttpsURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/HttpURLConnection",
+            "descriptor": "Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "field",
+            "name": "method",
+            "owner": "javax/net/ssl/HttpsURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/URLConnection",
+            "descriptor": "(I)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "setConnectTimeout",
+            "owner": "javax/net/ssl/HttpsURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/URLConnection",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getContentEncoding",
+            "owner": "javax/net/ssl/HttpsURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/URLConnection",
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getHeaderField",
+            "owner": "javax/net/ssl/HttpsURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/URLConnection",
+            "descriptor": "()Ljava/io/InputStream;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getInputStream",
+            "owner": "javax/net/ssl/HttpsURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/URLConnection",
+            "descriptor": "()Ljava/io/OutputStream;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getOutputStream",
+            "owner": "javax/net/ssl/HttpsURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/URLConnection",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "toString",
+            "owner": "javax/net/ssl/HttpsURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/URLConnection",
+            "descriptor": "(Z)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "setDoOutput",
+            "owner": "javax/net/ssl/HttpsURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/URLConnection",
+            "descriptor": "(J)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "setIfModifiedSince",
+            "owner": "javax/net/ssl/HttpsURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/URLConnection",
+            "descriptor": "(Ljava/lang/String;Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "setRequestProperty",
+            "owner": "javax/net/ssl/HttpsURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/net/URLConnection",
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getRequestProperty",
+            "owner": "javax/net/ssl/HttpsURLConnection",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "javax/net/ssl/SSLContext",
+            "descriptor": "(Ljava/lang/String;)Ljavax/net/ssl/SSLContext;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getInstance",
+            "owner": "javax/net/ssl/SSLContext",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "javax/net/ssl/SSLContext",
+            "descriptor": "()Ljava/lang/String;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getProtocol",
+            "owner": "javax/net/ssl/SSLContext",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "javax/net/ssl/SSLContext",
+            "descriptor": "([Ljavax/net/ssl/KeyManager;[Ljavax/net/ssl/TrustManager;Ljava/security/SecureRandom;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "init",
+            "owner": "javax/net/ssl/SSLContext",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "javax/net/ssl/SSLContext",
+            "descriptor": "()Ljavax/net/ssl/SSLSocketFactory;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "getSocketFactory",
+            "owner": "javax/net/ssl/SSLContext",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          }
+        ],
+        "soname": "libpanorenderer.so"
+      },
+      {
+        "boundary_types": [
+          "java/lang/String",
+          "java/lang/Throwable",
+          "java/util/UUID"
+        ],
+        "class_states": {
+          "java/lang/ArrayIndexOutOfBoundsException": "present",
+          "java/lang/Boolean": "present",
+          "java/lang/ClassNotFoundException": "present",
+          "java/lang/Double": "present",
+          "java/lang/Float": "present",
+          "java/lang/IllegalArgumentException": "present",
+          "java/lang/IllegalStateException": "present",
+          "java/lang/Long": "present",
+          "java/lang/NullPointerException": "present",
+          "java/lang/Object": "present",
+          "java/lang/OutOfMemoryError": "present",
+          "java/lang/Runnable": "present",
+          "java/lang/RuntimeException": "present",
+          "java/lang/String": "present",
+          "java/lang/UnsupportedOperationException": "present",
+          "java/util/Date": "present",
+          "java/util/IllegalFormatException": "present",
+          "java/util/UUID": "present"
+        },
+        "classes": [
+          "java/lang/ArrayIndexOutOfBoundsException",
+          "java/lang/Boolean",
+          "java/lang/ClassNotFoundException",
+          "java/lang/Double",
+          "java/lang/Float",
+          "java/lang/IllegalArgumentException",
+          "java/lang/IllegalStateException",
+          "java/lang/Long",
+          "java/lang/NullPointerException",
+          "java/lang/Object",
+          "java/lang/OutOfMemoryError",
+          "java/lang/Runnable",
+          "java/lang/RuntimeException",
+          "java/lang/String",
+          "java/lang/UnsupportedOperationException",
+          "java/util/Date",
+          "java/util/IllegalFormatException",
+          "java/util/UUID"
+        ],
+        "elf": "config.arm64_v8a.apk!lib/arm64-v8a/librealm-jni.so",
+        "members": [
+          {
+            "declared_in": "java/lang/ArrayIndexOutOfBoundsException",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/ArrayIndexOutOfBoundsException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/ArrayIndexOutOfBoundsException",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/ArrayIndexOutOfBoundsException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Boolean",
+            "descriptor": "(Z)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/Boolean",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Boolean",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/Boolean",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Boolean",
+            "descriptor": "Z",
+            "in_reference": false,
+            "kind": "field",
+            "name": "value",
+            "owner": "java/lang/Boolean",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/ClassNotFoundException",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/ClassNotFoundException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/ClassNotFoundException",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/ClassNotFoundException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Double",
+            "descriptor": "(D)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/Double",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Double",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/Double",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Double",
+            "descriptor": "D",
+            "in_reference": true,
+            "kind": "field",
+            "name": "NaN",
+            "owner": "java/lang/Double",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Double",
+            "descriptor": "D",
+            "in_reference": false,
+            "kind": "field",
+            "name": "value",
+            "owner": "java/lang/Double",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Float",
+            "descriptor": "(F)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/Float",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Float",
+            "descriptor": "(D)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/Float",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Float",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/Float",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Float",
+            "descriptor": "F",
+            "in_reference": true,
+            "kind": "field",
+            "name": "NaN",
+            "owner": "java/lang/Float",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Float",
+            "descriptor": "F",
+            "in_reference": false,
+            "kind": "field",
+            "name": "value",
+            "owner": "java/lang/Float",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/IllegalArgumentException",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/IllegalArgumentException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/IllegalArgumentException",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/IllegalArgumentException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/IllegalStateException",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/IllegalStateException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/IllegalStateException",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/IllegalStateException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Long",
+            "descriptor": "(J)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/Long",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Long",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/Long",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Long",
+            "descriptor": "J",
+            "in_reference": false,
+            "kind": "field",
+            "name": "value",
+            "owner": "java/lang/Long",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/NullPointerException",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/NullPointerException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/NullPointerException",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/NullPointerException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/OutOfMemoryError",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/OutOfMemoryError",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/OutOfMemoryError",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/OutOfMemoryError",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Runnable",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "run",
+            "owner": "java/lang/Runnable",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/RuntimeException",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/RuntimeException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/RuntimeException",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/RuntimeException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/String",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/String",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/String",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/String",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/String",
+            "descriptor": "I",
+            "in_reference": false,
+            "kind": "field",
+            "name": "hash",
+            "owner": "java/lang/String",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/UnsupportedOperationException",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/UnsupportedOperationException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/UnsupportedOperationException",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/UnsupportedOperationException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/Date",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/util/Date",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/Date",
+            "descriptor": "(J)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/util/Date",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/Date",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/util/Date",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/IllegalFormatException",
+            "descriptor": "()V",
+            "in_reference": false,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/util/IllegalFormatException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/UUID",
+            "descriptor": "(Ljava/lang/String;)Ljava/util/UUID;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "fromString",
+            "owner": "java/util/UUID",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          }
+        ],
+        "soname": "librealm-jni.so"
+      },
+      {
+        "boundary_types": [
+          "java/lang/Object",
+          "java/lang/String",
+          "java/lang/Throwable",
+          "java/util/Map"
+        ],
+        "class_states": {
+          "java/io/IOException": "present",
+          "java/lang/ArithmeticException": "present",
+          "java/lang/IllegalArgumentException": "present",
+          "java/lang/IllegalStateException": "present",
+          "java/lang/IndexOutOfBoundsException": "present",
+          "java/lang/Integer": "present",
+          "java/lang/NullPointerException": "present",
+          "java/lang/OutOfMemoryError": "present",
+          "java/lang/RuntimeException": "present",
+          "java/lang/String": "present",
+          "java/lang/UnknownError": "present",
+          "java/util/HashMap": "present"
+        },
+        "classes": [
+          "java/io/IOException",
+          "java/lang/ArithmeticException",
+          "java/lang/IllegalArgumentException",
+          "java/lang/IllegalStateException",
+          "java/lang/IndexOutOfBoundsException",
+          "java/lang/Integer",
+          "java/lang/NullPointerException",
+          "java/lang/OutOfMemoryError",
+          "java/lang/RuntimeException",
+          "java/lang/String",
+          "java/lang/UnknownError",
+          "java/util/HashMap"
+        ],
+        "elf": "config.arm64_v8a.apk!lib/arm64-v8a/librealmc.so",
+        "members": [
+          {
+            "declared_in": "java/io/IOException",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/io/IOException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/IOException",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/io/IOException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/io/IOException",
+            "descriptor": "(Ljava/lang/Throwable;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/io/IOException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/ArithmeticException",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/ArithmeticException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/ArithmeticException",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/ArithmeticException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/IllegalArgumentException",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/IllegalArgumentException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/IllegalArgumentException",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/IllegalArgumentException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/IllegalArgumentException",
+            "descriptor": "(Ljava/lang/Throwable;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/IllegalArgumentException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/IllegalStateException",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/IllegalStateException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/IllegalStateException",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/IllegalStateException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/IllegalStateException",
+            "descriptor": "(Ljava/lang/Throwable;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/IllegalStateException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/IndexOutOfBoundsException",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/IndexOutOfBoundsException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/IndexOutOfBoundsException",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/IndexOutOfBoundsException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/IndexOutOfBoundsException",
+            "descriptor": "(I)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/IndexOutOfBoundsException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/IndexOutOfBoundsException",
+            "descriptor": "(J)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/IndexOutOfBoundsException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Integer",
+            "descriptor": "(I)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/Integer",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Integer",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/Integer",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/Integer",
+            "descriptor": "I",
+            "in_reference": false,
+            "kind": "field",
+            "name": "value",
+            "owner": "java/lang/Integer",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/NullPointerException",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/NullPointerException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/NullPointerException",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/NullPointerException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/OutOfMemoryError",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/OutOfMemoryError",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/OutOfMemoryError",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/OutOfMemoryError",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/RuntimeException",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/RuntimeException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/RuntimeException",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/RuntimeException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/RuntimeException",
+            "descriptor": "(Ljava/lang/Throwable;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/RuntimeException",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/String",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/String",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/String",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/String",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/String",
+            "descriptor": "()I",
+            "in_reference": true,
+            "kind": "method",
+            "name": "length",
+            "owner": "java/lang/String",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/String",
+            "descriptor": "I",
+            "in_reference": false,
+            "kind": "field",
+            "name": "count",
+            "owner": "java/lang/String",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/String",
+            "descriptor": "I",
+            "in_reference": false,
+            "kind": "field",
+            "name": "hash",
+            "owner": "java/lang/String",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/UnknownError",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/UnknownError",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/lang/UnknownError",
+            "descriptor": "(Ljava/lang/String;)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/lang/UnknownError",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/HashMap",
+            "descriptor": "(I)V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/util/HashMap",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/HashMap",
+            "descriptor": "()V",
+            "in_reference": true,
+            "kind": "method",
+            "name": "<init>",
+            "owner": "java/util/HashMap",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/HashMap",
+            "descriptor": "()I",
+            "in_reference": true,
+            "kind": "method",
+            "name": "size",
+            "owner": "java/util/HashMap",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/HashMap",
+            "descriptor": "(Ljava/lang/Object;)Ljava/lang/Object;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "get",
+            "owner": "java/util/HashMap",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/HashMap",
+            "descriptor": "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+            "in_reference": true,
+            "kind": "method",
+            "name": "put",
+            "owner": "java/util/HashMap",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          },
+          {
+            "declared_in": "java/util/HashMap",
+            "descriptor": "I",
+            "in_reference": false,
+            "kind": "field",
+            "name": "size",
+            "owner": "java/util/HashMap",
+            "runtime_artifact": "core-oj.jar",
+            "state": "present"
+          }
+        ],
+        "soname": "librealmc.so"
+      },
+      {
+        "boundary_types": [],
+        "class_states": {
+          "android/database/SQLException": "present",
+          "java/lang/OutOfMemoryError": "present"
+        },
+        "classes": [
+          "android/database/SQLException",
+          "java/lang/OutOfMemoryError"
+        ],
+        "elf": "config.arm64_v8a.apk!lib/arm64-v8a/libsqliteJni.so",
+        "members": [],
+        "soname": "libsqliteJni.so"
+      }
+    ],
     "platform_field_references": 1793,
     "platform_method_names": {
       "Landroid/accessibilityservice/AccessibilityServiceInfo;": [
@@ -148286,9 +151515,9 @@
   "runtime_lock_id": "sha256:96366a206a3fe68c5b78a68fafc9addc63932d8ecee1ee166ab802ea62322b2b",
   "schema_version": "westlake-apk-gap/v0.2",
   "summary": {
-    "candidate_count": 498,
+    "candidate_count": 499,
     "direct_absence_count": 138,
-    "finding_count": 498,
+    "finding_count": 499,
     "findings_by_kind": {
       "existence_probe": 56,
       "hollow_method": 261,
@@ -148296,7 +151525,8 @@
       "missing_field": 13,
       "missing_method": 54,
       "native_import": 42,
-      "native_import_coverage": 1
+      "native_import_coverage": 1,
+      "native_upcall_hollow": 1
     },
     "missing_classes": 71,
     "native_by_state": {

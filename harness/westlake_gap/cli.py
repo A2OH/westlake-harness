@@ -60,6 +60,11 @@ def parser() -> argparse.ArgumentParser:
     scan.add_argument("--target-abi", help="override the runtime target ABI")
     scan.add_argument("--no-elf", action="store_true", help="skip packaged ELF symbol inventory")
     scan.add_argument(
+        "--platform-jar",
+        type=Path,
+        help="reference android.jar: find Java APIs that packaged native code calls back into via JNIEnv",
+    )
+    scan.add_argument(
         "--native-reach",
         action="store_true",
         help="attribute unresolved native imports to the JNI methods that reach them (needs llvm-objdump)",
@@ -119,6 +124,42 @@ def parser() -> argparse.ArgumentParser:
     apis.add_argument("--reference-api", required=True, type=int, help="API level of a device the app is known to run on")
     apis.add_argument("--out", required=True, type=Path)
 
+    reach_cmd = commands.add_parser(
+        "startup-reach",
+        help="static call-graph reachability from the manifest entry points: the stage at which each platform contract is first needed",
+    )
+    reach_cmd.add_argument("input", type=Path, help=".apk/.xapk/.apkm")
+    reach_cmd.add_argument("--runtime", type=Path, help="runtime index: platform class hierarchy and members, for precise callbacks")
+    reach_cmd.add_argument("--scan", type=Path, help="scan JSON of the same APK: report stages for its call sites and native libraries")
+    reach_cmd.add_argument("--graph-cache", type=Path, help="pickle of the call graph: written if absent, reused if present")
+    reach_cmd.add_argument("--trace", type=Path, help="ART method trace of the same APK: measure recall and precision against it")
+    reach_cmd.add_argument("--out", required=True, type=Path)
+
+    observe_cmd = commands.add_parser(
+        "trace-observe",
+        help="turn an ART method trace recorded on real Android into the platform touches and libraries of that run",
+    )
+    observe_cmd.add_argument("input", type=Path, help=".apk/.xapk/.apkm the trace was recorded from")
+    observe_cmd.add_argument("--trace", required=True, type=Path)
+    observe_cmd.add_argument("--runtime", type=Path, help="runtime index, to match a platform call to the subclass that ran it")
+    observe_cmd.add_argument("--loaded-libs", type=Path, help="text file: one app library loaded during the run per line")
+    observe_cmd.add_argument("--scenario", default="", help="what the run covered, e.g. 'cold start to sign-in screen'")
+    observe_cmd.add_argument("--graph-cache", type=Path)
+    observe_cmd.add_argument("--out", required=True, type=Path)
+
+    ndk_cmd = commands.add_parser(
+        "ndk-coverage",
+        help="measure the entire public NDK against a board's libraries and classify how each missing symbol is supplied",
+    )
+    ndk_cmd.add_argument("--ndk-api-dir", required=True, type=Path,
+                         help="NDK sysroot stub directory for one API level, e.g. .../sysroot/usr/lib/aarch64-linux-android/33")
+    ndk_cmd.add_argument("--oh-libs", required=True, type=Path, help="directory of OpenHarmony system libraries pulled from the board")
+    ndk_cmd.add_argument("--westlake-libs", required=True, type=Path, help="directory of deployed Westlake runtime libraries pulled from the board")
+    ndk_cmd.add_argument("--westlake", type=Path, help="Westlake source tree: report which missing symbols already have a build manifest")
+    ndk_cmd.add_argument("--model", type=Path, help="weld model JSON (default: data/ndk-weld-model.json)")
+    ndk_cmd.add_argument("--title", default="NDK coverage on OpenHarmony")
+    ndk_cmd.add_argument("--out", required=True, type=Path, help="output directory")
+
     gap = commands.add_parser(
         "gap-map",
         help="one categorized, effort-rated map of where an APK touches OpenHarmony and what shim each gap needs",
@@ -132,6 +173,9 @@ def parser() -> argparse.ArgumentParser:
     gap.add_argument("--manifest-repo", type=Path, help="launcher repo (tools/prepare_app.py)")
     gap.add_argument("--oh-resolution", required=True, type=Path, help="oh-import-resolution.json from the board")
     gap.add_argument("--app-key", required=True, help="key of this app inside --oh-resolution")
+    gap.add_argument("--ndk-coverage", type=Path,
+                     help="ndk-coverage.json: classify native gaps by how the NDK supplies them (package / libc-abi / weld / absence)")
+    gap.add_argument("--observed", type=Path, help="trace-observe output: mark each gap touched or not on a recorded real-Android run")
     gap.add_argument("--policy", type=Path, default=Path(__file__).parent / "data" / "oh-app-data-policy.json")
     gap.add_argument("--blockers", type=Path, help="known-blockers JSON: backtest the map against observed failures")
     gap.add_argument("--blockers-status", action="store_true",
@@ -142,6 +186,56 @@ def parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
+    if args.command in {"startup-reach", "trace-observe"}:
+        import pickle
+
+        from . import reach, tracecmp
+        from .contracts import manifest_facts
+
+        facts = manifest_facts(args.input)
+        if args.graph_cache and args.graph_cache.exists():
+            cached = pickle.loads(args.graph_cache.read_bytes())
+            reach.build_graph = lambda _path, _names=(): cached  # type: ignore[assignment]
+        elif args.graph_cache:
+            built = reach.build_graph(args.input, [c["name"] for c in facts["components"] if c.get("name")])
+            args.graph_cache.write_bytes(pickle.dumps(built, protocol=pickle.HIGHEST_PROTOCOL))
+            reach.build_graph = lambda _path, _names=(): built  # type: ignore[assignment]
+        runtime = read_json(args.runtime) if args.runtime else None
+        if args.command == "trace-observe":
+            graph = reach.build_graph(args.input, [c["name"] for c in facts["components"] if c.get("name")])
+            libs = [line.strip() for line in args.loaded_libs.read_text().splitlines() if line.strip()] if args.loaded_libs else []
+            value = tracecmp.observe(graph, tracecmp.executed_methods(args.trace), runtime, libs, args.scenario)
+            write_json(args.out, value)
+            print(f"{value['executed_methods']} methods executed, {len(value['executed_app_methods'])} the app's own, "
+                  f"{len(value['platform_touch'])} platform members touched -> {args.out}")
+            return 0
+        graph, result, summary = reach.analyse(args.input, facts, runtime)
+        value = reach.export(graph, result, summary, read_json(args.scan) if args.scan else None)
+        if args.trace:
+            value["trace_comparison"] = tracecmp.compare(graph, result, tracecmp.executed_methods(args.trace))
+        write_json(args.out, value)
+        print(f"{summary['methods_with_code']} methods: " + ", ".join(f"{k} {v}" for k, v in summary["methods_by_stage"].items())
+              + f" -> {args.out}")
+        return 0
+    if args.command == "ndk-coverage":
+        from . import ndk
+
+        model = ndk.load_model(args.model)
+        cov = ndk.coverage(
+            ndk.ndk_surface(args.ndk_api_dir),
+            ndk.library_exports(args.oh_libs),
+            ndk.library_exports(args.westlake_libs),
+            model,
+            ndk.westlake_manifest_index(args.westlake) if args.westlake else None,
+        )
+        cov["ndk_api_dir"] = args.ndk_api_dir.name
+        args.out.mkdir(parents=True, exist_ok=True)
+        write_json(args.out / "ndk-coverage.json", cov)
+        (args.out / "NDK-COVERAGE.md").write_text(ndk.markdown(cov, model, args.title))
+        status = cov["summary"]["status"]
+        print(f"{cov['summary']['symbols']} NDK symbols: OH {status.get('oh', 0)}, Westlake {status.get('westlake', 0)}, "
+              f"missing {status.get('missing', 0)} -> {args.out}")
+        return 0
     if args.command == "gap-map":
         from .contracts import manifest_facts
         from .gapmap import backtest, build_map, markdown
@@ -162,7 +256,9 @@ def main(argv: list[str] | None = None) -> int:
         )
         oh = read_json(args.oh_resolution)["apps"][args.app_key]["missing"]
         gap_map = build_map(scan, manifest_facts(args.apk), levels, aosp, args.westlake, oh,
-                            read_json(args.policy), args.manifest_repo)
+                            read_json(args.policy), args.manifest_repo,
+                            ndk_cov=read_json(args.ndk_coverage) if args.ndk_coverage else None,
+                            observed=read_json(args.observed) if args.observed else None)
         if args.westlake_label:
             gap_map["provider"]["westlake"] = {"branch": args.westlake_label, "commit": args.westlake_label, "uncommitted": []}
         results = None
@@ -284,12 +380,18 @@ def main(argv: list[str] | None = None) -> int:
 
     runtime = read_json(args.runtime)
     if args.command == "scan":
+        members = None
+        if args.platform_jar:
+            from .platformapi import load_platform_members
+
+            members = load_platform_members(args.platform_jar)
         value = scan_apk(
             args.input,
             runtime,
             include_elf=not args.no_elf,
             target_abi=args.target_abi,
             native_reach=args.native_reach,
+            platform_members=members,
         )
         write_json(args.out, value)
         print(f"{value['apk'].get('package')}: {value['summary']['finding_count']} findings -> {args.out}")

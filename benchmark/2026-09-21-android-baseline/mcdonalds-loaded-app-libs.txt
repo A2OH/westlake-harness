@@ -1,0 +1,3 @@
+libakamaibmp.so
+librealm-jni.so
+librealmc.so

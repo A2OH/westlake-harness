@@ -72,7 +72,9 @@ OpenHarmony, the shim each gap needs, and what that shim costs.
 | `benchmark/2026-08-23-toutiao/native-analysis/ANDROID11-RESOLUTION.md` | **99.7% of 3415 native imports decided** against stock Android 11, and the IFUNC parser defect that finding exposed. |
 | `benchmark/2026-09-18-oh-board/` | **First resolution against the deployed OpenHarmony runtime**: 90% of both apps' native imports resolve; the real gap is 58 symbols in five clusters, led by `__sF` at 40 importing libraries. |
 | `benchmark/2026-09-18-mcdonalds/` | Cheap validation of the second MVP app: in-APK library loading is required (WebView needs it too), the gap list, and a working Android baseline that touches only six native methods. |
-| `benchmark/2026-09-21-gapmap/` | **McDonald's gap map and backtest**: against the provider it actually ran on, the map flags 6 of the 8 board failures before any launch; today 76 gaps remain (1×OH, 3×L, 22×M, 30×S, 20×verify). |
+| `benchmark/2026-09-21-gapmap/` | **McDonald's gap map and backtest**: against the provider it actually ran on, the map flags 6 of the 8 board failures before any launch; today 78 gaps remain (1×OH, 2×L, 23×M, 31×S, 1×XS, 20×verify). |
+| `benchmark/2026-09-21-android-baseline/` | **McDonald's traced on real Android, cold start to sign-in**: 47 of its 78 open gaps are on that path and 31 are not; all 8 OH-board failures are on it; no Google services is not a blocker. Also measures the static reachability pass: 84% recall, 7% precision. |
+| `benchmark/2026-09-21-ndk-coverage/` | **The entire NDK against the OH board**: of 4,449 public symbols, OH provides 59%, Westlake 3%; the missing 1,719 reduce to ten welds plus the libc shim, and 165 are already built by Westlake but not deployed. |
 | `benchmark/2026-09-18-mvp-target/` | The Android-specific platform contract of both MVP apps: 206 symbols, of which 48 are ours to implement. |
 | `benchmark/2026-08-23-toutiao/runtime-evidence/android-baseline/` | **Static reading versus running**, on a OnePlus 6T: 280 methods and five whole libraries that no APK scan can see, 43 failing `dlsym` lookups, 463 methods never exercised. |
 | `benchmark/2026-08-23-toutiao/native-analysis/` | Provenance and surface reach over 138 stripped arm64 libraries: 1417 recovered JNI methods, 47% touching no platform surface. |
@@ -153,16 +155,18 @@ carries a `file:line`.
 
 Stripped libraries carry no source and no useful names. The harness does not try to understand
 what the code computes; it measures **where each library crosses into the platform**, because only
-those crossings touch OpenHarmony. Six layers, each answering one question:
+those crossings touch OpenHarmony. Eight layers, each answering one question:
 
 | # | Question | How | Detail |
 |---|---|---|---|
 | 1 | What does the library need from the platform? | Undefined dynamic symbols per `.so`, read from the APK and splits (pyelftools, IFUNC-correct), resolved against the **real** system libraries of a stock Android 11 device and of the OH board | [`ANDROID11-RESOLUTION.md`](benchmark/2026-08-23-toutiao/native-analysis/ANDROID11-RESOLUTION.md), [OH board](benchmark/2026-09-18-oh-board/REPORT.md) |
 | 2 | Whose code is inside it? | Component provenance: about 50 upstream components (OpenSSL/BoringSSL, SQLite, Realm, Skia, V8/Hermes, Flutter, Unity, WebRTC, TFLite, …) by version banners and exported-symbol families | [`NATIVE-PROVENANCE-AND-SURFACE.md`](analysis/NATIVE-PROVENANCE-AND-SURFACE.md) |
 | 3 | What can Java call into, even when stripped? | `Java_*` exports plus `RegisterNatives` tables rebuilt from relocations as {name, signature, function} | same |
-| 4 | Which platform surface does each JNI method reach? | Call graph from each JNI entry through PLT stubs to the imports, following tail calls; imports grouped into surfaces (GLES/EGL, Vulkan, `libandroid`, media, audio, binder, sysprop, dynamic load, net, file, thread) | same; blast radius in [`NATIVE-GAP-PROCESS-AMENDMENT.md`](analysis/NATIVE-GAP-PROCESS-AMENDMENT.md) |
-| 5 | What happens when it actually runs? | Frida capture on the Android baseline of `RegisterNatives`, `dlopen`, `dlsym`; `dlsym` name strings found statically | [`harness/jniprobe/`](harness/jniprobe/README.md), [baseline](benchmark/2026-08-23-toutiao/runtime-evidence/android-baseline/) |
-| 6 | Does a resolved symbol actually work on OH? | Policy-checked calls (`mkfifo`, `symlink`, `mknod`, `link`) against the live OH kernel policy; in-APK loading against the OH linker; missing symbols minus the Westlake bionic shim's exports and the loader's refusal list | [`GAP-MAP-METHOD.md`](analysis/GAP-MAP-METHOD.md) |
+| 4 | Which Java APIs does the library call back into? | `FindClass`/`Get*ID` go through the JNIEnv table, not imports, so neither scan saw them. Platform class names in the library's data strings; for each class, members enumerated from a reference `android.jar` and the runtime, kept only when name **and** exact JNI signature are both in the library; then resolved like dex references (`scan --platform-jar`) | [`nativeupcall.py`](harness/westlake_gap/nativeupcall.py) |
+| 5 | Which platform surface does each JNI method reach? | Call graph from each JNI entry through PLT stubs to the imports, following tail calls; imports grouped into surfaces (GLES/EGL, Vulkan, `libandroid`, media, audio, binder, sysprop, dynamic load, net, file, thread) | same; blast radius in [`NATIVE-GAP-PROCESS-AMENDMENT.md`](analysis/NATIVE-GAP-PROCESS-AMENDMENT.md) |
+| 6 | What happens when it actually runs? | Frida capture on the Android baseline of `RegisterNatives`, `dlopen`, `dlsym`; `dlsym` name strings found statically | [`harness/jniprobe/`](harness/jniprobe/README.md), [baseline](benchmark/2026-08-23-toutiao/runtime-evidence/android-baseline/) |
+| 7 | How is a missing symbol supplied? | The provider is OpenHarmony **plus the NDK Westlake packages**, not the raw board. `ndk-coverage` measures the entire public NDK against the board and classifies each missing symbol with a weld model: **package** (compile AOSP source), **libc-abi** (translate onto musl), **weld** (AOSP above a named OH subsystem), **truthful-absence**; and checks whether Westlake already has a build manifest for the source | [NDK coverage](benchmark/2026-09-21-ndk-coverage/README.md), [`ndk.py`](harness/westlake_gap/ndk.py) |
+| 8 | Does a resolved symbol actually work on OH? | Policy-checked calls (`mkfifo`, `symlink`, `mknod`, `link`) against the live OH kernel policy; in-APK loading against the OH linker; missing symbols minus the Westlake bionic shim's exports and the loader's refusal list | [`GAP-MAP-METHOD.md`](analysis/GAP-MAP-METHOD.md) |
 
 What it has shown so far:
 
@@ -174,10 +178,16 @@ What it has shown so far:
   platform surface, so they port unchanged.
 - The Android baseline sees 280 methods and 5 libraries that no APK scan can.
 - On McDonald's, Realm's `mkfifo` resolves, but OH denies the pipe it creates.
+- Calling back into Java is common. 46 of Toutiao's 138 libraries do it, naming 116 platform classes
+  and 645 members, and 6 of McDonald's 10 do. McDonald's `libpanorenderer.so` calls
+  `TrafficStats.setThreadStatsTag`, which is hollow in Westlake's mainline stub jar; no other scan
+  can see that. Four ByteDance runtime libraries name classes neither the SDK nor Westlake has
+  (`java/lang/reflect/ArtMethod`, `android/view/GLES20Canvas`): they probe ART and old-Android
+  internals, a runtime-integrity risk rather than an API gap.
 
 Provenance decides the repair route. Known open-source code takes its upstream port. The
-developer's own code only needs its **boundary** shimmed, and that boundary is what layers 1, 4 and 6
-enumerate.
+developer's own code only needs its **boundary** shimmed, and that boundary is what layers 1, 4, 5, 7
+and 8 enumerate.
 
 ### Contracts behind present names
 
@@ -207,19 +217,38 @@ rather than discovery. `--blockers` replays failures already paid for. Against t
 McDonald's actually ran on, the map flags **6 of its 8** board failures before any launch
 ([benchmark](benchmark/2026-09-21-gapmap/README.md)).
 
+### Which gaps are on the path: recorded, not guessed
+
+A gap list does not say what stands between process start and the first screen. Two tools answer
+that, and the measured difference between them decides which to trust:
+
+- **`trace-observe`** reads an ART method trace recorded on real Android (`am start-activity
+  --start-profiler … --streaming` on a userdebug or rooted device) and marks every gap-map row
+  touched or not, with evidence: the platform call is in the trace, a method containing the
+  reference ran, the manager class executed, or the library loaded. `gap-map --observed` adds an
+  "on path" column and a section listing the gaps on the recorded path. This is the authority.
+- **`startup-reach`** stages platform touches from bytecode alone (call graph from the manifest
+  entry points, rapid type analysis, user-input callbacks deferred). Measured on McDonald's against
+  the trace it has 84% recall and 7% precision: a dependency-injected app makes nearly everything
+  look reachable at process start. Use it for its call-chain explanations of *why* a gap is
+  reached, and as an upper bound when no device is available.
+
 ### Commands
 
 | Command | Purpose |
 |---|---|
 | `snapshot-runtime` | index an ordered boot classpath, bridge ELFs and system libraries into a runtime lock |
-| `scan` | Java, native and service inventory of one APK/XAPK/APKM against a runtime index |
+| `scan` | Java, native and service inventory of one APK/XAPK/APKM against a runtime index; `--platform-jar` adds native calls back into Java |
 | `annotate-api-levels` | drop absences a reference device could not reach either |
 | `native-surface` | component provenance and per-JNI-method platform-surface reach for packaged ELFs |
 | `native-capture-diff` | join a runtime JNI capture (`harness/jniprobe`) to a `native-surface` scan |
-| `gap-map` | the categorized, effort-rated map; `--blockers` for a backtest or status board |
+| `ndk-coverage` | the entire public NDK against a board's libraries, each missing symbol classified as package / libc-abi / weld / absence |
+| `trace-observe` | platform touches and loaded libraries of one run recorded on real Android, from an ART method trace |
+| `startup-reach` | static call-graph staging of platform touches (process start / first activity / next screens), with call-chain explanations; `--trace` measures it against a recording |
+| `gap-map` | the categorized, effort-rated map; `--observed` marks each gap on or off a recorded path; `--ndk-coverage` classifies native gaps by how the NDK supplies them; `--blockers` for a backtest or status board |
 | `benchmark`, `trace-watchlist`, `ingest-trace`, `runtime-summary` | portfolio scans and runtime trace evidence |
 
-OH-board symbol resolution is a recipe, not yet a command: pull the board's libraries with `hdc`,
+Per-app OH-board import resolution is a recipe, not yet a command: pull the board's libraries with `hdc`,
 then call `resolve_native_imports` (see the [board report](benchmark/2026-09-18-oh-board/REPORT.md)).
 
 The known-answer fixtures must pass before any portfolio or map is trusted:
@@ -230,11 +259,14 @@ PYTHONPATH=harness:tests python3 -m unittest discover -s tests -v
 
 ### Known limits
 
-- **Native rows in the gap map are not yet joined with layers 2, 4 and 5.** The map rates McDonald's
-  17 open `libandroid` symbols **L** for the whole app, but all of them come from
-  `libmlkit_google_ocr_pipeline.so` and `libpanorenderer.so`. On the Android baseline those
-  libraries never load before sign-in. Until the join lands, native effort is not weighted by what
-  the app reaches.
+- **Native rows are classified by supply strategy but not yet weighted by reach.** McDonald's
+  sensors weld and asset package come only from `libmlkit_google_ocr_pipeline.so` and
+  `libpanorenderer.so`, which never load before sign-in on the Android baseline. Until provenance,
+  per-JNI-method reach and the baseline capture are joined in, native priority does not reflect what
+  startup reaches.
+- Native calls back into Java are read from strings. Names built at runtime, encrypted, or
+  tail-merged into a longer string are invisible, and a primitive-typed field is matched by name
+  alone.
 - Computed service names and computed reflection are reported, not guessed.
 - Hollow-body candidates include bodies that are empty in AOSP too; they stay `verify`.
 - Provider models are extracted from source with patterns and covered by known-answer tests; a

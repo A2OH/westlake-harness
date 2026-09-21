@@ -28,7 +28,8 @@ CATEGORIES = [
     ("java-api", "Java framework API", "APK dex references − Westlake boot jars, filtered by API level"),
     ("system-services", "System services", "getSystemService name → AOSP fetcher/binder → Westlake provision → OH subsystem"),
     ("package-manager", "Package manager & manifest", "manifest features and PackageManager calls → Westlake PM semantics"),
-    ("native-symbols", "Native platform symbols", "packaged .so imports → symbols exported on the OH board"),
+    ("native-upcalls", "Java APIs called from native code", "JNIEnv FindClass/Get*ID names in packaged .so → Westlake boot jars"),
+    ("native-symbols", "Native platform symbols", "packaged .so imports → OpenHarmony plus the NDK Westlake packages (package / libc-abi / weld / absence)"),
     ("native-loading", "Native loading & packaging", "how the libraries are packaged → what the OH linker can map"),
     ("sandbox-policy", "Process sandbox & policy", "objects the code creates → what OH SELinux lets an app create"),
     ("external-deps", "External services & SDK behaviour", "SDKs that expect Google services or probe the device"),
@@ -123,6 +124,8 @@ def java_api_rows(scan: dict[str, Any], api_levels: dict[tuple, str]) -> tuple[l
         member = dep["owner"].strip("L;").replace("/", ".") + (f".{dep['name']}" if dep.get("name") else "")
         bucket = "hollow" if kind == "hollow_method" else "probe" if kind == "existence_probe" else "missing"
         group[bucket].append(member)
+        group.setdefault("keys", []).append({"kind": kind, "owner": dep["owner"], "name": dep.get("name"),
+                                             "signature": dep.get("signature")})
 
     rows = []
     for area, group in sorted(groups.items(), key=lambda kv: -len(kv[1]["missing"]) * 3 - len(kv[1]["hollow"])):
@@ -141,6 +144,7 @@ def java_api_rows(scan: dict[str, Any], api_levels: dict[tuple, str]) -> tuple[l
             oh_touchpoint=oh or "none (library code inside Westlake)",
             verdict=verdict, shim_class=shim, effort=effort, confidence=STATIC,
             counts={"missing": len(missing), "hollow": len(hollow), "probe": len(probe)},
+            members=group.get("keys", []),
             examples=sorted(set(missing))[:6] or sorted(set(hollow))[:6] or sorted(set(probe))[:6],
             shim=("implement the members over " + oh) if missing and mapped else
                  ("port from AOSP, or confirm the caller tolerates absence" if missing else
@@ -270,6 +274,87 @@ def package_manager_rows(scan: dict[str, Any], facts: dict[str, Any], pm: dict[s
     return rows
 
 
+def ndk_symbol_rows(
+    scan: dict[str, Any], oh_missing: list[dict[str, Any]], shim_exports: set[str], ndk_cov: dict[str, Any]
+) -> list[dict[str, Any]]:
+    """Native gaps classified by how the NDK supplies them: package, libc-abi, weld, absence.
+
+    The provider is OpenHarmony plus the NDK Westlake packages, not the raw board: a missing
+    `AAsset_open` is "compile asset_manager.cpp", a missing `ASensor_getName` is "weld to OH
+    sensors", and a missing `__sF` is "translate in the bionic shim". Symbols outside the public
+    NDK altogether (`__sF`, `_ctype_`) are bionic-private and belong to the libc-abi group.
+    """
+    from . import ndk as ndk_model
+
+    model = ndk_model.load_model()
+    by_symbol = {item["symbol"]: item for item in ndk_cov["symbols"]}
+    importers: dict[str, list[str]] = defaultdict(list)
+    for elf in scan["inventory"].get("elfs", []):
+        for symbol in elf.get("undefined_symbols", []):
+            importers[symbol].append(elf.get("soname") or elf["name"])
+
+    groups: dict[tuple[str, str | None], list[dict[str, Any]]] = defaultdict(list)
+    for item in oh_missing:
+        symbol = item["symbol"]
+        known = by_symbol.get(symbol)
+        if known is None:
+            how = {"group": "libc-abi", "weld": None, "oh": None, "source": None, "in_ndk": False}
+        elif known["status"] != "missing":
+            how = {"group": "now-provided", "weld": None, "oh": None, "source": None, "in_ndk": True,
+                   "providers": known.get("providers", [])}
+        else:
+            how = {**{k: known.get(k) for k in ("group", "weld", "oh", "source")}, "in_ndk": True,
+                   "manifests": known.get("westlake_manifests", [])}
+        groups[(how["group"], how["weld"])].append({"symbol": symbol, **how})
+
+    rows = []
+    for (group, weld), items in sorted(groups.items(), key=lambda kv: (kv[0][0], kv[0][1] or "")):
+        names = [i["symbol"] for i in items]
+        libs = sorted({lib for n in names for lib in importers.get(n, [])})
+        fields: dict[str, Any] = {"importing_libraries": libs[:12], "confidence": STATIC}
+        if group == "libc-abi":
+            covered = [n for n in names if n in shim_exports]
+            open_ = [n for n in names if n not in shim_exports]
+            fields.update(
+                item=f"bionic libc ABI: {len(names)} symbols to translate onto musl",
+                oh_touchpoint="OH musl libc", verdict="supplied" if not open_ else "missing",
+                shim_class="C0" if not open_ else "C1/C2", effort="none" if not open_ else "S",
+                provider=f"{len(covered)} of {len(names)} exported by the Westlake bionic shim",
+                open_symbols=open_[:20], covered_symbols=covered,
+                shim="bionic-ABI shim: forward or translate; never ship a second libc")
+        elif group == "package":
+            built = [i for i in items if i.get("manifests")]
+            manifests = sorted({m for i in built for m in i["manifests"]})
+            all_built = len(built) == len(items)
+            fields.update(
+                item=f"NDK package: {len(names)} symbols compiled from AOSP source",
+                oh_touchpoint="none beyond what Westlake already provides", verdict="missing", shim_class="C1",
+                effort="XS" if all_built else "S",
+                provider=(f"built by Westlake ({', '.join(manifests)}) but not deployed on the measured board" if all_built else
+                          f"{len(built)} of {len(names)} have a Westlake build manifest"),
+                open_symbols=names[:20],
+                shim="compile the AOSP source (" + ", ".join(sorted({i['source'].rsplit('/', 1)[-1] for i in items if i.get('source')})) + ") and deploy it")
+        elif group == "weld":
+            info = model["welds"].get(weld, {})
+            fields.update(
+                item=f"NDK weld · {weld}: {len(names)} symbols", oh_touchpoint=info.get("oh", ""),
+                verdict="missing", shim_class="C4", effort=info.get("effort", "M"),
+                provider="no Westlake provision on the measured board", open_symbols=names[:20],
+                shim=f"AOSP NDK source above, {info.get('oh', 'an OH subsystem')} below")
+        elif group == "now-provided":
+            fields.update(
+                item=f"{len(names)} symbols provided since the import resolution was taken",
+                oh_touchpoint="", verdict="supplied", shim_class="C0", effort="none",
+                provider="exported on the board measured by ndk-coverage", covered_symbols=names[:20], shim="none")
+        else:
+            fields.update(
+                item=f"NDK {group}: {len(names)} symbols", oh_touchpoint="", verdict="absent", shim_class="C5",
+                effort="XS", provider=model["groups"].get(group, ""), open_symbols=names[:20],
+                shim="export entry points that report the feature unavailable")
+        rows.append(_row("native-symbols", f"ndk:{group}" + (f":{weld}" if weld else ""), fields.pop("item"), **fields))
+    return rows
+
+
 def native_symbol_rows(scan: dict[str, Any], oh_missing: list[dict[str, Any]], shim_exports: set[str]) -> list[dict[str, Any]]:
     importers: dict[str, list[str]] = defaultdict(list)
     for elf in scan["inventory"].get("elfs", []):
@@ -295,6 +380,52 @@ def native_symbol_rows(scan: dict[str, Any], oh_missing: list[dict[str, Any]], s
             provider=f"{len(covered)} covered by Westlake bionic shim" if covered else "no Westlake provision",
             open_symbols=open_[:20], covered_symbols=covered, importing_libraries=libs[:12],
             shim=("NDK surface over OH equivalents" if ndk else "bionic-ABI shim: forward or translate to musl"),
+        ))
+    return rows
+
+
+def native_upcall_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
+    """One row per library that calls back into Java: what it names, and what the runtime lacks."""
+    rows = []
+    for lib in scan["inventory"].get("native_upcalls") or []:
+        name = lib.get("soname") or lib["elf"]
+        missing_classes = [c for c, state in lib["class_states"].items() if state == "missing"]
+        unknown = [c for c, state in lib["class_states"].items() if state == "unknown"]
+        missing = [m for m in lib["members"] if m["state"] == "missing"]
+        hollow = [m for m in lib["members"] if m["state"] == "hollow"]
+        candidates = [m for m in lib["members"] if m["state"] == "hollow-candidate"]
+        broken = missing + hollow + candidates
+        label = lambda m: f"{m['owner'].replace('/', '.')}.{m['name']}" + (m["descriptor"] if m["kind"] == "method" else "")
+        owners = [f"L{c};" for c in missing_classes] + [f"L{m['owner']};" for m in broken]
+        areas = sorted({_area(o)[1] or "none (library code inside Westlake)" for o in owners})
+        if missing_classes or missing:
+            verdict, shim_class = "missing", "C4" if any(a not in {"unmapped"} and "none" not in a for a in areas) else "C1/C5"
+            effort = _size_effort(len(missing_classes) + len(missing))
+        elif hollow:
+            verdict, shim_class, effort = "hollow", "C9", _size_effort(len(hollow))
+        elif candidates:
+            verdict, shim_class, effort = "hollow-candidate", "C9", "verify"
+        elif unknown:
+            verdict, shim_class, effort = "unresolved", "CU", "verify"
+        else:
+            verdict, shim_class, effort = "supplied", "C0", "none"
+        rows.append(_row(
+            "native-upcalls", f"upcall:{name}", f"{name} → {len(lib['classes'])} classes, {len(lib['members'])} members",
+            oh_touchpoint=", ".join(areas) if areas else "through the Java framework",
+            verdict=verdict, shim_class=shim_class, effort=effort, confidence=STATIC,
+            provider=((f"missing classes {missing_classes}; " if missing_classes else "")
+                     + (f"{len(missing)} missing; " if missing else "")
+                     + (f"{len(hollow)} hollow in Westlake adapter/stub jars; " if hollow else "")
+                     + (f"{len(candidates)} constant-bodied in framework.jar (may be AOSP's own); " if candidates else "")
+                     + (f"names {len(unknown)} class{'es' if len(unknown) != 1 else ''} neither the SDK nor the runtime has "
+                        f"({', '.join(unknown[:4])}): version-specific or runtime internals, a runtime-integrity risk "
+                        "rather than an API gap" if unknown else "")
+                     ).rstrip("; ") or "every named class and member resolves in the runtime",
+            app_evidence=", ".join(label(m) for m in broken[:6]) or f"e.g. {', '.join(lib['classes'][:4])}",
+            unknown_classes=unknown[:10],
+            shim=("implement or un-hollow the members the library calls back into" if missing or hollow or missing_classes else
+                  "compare the constant bodies with AOSP" if candidates else
+                  "confirm the library tolerates their absence; watch it under the runtime-integrity checks" if unknown else "none"),
         ))
     return rows
 
@@ -435,22 +566,123 @@ def build_map(
     oh_missing: list[dict[str, Any]],
     policy: dict[str, Any],
     manifest_root: Path | None = None,
+    ndk_cov: dict[str, Any] | None = None,
+    observed: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     westlake_services = services.westlake_service_model(westlake_root)
     pm = contracts.pm_adapter_model(westlake_root)
     java, java_excluded = java_api_rows(scan, api_levels)
     svc, dynamic = service_rows(scan, aosp_services, westlake_services)
     rows = (java + svc + package_manager_rows(scan, facts, pm)
-            + native_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root))
+            + native_upcall_rows(scan)
+            + (ndk_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root), ndk_cov) if ndk_cov
+               else native_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root)))
             + native_loading_rows(facts, scan, launcher_extraction(manifest_root))
             + sandbox_rows(scan, policy) + external_rows(facts, scan, refused_libraries(westlake_root)))
-    return {
+    gap_map = {
         "app": {"package": facts["package"], "version": facts["version_name"], "target_sdk": facts["target_sdk"],
                 "apk_sha256": scan["apk"]["sha256"]},
         "provider": {"westlake": pm["provenance"], "oh_board": policy["oh"]["board"]},
-        "notes": {"java_excluded_by_api_level": java_excluded, "service_requests_with_computed_names": dynamic},
+        "notes": {"java_excluded_by_api_level": java_excluded, "service_requests_with_computed_names": dynamic,
+                  "native_upcalls_scanned": scan["inventory"].get("native_upcalls") is not None},
         "rows": rows,
     }
+    if observed:
+        apply_observed(gap_map, scan, observed, aosp_services)
+    return gap_map
+
+
+def apply_observed(gap_map: dict[str, Any], scan: dict[str, Any], observed: dict[str, Any], aosp: dict[str, Any]) -> None:
+    """Mark every row with whether one recorded run on real Android touched it, and how we know."""
+    touch = observed["platform_touch"]
+    ran = set(observed["executed_app_methods"])
+    platform_classes = set(observed.get("executed_platform_classes", []))
+    loaded = set(observed.get("loaded_app_libraries", []))
+    by_owner: dict[str, list[str]] = defaultdict(list)
+    for key in touch:
+        by_owner[key.partition("->")[0]].append(key)
+
+    def caller_ran(site: dict[str, Any]) -> bool:
+        return f"{site['owner']}->{site['method']}{site.get('descriptor', '')}" in ran
+
+    requests: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    manager_to_service = {entry["manager"]: name for name, entry in aosp.items()}
+    for request in scan["inventory"].get("service_requests", []):
+        name = request.get("service") or manager_to_service.get(request.get("manager_class", ""))
+        if name:
+            requests[name].append(request)
+    probes: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for probe in scan["inventory"].get("existence_probes", []):
+        probes[probe["descriptor"]].append(probe)
+
+    for row in gap_map["rows"]:
+        category, rid = row["category"], row["id"]
+        on_path, evidence = False, ""
+        if category == "java-api":
+            executed = referenced = 0
+            for member in row.get("members", []):
+                owner = member["owner"]
+                if member["kind"] == "existence_probe":
+                    state = "referenced" if any(caller_ran(p) for p in probes.get(owner, [])) else None
+                elif member["kind"] == "missing_class":
+                    states = {touch[k] for k in by_owner.get(owner, [])}
+                    state = "executed" if "executed" in states else "referenced" if states else None
+                elif member["kind"] == "missing_field":
+                    state = touch.get(f"{owner}->F:{member['name']}:{member['signature']}")
+                else:
+                    state = touch.get(f"{owner}->{member['name']}{member['signature']}")
+                executed += state == "executed"
+                referenced += state == "referenced"
+            on_path = bool(executed or referenced)
+            evidence = f"{executed} members executed, {referenced} more referenced by executed methods, of {len(row.get('members', []))}"
+        elif category == "system-services":
+            name = row["item"]
+            callers = sum(1 for site in requests.get(name, []) if caller_ran(site))
+            manager = (aosp.get(name) or {}).get("manager")
+            manager_ran = manager in platform_classes
+            on_path = bool(callers) or manager_ran
+            evidence = f"{callers} of {len(requests.get(name, []))} requesting methods ran" + (
+                f"; {manager.strip('L;').rsplit('/', 1)[-1]} code executed" if manager_ran else "")
+        elif category == "package-manager":
+            if rid.startswith("pm:call:"):
+                states = {touch[k] for k in by_owner.get("Landroid/content/pm/PackageManager;", [])
+                          if k.partition("->")[2].startswith(rid[8:] + "(")}
+                on_path, evidence = bool(states), ", ".join(sorted(states)) or "not called"
+            elif rid == "pm:component-metadata":
+                states = {touch[k] for k in by_owner.get("Landroid/content/pm/PackageManager;", [])
+                          if k.partition("->")[2].startswith(("getServiceInfo(", "getActivityInfo(", "getProviderInfo(", "getReceiverInfo("))}
+                on_path, evidence = bool(states), "component lookups " + (", ".join(sorted(states)) or "not called")
+            else:
+                on_path, evidence = True, "done by the platform when the process is bound"
+        elif category in {"native-symbols", "native-upcalls", "sandbox-policy", "native-loading"}:
+            if rid.startswith("upcall:"):
+                libs = {rid[7:]}
+            elif category == "sandbox-policy":
+                libs = {part.split(":")[0] for part in (row.get("app_evidence") or "").split(", ") if part.endswith((":mkfifo", ":mkfifoat", ":symlink", ":symlinkat", ":mknod", ":link"))}
+            elif category == "native-loading":
+                libs = loaded
+            else:
+                libs = set(row.get("importing_libraries", []))
+            hit = sorted(libs & loaded)
+            on_path = bool(hit)
+            evidence = ("loaded: " + ", ".join(hit)) if hit else ("none of its libraries loaded" if libs else "no native library involved")
+        elif category == "external-deps":
+            prefixes = {"dep:google-play-services": "Lcom/google/android/gms/", "dep:gms-client-api-calls": "Lcom/google/android/gms/",
+                        "env:forter-fraud-sdk": "Lcom/forter/"}
+            if rid.startswith("dep:firebase"):
+                prefix = "Lcom/google/mlkit/" if "MlKit" in rid else "Lcom/google/firebase/components/"
+            elif rid == "env:akamai-bot-manager":
+                prefix = None
+                on_path = "libakamaibmp.so" in loaded
+                evidence = "libakamaibmp.so loaded" if on_path else "library not loaded"
+            else:
+                prefix = prefixes.get(rid)
+            if prefix:
+                count = sum(1 for name in ran if name.startswith(prefix))
+                on_path, evidence = bool(count), f"{count} of its methods executed"
+        row["observed"] = {"on_path": on_path, "evidence": evidence}
+    gap_map["observed"] = {"scenario": observed.get("scenario", ""), "executed_methods": observed["executed_methods"],
+                           "executed_app_methods": len(ran), "loaded_app_libraries": sorted(loaded)}
 
 
 def backtest(gap_map: dict[str, Any], blockers: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -496,6 +728,25 @@ def markdown(gap_map: dict[str, Any], backtest_results: list[dict[str, Any]] | N
         prof = ", ".join(f"{profile[e]}×{e}" for e in _EFFORT_ORDER if profile.get(e))
         out.append(f"| {title} | {how} | {len(cat)} | {len(gaps)} | {prof or '—'} |")
     out += ["", "Effort: " + "; ".join(f"**{k}** {v}" for k, v in EFFORT.items() if k != "none"), ""]
+    observed = gap_map.get("observed")
+    if observed:
+        open_rows = [r for r in rows if r["verdict"] != "supplied" and r["effort"] != "none"]
+        on_path = [r for r in open_rows if r.get("observed", {}).get("on_path")]
+        order = {e: i for i, e in enumerate(["OH", "L", "M", "S", "XS", "verify"])}
+        on_path.sort(key=lambda r: (order.get(r["effort"], 9), r["category"]))
+        out += [f"## Gaps on the observed path: {observed['scenario']}", "",
+                f"Recorded on real Android with full method tracing: {observed['executed_methods']} methods executed "
+                f"({observed['executed_app_methods']} of them the app's own), app libraries loaded: "
+                f"{', '.join(observed['loaded_app_libraries']) or 'none'}.", "",
+                f"**{len(on_path)} of the {len(open_rows)} open gaps were touched on this path; "
+                f"{len(open_rows) - len(on_path)} were not.**", "",
+                "| Gap | Category | Verdict | Effort | How we know |", "|---|---|---|---|---|"]
+        titles = {key: title for key, title, _ in CATEGORIES}
+        for r in on_path:
+            out.append(f"| {_escape(r['item'])} | {titles.get(r['category'], r['category'])} | {r['verdict']} | {r['effort']} | "
+                       f"{_escape(r['observed']['evidence'])} |")
+        out += ["", "\"Touched\" means the call ran, or a method containing the reference ran; it leans large, never small. "
+                "A gap that was not touched can still matter for a later screen or feature.", ""]
     if backtest_results:
         label = (lambda r: _STATUS.get(r["outcome"], r["outcome"])) if status_mode else (lambda r: r["outcome"])
         tally = Counter(label(r) for r in backtest_results)
@@ -516,7 +767,10 @@ def markdown(gap_map: dict[str, Any], backtest_results: list[dict[str, Any]] | N
         if not cat:
             continue
         cat.sort(key=lambda r: (r["verdict"] == "supplied", -_EFFORT_ORDER.index(r["effort"])))
-        out += [f"## {title}", "", f"_{how}_", "", "| Item | Verdict | Class | Effort | OH touchpoint | Shim / evidence |", "|---|---|---|---|---|---|"]
+        path_col = bool(gap_map.get("observed"))
+        out += [f"## {title}", "", f"_{how}_", "",
+                "| Item | Verdict | Class | Effort |" + (" On path |" if path_col else "") + " OH touchpoint | Shim / evidence |",
+                "|---|---|---|---|---|---|" + ("---|" if path_col else "")]
         for r in cat:
             detail = r.get("shim", "")
             evidence = r.get("app_evidence") or (", ".join(r.get("examples", [])[:3]) if r.get("examples") else "") \
@@ -525,13 +779,17 @@ def markdown(gap_map: dict[str, Any], backtest_results: list[dict[str, Any]] | N
                 evidence = "open: " + ", ".join(r["open_symbols"][:8])
             src = f" `{r['provider_source']}`" if r.get("provider_source") else ""
             probe = f" — probe: `{r['probe']}`" if r.get("probe") else ""
-            out.append(f"| {_escape(r['item'])} | {r['verdict']} | {r['shim_class']} | {r['effort']} | {_escape(r['oh_touchpoint'] or '')} | "
+            mark = (" yes |" if r.get("observed", {}).get("on_path") else " – |") if path_col else ""
+            out.append(f"| {_escape(r['item'])} | {r['verdict']} | {r['shim_class']} | {r['effort']} |{mark} {_escape(r['oh_touchpoint'] or '')} | "
                        f"{_escape(detail)}{'<br>' + _escape(evidence) if evidence else ''}{src}{probe} |")
         out.append("")
     notes = gap_map["notes"]
     out += ["## Limits of this map", "",
             f"- {notes['service_requests_with_computed_names']} service requests use computed names and are not resolved statically.",
             f"- Java absences excluded by API level: {notes['java_excluded_by_api_level']}.",
+            ("- Native code calling back into Java was matched from library strings against a reference android.jar; "
+             "names built at runtime or encrypted are invisible." if notes.get("native_upcalls_scanned") else
+             "- **Native code calling back into Java was not analysed**: rescan with `scan --platform-jar <android.jar>`."),
             "- `supplied` means the provider source answers the contract; `verify` rows need their conformance probe on the board.",
             "- Semantic mismatches (right name, wrong behaviour) remain invisible until a probe or the Android baseline compares them."]
     return "\n".join(out) + "\n"
