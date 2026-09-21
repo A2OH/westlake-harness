@@ -657,6 +657,13 @@ westlake-apk-gap report <portfolio>
 
 The first implementation can wrap existing tools. A unified custom parser is not required to prove the process.
 
+**Implemented interface (2026-09-21).** The commands that exist are `snapshot-runtime`, `scan`,
+`annotate-api-levels`, `native-surface`, `native-capture-diff`, `gap-map`, `benchmark`,
+`trace-watchlist`, `ingest-trace` and `runtime-summary`; the README lists what each does. `gap-map`
+currently covers what `resolve`, `plan` and `prioritize` above describe for a single APK: one row
+per contract, with shim class, effort, and the conformance probe that settles it. `probe`,
+`reconcile` and the portfolio `prioritize` over a gap registry are not implemented as commands.
+
 ## 19. Metrics
 
 Track at least:

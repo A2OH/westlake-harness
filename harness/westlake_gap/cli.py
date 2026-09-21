@@ -118,11 +118,66 @@ def parser() -> argparse.ArgumentParser:
     )
     apis.add_argument("--reference-api", required=True, type=int, help="API level of a device the app is known to run on")
     apis.add_argument("--out", required=True, type=Path)
+
+    gap = commands.add_parser(
+        "gap-map",
+        help="one categorized, effort-rated map of where an APK touches OpenHarmony and what shim each gap needs",
+    )
+    gap.add_argument("--scan", required=True, type=Path, help="scan JSON for the APK (from `scan`)")
+    gap.add_argument("--apk", required=True, type=Path, help="the same .apk/.xapk, for manifest facts")
+    gap.add_argument("--api-levels", type=Path, help="annotate-api-levels output for the same scan")
+    gap.add_argument("--aosp", required=True, type=Path, help="AOSP source root holding frameworks-base and modules-*")
+    gap.add_argument("--westlake", required=True, type=Path, help="Westlake source tree (the provider under test)")
+    gap.add_argument("--westlake-label", help="provenance label when --westlake is not a git checkout")
+    gap.add_argument("--manifest-repo", type=Path, help="launcher repo (tools/prepare_app.py)")
+    gap.add_argument("--oh-resolution", required=True, type=Path, help="oh-import-resolution.json from the board")
+    gap.add_argument("--app-key", required=True, help="key of this app inside --oh-resolution")
+    gap.add_argument("--policy", type=Path, default=Path(__file__).parent / "data" / "oh-app-data-policy.json")
+    gap.add_argument("--blockers", type=Path, help="known-blockers JSON: backtest the map against observed failures")
+    gap.add_argument("--blockers-status", action="store_true",
+                     help="report known blockers as open/closed against this provider instead of as a backtest")
+    gap.add_argument("--out", required=True, type=Path, help="output directory")
     return root
 
 
 def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
+    if args.command == "gap-map":
+        from .contracts import manifest_facts
+        from .gapmap import backtest, build_map, markdown
+        from .services import aosp_service_table
+
+        scan = read_json(args.scan)
+        levels = {}
+        if args.api_levels:
+            for finding in read_json(args.api_levels).get("findings", []):
+                verdict = finding.get("api_verdict")
+                if verdict:
+                    dep = finding["dependency"]
+                    levels[(finding["kind"], dep["owner"], dep.get("name"), dep.get("signature"))] = verdict
+        aosp = aosp_service_table(
+            args.aosp / "frameworks-base/core/java/android/app/SystemServiceRegistry.java",
+            args.aosp / "frameworks-base/core/java/android/content/Context.java",
+            [args.aosp / "frameworks-base", *sorted(args.aosp.glob("modules-*"))],
+        )
+        oh = read_json(args.oh_resolution)["apps"][args.app_key]["missing"]
+        gap_map = build_map(scan, manifest_facts(args.apk), levels, aosp, args.westlake, oh,
+                            read_json(args.policy), args.manifest_repo)
+        if args.westlake_label:
+            gap_map["provider"]["westlake"] = {"branch": args.westlake_label, "commit": args.westlake_label, "uncommitted": []}
+        results = None
+        if args.blockers:
+            results = backtest(gap_map, read_json(args.blockers)["blockers"])
+            gap_map["backtest"] = results
+        args.out.mkdir(parents=True, exist_ok=True)
+        write_json(args.out / "gap-map.json", gap_map)
+        (args.out / "GAP-MAP.md").write_text(markdown(gap_map, results, status_mode=args.blockers_status))
+        gaps = [r for r in gap_map["rows"] if r["verdict"] != "supplied" and r["effort"] != "none"]
+        print(f"{len(gap_map['rows'])} rows, {len(gaps)} gaps"
+              + (f"; backtest {sum(r['outcome'] == 'predicted' for r in results)}/{len(results)} predicted, "
+                 f"{sum(r['outcome'] == 'flagged for verification' for r in results)} flagged" if results else "")
+              + f" -> {args.out}")
+        return 0
     if args.command == "annotate-api-levels":
         indexes = {}
         for spec in args.platform_jar:
