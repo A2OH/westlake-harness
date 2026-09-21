@@ -2,10 +2,10 @@
 set -euo pipefail
 
 ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-SDK=${ANDROID_SDK_ROOT:-/home/dspfac/android-sdk}
+SDK=${ANDROID_SDK_ROOT:-${ANDROID_HOME:-$HOME/android-sdk}}
 TOOLS="$SDK/build-tools/34.0.0"
 ANDROID_JAR="$SDK/platforms/android-34/android.jar"
-KEYSTORE=${WESTLAKE_DEBUG_KEYSTORE:-/home/dspfac/.android/debug.keystore}
+KEYSTORE=${WESTLAKE_DEBUG_KEYSTORE:-$HOME/.android/debug.keystore}
 OUT="$ROOT/out"
 
 for tool in "$TOOLS/aapt" "$TOOLS/d8" "$TOOLS/zipalign" "$TOOLS/apksigner" \

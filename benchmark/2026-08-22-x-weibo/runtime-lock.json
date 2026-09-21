@@ -11,7 +11,7 @@
       ],
       "name": "core-oj.jar",
       "order": 0,
-      "path": "/home/dspfac/bridge-build-arm64/corejars/core-oj.jar",
+      "path": "core-oj.jar",
       "sha256": "610c2920aaa22174fad24faf6eb8a7c62ddf923f21752bd506acfcdae7dc2549"
     },
     {
@@ -25,7 +25,7 @@
       ],
       "name": "core-libart.jar",
       "order": 1,
-      "path": "/home/dspfac/bridge-build-arm64/corejars/core-libart.jar",
+      "path": "core-libart.jar",
       "sha256": "017aae7e18a501836b11bbb663bd3d4d26f2686820ea3309197998b1c09b35d7"
     },
     {
@@ -39,7 +39,7 @@
       ],
       "name": "core-icu4j.jar",
       "order": 2,
-      "path": "/home/dspfac/bridge-build-arm64/fwjars/core-icu4j.jar",
+      "path": "core-icu4j.jar",
       "sha256": "f31e34e244b6dc90a1fe28b26508447e62d898943cdf72ebbd0a4f540ad731d2"
     },
     {
@@ -53,7 +53,7 @@
       ],
       "name": "okhttp.jar",
       "order": 3,
-      "path": "/home/dspfac/bridge-build-arm64/fwjars/okhttp.jar",
+      "path": "okhttp.jar",
       "sha256": "8f59f08612bb175b88d657802493856cbd2f1d1c35d1c6b9cac2c7f326ba6d86"
     },
     {
@@ -67,7 +67,7 @@
       ],
       "name": "bouncycastle.jar",
       "order": 4,
-      "path": "/home/dspfac/bridge-build-arm64/fwjars/bouncycastle.jar",
+      "path": "bouncycastle.jar",
       "sha256": "e9f6e84d96b17ac6515cc9df5ecfbdc5805c67cbb26bd42ea7bf78e358640b71"
     },
     {
@@ -96,7 +96,7 @@
       ],
       "name": "apache-xml.jar",
       "order": 5,
-      "path": "/home/dspfac/bridge-build-arm64/fwjars/apache-xml.jar",
+      "path": "apache-xml.jar",
       "sha256": "6057ba023c8df2ea72be38dbb1cf5cafe0235e6430c6eba1c169d9dcb3d57a6c"
     },
     {
@@ -110,7 +110,7 @@
       ],
       "name": "adapter-mainline-stubs.jar",
       "order": 6,
-      "path": "/home/dspfac/westlake-harness/benchmark/2026-08-22-x-weibo/device-runtime/adapter-mainline-stubs.jar",
+      "path": "adapter-mainline-stubs.jar",
       "sha256": "354aa5da56fa24d7824451b2e5ffec1feca932c1da10598880349117929d83ec"
     },
     {
@@ -144,7 +144,7 @@
       ],
       "name": "framework.jar",
       "order": 7,
-      "path": "/home/dspfac/bridge-build-arm64/corejars/framework.jar",
+      "path": "framework.jar",
       "sha256": "0297d57ed970531060a6cf727a0ba40cfd79b18b8837b1e1846a00ec24fae682"
     },
     {
@@ -158,7 +158,7 @@
       ],
       "name": "adapter-runtime-bcp.jar",
       "order": 8,
-      "path": "/home/dspfac/westlake-harness/benchmark/2026-08-22-x-weibo/device-runtime/adapter-runtime-bcp.jar",
+      "path": "adapter-runtime-bcp.jar",
       "sha256": "bbefced983ec5a0420ad16847e91be40e37b3af70ca94acc48596f7a6baa824a"
     },
     {
@@ -177,7 +177,7 @@
       ],
       "name": "oh-adapter-framework.jar",
       "order": 9,
-      "path": "/home/dspfac/westlake-harness/benchmark/2026-08-22-x-weibo/device-runtime/oh-adapter-framework.jar",
+      "path": "oh-adapter-framework.jar",
       "sha256": "d731808d2ee665d281ad397680383e64d744d3bda066a0d0a1011e929ab678a4"
     }
   ],

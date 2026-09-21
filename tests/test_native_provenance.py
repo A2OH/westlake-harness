@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import tempfile
@@ -19,6 +20,7 @@ from westlake_gap.nativeprov import (
     method_surface_reach,
     resolve_native_imports,
     surface_of,
+    ndk_toolchain_bins,
 )
 from westlake_gap.native import recover_jni_registration_entries
 from westlake_gap.scanner import _dynamic_symbols_from_text, read_elf
@@ -176,7 +178,7 @@ def _find_ndk_clang() -> str | None:
     found = shutil.which("aarch64-linux-android21-clang")
     if found:
         return found
-    for root in sorted(Path("/home/dspfac/android-sdk/ndk").glob("*/toolchains/llvm/prebuilt/*/bin"), reverse=True):
+    for root in ndk_toolchain_bins():
         for version in (21, 24, 26, 29):
             candidate = root / f"aarch64-linux-android{version}-clang"
             if candidate.exists():
@@ -398,9 +400,10 @@ Symbol table '.dynsym' contains 4 entries:
         self.assertEqual({"__cxa_thread_atexit_impl"}, weak)
 
     def test_real_library_exports_ifuncs(self) -> None:
-        libc = Path("/mnt/c/Users/dspfa/wl-probe/android11-syslibs/libc.so")
-        if not libc.exists():
-            self.skipTest("Android 11 reference libc.so is not present")
+        syslibs = os.environ.get("WESTLAKE_ANDROID11_SYSLIBS")
+        libc = Path(syslibs) / "libc.so" if syslibs else None
+        if libc is None or not libc.exists():
+            self.skipTest("set WESTLAKE_ANDROID11_SYSLIBS to a directory holding an Android 11 arm64 libc.so")
         record = read_elf(path=libc, abi="arm64-v8a")
         for symbol in ("strlen", "strcmp", "memcpy", "memchr"):
             self.assertIn(symbol, record["exported_symbols"], symbol)

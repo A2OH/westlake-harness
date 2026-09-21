@@ -9,7 +9,7 @@
     "md5": "cc99caaaa3baffbb100118753fa1d130",
     "sha256": "a1112a0c941f865847c2fab9138cf815735268fbfcd41d697412fb80992c7395",
     "device_path": "/data/local/tmp/asx/toutiao.apk",
-    "host_path": "/home/dspfac/bridge-build-arm64/toutiao.apk"
+    "host_path": "toutiao.apk"
   },
   "runtime": {
     "runtime_lock_id": "sha256:96366a206a3fe68c5b78a68fafc9addc63932d8ecee1ee166ab802ea62322b2b",

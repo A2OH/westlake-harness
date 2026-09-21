@@ -5,7 +5,11 @@ from pathlib import Path
 
 from westlake_gap.platformapi import annotate, introduced_at, load_platform_index
 
-PLATFORMS = Path("/home/dspfac/android-sdk/platforms")
+from westlake_gap.nativeprov import android_sdk_roots
+
+# The first SDK root (``$ANDROID_HOME``, ``$ANDROID_SDK_ROOT``, ``~/android-sdk``) that ships platforms.
+PLATFORMS = next((root / "platforms" for root in android_sdk_roots() if (root / "platforms").is_dir()),
+                 Path.home() / "android-sdk/platforms")
 
 
 def finding(kind: str, owner: str, name: str | None = None) -> dict:

@@ -23,7 +23,7 @@
     ],
     "native_library_entries": 0,
     "package": "com.mcdonalds.app",
-    "path": "/tmp/claude-1000/-home-dspfac-a2hlab/ba503e44-b0bb-446e-866d-e0566b949cae/scratchpad/mcdonalds.xapk",
+    "path": "mcdonalds.xapk",
     "permissions": [
       "android.permission.ACCESS_ADSERVICES_AD_ID",
       "android.permission.ACCESS_ADSERVICES_ATTRIBUTION",
