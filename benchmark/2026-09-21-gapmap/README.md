@@ -9,7 +9,8 @@ the scan reproduces the 2026-09-18 findings exactly (1106/1106) and adds service
 | `mcdonalds-known-blockers.json` | The eight failures McDonald's hit on the board, each naming the row that should predict it |
 | `backtest-75d82d5/` | Map against the provider McDonald's actually ran on (Westlake `75d82d5`, launcher `f229702`) |
 | `current/` | Map against today's provider (Westlake `c279d16` + 9 uncommitted files, recorded in the map) |
-| `mcdonalds-scan.json` | The scan, with `service_requests`, `platform_method_names` and `native_upcalls` (`--platform-jar android-34`) |
+| `runtime-lock-source-build.json` | Lock of the runtime McDonald's runs on: 9 boot jars and 48 libraries pulled from the board |
+| `mcdonalds-scan.json` | The scan against that runtime, with `service_requests`, `platform_method_names` and `native_upcalls` (`--platform-jar android-34`) |
 | `toutiao-native-upcalls.json` | Java APIs Toutiao 13.9.0's native libraries call back into, per library |
 
 ## Backtest: would the map have saved the trial and error?
@@ -31,14 +32,19 @@ Before this change the harness's detectors flagged only B2, and scored B7's `mkf
 
 ## What is left today
 
-96 rows, **78 open gaps**: 1×OH, 2×L, 23×M, 31×S, 1×XS, 20×verify. Native gaps are classified against the NDK
-provider model (`../2026-09-21-ndk-coverage/`), not the raw board.
+88 rows, **68 open gaps**: 1×OH, 1×L, 20×M, 24×S, 22×verify; 43 are on the recorded path to sign-in.
+
+**Provider corrected.** The scan now uses the runtime McDonald's really runs on, re-indexed from the
+boot jars staged on the board (`runtime-lock-source-build.json`). The earlier map used the August
+index of the legacy payload and reported 58 required Java absences, led by WiFi. Against the real
+build there are **none**: its `framework.jar` carries the real AOSP WiFi, `TrafficStats` and job
+classes. Native gaps are classified against the NDK provider model (`../2026-09-21-ndk-coverage/`).
 
 | Effort | Items |
 |---|---|
 | **OH** | Create `fifo_file` in app data: OH policy denies what Android allows (Realm). One allow rule, no `neverallow` conflict; bring-up workaround: label the app-data tree `data_app_el2_file` |
-| **L** | WiFi (38 members over `communication/wifi`); `phone` (TelephonyManager, binder unprovisioned) |
-| **M** | NDK sensors weld: 11 `ASensor*` symbols over OH `sensors`. Services: `alarm`, `clipboard`, `uimode`, `wifi` null; `camera`, `sensor`, `download` inert; `audio`, `notification`, `user`, `jobscheduler` hollow. PackageManager `query*`/`resolve*` stubs. Networking, mDNS, media store. Symlinks (neverallow'd: needs a libc emulation). Google Play services |
+| **L** | `phone` (TelephonyManager, binder unprovisioned) |
+| **M** | NDK sensors weld: 11 `ASensor*` symbols over OH `sensors` (off the sign-in path). Services: `alarm`, `clipboard`, `uimode`, `wifi` null; `camera`, `sensor`, `download` inert; `audio`, `notification`, `user`, `jobscheduler` hollow. PackageManager `query*`/`resolve*` stubs. Networking, mDNS, media store. Symlinks (neverallow'd: needs a libc emulation). Google Play services |
 | **XS** | NDK package: 6 `AAsset*`/`ALooper*` symbols. Westlake already builds `asset_manager.cpp` and `looper.cpp`; they are not deployed |
 | **S** | bionic libc ABI: 13 of 14 covered by the shim, `__system_property_read` open. 10 small services (`power`, `keyguard`, `appops`, `locale`, …), 12 PackageManager stubs, the last sysprop symbol, `TrafficStats.setThreadStatsTag` hollow under `libpanorenderer.so`, and several small Java areas |
 | **verify** | Providers at bind (`probes/provider-manifest`), component metadata (`probes/service-metadata`), splits (probe to write), hollow-candidate framework bodies, Firebase, Akamai refusal, Forter |
@@ -49,8 +55,8 @@ jobs are accepted and never run.
 
 ## On the path to sign-in
 
-Recorded on real Android (`../2026-09-21-android-baseline/`): **47 of the 78 open gaps are touched
-between cold start and the sign-in screen** (1×OH, 2×L, 15×M, 18×S, 11×verify); 31 are not. Both
+Recorded on real Android (`../2026-09-21-android-baseline/`): **43 of the 68 open gaps are touched
+between cold start and the sign-in screen** (1×OH, 1×L, 14×M, 15×S, 12×verify); 25 are not. Both
 maps carry an "On path" column and a section listing those gaps with the evidence for each.
 
 ## Native code calling back into Java
@@ -84,10 +90,10 @@ from four traps, each now a known-answer test:
 westlake-apk-gap scan mcdonalds-26.31.1.xapk --runtime ../2026-08-23-toutiao/runtime-index.json \
   --platform-jar $ANDROID_HOME/platforms/android-34/android.jar --out mcdonalds-scan.json
 westlake-apk-gap gap-map --scan mcdonalds-scan.json --apk mcdonalds-26.31.1.xapk \
-  --api-levels ../2026-09-18-mcdonalds/scan-api-annotated.json --aosp <imports> \
+  --api-levels mcdonalds-scan.json --aosp <imports> \
   --westlake <westlake at 75d82d5> --manifest-repo <manifest at f229702> \
   --oh-resolution ../2026-09-18-oh-board/oh-import-resolution.json --app-key mcdonalds \
-  --ndk-coverage ../2026-09-21-ndk-coverage/ndk-coverage.json \
+  --ndk-coverage ../2026-09-21-ndk-coverage/source-build/ndk-coverage.json \
   --blockers mcdonalds-known-blockers.json --out backtest-75d82d5
 ```
 

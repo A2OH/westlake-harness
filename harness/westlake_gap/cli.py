@@ -13,6 +13,7 @@ from .nativeprov import analyze_library, compare_runtime_capture
 from .platformapi import annotate, load_platform_index
 from .report import aggregate, markdown_report
 from .scanner import (
+    RuntimeResolver,
     build_runtime_index,
     read_elf,
     read_json,
@@ -147,6 +148,21 @@ def parser() -> argparse.ArgumentParser:
     observe_cmd.add_argument("--graph-cache", type=Path)
     observe_cmd.add_argument("--out", required=True, type=Path)
 
+    fw_cmd = commands.add_parser(
+        "trace-framework-check",
+        help="look up every platform method a recorded run executed in the runtime under test: missing, hollow, or native and unbound",
+    )
+    fw_cmd.add_argument("input", type=Path, help=".apk/.xapk/.apkm the trace was recorded from")
+    fw_cmd.add_argument("--trace", required=True, type=Path)
+    fw_cmd.add_argument("--runtime", required=True, type=Path, help="runtime index of the build under test")
+    fw_cmd.add_argument("--westlake-libs", required=True, type=Path, help="deployed runtime libraries: the JNI bindings actually available")
+    fw_cmd.add_argument("--proven-trace", type=Path, action="append", default=[],
+                        help="trace of an app that already runs on the target: what it also executes is proven there; repeat")
+    fw_cmd.add_argument("--platform-jar", type=Path, help="reference android.jar: marks which findings are public API (the boundary) rather than internals")
+    fw_cmd.add_argument("--frontier", help="method name prefix of the furthest point reached on the target, e.g. 'Landroid/location/LocationManager;-><init>'")
+    fw_cmd.add_argument("--graph-cache", type=Path)
+    fw_cmd.add_argument("--out", required=True, type=Path)
+
     ndk_cmd = commands.add_parser(
         "ndk-coverage",
         help="measure the entire public NDK against a board's libraries and classify how each missing symbol is supplied",
@@ -186,6 +202,55 @@ def parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
+    if args.command == "trace-framework-check":
+        import pickle
+
+        from . import reach, tracecmp
+        from .contracts import manifest_facts
+        from .platformapi import load_platform_members
+
+        if args.graph_cache and args.graph_cache.exists():
+            graph = pickle.loads(args.graph_cache.read_bytes())
+        else:
+            facts = manifest_facts(args.input)
+            graph = reach.build_graph(args.input, [c["name"] for c in facts["components"] if c.get("name")])
+            if args.graph_cache:
+                args.graph_cache.write_bytes(pickle.dumps(graph, protocol=pickle.HIGHEST_PROTOCOL))
+        app_classes = {graph.cls_names[cid] for cid in graph.defined}
+        runtime = read_json(args.runtime)
+        order = tracecmp.execution_order(args.trace)
+        tables, exports = tracecmp.jni_tables(args.westlake_libs)
+        result = tracecmp.framework_check(set(order), app_classes, runtime, RuntimeResolver(runtime), tables, exports, order)
+        proven: set[str] = set()
+        for path in args.proven_trace:
+            proven |= tracecmp.executed_methods(path)
+        reference = load_platform_members(args.platform_jar) if args.platform_jar else {}
+
+        def public(key: str) -> bool:
+            owner, _, sig = key.partition("->")
+            record = reference.get(owner[1:-1])
+            name, _, rest = sig.partition("(")
+            return bool(record) and any(n == name and d == "(" + rest and a & 5 for n, d, a in record["methods"])
+
+        frontier = min((rank for key, rank in order.items() if args.frontier and key.startswith(args.frontier)), default=None)
+        for finding in result["findings"]:
+            finding["proven_on_target"] = finding["method"] in proven
+            finding["public_api"] = public(finding["method"])
+            finding["after_frontier"] = frontier is not None and (finding["first_seen"] or 0) > frontier
+        platform_total = sum(result["counts"].values())
+        platform_methods = [k for k in order if k.partition("->")[0] not in app_classes]
+        result["summary"] = {
+            "runtime_lock_id": runtime.get("runtime_lock_id"),
+            "methods_executed": len(order), "platform_methods_executed": platform_total,
+            "platform_methods_proven_on_target": sum(1 for k in platform_methods if k in proven) if proven else None,
+            "frontier_rank": frontier, "jni_tables": len(tables), "jni_exports": len(exports),
+            "boundary_failures": [f for f in result["findings"] if not f["proven_on_target"] and (
+                f["state"] in {"native-unbound", "hollow"} or (f["state"] in {"member-missing", "class-missing"} and f["public_api"]))],
+        }
+        write_json(args.out, result)
+        print(f"{platform_total} platform methods executed: " + ", ".join(f"{k} {v}" for k, v in sorted(result["counts"].items()))
+              + f"; boundary failures not proven on target: {len(result['summary']['boundary_failures'])} -> {args.out}")
+        return 0
     if args.command in {"startup-reach", "trace-observe"}:
         import pickle
 

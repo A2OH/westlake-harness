@@ -112,5 +112,45 @@ class StartupReach(unittest.TestCase):
         self.assertEqual(comparison["executed_but_not_reached"], 0)
 
 
+class FrameworkCheck(unittest.TestCase):
+    """Every platform method a run executed, looked up in the runtime under test."""
+
+    RUNTIME = {"runtime_lock_id": "fixture", "classes": {
+        "Landroid/view/Fine;": {"artifact": "framework.jar", "super": "Ljava/lang/Object;", "interfaces": [],
+                                "methods": ["draw()V", "nBound()J", "nUnbound()J", "template()V"], "fields": [],
+                                "hollow_methods": ["template()V"], "native_methods": ["nBound()J", "nUnbound()J"]},
+        "Landroid/net/Stubbed;": {"artifact": "adapter-mainline-stubs.jar", "super": "Ljava/lang/Object;", "interfaces": [],
+                                  "methods": ["tag(I)V"], "fields": [], "hollow_methods": ["tag(I)V"], "native_methods": []},
+    }}
+
+    def test_states_order_and_limits(self) -> None:
+        from westlake_gap.scanner import RuntimeResolver
+
+        with tempfile.TemporaryDirectory(prefix="westlake-fwcheck-") as temp:
+            trace = Path(temp) / "run.trace"
+            records = [("fixture.App", "onCreate", "()V"), ("android.view.Fine", "draw", "()V"),
+                       ("android.view.Fine", "nBound", "()J"), ("android.view.Fine", "nUnbound", "()J"),
+                       ("android.view.Fine", "template", "()V"), ("android.net.Stubbed", "tag", "(I)V"),
+                       ("android.view.Fine", "gone", "()V"), ("android.view.Absent", "x", "()V"),
+                       ("android.view.Fine", "-$$Nest$fgetmX", "()I")]
+            trace.write_bytes(b"".join(f"\x00\x01{c}\t{n}\t{sig}\tX.java\n".encode() for c, n, sig in records))
+            order = tracecmp.execution_order(trace)
+        self.assertEqual(order["Lfixture/App;->onCreate()V"], 0)
+        self.assertLess(order["Landroid/view/Fine;->draw()V"], order["Landroid/net/Stubbed;->tag(I)V"], "record order is first-execution order")
+
+        tables = [{"library": "libruntime.so", "methods": {"nBound()J", "nOther()V"}}]
+        result = tracecmp.framework_check(set(order), {"Lfixture/App;"}, self.RUNTIME, RuntimeResolver(self.RUNTIME), tables, set(), order)
+        state = {f["method"]: f["state"] for f in result["findings"]}
+        self.assertEqual(state["Landroid/view/Fine;->nUnbound()J"], "native-unbound", "its class table exists and lacks it")
+        self.assertNotIn("Landroid/view/Fine;->nBound()J", state)
+        self.assertEqual(state["Landroid/net/Stubbed;->tag(I)V"], "hollow", "placeholder in a Westlake stub jar")
+        self.assertEqual(state["Landroid/view/Fine;->template()V"], "hollow-candidate", "framework.jar may carry AOSP's own empty body")
+        self.assertEqual(state["Landroid/view/Fine;->gone()V"], "member-missing")
+        self.assertEqual(state["Landroid/view/Absent;->x()V"], "class-missing")
+        self.assertNotIn("Lfixture/App;->onCreate()V", state, "app methods are not platform methods")
+        self.assertEqual(result["counts"]["compiler-generated"], 1, "nest accessors differ between builds and prove nothing")
+        self.assertEqual([f["first_seen"] for f in result["findings"]], sorted(f["first_seen"] for f in result["findings"]))
+
+
 if __name__ == "__main__":
     unittest.main()

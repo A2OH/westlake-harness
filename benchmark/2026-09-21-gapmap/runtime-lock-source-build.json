@@ -1,0 +1,399 @@
+{
+  "boot_classpath": [
+    {
+      "bytes": 1927350,
+      "name": "core-oj.jar",
+      "path": "core-oj.jar",
+      "sha256": "02d8b12d06c8944844916b46b66da5a90a61d876399a003e9b82d0828f617c5c"
+    },
+    {
+      "bytes": 197929,
+      "name": "core-libart.jar",
+      "path": "core-libart.jar",
+      "sha256": "b9438a3b4fe5dd37f750a1eb6c8c4fdf0bc4933217442d1bcbd98e2575717ac6"
+    },
+    {
+      "bytes": 1079326,
+      "name": "core-icu4j.jar",
+      "path": "core-icu4j.jar",
+      "sha256": "7d8786c1a0c7f0c3b2eae51160a872368fcf65bc6faf6592cd3155bbdfb67787"
+    },
+    {
+      "bytes": 148928,
+      "name": "okhttp.jar",
+      "path": "okhttp.jar",
+      "sha256": "1f8dfdb55631b0747c6402f04eb6b30a820ae326b9642a23a6edb3da7ba65f03"
+    },
+    {
+      "bytes": 483790,
+      "name": "bouncycastle.jar",
+      "path": "bouncycastle.jar",
+      "sha256": "7edd0e1a7668c12b459ddee6563e4ce1b0c5df5003304b858c3903bb27aa608c"
+    },
+    {
+      "bytes": 439222,
+      "name": "apache-xml.jar",
+      "path": "apache-xml.jar",
+      "sha256": "6e76cc75c53ccc8fc1089d62d8457be09a3f88e409717cd242970087a5cc01ec"
+    },
+    {
+      "bytes": 163474,
+      "name": "conscrypt.jar",
+      "path": "conscrypt.jar",
+      "sha256": "0e7577a33612afa55a33ebdd2468f742fd37eb0fbbadde19f843f889a301ad58"
+    },
+    {
+      "bytes": 18118759,
+      "name": "framework.jar",
+      "path": "framework.jar",
+      "sha256": "96f6b1e9c37bfad8c73171853f4593f6f886520537090fc5cb00b3159c41b1ff"
+    },
+    {
+      "bytes": 174277,
+      "name": "adapter-runtime-bcp.jar",
+      "path": "adapter-runtime-bcp.jar",
+      "sha256": "86a2d359ca2a57028550a2dea5e8fe4dfb7fd42dcecd289aac56e2da5eabcce5"
+    }
+  ],
+  "bridge_libraries": [
+    {
+      "build_id": "ce02da417ee5a43a0275d941e3dd555e127636df",
+      "bytes": 45704,
+      "name": "libandroid.so",
+      "sha256": "dc5eb800eb5626f41f72cb9ed8fe59f2c35151b0e8f2ee3b49cd9779886a47b4",
+      "soname": "libandroid.so"
+    },
+    {
+      "build_id": "8fb38ae6b036afee7277233541a67e3ce5f4471c",
+      "bytes": 22552,
+      "name": "libandroid_native_network_compat.so",
+      "sha256": "f6c354d1513071533fddcc91749f44e57a626177a584fb1bb9f48bf6446ef01e",
+      "soname": "libandroid_native_network_compat.so"
+    },
+    {
+      "build_id": "b1ae3ff6261596475cd197eadef1c310954ec2e2",
+      "bytes": 908040,
+      "name": "libandroidfw.so",
+      "sha256": "3da719deea81c1667ca8b2bb6efb0f88b04807c773b238236fcd482fe6557e9a",
+      "soname": "libandroidfw.so"
+    },
+    {
+      "build_id": "21e32ab88c3e8a8f5e10ae1589b2680bbccbedcf",
+      "bytes": 21543720,
+      "name": "libart.so",
+      "sha256": "7589abb2479a9e2a3cf760974f0fac0280e7bc17961c98ec530a2703d86a04bb",
+      "soname": "libart.so"
+    },
+    {
+      "build_id": "95f00a1ed26d14b4546fb462bccc32f74a7e161d",
+      "bytes": 347456,
+      "name": "libbase.so",
+      "sha256": "b976ad27de85287a12867238c372803157cf4778ba2b839661b8c2143811c1d3",
+      "soname": "libbase.so"
+    },
+    {
+      "build_id": "a3e6360a9de26ba2c1176bd5535a2cd92230e85b",
+      "bytes": 144360,
+      "name": "libbinder_ndk.so",
+      "sha256": "cd3fe767fcfba48467c3e23d67a63f3ff2e466517e1b32b967841bd8e20f6008",
+      "soname": "libbinder_ndk.so"
+    },
+    {
+      "build_id": "88d86099a7f7cc98f283661a2c457c80d4ca3508",
+      "bytes": 98240,
+      "name": "libcutils.so",
+      "sha256": "7964168df499aed82c853aadaa66b5b695cfe305da0254ffad44b642600e6e6d",
+      "soname": "libcutils.so"
+    },
+    {
+      "build_id": "163830d569d6c46f40d5fa772118c7681a3c9c4d",
+      "bytes": 166832,
+      "name": "libexpat.so",
+      "sha256": "fe08c1224706444a4da35daa25ca68fd6b127235d84ba8be0b71bc7c8f8db7f2",
+      "soname": "libexpat.so"
+    },
+    {
+      "build_id": "4857c736f9715ffea5723190b4e77fe5d8b65f1c",
+      "bytes": 27208,
+      "name": "libframework-connectivity-jni.so",
+      "sha256": "ae05b5ad52bb8f56f05c5398628836d4139341c36ac008fea72ac13ee91c7605",
+      "soname": "libframework-connectivity-jni.so"
+    },
+    {
+      "build_id": "c1e5377e47059f925202a813a8da49dc2c73deb9",
+      "bytes": 12976,
+      "name": "libframework-connectivity-tiramisu-jni.so",
+      "sha256": "b08c035a914fa4cd7a7ec27182625ffd43b41076551ffeae8e456059e99e934c",
+      "soname": "libframework-connectivity-tiramisu-jni.so"
+    },
+    {
+      "build_id": "97dc27397c8948939e5bdf82cce4ac4773c0ac6b",
+      "bytes": 634024,
+      "name": "libft2.so",
+      "sha256": "8242228fcf38a9c397d2d233d601a59d8bfd8a0956fb5ec60eb009fec0cf69c6",
+      "soname": "libft2.so"
+    },
+    {
+      "build_id": "4958c8072e9981ade5887298e60ede0512d6352c",
+      "bytes": 37768,
+      "name": "libgif.so",
+      "sha256": "a22e52138a0927ef1af874d01fda5edff65d39c7f749797897eaeeb4d959dd3a",
+      "soname": "libgif.so"
+    },
+    {
+      "build_id": "c1bc2af0e6de2367774d8b15620662c9ed40b641",
+      "bytes": 1094960,
+      "name": "libharfbuzz_ng.so",
+      "sha256": "bec22002b04c75adef9d9122361e27f16c2049b4ccd491773053306fe2a771e3",
+      "soname": "libharfbuzz_ng.so"
+    },
+    {
+      "build_id": "35da07286e9748888ca7900c6645baced8adca58",
+      "bytes": 12205432,
+      "name": "libhwui.so",
+      "sha256": "a11c9154ca16dd7acf5e3ea99727ae37c25b1b4494a9133816bc58c553c128e2",
+      "soname": "libhwui.so"
+    },
+    {
+      "build_id": "01fc95fd5821888d8dfd4607bc8e977366760454",
+      "bytes": 147896,
+      "name": "libicu_jni.so",
+      "sha256": "be7697a24cf59593a637a22c3b6fc63f1bd810727b88a796b7edae29762238e5",
+      "soname": "libicu_jni.so"
+    },
+    {
+      "build_id": "1f32fc125bc479de72750ed88e61784897123a3a",
+      "bytes": 3969600,
+      "name": "libicui18n.so",
+      "sha256": "2aa3bf514088f35f7f3f1b2650c7b1cb6753743bdec007bcc9bba40dd49c53d2",
+      "soname": "libicui18n.so"
+    },
+    {
+      "build_id": "98cf03883e2d75adf060fa2896db53ff2333b8d9",
+      "bytes": 30385440,
+      "name": "libicuuc.so",
+      "sha256": "fe821dc664991d10290bcfdb7cb9176f2f7bde0f932e21e08b819c3e4db7621c",
+      "soname": "libicuuc.so"
+    },
+    {
+      "build_id": "5ef4d78f94bcd78b96e32063f827aa5c313aa14d",
+      "bytes": 1819344,
+      "name": "libjavacrypto.so",
+      "sha256": "05223bfd53925be686d0b5dcf16e494b60f78c4586441d8c31e95a2187ca2fd9",
+      "soname": "libjavacrypto.so"
+    },
+    {
+      "build_id": "6c668c8eb63ae218d556e62dc9c14a1d69c26540",
+      "bytes": 37624,
+      "name": "libjnigraphics.so",
+      "sha256": "217b800ca291dcf213802154d79c6109e3d867c159f7f109daf7c125a67d5ad5",
+      "soname": "libjnigraphics.so"
+    },
+    {
+      "build_id": "d706863111fe5d1c0fbe710cf52be52cdc0025f6",
+      "bytes": 377256,
+      "name": "libjpeg.so",
+      "sha256": "a8323769564926d12fea716c0528b3ccc569f0170a65818b2ff986f84ae45b10",
+      "soname": "libjpeg.so"
+    },
+    {
+      "build_id": "f3d9d555f59bb8617c4ae8c0eb78bbbda0f973c3",
+      "bytes": 70216,
+      "name": "liblog.so",
+      "sha256": "d8ad176b41b820a4868b74394188429ad2dc69025661d320d0986dd713048ca4",
+      "soname": "liblog.so"
+    },
+    {
+      "build_id": "03fa31b03f3f32f7d75261492efa85b681a7c8d5",
+      "bytes": 17856,
+      "name": "libmedia_jni.so",
+      "sha256": "f394360144069bf6bd08d702f4bdadcd8a77883cf0854c1608bb6eba56c366d9",
+      "soname": "libmedia_jni.so"
+    },
+    {
+      "build_id": "627c6d73768f57fa0af8c6291739a5e699650431",
+      "bytes": 431728,
+      "name": "libminikin.so",
+      "sha256": "b5203bf3777e42d91fc74ed57d0c1eba1e4d3006c8b816607cdf4ca3e6ecb3c6",
+      "soname": "libminikin.so"
+    },
+    {
+      "build_id": "be2764e0cb591f43f40daa69c93461adb656038c",
+      "bytes": 32280,
+      "name": "libnativehelper.so",
+      "sha256": "ddd555394e8aaa354393f0aaaadfb0756d154a9cc6cacd484cc543e2e095463c",
+      "soname": "libnativehelper.so"
+    },
+    {
+      "build_id": "fda57cff59bde1119ade274c72f08903b67c824d",
+      "bytes": 13064,
+      "name": "liboh_account_state.so",
+      "sha256": "99c193d581eca592ab18e00e78bd193d32c143a8111e5c1a1971ef8e36b3f6da",
+      "soname": "liboh_account_state.so"
+    },
+    {
+      "build_id": "b5fbab4c623f2e67ac6e8a0f1983d08b8a68449d",
+      "bytes": 1998352,
+      "name": "liboh_adapter_bridge.so",
+      "sha256": "da350a1d79e59aa4a9065adc5a6827762aac96bec4bbcae28b216169acaa97d0",
+      "soname": "liboh_adapter_bridge.so"
+    },
+    {
+      "build_id": "1b582c088b6d77eb04b00cbddebdf199a0f6b701",
+      "bytes": 2198328,
+      "name": "liboh_android_runtime.so",
+      "sha256": "128dfe14c429caab6036140ab75825212fd840c9d584234f6074c79592cbd29f",
+      "soname": "liboh_android_runtime.so"
+    },
+    {
+      "build_id": "c88893257a195ac370ee006bd750bd68c7d0171e",
+      "bytes": 30400,
+      "name": "liboh_connectivity_state.so",
+      "sha256": "091fc804ffa6985f3e47ab05359892c56442e9ab1d70945a5e1ca6c7870aa491",
+      "soname": "liboh_connectivity_state.so"
+    },
+    {
+      "build_id": "7ca065e0767a14114f5e5472871048be2a96752d",
+      "bytes": 55840,
+      "name": "liboh_hwui_shim.so",
+      "sha256": "e6afc2ddfbfbb5771c7d6c75c23ac3a8ab44dbc5fea81c393fe25774573f9dc0",
+      "soname": "liboh_hwui_shim.so"
+    },
+    {
+      "build_id": "0dc6b62d35699047d98bebe126e0c3a85cbff755",
+      "bytes": 14336,
+      "name": "liboh_permission_queries.so",
+      "sha256": "2b52da2e95762fabd8eccfa81824579c4942f71176d5e68ac6dfb5078c57392d",
+      "soname": "liboh_permission_queries.so"
+    },
+    {
+      "build_id": "20e6a74ee44c46bb64fc0911b9b1282368cd3199",
+      "bytes": 226512,
+      "name": "libpng.so",
+      "sha256": "004344ec858bf9be8e924e0a1243b712e7335e731ba047c567793f05e079edd0",
+      "soname": "libpng.so"
+    },
+    {
+      "build_id": "93da0b53fed14fa4dd086d2bd9ccb1c4f2d6e66a",
+      "bytes": 31984,
+      "name": "libsoundpool.so",
+      "sha256": "60b1b79c1978b74a193f4cccd5d473d9bdd0b478c5f632f2462871b6be17a695",
+      "soname": "libsoundpool.so"
+    },
+    {
+      "build_id": "006f63a0e8028f42fdf67ecf80ace022f4ca3f24",
+      "bytes": 11024,
+      "name": "libstats_jni.so",
+      "sha256": "b4903d6ce3c36ccf68b198a0a9a4abbfd6ae1f9fb524ba55e823fc406124b1a6",
+      "soname": "libstats_jni.so"
+    },
+    {
+      "build_id": "99d1f8d6502f7122b658a5f557474882681ca40b",
+      "bytes": 349784,
+      "name": "libstatspull.so",
+      "sha256": "779c8ad9e26b5129216cadc55b54c276fa49d78586e22d90641c10c94243a312",
+      "soname": "libstatspull.so"
+    },
+    {
+      "build_id": "03453a915aa5090e2bb32d6aa4b307adc3ee3f6e",
+      "bytes": 52624,
+      "name": "libstatssocket.so",
+      "sha256": "94132828a8267d238a3b599c1dee6a9c006e1db3b533ad12a1e0ecbf1956718a",
+      "soname": "libstatssocket.so"
+    },
+    {
+      "build_id": "42c166686c5cddc3bf3123229534ba32d9d34312",
+      "bytes": 22952,
+      "name": "libstdc++.so",
+      "sha256": "1d914dab5a29d9047a1d7fdaa48beed278e63f1cde3976082694e9b4e8e69296",
+      "soname": "libstdc++.so"
+    },
+    {
+      "build_id": "2171cbd7260fc9bf357c2086dfb88f1e73dc1f35",
+      "bytes": 675112,
+      "name": "libultrahdr.so",
+      "sha256": "71d838b17be98b4ad07078a4e9bed516ed9a8281588764d1a1426b16626eb4b1",
+      "soname": "libultrahdr.so"
+    },
+    {
+      "build_id": "6e8bf7a7cc3a244668b1adfb9fe7533c7b74f6aa",
+      "bytes": 174584,
+      "name": "libutils.so",
+      "sha256": "0f7f1064e7efcdaa4112416ab288c653c397e9bcecfef7c7d3d85d362e99da6e",
+      "soname": "libutils.so"
+    },
+    {
+      "build_id": "2d500d505adc035940c62bbcc07408647e050476",
+      "bytes": 583416,
+      "name": "libwebp.so",
+      "sha256": "d87ed0fbc004ce195b0e35e8ea7d780dbedc346b774977904f02a579c24464f0",
+      "soname": "libwebp.so"
+    },
+    {
+      "build_id": "97d82c554df3cdde220d73d760846440a3d0ff58",
+      "bytes": 809120,
+      "name": "libwestlake_binder.so",
+      "sha256": "297f719cc322c9a18c6b610b0c2f30524aead9a5e00790e3920c20be185bdbd0",
+      "soname": "libwestlake_binder.so"
+    },
+    {
+      "build_id": "36198193d2d1417906afe7f23104679247d596b9",
+      "bytes": 17192,
+      "name": "libwestlake_bionic.so",
+      "sha256": "99baf31def2a4d908f688d7ae0cc50284640fdd4c65212bf6d37bf989c1dcedd",
+      "soname": "libwestlake_bionic.so"
+    },
+    {
+      "build_id": "ee3c5b6ecd28a321d30cf6bff018b194d28feeb9",
+      "bytes": 216536,
+      "name": "libwestlake_libcore_linux.so",
+      "sha256": "7aac5c7a7bd11ce2fe36c55944c6b41109b189ee665413788436eabfc9705791",
+      "soname": "libwestlake_libcore_linux.so"
+    },
+    {
+      "build_id": "b11482107a46f2157d6b580dfe0493aaef115dcf",
+      "bytes": 408720,
+      "name": "libwestlake_runtime_boundary.so",
+      "sha256": "9b4ba8819ca8a3bb955da1a513a9aa2ad68c3863b93891c74f9acbbf494ffa0d",
+      "soname": "libwestlake_runtime_boundary.so"
+    },
+    {
+      "build_id": "39746cdff6d594ae750db10e16064cad56644f93",
+      "bytes": 71312,
+      "name": "libwestlake_securec.so",
+      "sha256": "94f5315607f94955bda2ea36e70f3cda426ba6e66fd07b0921350f71cc5257c4",
+      "soname": "libwestlake_securec.so"
+    },
+    {
+      "build_id": "3b2f5e5880b7eeaebc0e08b62e1307aa90dd0693",
+      "bytes": 287184,
+      "name": "libwestlake_webp.so",
+      "sha256": "eab59243365aebddf0e6ac8bd07d6c7129a12ca8c78ae2310c43885bb32adfa4",
+      "soname": "libwestlake_webp.so"
+    },
+    {
+      "build_id": "51ac8cf7b6abc3251bbdaaee57b6da694681a982",
+      "bytes": 143056,
+      "name": "libwuffs.so",
+      "sha256": "3145809ea990d8dcf68c1152ecdd2c24fe97519c6f301d20bde90c30f2279803",
+      "soname": "libwuffs.so"
+    },
+    {
+      "build_id": "8f3b82da33282fd8b19662f21327e899e117aa54",
+      "bytes": 105024,
+      "name": "libz.so",
+      "sha256": "72c2eac44492d1feafb036ac6c129a9162576777dafe14886c80740a35fa4b2b",
+      "soname": "libz.so"
+    },
+    {
+      "build_id": "0ac08b704050b2bb0b5dcd661656e9f3df92916a",
+      "bytes": 119776,
+      "name": "libziparchive.so",
+      "sha256": "eef3e76498be60fc922228df1446f868167e1dcc093313d282876333294fa412",
+      "soname": "libziparchive.so"
+    }
+  ],
+  "runtime_lock_id": "sha256:32be2a05655f87eba371aa2f2f207f846e31f3f9ac0c4be4f9d67b54082c3142",
+  "source": "pulled from the OH board framework stage of 2026-09-19 08:55 (9 boot jars, 48 libraries)",
+  "target_abi": "arm64-v8a"
+}

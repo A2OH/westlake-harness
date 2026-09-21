@@ -1,0 +1,1383 @@
+{
+  "counts": {
+    "class-missing": 813,
+    "compiler-generated": 1050,
+    "hollow-candidate": 216,
+    "member-missing": 400,
+    "native-bound": 746,
+    "native-unbound": 43,
+    "present": 15225
+  },
+  "findings": [
+    {
+      "after_frontier": false,
+      "detail": "class table in libart.so lacks it",
+      "first_seen": 783,
+      "method": "Ljava/lang/System;->nanoTime()J",
+      "proven_on_target": true,
+      "public_api": true,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 937,
+      "method": "Ljava/lang/reflect/Array;->createObjectArray(Ljava/lang/Class;I)Ljava/lang/Object;",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 972,
+      "method": "Ljava/lang/Throwable;->nativeFillInStackTrace()Ljava/lang/Object;",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 1035,
+      "method": "Ldalvik/system/BaseDexClassLoader;->computeClassLoaderContextsNative()[Ljava/lang/String;",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 1088,
+      "method": "Lcom/android/internal/os/ClassLoaderFactory;->createClassloaderNamespace(Ljava/lang/ClassLoader;ILjava/lang/String;Ljava/lang/String;ZLjava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 1094,
+      "method": "Ljava/lang/VMClassLoader;->findLoadedClass(Ljava/lang/ClassLoader;Ljava/lang/String;)Ljava/lang/Class;",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 1227,
+      "method": "Ljava/lang/Float;->floatToRawIntBits(F)I",
+      "proven_on_target": true,
+      "public_api": true,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 1644,
+      "method": "Ljava/lang/Double;->doubleToRawLongBits(D)J",
+      "proven_on_target": true,
+      "public_api": true,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 1756,
+      "method": "Lorg/apache/harmony/dalvik/ddmc/DdmServer;->nativeSendChunk(I[BII)V",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "class table in libart.so lacks it",
+      "first_seen": 2342,
+      "method": "Ljava/lang/System;->currentTimeMillis()J",
+      "proven_on_target": true,
+      "public_api": true,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 4229,
+      "method": "Landroid/app/Flags;->rateLimitGetMyMemoryState()Z",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 4230,
+      "method": "Landroid/app/FeatureFlagsImpl;->rateLimitGetMyMemoryState()Z",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 4236,
+      "method": "Landroid/app/ActivityManager;->getMyMemoryStateInternal(Landroid/app/ActivityManager$RunningAppProcessInfo;)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 4241,
+      "method": "Landroid/app/ActivityManager$RunningAppProcessInfo;->copyTo(Landroid/app/ActivityManager$RunningAppProcessInfo;)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 4483,
+      "method": "Ljava/lang/reflect/Array;->createMultiArray(Ljava/lang/Class;[I)Ljava/lang/Object;",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 6748,
+      "method": "Ljava/util/Arrays;->copyOfRangeInt([III)[I",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 7197,
+      "method": "Lsun/nio/ch/NativeThread;->current()J",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 7203,
+      "method": "Lsun/nio/ch/FileKey;->init(Ljava/io/FileDescriptor;)V",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 7252,
+      "method": "Llibcore/io/AsynchronousCloseMonitor;->signalBlockedThreads(Ljava/io/FileDescriptor;)V",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 8278,
+      "method": "Landroid/app/Flags;->rateLimitGetRunningAppProcesses()Z",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 8279,
+      "method": "Landroid/app/FeatureFlagsImpl;->rateLimitGetRunningAppProcesses()Z",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 8282,
+      "method": "Landroid/app/ActivityManager;->$r8$lambda$KfaWjLSz8MRDCTZ5k_6RKNsGfys(Landroid/app/ActivityManager;)Ljava/util/List;",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 8284,
+      "method": "Landroid/app/ActivityManager;->getRunningAppProcessesInternal()Ljava/util/List;",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 8288,
+      "method": "Landroid/app/ActivityManager$RunningAppProcessInfo;-><init>(Landroid/os/Parcel;Landroid/app/ActivityManager-IA;)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "class table in libart.so lacks it",
+      "first_seen": 8505,
+      "method": "Ljava/lang/System;->mapLibraryName(Ljava/lang/String;)Ljava/lang/String;",
+      "proven_on_target": true,
+      "public_api": true,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 9629,
+      "method": "Ljava/lang/reflect/Proxy;->generateProxy(Ljava/lang/String;[Ljava/lang/Class;Ljava/lang/ClassLoader;[Ljava/lang/reflect/Method;[[Ljava/lang/Class;)Ljava/lang/Class;",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 10894,
+      "method": "Landroid/util/MemoryIntArray;->nativeOpen(IZ)J",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 10895,
+      "method": "Landroid/util/MemoryIntArray;->nativeSize(I)I",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 10906,
+      "method": "Landroid/util/MemoryIntArray;->nativeGet(IJI)I",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 12958,
+      "method": "Ljava/lang/Double;->longBitsToDouble(J)D",
+      "proven_on_target": true,
+      "public_api": true,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 15160,
+      "method": "Ljava/lang/Throwable;->nativeGetStackTrace(Ljava/lang/Object;)[Ljava/lang/StackTraceElement;",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 16737,
+      "method": "LByteString;->b(C)I",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "class-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 16738,
+      "method": "LByteString;->e(C)I",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "class-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 16761,
+      "method": "LSegmentedByteString;->a([BI[BII)Z",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "class-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 16782,
+      "method": "LSegmentedByteString;->b(JJJ)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "class-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "conscrypt.jar",
+      "first_seen": 17121,
+      "method": "Lcom/android/org/conscrypt/OpenSSLEvpCipherAES;->getCipherBlockSize()I",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": false,
+      "detail": "conscrypt.jar",
+      "first_seen": 17148,
+      "method": "Lcom/android/org/conscrypt/OpenSSLCipher;->supportsVariableSizeKey()Z",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 18493,
+      "method": "Landroid/icu/text/PluralRules$RuleList;-><init>(Landroid/icu/text/PluralRules-IA;)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 18589,
+      "method": "Landroid/icu/impl/number/LongNameHandler$AliasSink;-><init>(Landroid/icu/impl/number/LongNameHandler-IA;)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 18792,
+      "method": "Ljava/lang/Float;->intBitsToFloat(I)F",
+      "proven_on_target": true,
+      "public_api": true,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 20349,
+      "method": "Landroid/graphics/Matrix$ExtraNatives;->nCreate(J)J",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 20702,
+      "method": "Lcom/android/internal/util/VirtualRefBasePtr;->nIncStrong(J)V",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 20718,
+      "method": "Lcom/android/internal/util/VirtualRefBasePtr;->nDecStrong(J)V",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 21842,
+      "method": "Landroid/os/Debug$MemoryInfo;-><init>(Landroid/os/Parcel;Landroid/os/Debug-IA;)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 23298,
+      "method": "Ljava/util/Arrays;->copyOfRangeChar([CII)[C",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 24929,
+      "method": "Landroid/icu/impl/TextTrieMap$Node;-><init>(Landroid/icu/impl/TextTrieMap;Landroid/icu/impl/TextTrieMap-IA;)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 25346,
+      "method": "Landroid/icu/impl/TimeZoneNamesImpl$ZNamesLoader;-><init>(Landroid/icu/impl/TimeZoneNamesImpl-IA;)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 25746,
+      "method": "Landroid/tracing/perfetto/Producer;->nativePerfettoProducerInit(II)V",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 25750,
+      "method": "Landroid/tracing/perfetto/DataSource;->nativeCreate(Landroid/tracing/perfetto/DataSource;Ljava/lang/String;)J",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 25758,
+      "method": "Landroid/tracing/perfetto/DataSource;->nativeRegisterDataSource(JIZZ)V",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 25850,
+      "method": "Landroid/view/flags/Flags;->disableDrawWakeLock()Z",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 25851,
+      "method": "Landroid/view/flags/FeatureFlagsImpl;->disableDrawWakeLock()Z",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 27332,
+      "method": "LFallbackViewCreationInterceptor;-><init>()V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "class-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 27445,
+      "method": "Lcom/android/internal/hidden_from_bootclasspath/android/companion/virtualdevice/flags/Flags;->displayPowerManagerApis()Z",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "class-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 27446,
+      "method": "Lcom/android/internal/hidden_from_bootclasspath/android/companion/virtualdevice/flags/FeatureFlagsImpl;->displayPowerManagerApis()Z",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "class-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 27581,
+      "method": "Landroid/app/ResourcesManager$SharedLibraryAssets;-><init>(Landroid/content/pm/ApplicationInfo;Landroid/app/ResourcesManager-IA;)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 27592,
+      "method": "Landroid/content/res/ResourcesImpl;-><init>(Landroid/content/res/ResourcesImpl;)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 27607,
+      "method": "Landroid/content/res/CompatibilityInfo;->isOverrideDisplayRotationRequired()Z",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 27621,
+      "method": "Landroid/webkit/WebViewLibraryLoader;->nativeLoadWithRelroFile(Ljava/lang/String;Ljava/lang/String;Ljava/lang/ClassLoader;)I",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "class table in liboh_android_runtime.so lacks it",
+      "first_seen": 28251,
+      "method": "Landroid/view/SurfaceControl;->nativeSetFrameRateSelectionStrategy(JJI)V",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 29143,
+      "method": "Lcom/android/internal/hidden_from_bootclasspath/android/app/job/Flags;->handleAbandonedJobs()Z",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "class-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 29144,
+      "method": "Lcom/android/internal/hidden_from_bootclasspath/android/app/job/FeatureFlagsImpl;->handleAbandonedJobs()Z",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "class-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 29215,
+      "method": "Llibcore/util/NativeAllocationRegistry;->applyFreeFunction(JJ)V",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "framework.jar",
+      "first_seen": 29932,
+      "method": "Landroid/app/Activity;->onProvideReferrer()Landroid/net/Uri;",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": false,
+      "detail": "framework.jar",
+      "first_seen": 30112,
+      "method": "Landroid/app/servertransaction/PauseActivityItem;->getTargetState()I",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 30120,
+      "method": "Landroid/app/Activity;->isImplicitEnterPipProhibited()Z",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 30121,
+      "method": "Landroid/app/Flags;->enableTvImplicitEnterPipRestriction()Z",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 30122,
+      "method": "Landroid/app/FeatureFlagsImpl;->enableTvImplicitEnterPipRestriction()Z",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "framework.jar",
+      "first_seen": 30125,
+      "method": "Landroid/app/Application$ActivityLifecycleCallbacks;->onActivityPrePaused(Landroid/app/Activity;)V",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": false,
+      "detail": "framework.jar",
+      "first_seen": 30202,
+      "method": "Landroid/app/Application$ActivityLifecycleCallbacks;->onActivityPostPaused(Landroid/app/Activity;)V",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 30580,
+      "method": "Ljava/util/EnumMap$ValueIterator;-><init>(Ljava/util/EnumMap;Ljava/util/EnumMap-IA;)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "no registration table or export for this class",
+      "first_seen": 30889,
+      "method": "Landroid/graphics/LinearGradient;->nativeCreate(JFFFF[J[FIJ)J",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": false,
+      "detail": "framework.jar",
+      "first_seen": 31363,
+      "method": "Landroid/graphics/drawable/RippleDrawable;->isStateful()Z",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": false,
+      "detail": "framework.jar",
+      "first_seen": 31371,
+      "method": "Landroid/graphics/drawable/RippleDrawable;->getOpacity()I",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": false,
+      "detail": "framework.jar",
+      "first_seen": 31522,
+      "method": "Landroid/widget/EditText;->getDefaultEditable()Z",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 31534,
+      "method": "Landroid/widget/Editor$CursorAnchorInfoNotifier;-><init>(Landroid/widget/Editor;Landroid/widget/Editor-IA;)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 31538,
+      "method": "Landroid/widget/Editor$SuggestionHelper;-><init>(Landroid/widget/Editor;Landroid/widget/Editor-IA;)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 31540,
+      "method": "Landroid/widget/Editor$SuggestionHelper$SuggestionSpanComparator;-><init>(Landroid/widget/Editor$SuggestionHelper;Landroid/widget/Editor-IA;)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 31543,
+      "method": "Landroid/widget/Editor$ProcessTextIntentActionsHandler;-><init>(Landroid/widget/Editor;Landroid/widget/Editor-IA;)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 31546,
+      "method": "Landroid/widget/Editor$AccessibilitySmartActions;-><init>(Landroid/widget/TextView;Landroid/widget/Editor-IA;)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "framework.jar",
+      "first_seen": 31609,
+      "method": "Landroid/text/method/TextKeyListener;->onSpanAdded(Landroid/text/Spannable;Ljava/lang/Object;II)V",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 31610,
+      "method": "Landroid/widget/Editor$SpanController;-><init>(Landroid/widget/Editor;Landroid/widget/Editor-IA;)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "framework.jar",
+      "first_seen": 31635,
+      "method": "Landroid/widget/TextView;->isInExtractedMode()Z",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 31671,
+      "method": "Landroid/widget/SelectionActionModeHelper$SelectionTracker$LogAbandonRunnable;-><init>(Landroid/widget/SelectionActionModeHelper$SelectionTracker;Landroid/widget/SelectionActionModeHelper-IA;)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "framework.jar",
+      "first_seen": 31728,
+      "method": "Landroid/widget/EditText;->supportsAutoSizeText()Z",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 31822,
+      "method": "Landroid/widget/TextView;->ensureEditorFocusedNotifiedToHandwritingInitiator()V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "framework.jar",
+      "first_seen": 32285,
+      "method": "Landroid/view/animation/Animation;->setDetachWallpaper(Z)V",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 32685,
+      "method": "LBuffer;-><clinit>()V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "class-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 32686,
+      "method": "LBuffer;->f(Lokio/Buffer;Lokio/Options;Z)I",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "class-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 33559,
+      "method": "Landroid/view/View$TooltipInfo;-><init>(Landroid/view/View-IA;)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 34629,
+      "method": "Ljava/util/EnumMap$KeySet;-><init>(Ljava/util/EnumMap;Ljava/util/EnumMap-IA;)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": false,
+      "detail": "",
+      "first_seen": 34632,
+      "method": "Ljava/util/EnumMap$KeyIterator;-><init>(Ljava/util/EnumMap;Ljava/util/EnumMap-IA;)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": true,
+      "detail": "class table in liboh_android_runtime.so lacks it",
+      "first_seen": 35939,
+      "method": "Landroid/view/SurfaceControl;->nativeAddTransactionCompletedListener(JLjava/util/function/Consumer;)V",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": true,
+      "detail": "class table in liboh_android_runtime.so lacks it",
+      "first_seen": 36273,
+      "method": "Landroid/view/SurfaceControl;->nativeSetFrameRateCategory(JJIZ)V",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 36799,
+      "method": "Landroid/app/Activity;->onEnterAnimationComplete()V",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 36817,
+      "method": "Landroid/app/servertransaction/DestroyActivityItem;->getTargetState()I",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 36821,
+      "method": "Landroid/app/Activity;->onCreateDescription()Ljava/lang/CharSequence;",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 36831,
+      "method": "Landroid/app/Application$ActivityLifecycleCallbacks;->onActivityPreStopped(Landroid/app/Activity;)V",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "",
+      "first_seen": 36849,
+      "method": "Landroid/window/WindowOnBackInvokedDispatcher;->removeCallbackInternal(Landroid/window/OnBackInvokedCallback;)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": true,
+      "detail": "",
+      "first_seen": 36853,
+      "method": "Landroid/window/BackProgressAnimator;->removeOnBackInvokedFinishCallback()V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 36920,
+      "method": "Landroid/app/Application$ActivityLifecycleCallbacks;->onActivityPostStopped(Landroid/app/Activity;)V",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 36944,
+      "method": "Landroid/app/Application$ActivityLifecycleCallbacks;->onActivityPreDestroyed(Landroid/app/Activity;)V",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 37047,
+      "method": "Landroid/app/Application$ActivityLifecycleCallbacks;->onActivityPostDestroyed(Landroid/app/Activity;)V",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 37103,
+      "method": "Landroid/app/Activity;->onDetachedFromWindow()V",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 37154,
+      "method": "Landroid/app/Activity;->onPictureInPictureRequested()Z",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 37157,
+      "method": "Landroid/app/Activity;->onUserInteraction()V",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 37159,
+      "method": "Landroid/app/Activity;->onUserLeaveHint()V",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 37205,
+      "method": "Landroid/app/Service;->onDestroy()V",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "",
+      "first_seen": 37295,
+      "method": "Landroid/app/SystemServiceRegistry$29;->createService(Landroid/app/ContextImpl;)Ljava/lang/Object;",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": true,
+      "detail": "",
+      "first_seen": 37296,
+      "method": "Landroid/app/SystemServiceRegistry$29;->createService(Landroid/app/ContextImpl;)Landroid/view/textservice/TextServicesManager;",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": true,
+      "detail": "",
+      "first_seen": 37308,
+      "method": "Landroid/widget/Editor$PositionListener;-><init>(Landroid/widget/Editor;Landroid/widget/Editor-IA;)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 37663,
+      "method": "Landroid/text/method/ArrowKeyMovementMethod;->canSelectArbitrarily()Z",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 37733,
+      "method": "Landroid/view/ViewRootImpl;->childHasTransientStateChanged(Landroid/view/View;Z)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "",
+      "first_seen": 37982,
+      "method": "Lcom/android/wifi/x/com/android/modules/utils/build/SdkLevel;->isAtLeastS()Z",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "class-missing"
+    },
+    {
+      "after_frontier": true,
+      "detail": "",
+      "first_seen": 37994,
+      "method": "Lcom/android/wifi/x/com/android/modules/utils/build/SdkLevel;->isAtLeastT()Z",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "class-missing"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 38067,
+      "method": "Landroid/app/servertransaction/StopActivityItem;->getTargetState()I",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 38087,
+      "method": "Landroid/app/Application$ActivityLifecycleCallbacks;->onActivityPreSaveInstanceState(Landroid/app/Activity;Landroid/os/Bundle;)V",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 38116,
+      "method": "Landroid/app/Fragment;->onSaveInstanceState(Landroid/os/Bundle;)V",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 38222,
+      "method": "Landroid/app/Application$ActivityLifecycleCallbacks;->onActivityPostSaveInstanceState(Landroid/app/Activity;Landroid/os/Bundle;)V",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 38278,
+      "method": "Landroid/widget/EditText;->getFreezesText()Z",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "",
+      "first_seen": 38355,
+      "method": "LWV/qm1;->run()V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "class-missing"
+    },
+    {
+      "after_frontier": true,
+      "detail": "",
+      "first_seen": 38396,
+      "method": "Ljava/util/EnumMap$Values;-><init>(Ljava/util/EnumMap;Ljava/util/EnumMap-IA;)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": true,
+      "detail": "no registration table or export for this class",
+      "first_seen": 38426,
+      "method": "Landroid/app/ActivityThread;->nPurgePendingResources()V",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 38697,
+      "method": "Landroid/view/ViewGroup;->shouldDelayChildPressedState()Z",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "",
+      "first_seen": 38698,
+      "method": "Landroid/view/View$CheckForTap;-><init>(Landroid/view/View;Landroid/view/View-IA;)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 38700,
+      "method": "Landroid/view/ViewConfiguration;->getTapTimeout()I",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 38703,
+      "method": "Lcom/android/text/flags/FeatureFlagsImpl;->handwritingEndOfLineTap()Z",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 38752,
+      "method": "Landroid/view/View;->dispatchDrawableHotspotChanged(FF)V",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 38771,
+      "method": "Landroid/view/ViewConfiguration;->getPressedStateDuration()I",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 38844,
+      "method": "Landroid/app/servertransaction/StartActivityItem;->getTargetState()I",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 38871,
+      "method": "Landroid/view/View;->onConfigurationChanged(Landroid/content/res/Configuration;)V",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "",
+      "first_seen": 38961,
+      "method": "Landroid/view/InsetsAnimationControlImpl;->getSurfaceParamsApplier()Landroid/view/InsetsAnimationControlRunner$SurfaceParamsApplier;",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": true,
+      "detail": "no registration table or export for this class",
+      "first_seen": 39090,
+      "method": "Ljdk/internal/misc/VM;->getNanoTimeAdjustment(J)J",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": true,
+      "detail": "",
+      "first_seen": 39233,
+      "method": "Landroid/app/IActivityManager$Stub$Proxy;->unbindFinished(Landroid/os/IBinder;Landroid/content/Intent;)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": true,
+      "detail": "",
+      "first_seen": 39533,
+      "method": "Ljava/util/zip/Deflater$DeflaterZStreamRef;-><init>(Ljava/util/zip/Deflater;JLjava/util/zip/Deflater-IA;)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "member-missing"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 39790,
+      "method": "Landroid/view/IWindow$Stub;->getMaxTransactionId()I",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "no registration table or export for this class",
+      "first_seen": 39828,
+      "method": "Landroid/hardware/SyncFence;->nIncRef(J)V",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": true,
+      "detail": "no registration table or export for this class",
+      "first_seen": 39831,
+      "method": "Landroid/hardware/SyncFence;->nWait(JJ)Z",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": true,
+      "detail": "no registration table or export for this class",
+      "first_seen": 39833,
+      "method": "Landroid/hardware/SyncFence;->nGetSignalTime(J)J",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 39863,
+      "method": "Landroid/app/job/IJobService$Stub;->getMaxTransactionId()I",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 40397,
+      "method": "Landroid/os/Binder;->unlinkToDeath(Landroid/os/IBinder$DeathRecipient;I)Z",
+      "proven_on_target": false,
+      "public_api": true,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "",
+      "first_seen": 41321,
+      "method": "Ljdk/internal/math/FloatToDecimal;->toChars2(III)I",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "class-missing"
+    },
+    {
+      "after_frontier": true,
+      "detail": "",
+      "first_seen": 41322,
+      "method": "Ljdk/internal/math/FloatToDecimal;->append8Digits(I)V",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "class-missing"
+    },
+    {
+      "after_frontier": true,
+      "detail": "",
+      "first_seen": 41615,
+      "method": "Ljdk/internal/math/MathUtils;->flog10threeQuartersPow2(I)I",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "class-missing"
+    },
+    {
+      "after_frontier": true,
+      "detail": "framework.jar",
+      "first_seen": 42609,
+      "method": "Landroid/app/job/JobInfo;->getMinBackoffMillis()J",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "hollow-candidate"
+    },
+    {
+      "after_frontier": true,
+      "detail": "",
+      "first_seen": 42614,
+      "method": "Lcom/android/internal/hidden_from_bootclasspath/android/app/job/Flags;->ignoreImportantWhileForeground()Z",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "class-missing"
+    },
+    {
+      "after_frontier": true,
+      "detail": "",
+      "first_seen": 42615,
+      "method": "Lcom/android/internal/hidden_from_bootclasspath/android/app/job/FeatureFlagsImpl;->ignoreImportantWhileForeground()Z",
+      "proven_on_target": false,
+      "public_api": false,
+      "state": "class-missing"
+    },
+    {
+      "after_frontier": true,
+      "detail": "no registration table or export for this class",
+      "first_seen": 43106,
+      "method": "Landroid/hardware/display/DisplayManagerGlobal;->nSignalNativeCallbacks(F)V",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": true,
+      "detail": "no registration table or export for this class",
+      "first_seen": 43264,
+      "method": "Ljava/io/FileInputStream;->available0()I",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": true,
+      "detail": "class table in libwestlake_runtime_boundary.so lacks it",
+      "first_seen": 44313,
+      "method": "Lsun/nio/ch/FileDispatcherImpl;->close0(Ljava/io/FileDescriptor;)V",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    },
+    {
+      "after_frontier": true,
+      "detail": "no registration table or export for this class",
+      "first_seen": 44360,
+      "method": "Landroid/hardware/camera2/impl/CameraMetadataNative;->nativeSetupGlobalVendorTagDescriptor()I",
+      "proven_on_target": true,
+      "public_api": false,
+      "state": "native-unbound"
+    }
+  ],
+  "note": "findings not also executed by Toutiao, plus every native-unbound/hollow; full list is reproducible with trace-framework-check",
+  "summary": {
+    "boundary_failures": [],
+    "frontier_rank": 34988,
+    "jni_exports": 261,
+    "jni_tables": 93,
+    "methods_executed": 44451,
+    "platform_methods_executed": 18493,
+    "platform_methods_proven_on_target": 15335,
+    "runtime_lock_id": "sha256:32be2a05655f87eba371aa2f2f207f846e31f3f9ac0c4be4f9d67b54082c3142"
+  }
+}

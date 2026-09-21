@@ -72,8 +72,8 @@ OpenHarmony, the shim each gap needs, and what that shim costs.
 | `benchmark/2026-08-23-toutiao/native-analysis/ANDROID11-RESOLUTION.md` | **99.7% of 3415 native imports decided** against stock Android 11, and the IFUNC parser defect that finding exposed. |
 | `benchmark/2026-09-18-oh-board/` | **First resolution against the deployed OpenHarmony runtime**: 90% of both apps' native imports resolve; the real gap is 58 symbols in five clusters, led by `__sF` at 40 importing libraries. |
 | `benchmark/2026-09-18-mcdonalds/` | Cheap validation of the second MVP app: in-APK library loading is required (WebView needs it too), the gap list, and a working Android baseline that touches only six native methods. |
-| `benchmark/2026-09-21-gapmap/` | **McDonald's gap map and backtest**: against the provider it actually ran on, the map flags 6 of the 8 board failures before any launch; today 78 gaps remain (1×OH, 2×L, 23×M, 31×S, 1×XS, 20×verify). |
-| `benchmark/2026-09-21-android-baseline/` | **McDonald's traced on real Android, cold start to sign-in**: 47 of its 78 open gaps are on that path and 31 are not; all 8 OH-board failures are on it; no Google services is not a blocker. Also measures the static reachability pass: 84% recall, 7% precision. |
+| `benchmark/2026-09-21-gapmap/` | **McDonald's gap map and backtest**: against the provider it actually ran on, the map flags 6 of the 8 board failures before any launch; against the real source build 68 gaps remain (1×OH, 1×L, 20×M, 24×S, 22×verify), 43 of them on the path to sign-in. |
+| `benchmark/2026-09-21-android-baseline/` | **McDonald's traced on real Android, cold start to sign-in**: 43 of its 68 open gaps are on that path; all 8 OH-board failures are on it; no Google services is not a blocker. First-execution order places OH at rank 34,988 of 44,451, inside the sign-in activity. Of 18,493 framework methods that ran, none at the public boundary is missing, hollow or unbound in the real build, and 83% are also run by Toutiao on OH. |
 | `benchmark/2026-09-21-ndk-coverage/` | **The entire NDK against the OH board**: of 4,449 public symbols, OH provides 59%, Westlake 3%; the missing 1,719 reduce to ten welds plus the libc shim, and 165 are already built by Westlake but not deployed. |
 | `benchmark/2026-09-18-mvp-target/` | The Android-specific platform contract of both MVP apps: 206 symbols, of which 48 are ours to implement. |
 | `benchmark/2026-08-23-toutiao/runtime-evidence/android-baseline/` | **Static reading versus running**, on a OnePlus 6T: 280 methods and five whole libraries that no APK scan can see, 43 failing `dlsym` lookups, 463 methods never exercised. |
@@ -227,6 +227,13 @@ that, and the measured difference between them decides which to trust:
   touched or not, with evidence: the platform call is in the trace, a method containing the
   reference ran, the manager class executed, or the library loaded. `gap-map --observed` adds an
   "on path" column and a section listing the gaps on the recorded path. This is the authority.
+- **`trace-framework-check`** starts from what *ran* rather than what the app references: every
+  platform method in the trace is looked up in the runtime under test (missing, placeholder, or
+  native with no JNI binding in the deployed libraries), minus what an app already running on the
+  target also executes (`--proven-trace`). It covers the framework calling itself and its own
+  native code, where app-side scans are blind. It cannot see *when* a native gets registered.
+  `execution_order` turns the trace into a ruler, so known failure points on the target show how far
+  along the path the port has got.
 - **`startup-reach`** stages platform touches from bytecode alone (call graph from the manifest
   entry points, rapid type analysis, user-input callbacks deferred). Measured on McDonald's against
   the trace it has 84% recall and 7% precision: a dependency-injected app makes nearly everything
@@ -243,6 +250,7 @@ that, and the measured difference between them decides which to trust:
 | `native-surface` | component provenance and per-JNI-method platform-surface reach for packaged ELFs |
 | `native-capture-diff` | join a runtime JNI capture (`harness/jniprobe`) to a `native-surface` scan |
 | `ndk-coverage` | the entire public NDK against a board's libraries, each missing symbol classified as package / libc-abi / weld / absence |
+| `trace-framework-check` | every platform method a recorded run executed, checked against the runtime under test and its deployed JNI bindings |
 | `trace-observe` | platform touches and loaded libraries of one run recorded on real Android, from an ART method trace |
 | `startup-reach` | static call-graph staging of platform touches (process start / first activity / next screens), with call-chain explanations; `--trace` measures it against a recording |
 | `gap-map` | the categorized, effort-rated map; `--observed` marks each gap on or off a recorded path; `--ndk-coverage` classifies native gaps by how the NDK supplies them; `--blockers` for a backtest or status board |
@@ -258,6 +266,10 @@ PYTHONPATH=harness:tests python3 -m unittest discover -s tests -v
 ```
 
 ### Known limits
+
+- **The runtime index must describe the build under test.** McDonald's first map used an index of
+  the legacy payload and reported 58 required Java absences; re-indexed from the boot jars staged on
+  the board, there are none. Snapshot the runtime from the deployed jars, not from memory.
 
 - **Native rows are classified by supply strategy but not yet weighted by reach.** McDonald's
   sensors weld and asset package come only from `libmlkit_google_ocr_pipeline.so` and
