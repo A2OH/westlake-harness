@@ -95,7 +95,10 @@ both now rows in the map:
 - `wm:dim-behind` (M): nothing is dimmed behind a dialog with `FLAG_DIM_BEHIND`; OpenHarmony has no
   such flag, so the dim layer would have to be drawn.
 
-Touch on the sign-in buttons has not been tried yet.
+Touch works: a tap on "Continue with Email", delivered through the in-process tap channel to the
+sheet's view root (root 2 of four, in add order: splash, Upgrade dialog, sheet, sign-in activity), opens
+McDonald's "Let's start with your email" screen, and the app stays alive. A real finger reaches the
+same channel through `touchfwd`. Typing into the email field (the input method) is not tried.
 
 Also seen, not blocking: `SplashActivity`'s window stays in the window list after the sign-in
 activity starts (it is at the bottom; why it is not removed is not yet traced), and a WebView-provider
