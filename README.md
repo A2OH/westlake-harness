@@ -222,6 +222,36 @@ app reached them. The first launch after those fixes reached the sign-in activit
 more, window stacking, which a probe reproduced and a Java fix closed: McDonald's now shows its
 sign-in screen on the board ([benchmark](benchmark/2026-09-22-mcdonalds-signin/README.md)).
 
+### Is the build under test what the source says?
+
+Two McDonald's blockers passed every check against the provider's source and still failed on the
+board, because what was deployed was not that source. `deploy-check` needs no device: it collects
+every library the Westlake runtime asks for by name (`System.loadLibrary`, `dlopen` literals),
+compares them with what the build and launch reports say was staged and with the board's own
+libraries, and for each staged Westlake binary looks up its sources' log strings in the binary. A
+file whose strings are only partly present was compiled from an older version of that file.
+
+```bash
+westlake-apk-gap deploy-check --westlake <westlake tree> --report <framework device-report.json> \
+  --report <app device-report.json> --staged-dir <runtime package> --staged-dir <WebView input> \
+  --board-libs benchmark/2026-09-18-oh-board/oh-board-libraries.txt --out out/
+```
+
+Run on the McDonald's configurations as they were, it reports the missing keyboard helper
+(`liboh_ime_helper_capi.so`), the WebView never staged, and the WebView input's bionic shim
+older than its source (missing the refusal of Akamai's self-trapping library). Each of those cost a
+launch. On the final build it reports that the deployed native bridge and runtime predate their
+source, which is the part that cannot currently be rebuilt
+([evidence](benchmark/2026-09-22-mcdonalds-signin/deploy-check/)).
+
+### The probe suite, on every build
+
+`probes/run_suite.py` runs every white-box probe in `probes/suite.json` against one build: it checks
+each APK against its pin, stages and launches it, watches its log for pass and fail markers, does
+its interaction (a tap where the probe says its button is), stops it, and merges the verdicts into
+the probe-results file `gap-map --probe-results` reads, keyed by the exact Westlake commit (a dirty
+tree never matches). One command; exit status 1 if any probe fails.
+
 ### Which gaps are on the path: recorded, not guessed
 
 A gap list does not say what stands between process start and the first screen. Two tools answer

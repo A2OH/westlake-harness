@@ -129,6 +129,14 @@ so a dialog shown before its activity's window is hidden under it (B11,
 `probes/dialog-before-window`). Holding the dialog's session back until the activity's window has
 one fixed it, and McDonald's shows its sign-in screen. See `benchmark/2026-09-22-mcdonalds-signin/`.
 
+## What the source cannot tell: the deployed build
+
+Rows are read from the provider's source, so they assume the board runs that source.
+`deploy-check` tests the assumption: libraries the runtime asks for that are neither staged nor on
+the board, and staged binaries built from an older version of their source files. It would have
+caught three McDonald's launch failures before the launch (B14, B16 and the WebView never staged).
+`probes/run_suite.py` then runs the probes on the build itself, one command per build.
+
 ## Running it
 
 ```bash

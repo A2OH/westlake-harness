@@ -163,6 +163,19 @@ def parser() -> argparse.ArgumentParser:
     fw_cmd.add_argument("--graph-cache", type=Path)
     fw_cmd.add_argument("--out", required=True, type=Path)
 
+    dep_cmd = commands.add_parser(
+        "deploy-check",
+        help="is every library the Westlake runtime asks for deployed, and is each deployed Westlake binary built from today's source",
+    )
+    dep_cmd.add_argument("--westlake", required=True, type=Path, help="Westlake source tree")
+    dep_cmd.add_argument("--report", action="append", type=Path, default=[],
+                         help="framework build report and/or app launch report (device-report.json): what was staged, with hashes; repeat")
+    dep_cmd.add_argument("--staged-dir", action="append", type=Path, default=[],
+                         help="local directory holding staged binaries (runtime package, WebView input, ...), matched by hash; repeat")
+    dep_cmd.add_argument("--board-libs", type=Path, help="library paths present on the board, one per line")
+    dep_cmd.add_argument("--title", default="Deployment check")
+    dep_cmd.add_argument("--out", required=True, type=Path, help="output directory")
+
     ndk_cmd = commands.add_parser(
         "ndk-coverage",
         help="measure the entire public NDK against a board's libraries and classify how each missing symbol is supplied",
@@ -285,6 +298,17 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{summary['methods_with_code']} methods: " + ", ".join(f"{k} {v}" for k, v in summary["methods_by_stage"].items())
               + f" -> {args.out}")
         return 0
+    if args.command == "deploy-check":
+        from . import deploy
+
+        result = deploy.check(args.westlake, [read_json(r) for r in args.report], args.staged_dir, args.board_libs)
+        args.out.mkdir(parents=True, exist_ok=True)
+        write_json(args.out / "deploy-check.json", result)
+        (args.out / "DEPLOY-CHECK.md").write_text(deploy.markdown(result, args.title))
+        summary = result["summary"]
+        print(f"{summary['loads']} libraries asked for, {summary['staged_files']} staged: "
+              f"missing {summary['missing'] or 'none'}; older than source {summary['older_than_source'] or 'none'} -> {args.out}")
+        return 1 if summary["missing"] or summary["older_than_source"] else 0
     if args.command == "ndk-coverage":
         from . import ndk
 

@@ -12,7 +12,11 @@ window list. The log line records the order:
 [WL-DIALOG-ORDER] phase=onCreate dialogShowing=true activityWindowAddedYet=false expected=RED_DIALOG_OVER_GREEN_ACTIVITY
 ```
 
-McDonald's sign-in bottom sheet is this case. Build with `./build.sh`.
+McDonald's sign-in bottom sheet is this case. The same dialog carries two more contracts: WMS
+centres it (`placement=CENTRED at x,y` is logged), and a tap delivered at screen coordinates must
+reach its button in the dialog's own coordinates (`button center=x,y` tells a runner where to tap;
+`dialog button clicked` confirms it). A tap can only press the button if the dialog is the topmost
+window under it, so the click also confirms the stacking. Build with `./build.sh`.
 
 ## 2026-09-22 result
 

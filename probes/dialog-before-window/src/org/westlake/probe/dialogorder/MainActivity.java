@@ -31,6 +31,7 @@ import android.widget.TextView;
 public final class MainActivity extends Activity implements View.OnClickListener, Runnable {
     private static final String TAG = "WL-DIALOG-ORDER";
     private View dialogDecor;
+    private View button;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -58,6 +59,7 @@ public final class MainActivity extends Activity implements View.OnClickListener
         body.setGravity(Gravity.CENTER);
         panel.addView(body);
         Button button = new Button(this);
+        this.button = button;
         button.setText("TAP ME");
         button.setOnClickListener(this);
         panel.addView(button);
@@ -92,6 +94,11 @@ public final class MainActivity extends Activity implements View.OnClickListener
         report("placement=" + (centred ? "CENTRED" : "NOT_CENTRED") + " at " + loc[0] + ","
                 + loc[1] + " size=" + dialogDecor.getWidth() + "x" + dialogDecor.getHeight()
                 + " screenWidth=" + screen);
+        // Where a tap must land to press the button: a runner delivering screen coordinates reads
+        // it here instead of assuming a layout.
+        int[] at = new int[2];
+        button.getLocationOnScreen(at);
+        report("button center=" + (at[0] + button.getWidth() / 2) + "," + (at[1] + button.getHeight() / 2));
     }
 
     private static void report(String result) {

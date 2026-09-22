@@ -3482,9 +3482,9 @@
       "oh_touchpoint": "none (answered from the APK inside Westlake)",
       "probe": "probes/service-metadata",
       "probe_result": {
-        "date": "2026-09-22",
+        "date": "2026-09-21",
         "passed": true,
-        "verdict": "PASS_SERVICE_INFO_METADATA (SELinux enforcing)",
+        "verdict": "[WL-SERVICE-META] verdict=PASS_SERVICE_INFO_METADATA info=true metadata=2 registrar=org.westlake.probe.ComponentRegistrar second=second-value",
         "westlake_commit": "f6dc615029471f5d57051c9552f44df53cfb9ac5"
       },
       "provider": "PMS-side direct-boot match defaults applied before PackageParser.isMatch",
@@ -3526,9 +3526,9 @@
       "oh_touchpoint": "none",
       "probe": "probes/provider-manifest",
       "probe_result": {
-        "date": "2026-09-22",
+        "date": "2026-09-21",
         "passed": true,
-        "verdict": "PASS_QUERY_EXCLUDED_REMOTE_FILTERED (SELinux enforcing)",
+        "verdict": "[WL-PROVIDER-PROBE] verdict=PASS_QUERY_EXCLUDED_REMOTE_FILTERED mainProviderCreates=1 remoteProviderCreates=0",
         "westlake_commit": "f6dc615029471f5d57051c9552f44df53cfb9ac5"
       },
       "shim": "install every main-process provider in initOrder before Application.onCreate",
@@ -3855,9 +3855,9 @@
       "oh_touchpoint": "none (the caller's own process is the answer)",
       "probe": "probes/running-app-processes",
       "probe_result": {
-        "date": "2026-09-22",
+        "date": "2026-09-21",
         "passed": true,
-        "verdict": "PASS_SELF_VISIBLE, both phases (SELinux enforcing)",
+        "verdict": "[WL-RUNNING-PROCS] phase=application verdict=PASS_SELF_VISIBLE manager=true listNull=false count=1 myPid=4470 myUid=20010054 pidSeen=true uidSeen=true nameSeen=true | [WL-RUNNING-PROCS] phase=activity verdict=PASS_SELF_VISIBLE manager=true listNull=false count=1 myPid=4470 myUid=20010054 pidSeen=true uidSeen=true nameSeen=true",
         "westlake_commit": "f6dc615029471f5d57051c9552f44df53cfb9ac5"
       },
       "provider": "answered with the caller's own process",
@@ -3880,9 +3880,9 @@
       "oh_touchpoint": "window_manager (sub-window z-order: creation order)",
       "probe": "probes/dialog-before-window",
       "probe_result": {
-        "date": "2026-09-22",
+        "date": "2026-09-21",
         "passed": true,
-        "verdict": "PASS: dialog above the dimmed activity, placement=CENTRED at 280,634, button click delivered at screen coordinates (SELinux enforcing)",
+        "verdict": "[WL-DIALOG-ORDER] placement=CENTRED at 280,634 size=640x651 screenWidth=1200 | [WL-DIALOG-ORDER] dialog button clicked",
         "westlake_commit": "f6dc615029471f5d57051c9552f44df53cfb9ac5"
       },
       "provider": "a dialog's OH session is held back until its activity's window has one, so creation order is Android's stacking order",
@@ -3905,9 +3905,9 @@
       "oh_touchpoint": "window_manager (session rect)",
       "probe": "probes/dialog-before-window",
       "probe_result": {
-        "date": "2026-09-22",
+        "date": "2026-09-21",
         "passed": true,
-        "verdict": "PASS: dialog above the dimmed activity, placement=CENTRED at 280,634, button click delivered at screen coordinates (SELinux enforcing)",
+        "verdict": "[WL-DIALOG-ORDER] placement=CENTRED at 280,634 size=640x651 screenWidth=1200 | [WL-DIALOG-ORDER] dialog button clicked",
         "westlake_commit": "f6dc615029471f5d57051c9552f44df53cfb9ac5"
       },
       "provider": "applied in the window adapter",
@@ -3930,9 +3930,9 @@
       "oh_touchpoint": "render_service (a layer under the window)",
       "probe": "probes/dialog-before-window",
       "probe_result": {
-        "date": "2026-09-22",
+        "date": "2026-09-21",
         "passed": true,
-        "verdict": "PASS: dialog above the dimmed activity, placement=CENTRED at 280,634, button click delivered at screen coordinates (SELinux enforcing)",
+        "verdict": "[WL-DIALOG-ORDER] placement=CENTRED at 280,634 size=640x651 screenWidth=1200 | [WL-DIALOG-ORDER] dialog button clicked",
         "westlake_commit": "f6dc615029471f5d57051c9552f44df53cfb9ac5"
       },
       "provider": "applied in the window adapter",
