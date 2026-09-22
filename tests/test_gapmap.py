@@ -336,6 +336,42 @@ class AppFrameworkContracts(unittest.TestCase):
         self.assertEqual(rows["pm:providers"]["probe_result"]["note"], "measured on other builds only")
 
 
+class StaticServiceAccessors(unittest.TestCase):
+    """Wikipedia died in onCreate on a null AccountManager and its map had no row for the account
+    service: the app never names it, AccountManager.get(context) asks the platform inside."""
+
+    def test_accessor_counts_as_a_service_request(self) -> None:
+        javac, d8 = shutil.which("javac"), _find_android_d8()
+        if not javac or not d8:
+            self.skipTest("javac and d8 are required for the executable fixture")
+        with tempfile.TemporaryDirectory(prefix="westlake-accessor-") as temp:
+            root = Path(temp)
+            _write(root / "api/android/content/Context.java", "package android.content; public abstract class Context {}")
+            _write(root / "api/android/accounts/AccountManager.java", """package android.accounts;
+                import android.content.Context;
+                public class AccountManager {
+                    public static AccountManager get(Context c) { return null; }
+                }""")
+            _write(root / "app/fixture/Login.java", """package fixture;
+                import android.accounts.AccountManager;
+                import android.content.Context;
+                public class Login {
+                    static boolean isLoggedIn(Context c) { return AccountManager.get(c).getClass() != null; }
+                }""")
+            api, app, dex = root / "api-classes", root / "app-classes", root / "dex"
+            for directory in (api, app, dex):
+                directory.mkdir()
+            _run(javac, "--release", "8", "-d", str(api), *map(str, (root / "api").rglob("*.java")))
+            _run(javac, "--release", "8", "-cp", str(api), "-d", str(app), str(root / "app/fixture/Login.java"))
+            _run(d8, "--min-api", "21", "--output", str(dex), str(app / "fixture/Login.class"))
+
+            requests = inventory_dex(dex / "classes.dex").service_requests
+            account = [r for r in requests if r.get("service") == "account"]
+            self.assertEqual(len(account), 1, "AccountManager.get is a service request with no getSystemService call site")
+            self.assertTrue(account[0]["via_static_accessor"])
+            self.assertFalse(account[0]["dynamic"], "the name is known, it is just never written down by the app")
+
+
 class KeystoreAndLoaderOrder(unittest.TestCase):
     """Burger King's two startup blockers: neither is an absent name.
 

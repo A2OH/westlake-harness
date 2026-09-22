@@ -45,4 +45,65 @@ collected and not consulted. It is recorded here because the next person will do
 
 ## Scoring
 
-Added after the launches, without editing the predictions.
+Added after the launches; [predictions.json](predictions.json) is unchanged. Details in
+[results.json](results.json).
+
+| App | Predicted | What happened | Verdict |
+|---|---|---|---|
+| LocalSend | `libflutter.so` will not load | it did not: `ANativeWindow_lock`, `ANativeWindow_unlockAndPost`, `__openat_2` are GLOBAL UND | **right**, mechanism and effect |
+| Subway Surfers | `libunity.so` will not load | `Unable to load library libunity.so: Error loading shared library libmediandk.so` | **right**, mechanism and effect |
+| VLC | dies without namespace isolation, otherwise first screen | died before loading any engine library, on a theme attribute it could not resolve while inflating | **untested** |
+| Wikipedia | first screen renders | `AccountManager.get()` returned null in `BaseActivity.onCreate` and the app dereferenced it | **wrong** |
+| Firefox | `libxul.so` will not load | it loaded; Gecko ran, then hit the strict user proxy, a window context that is not attached, and an activity result for a record that does not exist | **wrong** (the `svc:user` row was right) |
+
+Two of five headline predictions right, two wrong, one untested. Both correct ones came from native
+symbol resolution; both wrong ones were Java and framework side.
+
+### What the misses have in common
+
+None of them is an app-specific accident.
+
+- **Wikipedia**: the account service is reached through `AccountManager.get(context)`. The scanner
+  only sees direct `getSystemService` and `ServiceManager` call sites, so the map had **no row at
+  all** for a service whose absence killed the app in `onCreate`. Every service with a static
+  accessor is invisible the same way.
+- **VLC**: nothing in the map models theme or attribute resolution, so an app that cannot inflate
+  its own layout has no row to land in.
+- **LocalSend**: the second gap, after the predicted one, is that an app cannot map executable code
+  out of its own data directory. `sandbox-policy` models fifo and symlink creation, not execute.
+- **Firefox**: window context attachment and activity result delivery have no rows either, though
+  `app-framework` covers the process table, dialogs and placement.
+
+### Process findings
+
+1. **A map is only valid for a launch configuration, and does not say which.** Firefox was first
+   launched without the bionic shim and died on `__register_atfork`, which the map counted as
+   resolved *because the shim exports it*. The resolution was generated with the shim in its index
+   and never records that dependency. Fix: state the provider inputs a resolution assumed.
+2. **Evidence collected and not read.** Two downloads were 32-bit behind an arm64 filename; the scan
+   said `target-abi-unavailable` before any prediction was written. Fix: surface `abi_status` in the
+   gap map, where predictions are actually made.
+3. **Predict the library, not the screen.** The native predictions named the right library both
+   times. The Java-side predictions named a screen and were wrong both times, even where the
+   underlying row was right.
+
+### One miss already closed
+
+The scanner now treats a static framework accessor as a service request: `AccountManager.get`,
+`LayoutInflater.from`, `NotificationManagerCompat.from` and the rest ask the platform for a service
+inside the framework, leaving no call site in the app's dex. Rescanning the same Wikipedia build
+produces the row that was missing:
+
+```
+svc:account | null | M | no Westlake provision: getSystemService returns null
+```
+
+That is the row whose absence let the app be predicted as "first screen renders" when it dies in
+`onCreate`. The other four gap classes found here — theme attribute resolution, execute from app
+data, window context attachment, activity result delivery — do not have rows yet.
+
+### Rows confirmed on apps they were not written for
+
+`svc:user` (written for McDonald's WebView) caught Firefox's `getUserSerialNumber`.
+`libc:constant-namespace` reported supplied for VLC and LocalSend, and neither showed a page-size
+or limit failure. `load:shadowed-by-board` is still unproven: VLC never reached its engine.

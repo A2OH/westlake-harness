@@ -665,6 +665,24 @@ def _detect_string_call(
 # Calls that ask the platform for a service by name or by manager class. The argument register
 # for each: instance getSystemService(String|Class) takes it after `this`; the static forms take it
 # first (ServiceManager) or second (ContextCompat, after the Context).
+# Services an app reaches without ever naming them: a static framework accessor calls
+# getSystemService inside the platform, so the app's dex holds no call site at all. Wikipedia died
+# in onCreate on a null AccountManager.get(context) and its map had no row for the account service.
+STATIC_SERVICE_ACCESSORS = {
+    ("Landroid/accounts/AccountManager;", "get"): "account",
+    ("Landroid/accounts/AccountManager;", "getInstance"): "account",
+    ("Landroid/view/LayoutInflater;", "from"): "layout_inflater",
+    ("Landroid/view/accessibility/AccessibilityManager;", "getInstance"): "accessibility",
+    ("Landroid/telephony/SubscriptionManager;", "from"): "telephony_subscription_service",
+    ("Landroid/telephony/TelephonyManager;", "from"): "phone",
+    ("Landroid/app/NotificationManagerCompat;", "from"): "notification",
+    ("Landroidx/core/app/NotificationManagerCompat;", "from"): "notification",
+    ("Landroid/net/ConnectivityManager;", "from"): "connectivity",
+    ("Landroid/os/storage/StorageManager;", "from"): "storage",
+    ("Landroid/media/AudioManager;", "from"): "audio",
+    ("Landroid/view/inputmethod/InputMethodManager;", "getInstance"): "input_method",
+}
+
 _SERVICE_BY_NAME = {"(Ljava/lang/String;)Ljava/lang/Object;"}
 _SERVICE_BY_CLASS = {"(Ljava/lang/Class;)Ljava/lang/Object;"}
 
@@ -689,6 +707,9 @@ def _detect_service_call(
             request = {"api": f"{owner}->getSystemService", "manager_class": class_regs.get(registers[1])}
     elif owner == "Landroid/os/ServiceManager;" and name in {"getService", "checkService", "getServiceOrThrow"} and registers:
         request = {"api": f"ServiceManager.{name}", "service": string_regs.get(registers[0]), "binder_direct": True}
+    elif (owner, name) in STATIC_SERVICE_ACCESSORS:
+        request = {"api": f"{owner.strip('L;').rsplit('/', 1)[-1]}.{name}",
+                   "service": STATIC_SERVICE_ACCESSORS[(owner, name)], "via_static_accessor": True}
     if request is None:
         return
     request["dynamic"] = request.get("service") is None and request.get("manager_class") is None
