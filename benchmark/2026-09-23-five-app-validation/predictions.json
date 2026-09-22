@@ -1,0 +1,95 @@
+{
+  "written_before_any_launch": true,
+  "provider": "Westlake 02cbace (McDonald's/Burger King fixes), board native runtime of 2026-09-19 plus the source-built IME helper, source-built bionic shim with sysconf and pathconf translation, WebView input supplied, SELinux enforcing",
+  "corpus": "five apps chosen for runtimes the checks have never seen: Flutter, Unity/IL2CPP, Gecko, native C/C++, and Java/Kotlin only",
+  "method": "each prediction is taken from a row of that app's gap map, generated before the app was launched. The launch is scored against these without editing them.",
+  "apps": [
+    {
+      "key": "localsend",
+      "app": "org.localsend.localsend_app 643 (F-Droid, arm64-v8a)",
+      "stack": "Flutter (libflutter.so, libapp.so, a Rust library)",
+      "overall": "does not reach its first frame",
+      "predictions": [
+        {"id": "L1", "claim": "libflutter.so does not load: it imports ANativeWindow_lock and ANativeWindow_unlockAndPost, which Westlake's libandroid.so does not export, and __openat_2, which musl does not have and the bionic shim does not supply",
+         "expected": "blocker at startup, in System.loadLibrary from the Flutter engine's initialisation",
+         "confidence": "high", "basis": "oh-resolve: 485/488 resolved, 3 missing, all imported by libflutter.so"},
+        {"id": "L2", "claim": "if the engine did load, the WiFi service would throw: two Kotlin non-null casts of WifiManager, which is null here",
+         "expected": "not reached unless L1 is wrong", "confidence": "medium", "basis": "svc:wifi null, throws_if_null=2"},
+        {"id": "L3", "claim": "no Java platform API is missing on the path", "expected": "no NoSuchMethodError from a platform API",
+         "confidence": "high", "basis": "annotate-api-levels: 8 of 10 absences are newer than API 35, 1 absent, 1 unindexed"}
+      ]
+    },
+    {
+      "key": "vlc",
+      "app": "org.videolan.vlc 3.7.1 (APKPure, arm64-v8a)",
+      "stack": "native C/C++ media engine, no splits",
+      "overall": "reaches its first screen when launched with the isolation the map asks for, with an empty media library",
+      "predictions": [
+        {"id": "V1", "claim": "launched without namespace isolation, libvlcjni.so fails to link: the APK's libc++_shared.so is shadowed by the board's copy, and four of its libraries reach it through DT_NEEDED",
+         "expected": "blocker at startup, the same shape as Burger King B1",
+         "confidence": "high", "basis": "load:shadowed-by-board missing, targets libc++_shared.so libmla.so libvlc.so libvlcjni.so"},
+        {"id": "V2", "claim": "with those four passed to --android-native-target, every native import resolves and the engine loads",
+         "expected": "first screen renders", "confidence": "high", "basis": "oh-resolve: 889/889 resolved, 0 missing"},
+        {"id": "V3", "claim": "the media library is empty: a runtime storage permission request reaches no permission controller",
+         "expected": "degraded, no crash", "confidence": "medium", "basis": "not a map row; direct launch has no permission controller"},
+        {"id": "V4", "claim": "components declared in a second process do not start", "expected": "degraded",
+         "confidence": "medium", "basis": "pm:multiprocess missing"}
+      ]
+    },
+    {
+      "key": "wikipedia",
+      "app": "org.wikipedia 2.7.50606 (F-Droid, universal)",
+      "stack": "Java/Kotlin, one native map library",
+      "overall": "reaches its first screen; opening an article takes the process down",
+      "predictions": [
+        {"id": "W1", "claim": "the feed renders: nothing on the startup path needs a missing native symbol, and the only unresolved one (dl_unwind_find_exidx) is imported by libmaplibre.so, which loads when a map is shown",
+         "expected": "first screen renders", "confidence": "medium", "basis": "oh-resolve: 288/289 resolved"},
+        {"id": "W2", "claim": "opening an article aborts the process: article content is rendered in a WebView, whose renderer needs an isolated service process direct launch cannot start",
+         "expected": "process death on the article screen", "confidence": "high", "basis": "wv:renderer-process missing, 23 WebView methods called"},
+        {"id": "W3", "claim": "a map screen fails to load its library", "expected": "degraded where maps appear",
+         "confidence": "medium", "basis": "libmaplibre.so imports dl_unwind_find_exidx, which is bionic-private and not in the shim"},
+        {"id": "W4", "claim": "13 platform members the app references are absent from the boot jars and at least one is reachable from the startup path",
+         "expected": "possible NoSuchMethodError or NoClassDefFoundError before the first screen", "confidence": "low",
+         "basis": "annotate-api-levels: absent-from-platform=13"}
+      ]
+    },
+    {
+      "key": "firefox",
+      "app": "org.mozilla.firefox 156.0 (APKPure, arm64-v8a), target SDK 37",
+      "stack": "Gecko (libxul.so), its own multiprocess model",
+      "overall": "does not render a page",
+      "predictions": [
+        {"id": "F1", "claim": "libxul.so does not load: it imports AHardwareBuffer_sendHandleToUnixSocket, AHardwareBuffer_recvHandleFromUnixSocket, AImageReader and AMediaCodec entry points that the board and the staged runtime do not provide",
+         "expected": "blocker at startup", "confidence": "high", "basis": "oh-resolve: 1898/1958 resolved, 60 missing, libxul.so the importer"},
+        {"id": "F2", "claim": "even with libxul loaded, Gecko's content process cannot start: it is an isolated service process, the same gap that stops WebView's renderer",
+         "expected": "no page content", "confidence": "high", "basis": "pm:multiprocess missing; wv:renderer-process missing"},
+        {"id": "F3", "claim": "AccessibilityNodeInfo.setChecked(I)V is referenced and absent from the boot jars at API 35",
+         "expected": "NoSuchMethodError if an accessibility path runs", "confidence": "low",
+         "basis": "annotate-api-levels: required=1"}
+      ]
+    },
+    {
+      "key": "subwaysurfers",
+      "app": "com.kiloo.subwaysurf 3.69.1 (APKPure, arm64-v8a)",
+      "stack": "Unity with IL2CPP, 20 native libraries",
+      "overall": "does not reach gameplay",
+      "predictions": [
+        {"id": "S1", "claim": "libunity.so does not load: it imports __system_property_read, which musl does not have and the shim does not supply, and the AMEDIAFORMAT_KEY_* data symbols from libmediandk, which the runtime does not ship",
+         "expected": "blocker at startup", "confidence": "high", "basis": "oh-resolve: 559/618 resolved, 59 missing, libunity.so and libnms.so the importers"},
+        {"id": "S2", "claim": "all 15 manifest providers are created at bind without error", "expected": "fine",
+         "confidence": "medium", "basis": "pm:providers, probed on earlier builds"},
+        {"id": "S3", "claim": "Google Play services are absent, so Firebase and the ad SDKs degrade rather than crash",
+         "expected": "degraded", "confidence": "medium", "basis": "dep:google-play-services absent"},
+        {"id": "S4", "claim": "four Kotlin non-null casts of StorageStatsManager, and one each of WifiManager, CaptioningManager and the network service discovery manager, would throw if reached: all four services are null",
+         "expected": "not reached unless S1 is wrong", "confidence": "medium",
+         "basis": "throws_if_null: svc:storagestats(4), svc:wifi(1), svc:captioning(1), svc:servicediscovery(2)"}
+      ]
+    }
+  ],
+  "what_this_tests": [
+    "whether the native-symbol resolution is right about three different engines it has never seen",
+    "whether load:shadowed-by-board, written after Burger King, generalises to an unrelated app (VLC)",
+    "whether wv:renderer-process, written for Chromium, describes Gecko's content process too",
+    "whether the map is quiet on an app that should mostly work (Wikipedia's first screen)"
+  ]
+}
