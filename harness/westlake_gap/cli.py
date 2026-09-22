@@ -192,6 +192,9 @@ def parser() -> argparse.ArgumentParser:
     gap.add_argument("--ndk-coverage", type=Path,
                      help="ndk-coverage.json: classify native gaps by how the NDK supplies them (package / libc-abi / weld / absence)")
     gap.add_argument("--observed", type=Path, help="trace-observe output: mark each gap touched or not on a recorded real-Android run")
+    gap.add_argument("--probe-results", type=Path,
+                     help="white-box probe results measured on the board: they replace the static verdict of the rows they back, "
+                          "for the exact Westlake commit they were measured on")
     gap.add_argument("--policy", type=Path, default=Path(__file__).parent / "data" / "oh-app-data-policy.json")
     gap.add_argument("--blockers", type=Path, help="known-blockers JSON: backtest the map against observed failures")
     gap.add_argument("--blockers-status", action="store_true",
@@ -323,7 +326,8 @@ def main(argv: list[str] | None = None) -> int:
         gap_map = build_map(scan, manifest_facts(args.apk), levels, aosp, args.westlake, oh,
                             read_json(args.policy), args.manifest_repo,
                             ndk_cov=read_json(args.ndk_coverage) if args.ndk_coverage else None,
-                            observed=read_json(args.observed) if args.observed else None)
+                            observed=read_json(args.observed) if args.observed else None,
+                            probe_results=read_json(args.probe_results) if args.probe_results else None)
         if args.westlake_label:
             gap_map["provider"]["westlake"] = {"branch": args.westlake_label, "commit": args.westlake_label, "uncommitted": []}
         results = None

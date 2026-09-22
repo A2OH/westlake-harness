@@ -14,7 +14,7 @@ from pathlib import Path
 
 from test_known_answers import _find_android_d8, _run, _write
 from westlake_gap import gapmap, services
-from westlake_gap.contracts import pm_adapter_model
+from westlake_gap.contracts import direct_launch_am_model, pm_adapter_model
 from westlake_gap.scanner import inventory_dex
 
 
@@ -193,6 +193,74 @@ class PackageManagerSemantics(unittest.TestCase):
             rows = {r["id"]: r for r in gapmap.package_manager_rows(scan, facts, model)}
             self.assertEqual(rows["pm:component-metadata"]["verdict"], "missing")
             self.assertEqual(rows["pm:component-metadata"]["probe"], "probes/service-metadata")
+
+
+class AppFrameworkContracts(unittest.TestCase):
+    _STUB = """class AppSpawnXInit {
+        private static InvocationHandler makeStubHandler(final String label, final Set<String> hot) {
+            return new InvocationHandler() {
+                public Object invoke(Object proxy, Method method, Object[] args) {
+                    String name = method.getName();
+                    if ("asBinder".equals(name)) return proxy;
+                    %s
+                    return null;
+                }
+            };
+        }
+        static void install() { iamImpl = makeProxyStub("AdapterIAM-stub", "android.app.IActivityManager", hot); }
+    }"""
+
+    def _model(self, answers: str) -> dict:
+        with tempfile.TemporaryDirectory(prefix="westlake-am-") as temp:
+            root = Path(temp)
+            _write(root / "framework/appspawn-x/java/com/android/internal/os/AppSpawnXInit.java", self._STUB % answers)
+            return direct_launch_am_model(root)
+
+    def test_null_answers_are_read_from_the_stub(self) -> None:
+        scan = {"inventory": {"platform_method_names": {
+            "Landroid/app/ActivityManager;": ["getRunningAppProcesses", "getRunningServices", "getMemoryClass"],
+            "Landroid/app/Dialog;": ["show", "dismiss"]}}}
+        bare = self._model("")
+        self.assertTrue(bare["proxy_stub"])
+        self.assertEqual(bare["answered"], [], "asBinder outside the label block is not an answer")
+        rows = {r["id"]: r for r in gapmap.app_framework_rows(scan, bare)}
+        self.assertEqual(rows["am:process-table"]["verdict"], "null")
+        self.assertIn("getServices", rows["am:process-table"]["provider"], "getRunningServices is answered by getServices")
+        self.assertEqual(rows["wm:dialog-stacking"]["verdict"], "unverified")
+
+        answered = self._model("""if ("AdapterIAM-stub".equals(label)) {
+                        if ("getRunningAppProcesses".equals(name)) return CallerProcess.runningAppProcesses();
+                        if ("getServices".equals(name)) { return CallerProcess.runningServices(); }
+                    }""")
+        self.assertEqual(answered["answered"], ["getRunningAppProcesses", "getServices"])
+        rows = {r["id"]: r for r in gapmap.app_framework_rows(scan, answered)}
+        self.assertEqual(rows["am:process-table"]["verdict"], "supplied")
+
+    def test_probe_results_apply_only_to_their_commit(self) -> None:
+        def fresh():
+            return {"provider": {"westlake": {"commit": "f4e0366953002a33"}},
+                    "rows": [{"id": "wm:dialog-stacking", "probe": "probes/dialog-before-window", "verdict": "unverified",
+                              "shim_class": "CU", "effort": "verify", "confidence": "static"},
+                             {"id": "pm:providers", "probe": "probes/provider-manifest", "verdict": "unverified",
+                              "shim_class": "CU", "effort": "verify", "confidence": "static"}]}
+        results = {"results": [
+            {"probe": "dialog-before-window", "westlake_commit": "f4e0366953002a33db50", "passed": False, "verdict": "FAIL",
+             "effort": "M", "shim_class": "C6", "finding": "stacked by creation order"},
+            {"probe": "provider-manifest", "westlake_commit": "0231db6053cd1b43", "passed": False, "verdict": "FAIL"},
+            {"probe": "provider-manifest", "westlake_commit": "f4e0366953002a33db50", "passed": True, "verdict": "PASS"}]}
+        gap = fresh()
+        gapmap.apply_probe_results(gap, results)
+        rows = {r["id"]: r for r in gap["rows"]}
+        self.assertEqual((rows["wm:dialog-stacking"]["verdict"], rows["wm:dialog-stacking"]["effort"]), ("missing", "M"))
+        self.assertEqual(rows["wm:dialog-stacking"]["confidence"], gapmap.PROBED)
+        self.assertEqual(rows["pm:providers"]["verdict"], "supplied", "the pass on this commit, not the older failure")
+
+        older = fresh()
+        older["provider"]["westlake"]["commit"] = "75d82d5"
+        gapmap.apply_probe_results(older, results)
+        rows = {r["id"]: r for r in older["rows"]}
+        self.assertEqual(rows["pm:providers"]["verdict"], "unverified", "a later build's result says nothing about this one")
+        self.assertEqual(rows["pm:providers"]["probe_result"]["note"], "measured on other builds only")
 
 
 class SandboxAndBacktest(unittest.TestCase):

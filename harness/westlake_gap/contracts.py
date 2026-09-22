@@ -148,6 +148,39 @@ def pm_adapter_model(westlake_root: Path) -> dict[str, Any]:
     }
 
 
+def _braced_block(text: str, start: int) -> str:
+    """The body of the first {...} block at or after start, braces balanced."""
+    open_at = text.find("{", start)
+    if open_at < 0:
+        return ""
+    depth = 0
+    for index in range(open_at, len(text)):
+        if text[index] == "{":
+            depth += 1
+        elif text[index] == "}":
+            depth -= 1
+            if depth == 0:
+                return text[open_at + 1:index]
+    return text[open_at + 1:]
+
+
+def direct_launch_am_model(westlake_root: Path) -> dict[str, Any]:
+    """What an app gets from IActivityManager in direct launch, where there is no system_server.
+
+    AppSpawnXInit installs a java.lang.reflect.Proxy for IActivityManager whose handler returns a
+    type default for every method it does not answer by name: null for any object result, 0 or
+    false otherwise. The methods it answers are read from the handler's label-specific block.
+    """
+    path = westlake_root / "framework/appspawn-x/java/com/android/internal/os/AppSpawnXInit.java"
+    text = path.read_text(errors="replace") if path.exists() else ""
+    stub = re.search(r'makeProxyStub\(\s*"AdapterIAM-stub"', text)
+    guard = text.find('"AdapterIAM-stub".equals(label)')
+    answered = sorted(set(re.findall(r'"(\w+)"\.equals\(name\)', _braced_block(text, guard)))) if guard >= 0 else []
+    line = text.count("\n", 0, stub.start()) + 1 if stub else None
+    return {"proxy_stub": stub is not None, "answered": answered,
+            "source": f"{path.relative_to(westlake_root)}:{line}" if stub else None}
+
+
 def _evidence(text: str, pattern: str, path: Path, root: Path) -> dict[str, Any]:
     match = re.search(pattern, text)
     if not match:

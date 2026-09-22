@@ -195,6 +195,7 @@ and 8 enumerate.
 |---|---|---|
 | System services | `getSystemService(String\|Class)`, `ContextCompat`, `ServiceManager` call sites and the manager methods called | AOSP `SystemServiceRegistry` and mainline initializers (name → manager → binders, including lazily fetched ones) × Westlake `OHServiceManager`, runtime seeds, `AppSpawnXInit` overrides → `supplied` / `hollow` / `null` / `inert` / `unresolved` |
 | Package manager & manifest | components, `<meta-data>`, `directBootAware`, providers and `initOrder`, splits, processes; `PackageManager` calls | `PackageManagerAdapter` method by method (bridged, or stub and what it returns); PMS semantics the source-app path must reproduce |
+| Activity, window & process contracts | `ActivityManager` process-table queries, `Dialog.show` | what system_server answers, answered in-process in direct launch: the `IActivityManager` stub handler (null for any object result it does not answer by name), Android window stacking; decided by probes |
 | Sandbox policy | objects the code creates | OH SELinux decision for the app domain, queried from the loaded kernel policy (`probes/avq.c`, `harness/westlake_gap/data/oh-app-data-policy.json`), beside the AOSP rule |
 | Loading & packaging | `extractNativeLibs`, split ABI libraries | OH linker capability (board test) and the launcher's extraction |
 | External services & SDKs | GMS/Firebase markers; device-probing SDKs | no Google services on OH; the loader's refusal list |
@@ -212,10 +213,13 @@ an **effort** tier, the **OH touchpoint**, provider and app evidence, and the **
 | verify | the source claims it; run the named probe before trusting it |
 
 A row's confidence moves from **static** (APK + provider source) to **probe** (a white-box probe
-passed on the board) to **observed** (the full app on the device). The launch becomes acceptance
-rather than discovery. `--blockers` replays failures already paid for. Against the provider
-McDonald's actually ran on, the map flags **6 of its 8** board failures before any launch
-([benchmark](benchmark/2026-09-21-gapmap/README.md)).
+ran on the board; `--probe-results` applies it, for the exact Westlake commit it was measured on)
+to **observed** (the full app on the device). The launch becomes acceptance rather than discovery.
+`--blockers` replays failures already paid for. Against the provider McDonald's actually ran on,
+the map flags **6 of its 8** board failures before any launch
+([benchmark](benchmark/2026-09-21-gapmap/README.md)). The probes then found two more before the
+app reached them, and the first launch after those fixes reached the sign-in activity with one
+blocker left: window stacking ([benchmark](benchmark/2026-09-22-mcdonalds-signin/README.md)).
 
 ### Which gaps are on the path: recorded, not guessed
 

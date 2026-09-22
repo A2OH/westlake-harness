@@ -34,6 +34,7 @@ one place the app touches the platform:
 | **Java framework API** | dex member references, API-level filtered | Westlake boot jars |
 | **System services** *(new)* | `getSystemService(String\|Class)`, `ContextCompat`, `ServiceManager` call sites, with the manager methods called | AOSP `SystemServiceRegistry` + mainline `*FrameworkInitializer` (name → manager → binders, including binders a manager fetches lazily) × Westlake `OHServiceManager`, `AndroidRuntime.cpp` seeds, `AppSpawnXInit` fetcher overrides |
 | **Package manager & manifest** *(new)* | manifest components, `<meta-data>`, `directBootAware`, providers/`initOrder`, splits, processes; `PackageManager` calls | `PackageManagerAdapter` method by method (bridged / stub and what the stub returns); source checks for PMS semantics the source-app path must reproduce |
+| **Activity, window & process contracts** *(new)* | `ActivityManager` process-table queries; `Dialog.show` | what system_server would answer, answered in-process in direct launch: the `IActivityManager` proxy stub's handler (which methods it answers by name; every other object result is null), and Android's window stacking. Decided by white-box probes |
 | **Java APIs called from native code** *(new)* | platform class names, member names and JNI signatures in each `.so`'s data strings (`FindClass`/`Get*ID` go through JNIEnv, not imports) | reference `android.jar` + runtime members, kept only when name and signature both occur; resolved against the boot jars. Hollow counts only in Westlake adapter/stub jars; in `framework.jar` it is a candidate; in upstream libcore it is not a gap |
 | **Native platform symbols** | undefined symbols per packaged `.so` | OpenHarmony **plus the NDK Westlake packages** (`--ndk-coverage`): each missing import is classified as package / libc-abi / weld to a named OH subsystem / truthful absence, with the bionic shim's exports and Westlake's build manifests subtracted. Without `--ndk-coverage`, the raw board |
 | **Native loading** | `extractNativeLibs`, split ABI libraries | OH linker capability (board test) and the launcher's extraction |
@@ -115,6 +116,18 @@ Run against the current provider with `--blockers-status`, the same file becomes
 removed the crash but installed a no-op scheduler, so WorkManager jobs are accepted and never run.
 No crash will ever report that. The map does.
 
+## Probes decide the "verify" rows
+
+A row the source cannot settle names a white-box probe (`probes/*`): one contract, one signed
+APK, run unchanged on the board. `--probe-results` applies measured verdicts, and a result counts
+only for the exact Westlake commit it was measured on, so a pass on a later build never closes a
+row for an earlier one. For McDonald's the probes found two blockers before the app reached them:
+providers were never created at bind (B9), and the direct-launch `IActivityManager` returned null
+process lists that an SDK iterates (B10). The first McDonald's launch after those fixes reached
+the sign-in activity and exposed a third: OpenHarmony stacks the app's windows by creation order,
+so a dialog shown before its activity's window is hidden under it (B11,
+`probes/dialog-before-window`). See `benchmark/2026-09-22-mcdonalds-signin/`.
+
 ## Running it
 
 ```bash
@@ -122,6 +135,7 @@ westlake-apk-gap scan app.xapk --runtime runtime-index.json --out scan.json
 westlake-apk-gap gap-map --scan scan.json --apk app.xapk --api-levels scan-api-annotated.json \
   --aosp <imports root: frameworks-base, modules-*> --westlake <westlake tree> \
   --manifest-repo <launcher repo> --oh-resolution oh-import-resolution.json --app-key <app> \
+  [--observed observed.json] [--probe-results probe-results.json] \
   [--blockers known-blockers.json [--blockers-status]] --out out/
 ```
 

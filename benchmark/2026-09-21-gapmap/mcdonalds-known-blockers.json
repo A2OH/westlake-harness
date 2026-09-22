@@ -18,6 +18,15 @@
     {"id": "B7", "symptom": "Realm: Failed to create fifo ... Permission denied (13)",
      "fix": "none yet: board run permissive; policy rule or data_app_el2_file label needed", "predicted_by": ["policy:fifo_file"]},
     {"id": "B8", "symptom": "Firebase Instance ID component is not present (component discovery found no registrars)",
-     "fix": "direct-boot match defaults in SourcePackageRegistry (uncommitted, 2026-09-18)", "predicted_by": ["pm:component-metadata"]}
+     "fix": "direct-boot match defaults in SourcePackageRegistry (uncommitted, 2026-09-18)", "predicted_by": ["pm:component-metadata"]},
+    {"id": "B9", "symptom": "no content provider from the manifest is created before Application.onCreate (Firebase, Forter, ML Kit initializers never run)",
+     "fix": "default ComponentInfo.processName to the application's process (westlake 4993809)", "predicted_by": ["pm:providers"],
+     "found_by": "probes/provider-manifest on 2026-09-21, before any McDonald's launch reached it"},
+    {"id": "B10", "symptom": "ActivityManager.getRunningAppProcesses() and getRunningServices() return null; Kochava AppUtil iterates both unchecked",
+     "fix": "answer with the caller's own process (westlake f4e0366)", "predicted_by": ["am:process-table"],
+     "found_by": "probes/running-app-processes on 2026-09-21; map row added 2026-09-22"},
+    {"id": "B11", "symptom": "sign-in activity reached and drawing, screen white: the sign-in bottom sheet, a dialog shown before the activity's window, is stacked under that window",
+     "fix": "none yet: the native window client must stack a base window below its token's dialogs", "predicted_by": ["wm:dialog-stacking"],
+     "found_by": "first McDonald's launch on the rebuilt stack, 2026-09-22; reproduced by probes/dialog-before-window; map row added after the fact"}
   ]
 }

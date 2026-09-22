@@ -10,8 +10,9 @@ Inputs are all produced without launching the app:
   (`data/oh-app-data-policy.json`).
 
 Each row carries its evidence and a confidence level, so "supplied" never hides "we only read the
-source". A `known-blockers` file turns the map into a backtest: for every failure already paid for
-on the device, did a row predict it?
+source". Probe results measured on the board replace a row's static verdict, for the exact provider
+commit they were measured on. A `known-blockers` file turns the map into a backtest: for every
+failure already paid for on the device, did a row predict it?
 """
 
 from __future__ import annotations
@@ -28,6 +29,8 @@ CATEGORIES = [
     ("java-api", "Java framework API", "APK dex references − Westlake boot jars, filtered by API level"),
     ("system-services", "System services", "getSystemService name → AOSP fetcher/binder → Westlake provision → OH subsystem"),
     ("package-manager", "Package manager & manifest", "manifest features and PackageManager calls → Westlake PM semantics"),
+    ("app-framework", "Activity, window & process contracts",
+     "what system_server would answer, answered in-process by Westlake in direct launch → white-box probes"),
     ("native-upcalls", "Java APIs called from native code", "JNIEnv FindClass/Get*ID names in packaged .so → Westlake boot jars"),
     ("native-symbols", "Native platform symbols", "packaged .so imports → OpenHarmony plus the NDK Westlake packages (package / libc-abi / weld / absence)"),
     ("native-loading", "Native loading & packaging", "how the libraries are packaged → what the OH linker can map"),
@@ -355,6 +358,69 @@ def ndk_symbol_rows(
     return rows
 
 
+# ActivityManager process-table queries -> the IActivityManager method behind each. Since Android
+# 5.1 an ordinary app sees only its own processes and services, so each has a local answer; null is
+# never one of them, and SDKs iterate the result unchecked.
+AM_PROCESS_TABLE = {"getRunningAppProcesses": "getRunningAppProcesses", "getRunningServices": "getServices",
+                    "getProcessMemoryInfo": "getProcessMemoryInfo"}
+
+
+def app_framework_rows(scan: dict[str, Any], am: dict[str, Any]) -> list[dict[str, Any]]:
+    rows = []
+    names = scan["inventory"].get("platform_method_names", {})
+    called = [name for name in AM_PROCESS_TABLE if name in names.get("Landroid/app/ActivityManager;", [])]
+    if called:
+        unanswered = [n for n in called if am["proxy_stub"] and AM_PROCESS_TABLE[n] not in am["answered"]]
+        rows.append(_row(
+            "app-framework", "am:process-table", f"ActivityManager process-table queries ({', '.join(called)})",
+            oh_touchpoint="none (the caller's own process is the answer)",
+            verdict="null" if unanswered else "supplied", shim_class="C9" if unanswered else "C0",
+            effort="S" if unanswered else "verify", confidence=STATIC, probe="probes/running-app-processes",
+            provider=(f"direct-launch IActivityManager proxy returns null for {', '.join(AM_PROCESS_TABLE[n] for n in unanswered)}"
+                      if unanswered else "answered with the caller's own process"),
+            provider_source=am["source"], app_evidence=f"app calls {', '.join(called)}",
+            shim="answer with the caller's process: name, pid, uid, foreground importance, its package"))
+    if "show" in names.get("Landroid/app/Dialog;", []):
+        rows.append(_row(
+            "app-framework", "wm:dialog-stacking", "Dialogs stack above their activity's window, whatever the add order",
+            oh_touchpoint="window_manager (sub-window z-order)", verdict="unverified", shim_class="CU", effort="verify",
+            confidence=STATIC, probe="probes/dialog-before-window",
+            provider="Android WindowToken order: TYPE_BASE_APPLICATION below the token's other windows",
+            app_evidence="app shows dialogs (Dialog.show referenced); a dialog shown from onCreate/onResume is added "
+                         "before the activity's own window",
+            shim="stack a base application window below the dialogs already attached to its token"))
+    return rows
+
+
+def apply_probe_results(gap_map: dict[str, Any], results: dict[str, Any]) -> None:
+    """Replace a probe-backed row's static verdict with the probe's measurement on the device.
+
+    A result counts only for the exact Westlake commit it was measured on: a probe that passes on a
+    later build says nothing about the provider under test.
+    """
+    commit = (gap_map["provider"]["westlake"].get("commit") or "")
+    for row in gap_map["rows"]:
+        probe = (row.get("probe") or "").removeprefix("probes/")
+        measured = [r for r in results.get("results", []) if r["probe"] == probe]
+        if not measured:
+            continue
+        exact = [r for r in measured if commit and (r["westlake_commit"].startswith(commit) or commit.startswith(r["westlake_commit"]))]
+        if not exact:
+            row["probe_result"] = {"note": "measured on other builds only", "builds": [r["westlake_commit"][:10] for r in measured]}
+            continue
+        result = exact[-1]
+        row["probe_result"] = {k: result[k] for k in ("verdict", "passed", "date", "westlake_commit") if k in result}
+        row["confidence"] = PROBED
+        if result["passed"]:
+            row.update(verdict="supplied", shim_class="C0", effort="none")
+        else:
+            row.update(verdict="missing" if row["verdict"] in {"unverified", "supplied"} else row["verdict"],
+                       effort=result.get("effort", row["effort"] if row["effort"] != "verify" else "M"),
+                       shim_class=result.get("shim_class", "C6" if row["shim_class"] in {"CU", "C0"} else row["shim_class"]))
+            if result.get("finding"):
+                row["provider"] = result["finding"]
+
+
 def native_symbol_rows(scan: dict[str, Any], oh_missing: list[dict[str, Any]], shim_exports: set[str]) -> list[dict[str, Any]]:
     importers: dict[str, list[str]] = defaultdict(list)
     for elf in scan["inventory"].get("elfs", []):
@@ -568,12 +634,14 @@ def build_map(
     manifest_root: Path | None = None,
     ndk_cov: dict[str, Any] | None = None,
     observed: dict[str, Any] | None = None,
+    probe_results: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     westlake_services = services.westlake_service_model(westlake_root)
     pm = contracts.pm_adapter_model(westlake_root)
     java, java_excluded = java_api_rows(scan, api_levels)
     svc, dynamic = service_rows(scan, aosp_services, westlake_services)
     rows = (java + svc + package_manager_rows(scan, facts, pm)
+            + app_framework_rows(scan, contracts.direct_launch_am_model(westlake_root))
             + native_upcall_rows(scan)
             + (ndk_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root), ndk_cov) if ndk_cov
                else native_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root)))
@@ -587,6 +655,8 @@ def build_map(
                   "native_upcalls_scanned": scan["inventory"].get("native_upcalls") is not None},
         "rows": rows,
     }
+    if probe_results:
+        apply_probe_results(gap_map, probe_results)
     if observed:
         apply_observed(gap_map, scan, observed, aosp_services)
     return gap_map
@@ -654,6 +724,13 @@ def apply_observed(gap_map: dict[str, Any], scan: dict[str, Any], observed: dict
                 on_path, evidence = bool(states), "component lookups " + (", ".join(sorted(states)) or "not called")
             else:
                 on_path, evidence = True, "done by the platform when the process is bound"
+        elif category == "app-framework":
+            owner, names = (("Landroid/app/ActivityManager;", tuple(AM_PROCESS_TABLE)) if rid == "am:process-table"
+                            else ("Landroid/app/Dialog;", ("show",)))
+            states = {k.partition("->")[2].split("(")[0]: touch[k] for k in by_owner.get(owner, [])
+                      if k.partition("->")[2].split("(")[0] in names}
+            on_path = bool(states)
+            evidence = ", ".join(f"{n} {st}" for n, st in sorted(states.items())) or "not called"
         elif category in {"native-symbols", "native-upcalls", "sandbox-policy", "native-loading"}:
             if rid.startswith("upcall:"):
                 libs = {rid[7:]}

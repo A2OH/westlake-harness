@@ -1,6 +1,6 @@
 # com.mcdonalds.app 26.31.1 → OpenHarmony: API shim gap map
 
-Provider: Westlake `jobscheduler-service-stub` @ `c279d162c1` (+9 uncommitted files); OH board: OpenHarmony 6.1.0.31, arm64, SELinux enforcing policy as loaded. Target SDK 35.
+Provider: Westlake `mcdonalds-signin-fixes` @ `f4e0366953`; OH board: OpenHarmony 6.1.0.31, arm64, SELinux enforcing policy as loaded. Target SDK 35.
 
 ## Summary
 
@@ -8,7 +8,8 @@ Provider: Westlake `jobscheduler-service-stub` @ `c279d162c1` (+9 uncommitted fi
 |---|---|---|---|---|
 | Java framework API | APK dex references − Westlake boot jars, filtered by API level | 17 | 17 | 16×verify, 1×S |
 | System services | getSystemService name → AOSP fetcher/binder → Westlake provision → OH subsystem | 33 | 23 | 1×verify, 10×S, 11×M, 1×L |
-| Package manager & manifest | manifest features and PackageManager calls → Westlake PM semantics | 21 | 19 | 1×verify, 12×S, 6×M |
+| Package manager & manifest | manifest features and PackageManager calls → Westlake PM semantics | 21 | 18 | 12×S, 6×M |
+| Activity, window & process contracts | what system_server would answer, answered in-process by Westlake in direct launch → white-box probes | 2 | 1 | 1×M |
 | Java APIs called from native code | JNIEnv FindClass/Get*ID names in packaged .so → Westlake boot jars | 6 | 0 | — |
 | Native platform symbols | packaged .so imports → OpenHarmony plus the NDK Westlake packages (package / libc-abi / weld / absence) | 3 | 2 | 1×S, 1×M |
 | Native loading & packaging | how the libraries are packaged → what the OH linker can map | 1 | 0 | — |
@@ -27,6 +28,7 @@ Recorded on real Android with full method tracing: 44451 methods executed (25957
 |---|---|---|---|---|
 | Create fifo_file in app data | Process sandbox & policy | denied | OH | loaded: librealm-jni.so, librealmc.so |
 | phone | System services | inert | L | 3 of 13 requesting methods ran; TelephonyManager code executed |
+| Dialogs stack above their activity's window, whatever the add order | Activity, window & process contracts | missing | M | show executed |
 | Google Play services | External services & SDK behaviour | absent | M | 1979 of its methods executed |
 | PackageManager.queryBroadcastReceivers | Package manager & manifest | stub | M | referenced |
 | PackageManager.queryIntentContentProviders | Package manager & manifest | stub | M | executed |
@@ -66,14 +68,13 @@ Recorded on real Android with full method tracing: 44451 methods executed (25957
 | OS services | Java framework API | hollow-candidate | verify | 1 members executed, 0 more referenced by executed methods, of 4 |
 | Widgets | Java framework API | hollow-candidate | verify | 1 members executed, 0 more referenced by executed methods, of 3 |
 | Content & intents | Java framework API | hollow-candidate | verify | 1 members executed, 0 more referenced by executed methods, of 2 |
-| Content providers installed at bind (9, initOrder honoured) | Package manager & manifest | unverified | verify | done by the platform when the process is bound |
 | textclassification | System services | unresolved | verify | 0 of 1 requesting methods ran; TextClassificationManager code executed |
 
 "Touched" means the call ran, or a method containing the reference ran; it leans large, never small. A gap that was not touched can still matter for a later screen or feature.
 
 ## Known blockers: status against this provider
 
-Of 8 blockers already hit on the board: **4** closed per source (confirm on device), **3** open, **1** open (verify).
+Of 11 blockers already hit on the board: **6** closed per source (confirm on device), **4** open, **1** open (verify).
 
 | Blocker | Symptom on device | Row | Status |
 |---|---|---|---|
@@ -85,6 +86,9 @@ Of 8 blockers already hit on the board: **4** closed per source (confirm on devi
 | B6 | LocationManager null on splash (AnalyticsHelper) | `svc:location` (supplied) | closed per source (confirm on device) |
 | B7 | Realm: Failed to create fifo ... Permission denied (13) | `policy:fifo_file` (denied) | open |
 | B8 | Firebase Instance ID component is not present (component discovery found no registrars) | `pm:component-metadata` (supplied) | closed per source (confirm on device) |
+| B9 | no content provider from the manifest is created before Application.onCreate (Firebase, Forter, ML Kit initializers never run) | `pm:providers` (supplied) | closed per source (confirm on device) |
+| B10 | ActivityManager.getRunningAppProcesses() and getRunningServices() return null; Kochava AppUtil iterates both unchecked | `am:process-table` (supplied) | closed per source (confirm on device) |
+| B11 | sign-in activity reached and drawing, screen white: the sign-in bottom sheet, a dialog shown before the activity's window, is stacked under that window | `wm:dialog-stacking` (missing) | open |
 
 ## Java framework API
 
@@ -118,11 +122,11 @@ _getSystemService name → AOSP fetcher/binder → Westlake provision → OH sub
 |---|---|---|---|---|---|---|
 | phone | inert | C4 | L | yes | telephony/core_service | Android TelephonyManager facade over telephony/core_service<br>13 call sites, e.g. apptentive.com.android.feedback.platform.AndroidUtils.getTelephonyManager |
 | alarm | null | C4 | M | yes | time_service / reminder_agent | Android AlarmManager facade over time_service / reminder_agent<br>18 call sites, e.g. androidx.work.impl.background.systemalarm.Alarms.b |
-| audio | hollow | C9 | M | yes | audio_framework | replace the hollow binder with an implementation over audio_framework<br>6 call sites, e.g. androidx.appcompat.app.AppCompatDelegateImpl.K0 `framework/appspawn-x/java/com/android/internal/os/AppSpawnXInit.java:1560` |
+| audio | hollow | C9 | M | yes | audio_framework | replace the hollow binder with an implementation over audio_framework<br>6 call sites, e.g. androidx.appcompat.app.AppCompatDelegateImpl.K0 `framework/appspawn-x/java/com/android/internal/os/AppSpawnXInit.java:1569` |
 | camera | inert | C4 | M | yes | multimedia/camera_framework | Android CameraManager facade over multimedia/camera_framework<br>7 call sites, e.g. androidx.camera.camera2.internal.compat.CameraManagerCompatBaseImpl.<init> |
 | clipboard | null | C4 | M | – | miscservices/pasteboard | Android ClipboardManager facade over miscservices/pasteboard<br>10 call sites, e.g. androidx.appcompat.widget.AppCompatReceiveContentHelper.b |
 | download | inert | C4 | M | – | miscservices/download_server | Android DownloadManager facade over miscservices/download_server<br>1 call sites, e.g. com.google.mlkit.common.sdkinternal.model.RemoteModelDownloadManager.<init> |
-| jobscheduler | hollow | C9 | M | yes | resourceschedule/work_scheduler | replace the hollow binder with an implementation over resourceschedule/work_scheduler<br>9 call sites, e.g. androidx.core.app.JobIntentService$JobWorkEnqueuer.<init> `framework/appspawn-x/java/com/android/internal/os/AppSpawnXInit.java:2079` |
+| jobscheduler | hollow | C9 | M | yes | resourceschedule/work_scheduler | replace the hollow binder with an implementation over resourceschedule/work_scheduler<br>9 call sites, e.g. androidx.core.app.JobIntentService$JobWorkEnqueuer.<init> `framework/appspawn-x/java/com/android/internal/os/AppSpawnXInit.java:2088` |
 | notification | hollow | C9 | M | yes | notification (ANS) | replace the hollow binder with an implementation over notification (ANS)<br>28 call sites, e.g. androidx.browser.trusted.TrustedWebActivityService.onCreate `framework/android-runtime/src/AndroidRuntime.cpp:821` |
 | sensor | inert | C4 | M | yes | sensors | Android SensorManager facade over sensors<br>10 call sites, e.g. com.amplifyframework.devmenu.ShakeDetector.<init> |
 | uimode | null | C4 | M | yes | display / theme | Android UiModeManager facade over display / theme<br>19 call sites, e.g. androidx.appcompat.app.AppCompatDelegateImpl.E0 |
@@ -174,9 +178,18 @@ _manifest features and PackageManager calls → Westlake PM semantics_
 | PackageManager.getSystemSharedLibraryNames | stub | C9 | S | – | none | answer from the APK/package state `framework/package-manager/java/PackageManagerAdapter.java:1733` |
 | PackageManager.isSafeMode | stub | C9 | S | – | none | answer from the APK/package state `framework/package-manager/java/PackageManagerAdapter.java:1760` |
 | PackageManager.setComponentEnabledSetting | stub | C9 | S | yes | none | answer from the APK/package state `framework/package-manager/java/PackageManagerAdapter.java:1641` |
-| Content providers installed at bind (9, initOrder honoured) | unverified | CU | verify | yes | none | install every main-process provider in initOrder before Application.onCreate<br>FileProvider, InitializationProvider, McdAppEngageHeroImageFileProvider, MlKitInitProvider@99, FirebaseInitProvider@100, FacebookInitProvider, SplitAppStartProvider@300, FTRHXContentProvider, AppStartContentProvider@100 — probe: `probes/provider-manifest` |
-| Component lookups return manifest <meta-data> | supplied | C0 | verify | yes | none (answered from the APK inside Westlake) | apply updateFlagsForComponent semantics in the source-app PM path<br>9 components carry meta-data (2 directBootAware, e.g. ComponentDiscoveryService, MlKitComponentDiscoveryService); app calls ['getActivityInfo', 'getApplicationInfo', 'getPackageInfo', 'getProviderInfo', 'getReceiverInfo', 'getServiceInfo'] `framework/package-manager/java/SourcePackageRegistry.java:77` — probe: `probes/service-metadata` |
 | Split APKs visible to resources and class loading (3 splits) | supplied | C0 | verify | yes | none (Westlake PM + asset manager) | populate splitNames/splitSourceDirs from the installed split set<br>config.arm64_v8a.apk, config.xxxhdpi.apk, config.en.apk `framework/package-manager/java/SplitApkResolver.java:115` — probe: `none yet (propose: split-resources)` |
+| Component lookups return manifest <meta-data> | supplied | C0 | none | yes | none (answered from the APK inside Westlake) | apply updateFlagsForComponent semantics in the source-app PM path<br>9 components carry meta-data (2 directBootAware, e.g. ComponentDiscoveryService, MlKitComponentDiscoveryService); app calls ['getActivityInfo', 'getApplicationInfo', 'getPackageInfo', 'getProviderInfo', 'getReceiverInfo', 'getServiceInfo'] `framework/package-manager/java/SourcePackageRegistry.java:77` — probe: `probes/service-metadata` |
+| Content providers installed at bind (9, initOrder honoured) | supplied | C0 | none | yes | none | install every main-process provider in initOrder before Application.onCreate<br>FileProvider, InitializationProvider, McdAppEngageHeroImageFileProvider, MlKitInitProvider@99, FirebaseInitProvider@100, FacebookInitProvider, SplitAppStartProvider@300, FTRHXContentProvider, AppStartContentProvider@100 — probe: `probes/provider-manifest` |
+
+## Activity, window & process contracts
+
+_what system_server would answer, answered in-process by Westlake in direct launch → white-box probes_
+
+| Item | Verdict | Class | Effort | On path | OH touchpoint | Shim / evidence |
+|---|---|---|---|---|---|---|
+| Dialogs stack above their activity's window, whatever the add order | missing | C6 | M | yes | window_manager (sub-window z-order) | stack a base application window below the dialogs already attached to its token<br>app shows dialogs (Dialog.show referenced); a dialog shown from onCreate/onResume is added before the activity's own window — probe: `probes/dialog-before-window` |
+| ActivityManager process-table queries (getRunningAppProcesses, getRunningServices, getProcessMemoryInfo) | supplied | C0 | none | yes | none (the caller's own process is the answer) | answer with the caller's process: name, pid, uid, foreground importance, its package<br>app calls getRunningAppProcesses, getRunningServices, getProcessMemoryInfo `framework/appspawn-x/java/com/android/internal/os/AppSpawnXInit.java:1351` — probe: `probes/running-app-processes` |
 
 ## Java APIs called from native code
 
@@ -207,7 +220,7 @@ _how the libraries are packaged → what the OH linker can map_
 
 | Item | Verdict | Class | Effort | On path | OH touchpoint | Shim / evidence |
 |---|---|---|---|---|---|---|
-| Libraries mapped straight out of the APK (10 .so, extractNativeLibs=false) | supplied | C0 | verify | yes | OH dynamic linker (cannot map zip!/ members: board test 2026-09-18) | extract at install/launch, or teach the loader zip-member mapping (WebView needs the latter too) `manifest/tools/prepare_app.py:73` |
+| Libraries mapped straight out of the APK (10 .so, extractNativeLibs=false) | supplied | C0 | verify | yes | OH dynamic linker (cannot map zip!/ members: board test 2026-09-18) | extract at install/launch, or teach the loader zip-member mapping (WebView needs the latter too) `manifest/tools/prepare_app.py:75` |
 
 ## Process sandbox & policy
 
