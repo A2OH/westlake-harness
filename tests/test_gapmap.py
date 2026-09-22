@@ -14,7 +14,8 @@ from pathlib import Path
 
 from test_known_answers import _find_android_d8, _run, _write
 from westlake_gap import gapmap, services
-from westlake_gap.contracts import direct_launch_am_model, keystore_model, pm_adapter_model, window_adapter_model
+from westlake_gap.contracts import (direct_launch_am_model, keystore_model, libc_constant_model,
+                                    pm_adapter_model, window_adapter_model)
 from westlake_gap.scanner import inventory_dex
 
 
@@ -435,6 +436,37 @@ class KeystoreAndLoaderOrder(unittest.TestCase):
             self.assertIn("not hardware-backed", row["provider"])
         self.assertEqual(gapmap.security_rows({"inventory": {"jca_requests": [
             {"owner": "La;", "method": "b", "api": "KeyStore.getInstance", "type": "PKCS12"}]}}, keystore_model(Path("/nonexistent"))), [])
+
+    def test_libc_constant_namespace(self) -> None:
+        """McDonald's Realm asked musl for the page size with bionic's selector number and was told
+        1000, so its mmap offset was unaligned and the home dashboard died opening its database."""
+        scan = {"inventory": {"elfs": [
+            {"name": "lib/arm64-v8a/librealm-jni.so", "soname": "librealm-jni.so",
+             "undefined_symbols": ["sysconf", "mmap", "open"]},
+            {"name": "lib/arm64-v8a/libquiet.so", "soname": "libquiet.so", "undefined_symbols": ["open"]}]}}
+        with tempfile.TemporaryDirectory(prefix="westlake-libc-") as temp:
+            root = Path(temp)
+            shim = root / "framework/webview-shim/webview_bionic_shim.c"
+            _write(shim, """long sysconf(int name) {
+                if (caller_is_webview(__builtin_return_address(0), &caller_path)) { return getpagesize(); }
+                return real_sysconf(name);
+            }""")
+            model = libc_constant_model(root)
+            self.assertEqual((model["translated"], model["scope"]), (["sysconf"], "webview-only"))
+            row = gapmap.libc_constant_rows(scan, model)[0]
+            self.assertEqual((row["verdict"], row["shim_class"], row["effort"]), ("missing", "C2", "S"))
+            self.assertIn("librealm-jni.so", row["app_evidence"])
+
+            _write(shim, """long sysconf(int name) {
+                if (!caller_is_android_dso(__builtin_return_address(0), &caller_path)) { return real_sysconf(name); }
+                return real_sysconf(westlake_bionic_sysconf[name]);
+            }""")
+            model = libc_constant_model(root)
+            self.assertEqual(model["scope"], "packaged-libraries")
+            self.assertEqual(gapmap.libc_constant_rows(scan, model)[0]["verdict"], "supplied")
+            self.assertEqual(gapmap.libc_constant_rows({"inventory": {"elfs": [
+                {"name": "x.so", "soname": "x.so", "undefined_symbols": ["open"]}]}}, model), [],
+                "no row when nothing asks libc for a numbered limit")
 
     def test_webview_renderer_process(self) -> None:
         """Burger King: WebView bound its sandboxed renderer, direct launch had none, Chromium aborted."""

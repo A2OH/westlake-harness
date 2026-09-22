@@ -247,6 +247,39 @@ def _strip_java_comments(text: str) -> str:
                   text, flags=re.S)
 
 
+# libc calls whose *arguments* are constants each libc numbers for itself. The name resolves and
+# the call returns a plausible number, so nothing fails at load time: bionic's _SC_PAGESIZE is 39,
+# OH musl reads 39 as _SC_BC_STRING_MAX and answers 1000, and McDonald's Realm rounded its mmap
+# offsets with that until the kernel rejected the unaligned offset.
+LIBC_CONSTANT_NAMESPACE_CALLS = {"sysconf", "pathconf", "fpathconf", "confstr"}
+
+
+def libc_constant_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether the bionic shim translates those constants, and for which callers.
+
+    Translating for the WebView DSO alone is not enough: every library the APK packages is built
+    against bionic and asks the same questions.
+    """
+    path = westlake_root / "framework/webview-shim/webview_bionic_shim.c"
+    if not path.exists():
+        return {"translated": [], "scope": "none", "source": None}
+    text = _strip_java_comments(path.read_text(errors="replace"))
+    translated = sorted(name for name in LIBC_CONSTANT_NAMESPACE_CALLS
+                        if re.search(rf"^\s*(?:long|int|size_t)\s+{name}\s*\(", text, re.M))
+    scope = "none"
+    if translated:
+        body = _braced_block(text, text.index(f"{translated[0]}("))
+        if "caller_is_android_dso" in body:
+            scope = "packaged-libraries"
+        elif "caller_is_webview" in body:
+            scope = "webview-only"
+        else:
+            scope = "all-callers"
+    line = text.count(chr(10), 0, text.index(f"{translated[0]}(")) + 1 if translated else None
+    return {"translated": translated, "scope": scope,
+            "source": f"{path.relative_to(westlake_root)}:{line}" if translated else None}
+
+
 def _evidence(text: str, pattern: str, path: Path, root: Path) -> dict[str, Any]:
     match = re.search(pattern, text)
     if not match:

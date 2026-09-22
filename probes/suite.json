@@ -53,10 +53,14 @@
       "apk": "dialog-before-window/out/dialog-before-window-probe.apk",
       "pass": [
         "placement=CENTRED",
+        "width=FITS",
+        "alertWidth=FITS",
         "dialog button clicked"
       ],
       "fail": [
-        "placement=NOT_CENTRED"
+        "placement=NOT_CENTRED",
+        "width=OVERFLOWS",
+        "alertWidth=OVERFLOWS"
       ],
       "tap": {
         "after": "button center=",

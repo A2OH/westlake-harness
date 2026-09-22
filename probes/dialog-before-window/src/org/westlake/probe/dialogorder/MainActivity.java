@@ -1,6 +1,7 @@
 package org.westlake.probe.dialogorder;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -31,6 +32,7 @@ import android.widget.TextView;
 public final class MainActivity extends Activity implements View.OnClickListener, Runnable {
     private static final String TAG = "WL-DIALOG-ORDER";
     private View dialogDecor;
+    private View alertDecor;
     private View button;
 
     @Override
@@ -94,8 +96,36 @@ public final class MainActivity extends Activity implements View.OnClickListener
         report("placement=" + (centred ? "CENTRED" : "NOT_CENTRED") + " at " + loc[0] + ","
                 + loc[1] + " size=" + dialogDecor.getWidth() + "x" + dialogDecor.getHeight()
                 + " screenWidth=" + screen);
+        // A window wider than the display puts its buttons where no finger can reach them:
+        // McDonald's upgrade dialog landed off the right edge on some launches and could not be
+        // dismissed at all. Centred is not enough; it has to fit.
+        boolean fits = loc[0] >= 0 && loc[0] + dialogDecor.getWidth() <= screen;
+        report("width=" + (fits ? "FITS" : "OVERFLOWS") + " right=" + (loc[0] + dialogDecor.getWidth())
+                + " screenWidth=" + screen);
+        if (alertDecor == null) {
+            // The shape that actually broke: a stock AlertDialog whose message is long enough that
+            // its preferred width exceeds the display. McDonald's upgrade dialog came out 1282 px
+            // wide on a 1200 px screen and put its OK button where no finger could reach it.
+            AlertDialog alert = new AlertDialog.Builder(this)
+                    .setTitle("Upgrade")
+                    .setMessage("We've been doing some work behind the scenes and are excited to show you the"
+                            + " latest. Please update to the latest version of the app for an upgraded"
+                            + " experience, with more of everything you already like about it.")
+                    .setPositiveButton("OK", null)
+                    .create();
+            alert.show();
+            alertDecor = alert.getWindow().getDecorView();
+            alertDecor.postDelayed(this, 1200);
+            return;
+        }
+        int[] alertAt = new int[2];
+        alertDecor.getLocationOnScreen(alertAt);
+        boolean alertFits = alertAt[0] >= 0 && alertAt[0] + alertDecor.getWidth() <= screen;
+        report("alertWidth=" + (alertFits ? "FITS" : "OVERFLOWS") + " at " + alertAt[0]
+                + " right=" + (alertAt[0] + alertDecor.getWidth()) + " screenWidth=" + screen);
         // Where a tap must land to press the button: a runner delivering screen coordinates reads
-        // it here instead of assuming a layout.
+        // it here instead of assuming a layout. Reported once the alert has been measured, so the
+        // runner taps the probe's own button rather than the alert on top of it.
         int[] at = new int[2];
         button.getLocationOnScreen(at);
         report("button center=" + (at[0] + button.getWidth() / 2) + "," + (at[1] + button.getHeight() / 2));

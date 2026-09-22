@@ -31,10 +31,14 @@ class ProbeSuite(unittest.TestCase):
     def test_tap_comes_from_the_probe(self) -> None:
         dialog = SUITE["dialog-before-window"]
         lines = ["[WL-DIALOG-ORDER] placement=CENTRED at 280,634 size=640x651",
+                 "[WL-DIALOG-ORDER] width=FITS right=920 screenWidth=1200",
                  "[WL-DIALOG-ORDER] button center=600,1075"]
         self.assertEqual(run_suite.tap_target(lines, dialog), (600, 1075))
         self.assertEqual(run_suite.evaluate(lines, dialog), "pending", "centred but not yet clicked")
         self.assertEqual(run_suite.evaluate(lines + ["[WL-DIALOG-ORDER] dialog button clicked"], dialog), "pass")
+        # McDonald's upgrade dialog was centred and still unreachable: it ran off the right edge.
+        overflow = [lines[0], "[WL-DIALOG-ORDER] width=OVERFLOWS right=1290 screenWidth=1200", lines[2]]
+        self.assertEqual(run_suite.evaluate(overflow, dialog), "fail", "a window wider than the display")
         self.assertIn("button center=", run_suite.markers(dialog))
 
     def test_merge_replaces_only_the_same_probe_and_commit(self) -> None:

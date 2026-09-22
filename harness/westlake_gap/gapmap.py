@@ -540,6 +540,36 @@ def native_symbol_rows(scan: dict[str, Any], oh_missing: list[dict[str, Any]], s
     return rows
 
 
+def libc_constant_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """Calls that resolve by name but carry a constant each libc numbers for itself."""
+    importers: dict[str, list[str]] = defaultdict(list)
+    for elf in scan["inventory"].get("elfs", []):
+        name = elf.get("soname") or elf["name"].rsplit("/", 1)[-1]
+        for symbol in elf.get("undefined_symbols", []):
+            if symbol in contracts.LIBC_CONSTANT_NAMESPACE_CALLS:
+                importers[symbol].append(name)
+    if not importers:
+        return []
+    untranslated = sorted(set(importers) - set(model["translated"]))
+    covered = model["scope"] == "packaged-libraries" and not untranslated
+    return [_row(
+        "native-symbols", "libc:constant-namespace",
+        "libc calls carrying a constant each libc numbers differently (" + ", ".join(sorted(importers)) + ")",
+        oh_touchpoint="OH musl: the same selector number means a different limit than in bionic",
+        verdict="supplied" if covered else "missing", shim_class="C0" if covered else "C2",
+        effort="verify" if covered else "S", confidence=STATIC,
+        provider=("the bionic shim translates them by name for the app's packaged libraries"
+                  if covered else
+                  f"the shim translates {', '.join(model['translated'])} for {model['scope'].replace('-', ' ')}"
+                  if model["translated"] else "nothing translates them: musl answers a different limit"),
+        provider_source=model["source"],
+        app_evidence="; ".join(f"{symbol}: {len(names)} libraries, e.g. {', '.join(sorted(names)[:3])}"
+                               for symbol, names in sorted(importers.items())),
+        shim="translate the selector by name at the libc boundary for every library built against bionic; "
+             "the call resolves and returns a plausible number either way, so nothing fails at load time",
+    )]
+
+
 def native_upcall_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
     """One row per library that calls back into Java: what it names, and what the runtime lacks."""
     rows = []
@@ -831,6 +861,7 @@ def build_map(
                else native_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root)))
             + native_loading_rows(facts, scan, launcher_extraction(manifest_root), board_paths,
                                   launcher_namespace_option(manifest_root))
+            + libc_constant_rows(scan, contracts.libc_constant_model(westlake_root))
             + security_rows(scan, contracts.keystore_model(westlake_root))
             + webview_rows(scan, webview_process_model(aosp_root, westlake_root))
             + sandbox_rows(scan, policy) + external_rows(facts, scan, refused_libraries(westlake_root)))
