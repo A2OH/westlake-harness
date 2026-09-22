@@ -77,6 +77,21 @@
       "fail": [
         "[WL-ASSET-LIST] verdict=FAIL"
       ]
+    },
+    {
+      "name": "webview-boundaries",
+      "lock_key": "webview-boundaries-probe",
+      "apk": "webview-boundaries/out/webview-boundaries-probe.apk",
+      "pass": [
+        "phase=multiprocess verdict=PASS_SINGLE_PROCESS",
+        "phase=searchpath verdict=",
+        "phase=windowcontext verdict=PASS_ANSWERED"
+      ],
+      "fail": [
+        "phase=multiprocess verdict=FAIL",
+        "phase=searchpath verdict=FAIL",
+        "phase=windowcontext verdict=FAIL"
+      ]
     }
   ]
 }
