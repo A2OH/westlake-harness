@@ -198,6 +198,55 @@ def window_adapter_model(westlake_root: Path) -> dict[str, Any]:
     }
 
 
+# JCA providers only Android's zygote installs (AndroidKeyStoreProvider.install), not libcore's defaults.
+ANDROID_JCA_PROVIDERS = {"AndroidKeyStore", "AndroidKeyStoreBCWorkaround"}
+
+
+def keystore_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether the runtime installs an "AndroidKeyStore" provider, and what answers it.
+
+    On Android the zygote calls AndroidKeyStoreProvider.install() (ZygoteInit.warmUpJcaProviders);
+    that provider's operations go to the keystore2 system service. Having the class in the boot jars
+    is not enough: KeyStore.getInstance("AndroidKeyStore") throws until something installs it. A
+    runtime may instead install its own Provider registered under that name (software or HUKS keys).
+    """
+    aosp_install = re.compile(r"AndroidKeyStoreProvider\s*\.\s*install\s*\(")
+    backend = re.compile(r"android\.system\.keystore2|IKeystoreService|OH_Huks_|\bHuks\w*\(")
+    sources = {}
+    framework = westlake_root / "framework"
+    for path in sorted(framework.rglob("*.java")) if framework.exists() else []:
+        sources[path] = _strip_java_comments(path.read_text(errors="replace"))
+
+    def first(pattern: re.Pattern[str]) -> dict[str, Any]:
+        for path, text in sources.items():
+            match = pattern.search(text)
+            if match:
+                return {"present": True, "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, match.start()) + 1}"}
+        return {"present": False, "source": None}
+
+    replacement = {"present": False, "source": None}
+    for path, text in sources.items():
+        declared = re.search(r"\bclass\s+(\w+)\s+extends\s+(?:java\.security\.)?Provider\b", text)
+        if not declared or '"AndroidKeyStore"' not in text:
+            continue
+        name = declared.group(1)
+        # Declared is not installed: code elsewhere must call its installer or add it to the list.
+        installer = re.compile(rf"\b{name}\s*\.\s*install\s*\(|(?:add|insert)Provider\w*\(\s*new\s+{name}\b")
+        if any(installer.search(other) for where, other in sources.items() if where != path):
+            replacement = {"present": True, "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, declared.start()) + 1}",
+                           "hardware_backed": bool(backend.search(text))}
+            break
+    return {"installed": first(aosp_install), "replacement": replacement, "backend": first(backend)}
+
+
+def _strip_java_comments(text: str) -> str:
+    """Blank out comments but keep line numbers: a comment naming an API is not support for it."""
+    def blank(match: re.Match[str]) -> str:
+        return re.sub(r"[^\n]", " ", match.group(0))
+    return re.sub(r'/\*.*?\*/|//[^\n]*|"(?:\\.|[^"\\\n])*"', lambda m: m.group(0) if m.group(0).startswith('"') else blank(m),
+                  text, flags=re.S)
+
+
 def _evidence(text: str, pattern: str, path: Path, root: Path) -> dict[str, Any]:
     match = re.search(pattern, text)
     if not match:

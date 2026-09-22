@@ -14,7 +14,7 @@ from pathlib import Path
 
 from test_known_answers import _find_android_d8, _run, _write
 from westlake_gap import gapmap, services
-from westlake_gap.contracts import direct_launch_am_model, pm_adapter_model, window_adapter_model
+from westlake_gap.contracts import direct_launch_am_model, keystore_model, pm_adapter_model, window_adapter_model
 from westlake_gap.scanner import inventory_dex
 
 
@@ -164,6 +164,50 @@ class ServiceVerdicts(unittest.TestCase):
         self.assertEqual(verdict["layout_inflater"], services.SUPPLIED)
         self.assertEqual(verdict["camera"], services.UNRESOLVED, "no binder found must not read as supplied")
 
+    def test_a_proxy_that_throws_is_strict_not_hollow(self) -> None:
+        """Burger King: WebView's policy provider called UserManager.getApplicationRestrictions; the
+        runtime-published user proxy threw, Chromium aborted. The static model had read the native
+        runtime's seeded bare binder and called it hollow."""
+        _write(self.root / "westlake/framework/android-runtime/src/AndroidRuntime.cpp",
+               'static const char* kServices[] = { "notification", "user" };\n')
+        _write(self.root / "westlake/framework/package-manager/java/OHUserManager.java", """class OHUserManager {
+            static void install() {
+                Object service = Proxy.newProxyInstance(loader, types, (proxy, method, arguments) -> {
+                    String name = method.getName();
+                    if (name.equals("asBinder")) return binder;
+                    if (name.equals("isUserUnlocked")) return true;
+                    throw new UnsupportedOperationException("OH user service does not implement " + name);
+                });
+                Field cache = ServiceManager.class.getDeclaredField("sCache");
+                services.put("user", binder);
+            }
+        }""")
+        model = services.westlake_service_model(self.root / "westlake")
+        verdict, basis = services.provision_verdict(model["user"])
+        self.assertEqual(verdict, services.STRICT, "published at run time over the seeded binder")
+        self.assertEqual(basis["answered"], ["isUserUnlocked"])
+        self.assertEqual(services.provision_verdict(model["notification"])[0], services.HOLLOW)
+
+    def test_null_service_behind_a_kotlin_cast_throws(self) -> None:
+        """Burger King: `getSystemService(UI_MODE_SERVICE) as UiModeManager` threw inside a JS host
+        function, where McDonald's had survived the same null service by checking it."""
+        aosp_root = self.root / "aosp"
+        table = services.aosp_service_table(
+            aosp_root / "frameworks-base/core/java/android/app/SystemServiceRegistry.java",
+            aosp_root / "frameworks-base/core/java/android/content/Context.java",
+            [aosp_root / "frameworks-base", aosp_root / "modules-scheduling"],
+        )
+        scan = {"inventory": {
+            "service_requests": [{"service": "alarm", "owner": "Lx/A;", "method": "m"},
+                                 {"service": "location", "owner": "Lx/B;", "method": "m"}],
+            "nonnull_casts": [{"owner": "Lexpo/Alarms;", "method": "schedule", "type": "android.app.AlarmManager"},
+                              {"owner": "Lx/B;", "method": "m", "type": "android.location.LocationManager"}]}}
+        rows, _ = gapmap.service_rows(scan, table, services.westlake_service_model(self.root / "westlake"))
+        rows = {r["id"]: r for r in rows}
+        self.assertEqual(rows["svc:alarm"]["throws_if_null"], 1)
+        self.assertIn("expo.Alarms.schedule", rows["svc:alarm"]["app_evidence"])
+        self.assertEqual(rows["svc:location"]["throws_if_null"], 0, "supplied: the cast never sees null")
+
 
 class PackageManagerSemantics(unittest.TestCase):
     def test_stub_bridged_and_direct_boot_defaults(self) -> None:
@@ -289,6 +333,147 @@ class AppFrameworkContracts(unittest.TestCase):
         rows = {r["id"]: r for r in older["rows"]}
         self.assertEqual(rows["pm:providers"]["verdict"], "unverified", "a later build's result says nothing about this one")
         self.assertEqual(rows["pm:providers"]["probe_result"]["note"], "measured on other builds only")
+
+
+class KeystoreAndLoaderOrder(unittest.TestCase):
+    """Burger King's two startup blockers: neither is an absent name.
+
+    KeyStore exists in the boot jars; the provider the app names at run time was never installed.
+    libc++_shared.so exists in the APK; the board's library of the same name was found first.
+    """
+
+    def test_provider_names_are_captured(self) -> None:
+        javac, d8 = shutil.which("javac"), _find_android_d8()
+        if not javac or not d8:
+            self.skipTest("javac and d8 are required for the executable fixture")
+        with tempfile.TemporaryDirectory(prefix="westlake-jca-") as temp:
+            root = Path(temp)
+            _write(root / "app/fixture/Keys.java", """package fixture;
+                import java.security.KeyStore;
+                import javax.crypto.KeyGenerator;
+                public class Keys {
+                    static final String STORE = "AndroidKeyStore";
+                    static KeyStore store() throws Exception { return KeyStore.getInstance(STORE); }
+                    static KeyGenerator aes() throws Exception { return KeyGenerator.getInstance("AES", "AndroidKeyStore"); }
+                    static KeyStore file() throws Exception { return KeyStore.getInstance("PKCS12"); }
+                }""")
+            app, dex = root / "app-classes", root / "dex"
+            for directory in (app, dex):
+                directory.mkdir()
+            _run(javac, "--release", "8", "-d", str(app), str(root / "app/fixture/Keys.java"))
+            _run(d8, "--min-api", "21", "--output", str(dex), str(app / "fixture/Keys.class"))
+            requests = inventory_dex(dex / "classes.dex").jca_requests
+            calls = {(r["method"], r["api"], r.get("type"), r.get("provider")) for r in requests if r["api"] != "provider name"}
+            self.assertIn(("aes", "KeyGenerator.getInstance", "AES", "AndroidKeyStore"), calls)
+            self.assertIn(("store", "KeyStore.getInstance", "AndroidKeyStore", None), calls)
+            self.assertIn(("file", "KeyStore.getInstance", "PKCS12", None), calls)
+            self.assertIn("store", {r["method"] for r in requests if r["api"] == "provider name"},
+                          "the constant is evidence even where it reaches getInstance as the type")
+
+    def test_kotlin_nonnull_casts_are_captured(self) -> None:
+        javac, d8 = shutil.which("javac"), _find_android_d8()
+        if not javac or not d8:
+            self.skipTest("javac and d8 are required for the executable fixture")
+        with tempfile.TemporaryDirectory(prefix="westlake-cast-") as temp:
+            root = Path(temp)
+            # What kotlinc emits for `context.getSystemService(UI_MODE_SERVICE) as UiModeManager`.
+            _write(root / "app/fixture/Casts.java", """package fixture;
+                public class Casts {
+                    static Object mode(Object service) {
+                        if (service == null) throw new NullPointerException("null cannot be cast to non-null type android.app.UiModeManager");
+                        return service;
+                    }
+                    static Object own(Object value) {
+                        if (value == null) throw new NullPointerException("null cannot be cast to non-null type kotlin.String");
+                        return value;
+                    }
+                }""")
+            app, dex = root / "app-classes", root / "dex"
+            for directory in (app, dex):
+                directory.mkdir()
+            _run(javac, "--release", "8", "-d", str(app), str(root / "app/fixture/Casts.java"))
+            _run(d8, "--min-api", "21", "--output", str(dex), str(app / "fixture/Casts.class"))
+            casts = inventory_dex(dex / "classes.dex").nonnull_casts
+            self.assertEqual([(c["method"], c["type"]) for c in casts], [("mode", "android.app.UiModeManager")],
+                             "platform types only")
+
+    def test_keystore_verdict_from_source(self) -> None:
+        scan = {"inventory": {"jca_requests": [
+            {"owner": "Lnj/i$v;", "method": "a", "api": "provider name", "provider": "AndroidKeyStore"},
+            {"owner": "Lgc/P;", "method": "a", "api": "KeyPairGenerator.getInstance", "type": "EC", "provider": "AndroidKeyStore"}]}}
+        with tempfile.TemporaryDirectory(prefix="westlake-ks-") as temp:
+            root = Path(temp)
+            init = root / "framework/appspawn-x/java/Init.java"
+            _write(init, """class Init {
+                // Android calls AndroidKeyStoreProvider.install() here; we skip it.
+                void preload() { Security.getProviders(); }
+            }""")
+            rows = gapmap.security_rows(scan, keystore_model(root))
+            self.assertEqual(len(rows), 1)
+            self.assertEqual((rows[0]["verdict"], rows[0]["shim_class"]), ("missing", "C4"), "a comment is not an install")
+            self.assertIn('KeyPairGenerator.getInstance("EC")', rows[0]["app_evidence"])
+
+            _write(init, "class Init { void preload() { AndroidKeyStoreProvider.install(); } }")
+            self.assertEqual(gapmap.security_rows(scan, keystore_model(root))[0]["verdict"], "hollow",
+                             "installed with nothing behind it")
+            _write(root / "framework/security/java/Keystore2Adapter.java",
+                   'class Keystore2Adapter { static final String NAME = "android.system.keystore2.IKeystoreService/default"; }')
+            self.assertEqual(gapmap.security_rows(scan, keystore_model(root))[0]["verdict"], "supplied")
+
+        with tempfile.TemporaryDirectory(prefix="westlake-ks-") as temp:
+            root = Path(temp)
+            _write(root / "framework/core/java/SoftKeys.java", """package adapter.core;
+                public final class SoftKeys extends Provider {
+                    public static void install(File dir) { Security.addProvider(new SoftKeys()); }
+                    private SoftKeys() { super("AndroidKeyStore", 1.0, "software"); }
+                }""")
+            self.assertEqual(gapmap.security_rows(scan, keystore_model(root))[0]["verdict"], "missing",
+                             "declared but never installed")
+            _write(root / "framework/activity/java/Bind.java", "class Bind { void bind() { SoftKeys.install(dir); } }")
+            row = gapmap.security_rows(scan, keystore_model(root))[0]
+            self.assertEqual((row["verdict"], row["effort"]), ("supplied", "verify"))
+            self.assertIn("not hardware-backed", row["provider"])
+        self.assertEqual(gapmap.security_rows({"inventory": {"jca_requests": [
+            {"owner": "La;", "method": "b", "api": "KeyStore.getInstance", "type": "PKCS12"}]}}, keystore_model(Path("/nonexistent"))), [])
+
+    def test_webview_renderer_process(self) -> None:
+        """Burger King: WebView bound its sandboxed renderer, direct launch had none, Chromium aborted."""
+        scan = {"inventory": {"platform_method_names": {"Landroid/webkit/WebView;": ["<init>", "loadUrl"]}}}
+        with tempfile.TemporaryDirectory(prefix="westlake-wv-") as temp:
+            root = Path(temp)
+            _write(root / "aosp/frameworks-base/core/java/android/webkit/WebViewDelegate.java", """class WebViewDelegate {
+    public boolean isMultiProcessEnabled() {
+        if (Flags.updateServiceV2()) {
+            return true;
+        }
+        return WebViewFactory.getUpdateService().isMultiProcessEnabled();
+    }
+}""")
+            model = gapmap.webview_process_model(root / "aosp", root / "westlake")
+            row = gapmap.webview_rows(scan, model)[0]
+            self.assertEqual((row["verdict"], row["effort"]), ("missing", "L"))
+            self.assertIn("Flags.updateServiceV2()", row["provider"])
+            self.assertEqual(gapmap.webview_rows({"inventory": {"platform_method_names": {}}}, model), [])
+
+    def test_shadowed_libraries_and_their_importers(self) -> None:
+        scan = {"inventory": {"elfs": [
+            {"name": "config.arm64_v8a.apk!lib/arm64-v8a/libc++_shared.so", "soname": "libc++_shared.so", "needed": ["libc.so"]},
+            {"name": "lib/arm64-v8a/libjsi.so", "soname": "libjsi.so", "needed": ["libc++_shared.so", "libc.so"]},
+            {"name": "lib/arm64-v8a/libreactnative.so", "soname": "libreactnative.so", "needed": ["libjsi.so", "libc.so"]},
+            {"name": "lib/arm64-v8a/libplain.so", "soname": "libplain.so", "needed": ["libc.so", "liblog.so"]}]}}
+        board = ["/system/lib64/libc++_shared.so", "/system/lib64/libc.so", "/data/app/libjsi.so"]
+        shadowed, targets = gapmap.shadowed_libraries(scan, board)
+        self.assertEqual(shadowed, {"libc++_shared.so": "/system/lib64/libc++_shared.so"})
+        self.assertEqual(targets, ["libc++_shared.so", "libjsi.so", "libreactnative.so"], "reached through libjsi.so")
+        facts = {"extract_native_libs": True}
+        with tempfile.TemporaryDirectory(prefix="westlake-ns-") as temp:
+            launcher = Path(temp)
+            _write(launcher / "tools/probe_source_app.py", "parser.add_argument('--android-native-target', action='append')")
+            rows = gapmap.native_loading_rows(facts, scan, {"present": True}, board, gapmap.launcher_namespace_option(launcher))
+        row = rows[0]
+        self.assertEqual((row["id"], row["shim_class"], row["effort"]), ("load:shadowed-by-board", "C3", "XS"))
+        self.assertEqual(row["launch_args"][:2], ["--android-native-target", "libc++_shared.so"])
+        self.assertEqual(gapmap.native_loading_rows(facts, scan, {"present": True}, []), [], "no board listing, no claim")
 
 
 class SandboxAndBacktest(unittest.TestCase):

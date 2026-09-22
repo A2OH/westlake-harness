@@ -28,6 +28,8 @@ from . import contracts, services
 CATEGORIES = [
     ("java-api", "Java framework API", "APK dex references − Westlake boot jars, filtered by API level"),
     ("system-services", "System services", "getSystemService name → AOSP fetcher/binder → Westlake provision → OH subsystem"),
+    ("security", "Keystore & crypto providers",
+     "JCA provider names the code selects → providers the Westlake runtime installs → OH HUKS"),
     ("package-manager", "Package manager & manifest", "manifest features and PackageManager calls → Westlake PM semantics"),
     ("app-framework", "Activity, window & process contracts",
      "what system_server would answer, answered in-process by Westlake in direct launch → white-box probes"),
@@ -161,6 +163,9 @@ def service_rows(scan: dict[str, Any], aosp: dict[str, Any], westlake: dict[str,
     inventory = scan["inventory"]
     requests = inventory.get("service_requests", [])
     calls = {owner: set(names) for owner, names in inventory.get("platform_method_names", {}).items()}
+    casts: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for cast in inventory.get("nonnull_casts") or []:
+        casts["L" + cast["type"].replace(".", "/") + ";"].append(cast)
     rows = []
     for entry in services.service_map(requests, aosp, westlake, calls):
         verdict = entry["verdict"]
@@ -172,6 +177,10 @@ def service_rows(scan: dict[str, Any], aosp: dict[str, Any], westlake: dict[str,
             effort, shim = "verify", "trace the helper's binder; then treat as null, inert or supplied"
         elif verdict == services.INERT and entry["service"] in services.NULL_TOLERANT:
             effort, shim = "none", "none: the manager is written to run without its service"
+        elif verdict == services.STRICT:
+            effort = "S"
+            shim = ("answer the methods callers use with Android's value for this device; a throw is never "
+                    "Android's answer (inside a JNI callback, WebView aborts on it)")
         elif verdict == services.HOLLOW:
             effort = _size_effort(len(methods), "S", "M", "M")
             shim = f"replace the hollow binder with an implementation over {analog}" if analog and analog != "unmapped" \
@@ -183,6 +192,14 @@ def service_rows(scan: dict[str, Any], aosp: dict[str, Any], westlake: dict[str,
         else:
             effort, shim = "none", "none (null on Android too)"
         basis = entry.get("westlake_basis") or {}
+        # A null manager is survivable only where the caller checks. Kotlin's `as Manager` does
+        # not: it throws, and inside a JS host function that is a JS exception.
+        throwing = casts.get(entry.get("manager", ""), []) if verdict in {services.NULL, services.UNRESOLVED} else []
+        evidence = None
+        if throwing:
+            owners = sorted({f"{c['owner'].strip('L;').replace('/', '.')}.{c['method']}" for c in throwing})
+            evidence = (f"{entry['site_count']} call sites; Kotlin casts it non-null in {len(owners)} methods "
+                        f"(e.g. {', '.join(owners[:3])}): a null answer throws there, it is not skipped")
         rows.append(_row(
             "system-services", f"svc:{entry['service']}", entry["service"],
             oh_touchpoint=analog or "none",
@@ -193,7 +210,7 @@ def service_rows(scan: dict[str, Any], aosp: dict[str, Any], westlake: dict[str,
                 if entry.get("manager") else None,
             app_calls=methods[:12], call_sites=entry["site_count"],
             example_site=_site(entry["sites"][0]) if entry.get("sites") else None,
-            shim=shim,
+            shim=shim, app_evidence=evidence, throws_if_null=len(throwing),
         ))
     dynamic = sum(1 for r in requests if r.get("dynamic"))
     return rows, dynamic
@@ -416,6 +433,55 @@ def app_framework_rows(scan: dict[str, Any], am: dict[str, Any], wm: dict[str, A
     return rows
 
 
+def webview_process_model(aosp_root: Path | None, westlake_root: Path) -> dict[str, Any]:
+    """Whether WebView will insist on its sandboxed renderer process, and whether anything hosts it.
+
+    WebView runs its renderer in an isolated service process when WebViewDelegate says multiprocess.
+    Since the update-service flags that answer is `true` whatever IWebViewUpdateService says, so a
+    runtime answering false there does not get single-process WebView.
+    """
+    forced = {"present": False, "source": None}
+    if aosp_root is not None:
+        path = aosp_root / "frameworks-base/core/java/android/webkit/WebViewDelegate.java"
+        if path.exists():
+            text = path.read_text(errors="replace")
+            body = re.search(r"public boolean isMultiProcessEnabled\(\)\s*\{(.*?)\n    \}", text, re.S)
+            flag = re.search(r"if \((Flags\.\w+\(\))\)\s*\{\s*return true;", body.group(1)) if body else None
+            if flag:
+                forced = {"present": True, "flag": flag.group(1),
+                          "source": f"frameworks-base/core/java/android/webkit/WebViewDelegate.java:{text.count(chr(10), 0, body.start()) + 1}"}
+    hosted = {"present": False, "source": None}
+    framework = westlake_root / "framework"
+    for path in sorted(framework.rglob("*.java")) if framework.exists() else []:
+        text = path.read_text(errors="replace")
+        match = re.search(r"SandboxedProcessService", text)
+        if match:
+            hosted = {"present": True, "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, match.start()) + 1}"}
+            break
+    return {"multiprocess_forced": forced, "renderer_hosted": hosted}
+
+
+def webview_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    called = scan["inventory"].get("platform_method_names", {}).get("Landroid/webkit/WebView;", [])
+    if "<init>" not in called:
+        return []
+    forced, hosted = model["multiprocess_forced"], model["renderer_hosted"]
+    return [_row(
+        "app-framework", "wv:renderer-process", "WebView's renderer runs in an isolated service process",
+        oh_touchpoint="process spawn (appspawn): an isolated Android service process with its own sandbox",
+        verdict="supplied" if hosted["present"] else "missing", shim_class="C0" if hosted["present"] else "C4",
+        effort="verify" if hosted["present"] else "L", confidence=STATIC,
+        provider=("the runtime hosts WebView's sandboxed renderer service" if hosted["present"] else
+                  "direct launch starts no isolated service processes: binding the renderer fails and Chromium aborts"
+                  + (f"; answering isMultiProcessEnabled()=false does not help, WebViewDelegate returns true while "
+                     f"{forced['flag']} is on" if forced["present"] else "")),
+        provider_source=hosted["source"] or forced["source"],
+        app_evidence=f"app constructs WebViews and calls {len(called)} WebView methods",
+        shim="host the renderer: spawn an isolated child and bind Chromium's SandboxedProcessService over a local "
+             "channel; or build the framework with the update-service flag off so WebView runs single-process",
+    )]
+
+
 def apply_probe_results(gap_map: dict[str, Any], results: dict[str, Any]) -> None:
     """Replace a probe-backed row's static verdict with the probe's measurement on the device.
 
@@ -520,9 +586,100 @@ def native_upcall_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
     return rows
 
 
-def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_extracts: dict[str, Any]) -> list[dict[str, Any]]:
+def security_rows(scan: dict[str, Any], keystore: dict[str, Any]) -> list[dict[str, Any]]:
+    requests = scan["inventory"].get("jca_requests") or []
+    # KeyStore.getInstance("AndroidKeyStore") names it as a type; the generators name it as the provider.
+    named = [r for r in requests if r.get("provider") in contracts.ANDROID_JCA_PROVIDERS
+             or (r["api"] == "KeyStore.getInstance" and r.get("type") in contracts.ANDROID_JCA_PROVIDERS)]
+    if not named:
+        return []
+    owners = sorted({r["owner"] for r in named})
+    calls = sorted({f"{r['api']}(\"{r['type']}\")" for r in named if r["api"] != "provider name" and r.get("type")})
+    installed, backend = keystore["installed"], keystore["backend"]
+    replacement = keystore.get("replacement", {"present": False})
+    if replacement["present"]:
+        verdict, provider, source = "supplied", ("a provider registered as AndroidKeyStore is installed in process: "
+                                                 + ("hardware-backed keys" if replacement.get("hardware_backed") else
+                                                    "software keys in app data, not hardware-backed, no attestation")), replacement["source"]
+    elif installed["present"]:
+        verdict = "supplied" if backend["present"] else "hollow"
+        provider = ("installed and answered" if backend["present"]
+                    else "installed, but nothing answers keystore2: key generation and use fail")
+        source = installed["source"]
+    else:
+        verdict, source = "missing", None
+        provider = ('never installed (Android installs it in the zygote): KeyStore.getInstance("AndroidKeyStore") '
+                    'throws KeyStoreException "AndroidKeyStore not found"')
+    return [_row(
+        "security", "jca:AndroidKeyStore", 'Android keystore provider ("AndroidKeyStore")',
+        oh_touchpoint="security/huks (OH Universal Keystore); keystore2 has no OH counterpart",
+        verdict=verdict, shim_class="C0" if verdict == "supplied" else "C9" if verdict == "hollow" else "C4",
+        effort="verify" if verdict == "supplied" else "M", confidence=STATIC,
+        provider=provider, provider_source=source,
+        app_evidence=f"{len(owners)} classes name it, e.g. {', '.join(owners[:4])}" + (f"; calls {', '.join(calls[:4])}" if calls else ""),
+        shim='install an "AndroidKeyStore" provider whose keys come from KeyGenParameterSpec and stay per app: '
+             "software keys in app data (days), or OH HUKS for hardware-backed keys (weeks). A blocker wherever the app "
+             "opens it at startup (secure storage, encrypted preferences, biometric crypto, attestation)",
+    )]
+
+
+# Directories the Westlake child's default namespace searches before the app's own library
+# directory (its LD_LIBRARY_PATH, as [SOURCE-NATIVE-LOAD] logs it on the board).
+_SEARCHED_BEFORE_APP = ("/system/lib64/", "/vendor/lib64/")
+
+
+def shadowed_libraries(scan: dict[str, Any], board_paths: list[str]) -> tuple[dict[str, str], list[str]]:
+    """Packaged libraries a board library of the same name wins over, and the APK libraries whose
+    DT_NEEDED graph reaches one: those must load in an isolated namespace to get the APK's copy."""
+    board: dict[str, str] = {}
+    for path in board_paths:
+        if path.startswith(_SEARCHED_BEFORE_APP):
+            board.setdefault(path.rsplit("/", 1)[-1], path)
+    needed: dict[str, set[str]] = {}
+    for elf in scan["inventory"].get("elfs", []):
+        name = elf.get("soname") or elf["name"].rsplit("/", 1)[-1]
+        needed.setdefault(name, set()).update(elf.get("needed", []))
+    shadowed = {name: board[name] for name in needed if name in board}
+    reach = set(shadowed)
+    grew = True
+    while grew:
+        grew = False
+        for name, deps in needed.items():
+            if name not in reach and deps & reach:
+                reach.add(name)
+                grew = True
+    return shadowed, sorted(reach)
+
+
+def launcher_namespace_option(manifest_root: Path | None) -> dict[str, Any]:
+    path = manifest_root / "tools/probe_source_app.py" if manifest_root else None
+    if path is None or not path.exists():
+        return {"present": False, "source": None}
+    text = path.read_text(errors="replace")
+    match = re.search(r"--android-native-target", text)
+    return {"present": bool(match), "source": f"manifest/tools/probe_source_app.py:{text.count(chr(10), 0, match.start()) + 1}" if match else None}
+
+
+def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_extracts: dict[str, Any],
+                        board_paths: list[str] | None = None, namespace_option: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     rows = []
     elfs = scan["inventory"].get("elfs", [])
+    shadowed, targets = shadowed_libraries(scan, board_paths or [])
+    if shadowed:
+        option = namespace_option or {"present": False, "source": None}
+        rows.append(_row(
+            "native-loading", "load:shadowed-by-board",
+            f"Packaged libraries a board library of the same name shadows ({', '.join(sorted(shadowed))})",
+            oh_touchpoint="OH dynamic linker search order: " + ", ".join(sorted(set(shadowed.values()))) + " comes before the app's library directory",
+            verdict="missing", shim_class="C3", effort="XS" if option["present"] else "M", confidence=STATIC,
+            provider=("the launcher isolates only the libraries it is given (--android-native-target); nothing selects them"
+                      if option["present"] else "no namespace isolation: DT_NEEDED resolves to the board's copy"),
+            provider_source=option["source"],
+            app_evidence=f"{len(targets)} APK libraries reach them through DT_NEEDED",
+            shim=f"load these {len(targets)} libraries in the isolated Android namespace so DT_NEEDED picks the APK's copy "
+                 "(e.g. NDK libc++_shared is std::__ndk1; OH's is not): " + " ".join(targets),
+            launch_args=[arg for name in targets for arg in ("--android-native-target", name)],
+        ))
     if not facts["extract_native_libs"] and elfs:
         rows.append(_row(
             "native-loading", "load:in-apk", f"Libraries mapped straight out of the APK ({len(elfs)} .so, extractNativeLibs=false)",
@@ -659,6 +816,8 @@ def build_map(
     ndk_cov: dict[str, Any] | None = None,
     observed: dict[str, Any] | None = None,
     probe_results: dict[str, Any] | None = None,
+    board_paths: list[str] | None = None,
+    aosp_root: Path | None = None,
 ) -> dict[str, Any]:
     westlake_services = services.westlake_service_model(westlake_root)
     pm = contracts.pm_adapter_model(westlake_root)
@@ -670,7 +829,10 @@ def build_map(
             + native_upcall_rows(scan)
             + (ndk_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root), ndk_cov) if ndk_cov
                else native_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root)))
-            + native_loading_rows(facts, scan, launcher_extraction(manifest_root))
+            + native_loading_rows(facts, scan, launcher_extraction(manifest_root), board_paths,
+                                  launcher_namespace_option(manifest_root))
+            + security_rows(scan, contracts.keystore_model(westlake_root))
+            + webview_rows(scan, webview_process_model(aosp_root, westlake_root))
             + sandbox_rows(scan, policy) + external_rows(facts, scan, refused_libraries(westlake_root)))
     gap_map = {
         "app": {"package": facts["package"], "version": facts["version_name"], "target_sdk": facts["target_sdk"],
@@ -807,7 +969,7 @@ def backtest(gap_map: dict[str, Any], blockers: list[dict[str, Any]]) -> list[di
 
 
 # Verdicts that assert the contract is broken, as opposed to "check this".
-HARD_GAPS = {"missing", "null", "inert", "hollow", "denied", "stub", "absent"}
+HARD_GAPS = {"missing", "null", "inert", "hollow", "strict", "denied", "stub", "absent"}
 
 
 _STATUS = {"predicted": "open", "flagged for verification": "open (verify)",

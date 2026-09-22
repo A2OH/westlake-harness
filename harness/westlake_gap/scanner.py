@@ -26,6 +26,7 @@ from androguard.core.apk import APK
 from androguard.core.dex import DEX, HiddenApiClassDataItem
 from loguru import logger
 
+from .contracts import ANDROID_JCA_PROVIDERS
 from .native import (
     abi_from_archive_name,
     abi_from_machine,
@@ -471,6 +472,8 @@ class DexInventory:
     probes: list[dict[str, Any]] = field(default_factory=list)
     load_libraries: list[dict[str, Any]] = field(default_factory=list)
     service_requests: list[dict[str, Any]] = field(default_factory=list)
+    jca_requests: list[dict[str, Any]] = field(default_factory=list)
+    nonnull_casts: list[dict[str, Any]] = field(default_factory=list)
     native_methods: list[dict[str, Any]] = field(default_factory=list)
 
 
@@ -552,6 +555,16 @@ def _inventory_instructions(dex: DEX, method: Any, caller: dict[str, Any], out: 
         if name in {"const-string", "const-string/jumbo"} and registers:
             string_regs[registers[0]] = str(instruction.get_string())
             class_regs.pop(registers[0], None)
+            if string_regs[registers[0]].startswith(KOTLIN_NONNULL_CAST + "android."):
+                # Kotlin's `x as T` on a platform type: the message is the only trace in the dex
+                # that a null result throws here instead of being checked.
+                out.nonnull_casts.append({**caller, "offset": offset,
+                                          "type": string_regs[registers[0]][len(KOTLIN_NONNULL_CAST):]})
+            if string_regs[registers[0]] in ANDROID_JCA_PROVIDERS:
+                # Libraries keep the provider name in a constant and pass it on through fields and
+                # helpers, so the name itself is evidence even where the getInstance call is not.
+                out.jca_requests.append({**caller, "offset": offset, "api": "provider name",
+                                         "provider": string_regs[registers[0]]})
             continue
         if name == "const-class" and registers:
             try:
@@ -588,6 +601,7 @@ def _inventory_instructions(dex: DEX, method: Any, caller: dict[str, Any], out: 
                         out.method_sites[key].append({**caller, "offset": offset, "opcode": name})
                 _detect_string_call(key, registers, string_regs, caller, offset, out)
                 _detect_service_call(key, registers, string_regs, class_regs, caller, offset, out)
+                _detect_jca_call(key, registers, string_regs, caller, offset, out)
             except (IndexError, TypeError, ValueError):
                 pass
         elif (
@@ -679,6 +693,39 @@ def _detect_service_call(
         return
     request["dynamic"] = request.get("service") is None and request.get("manager_class") is None
     out.service_requests.append({**caller, "offset": offset, "call_owner": owner, **request})
+
+
+KOTLIN_NONNULL_CAST = "null cannot be cast to non-null type "
+
+# JCA engine classes: getInstance(type[, provider]) picks an implementation by name at run time, so
+# the class being present in the boot jars says nothing about whether the named one is installed.
+JCA_ENGINES = {
+    "Ljava/security/KeyStore;", "Ljava/security/KeyPairGenerator;", "Ljava/security/KeyFactory;",
+    "Ljava/security/Signature;", "Ljava/security/MessageDigest;", "Ljava/security/SecureRandom;",
+    "Ljava/security/AlgorithmParameters;", "Ljava/security/cert/CertificateFactory;",
+    "Ljavax/crypto/Cipher;", "Ljavax/crypto/KeyGenerator;", "Ljavax/crypto/Mac;", "Ljavax/crypto/SecretKeyFactory;",
+    "Ljavax/crypto/KeyAgreement;", "Ljavax/net/ssl/SSLContext;", "Ljavax/net/ssl/TrustManagerFactory;",
+    "Ljavax/net/ssl/KeyManagerFactory;",
+}
+
+
+def _detect_jca_call(
+    key: tuple[str, str, str],
+    registers: list[int],
+    string_regs: dict[int, str],
+    caller: dict[str, Any],
+    offset: int,
+    out: DexInventory,
+) -> None:
+    owner, name, descriptor = key
+    if owner not in JCA_ENGINES or name != "getInstance" or not registers or not descriptor.startswith("(Ljava/lang/String;"):
+        return
+    request = {"api": owner.strip("L;").rsplit("/", 1)[-1] + ".getInstance", "type": string_regs.get(registers[0])}
+    if descriptor.startswith("(Ljava/lang/String;Ljava/lang/String;)") and len(registers) >= 2:
+        request["provider"] = string_regs.get(registers[1])
+    elif descriptor.startswith("(Ljava/lang/String;Ljava/security/Provider;)"):
+        request["provider"] = "(Provider object)"
+    out.jca_requests.append({**caller, "offset": offset, **request})
 
 
 def _method_names_by_owner(method_refs: Iterable[tuple[str, str, str]]) -> dict[str, list[str]]:
@@ -1307,6 +1354,8 @@ def scan_apk(
             "existence_probes": inventory.probes,
             "load_library_calls": inventory.load_libraries,
             "service_requests": inventory.service_requests,
+            "jca_requests": inventory.jca_requests,
+            "nonnull_casts": inventory.nonnull_casts,
             "native_upcalls": native_upcalls if platform_members is not None else None,
             "platform_method_names": _method_names_by_owner(inventory.method_refs),
             "declared_native_methods": native_findings,
