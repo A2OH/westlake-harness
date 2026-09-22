@@ -1,19 +1,19 @@
 # org.wikipedia r/50606-r-2026-09-09 → OpenHarmony: API shim gap map
 
-Provider: Westlake `burgerking-startup-fixes` @ `02cbace7fb`; OH board: OpenHarmony 6.1.0.31, arm64, SELinux enforcing policy as loaded. Target SDK 37.
+Provider: Westlake `burgerking-startup-fixes` @ `e6e67aea9d`; OH board: OpenHarmony 6.1.0.31, arm64, SELinux enforcing policy as loaded. Target SDK 37.
 
 ## Summary
 
 | Category | How it reaches OH | Rows | Gaps | Effort profile |
 |---|---|---|---|---|
 | Java framework API | APK dex references − Westlake boot jars, filtered by API level | 12 | 12 | 9×verify, 2×S, 1×M |
-| System services | getSystemService name → AOSP fetcher/binder → Westlake provision → OH subsystem | 24 | 12 | 2×verify, 7×S, 3×M |
+| System services | getSystemService name → AOSP fetcher/binder → Westlake provision → OH subsystem | 25 | 12 | 2×verify, 7×S, 3×M |
 | Keystore & crypto providers | JCA provider names the code selects → providers the Westlake runtime installs → OH HUKS | 0 | 0 | — |
 | Package manager & manifest | manifest features and PackageManager calls → Westlake PM semantics | 10 | 9 | 1×verify, 3×S, 5×M |
 | Activity, window & process contracts | what system_server would answer, answered in-process by Westlake in direct launch → white-box probes | 5 | 1 | 1×L |
 | Java APIs called from native code | JNIEnv FindClass/Get*ID names in packaged .so → Westlake boot jars | 2 | 0 | — |
 | Native platform symbols | packaged .so imports → OpenHarmony plus the NDK Westlake packages (package / libc-abi / weld / absence) | 2 | 1 | 1×S |
-| Native loading & packaging | how the libraries are packaged → what the OH linker can map | 1 | 0 | — |
+| Native loading & packaging | how the libraries are packaged → what the OH linker can map | 2 | 1 | 1×verify |
 | Process sandbox & policy | objects the code creates → what OH SELinux lets an app create | 1 | 1 | 1×M |
 | External services & SDK behaviour | SDKs that expect Google services or probe the device | 0 | 0 | — |
 
@@ -57,12 +57,13 @@ _getSystemService name → AOSP fetcher/binder → Westlake provision → OH sub
 | permission_controller | unresolved | CU | verify | unmapped | trace the helper's binder; then treat as null, inert or supplied<br>1 call sites, e.g. leakcanary.AndroidLeakFixes$PERMISSION_CONTROLLER_MANAGER.apply `SystemServiceRegistry.java:1437` |
 | textclassification | unresolved | CU | verify | unmapped | trace the helper's binder; then treat as null, inert or supplied<br>2 call sites, e.g. androidx.compose.foundation.text.selection.TextClassifierHelperMethods.createTextClassificationSession `SystemServiceRegistry.java:413` |
 | accessibility | inert | C5 | none | unmapped | none: the manager is written to run without its service<br>19 call sites, e.g. androidx.appcompat.widget.TooltipCompatHandler.onHover |
+| account | supplied | C0 | verify | account/os_account | none<br>3 call sites, e.g. org.wikipedia.auth.WikimediaAuthenticator.addAccount |
 | activity | supplied | C0 | verify | ability_runtime (AMS) | none<br>5 call sites, e.g. androidx.room.RoomDatabase$Builder.build |
 | alarm | supplied | C0 | verify | time_service / reminder_agent | none<br>10 call sites, e.g. androidx.work.impl.utils.ForceStopRunnable.setAlarm |
 | clipboard | supplied | C0 | verify | miscservices/pasteboard | none<br>10 call sites, e.g. androidx.appcompat.widget.AppCompatEditText.onTextContextMenuItem |
 | connectivity | supplied | C0 | verify | netmanager (NetConnManager) | none<br>13 call sites, e.g. androidx.work.impl.constraints.trackers.NetworkStateTrackerPre24.<init> |
 | input_method | supplied | C0 | verify | inputmethod_framework | none<br>35 call sites, e.g. androidx.activity.ImmLeaksCleaner.onStateChanged `framework/core/java/OHServiceManager.java:105` |
-| layout_inflater | supplied | C0 | verify | unmapped | none<br>2 call sites, e.g. androidx.appcompat.app.AlertController$AlertParams.<init> `SystemServiceRegistry.java:593` |
+| layout_inflater | supplied | C0 | verify | unmapped | none<br>142 call sites, e.g. androidx.appcompat.app.AlertController$AlertParams.<init> `SystemServiceRegistry.java:593` |
 | location | supplied | C0 | verify | location | none<br>2 call sites, e.g. androidx.appcompat.app.AppCompatDelegateImpl.getAutoTimeNightModeManager |
 | power | supplied | C0 | verify | powermgr | none<br>3 call sites, e.g. androidx.appcompat.app.AppCompatDelegateImpl$AutoTimeNightModeManager.<init> |
 | shortcut | supplied | C0 | verify | unmapped | none<br>3 call sites, e.g. androidx.core.content.pm.ShortcutManagerCompat.getDynamicShortcuts |
@@ -113,7 +114,7 @@ _packaged .so imports → OpenHarmony plus the NDK Westlake packages (package / 
 
 | Item | Verdict | Class | Effort | OH touchpoint | Shim / evidence |
 |---|---|---|---|---|---|
-| bionic libc ABI: 1 symbols to translate onto musl | missing | C1/C2 | S | OH musl libc | bionic-ABI shim: forward or translate; never ship a second libc<br>open: dl_unwind_find_exidx |
+| bionic-private (not in the NDK): 1 symbols missing on the OH board | missing | C1/C2 | S | OH musl / system libraries | bionic-ABI shim: forward or translate to musl<br>open: dl_unwind_find_exidx |
 | libc calls carrying a constant each libc numbers differently (pathconf, sysconf) | supplied | C0 | verify | OH musl: the same selector number means a different limit than in bionic | translate the selector by name at the libc boundary for every library built against bionic; the call resolves and returns a plausible number either way, so nothing fails at load time<br>pathconf: 4 libraries, e.g. libmaplibre.so, libmaplibre.so, libmaplibre.so; sysconf: 4 libraries, e.g. libmaplibre.so, libmaplibre.so, libmaplibre.so `framework/webview-shim/webview_bionic_shim.c:1189` |
 
 ## Native loading & packaging
@@ -122,6 +123,7 @@ _how the libraries are packaged → what the OH linker can map_
 
 | Item | Verdict | Class | Effort | OH touchpoint | Shim / evidence |
 |---|---|---|---|---|---|
+| Runtime libraries its own loader will not open (libicu_jni.so) | unresolved | C3 | verify | Runtime.nativeLoad in the runtime's own OpenJDK stub | compare the staged library's methods against the tables the runtime's own stubs register (art-build/stubs, registerNativesOrSkip) and ship any remainder under a name the filter does not match. ship the library under a name none of those substrings match, or narrow the stub to the libraries the runtime really does link in. A load that reports success it did not perform cannot be told from one that worked, so nothing downstream can detect this.<br>a property of the runtime, not of this app: it holds for every app it launches `art-build/stubs/openjdk_stub.c:1315` |
 | Libraries mapped straight out of the APK (8 .so, extractNativeLibs=false) | supplied | C0 | verify | OH dynamic linker (cannot map zip!/ members: board test 2026-09-18) | extract at install/launch, or teach the loader zip-member mapping (WebView needs the latter too) `manifest/tools/prepare_app.py:75` |
 
 ## Process sandbox & policy

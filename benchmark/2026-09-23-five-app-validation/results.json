@@ -1,46 +1,82 @@
 {
   "scored_after_launches": true,
   "provider": "Westlake 02cbace, board build framework-signin-device17, SELinux enforcing",
-  "summary": "Native symbol resolution was right both times it decided the outcome. The Java and framework side missed three of four, each for a different structural reason, and none of the three is an app-specific accident.",
+  "summary": "Native symbol resolution was right both times it decided the outcome. The Java and framework side missed three of four, each for a different structural reason. Wikipedia was driven to a rendered feed by closing the two gaps that stopped it, which is what the map is for.",
   "apps": [
-    {"key": "localsend", "reached": "no first frame",
-     "verdict": "L1 right, mechanism and effect",
-     "evidence": "UnsatisfiedLinkError on libflutter.so. Its ANativeWindow_lock, ANativeWindow_unlockAndPost and __openat_2 imports are GLOBAL UND, confirmed with llvm-readelf, so dlopen cannot succeed.",
-     "new_gap": "the app's fallback copied libflutter.so into /data/data/<pkg>/app_lib and the kernel refused to map it: errno 13 on a file labelled data_app_el2_file. An app cannot map executable code out of its own data directory, which is what Flutter's loader and every ReLinker-style fallback does.",
-     "row_for_new_gap": "none: sandbox-policy models fifo and symlink, not execute-from-app-data"},
-
-    {"key": "subwaysurfers", "reached": "no gameplay",
-     "verdict": "S1 right, mechanism and effect",
-     "evidence": "JNI FatalError: Unable to load library libunity.so: Error loading shared library libmediandk.so. The runtime ships no libmediandk, which is where the AMEDIAFORMAT_KEY_* symbols the map listed live.",
-     "new_gap": null, "row_for_new_gap": null},
-
-    {"key": "vlc", "reached": "onboarding activity, then died",
-     "verdict": "V1 untested: the app never got as far as loading its engine",
-     "evidence": "InflateException on layout/activity_onboarding line 9, caused by UnsupportedOperationException: Failed to resolve attribute at index 13, theme Theme.VLC.Transparent over Theme.MaterialComponents.NoActionBar.",
-     "new_gap": "a theme attribute reference the resource stack cannot resolve during inflation. No row models theme or attribute resolution at all.",
-     "row_for_new_gap": "none"},
-
-    {"key": "wikipedia", "reached": "no first screen",
-     "verdict": "W1 wrong: the feed did not render",
-     "evidence": "NullPointerException in TabUtil.accountManager from BaseActivity.onCreate: AccountManager.get(context) returned null and the app called getClass() on it.",
-     "new_gap": "the account service is reached through AccountManager.get(context), a static framework helper, so no getSystemService call site exists in the app's dex and the service map has no row for it at all. Same shape for any service with a static accessor.",
-     "row_for_new_gap": "none, and the miss is structural: service_map only sees direct getSystemService and ServiceManager call sites"},
-
-    {"key": "firefox", "reached": "Gecko started, then its own startup-crash screen",
-     "verdict": "F1 wrong: libxul loaded. F2 not reached. The svc:user row was right.",
-     "evidence": "With the bionic shim preloaded, Gecko threads run. Three failures follow: UnsupportedOperationException 'OH user service does not implement getUserSerialNumber' (the strict proxy the map flagged as svc:user), UnsupportedOperationException 'OpenHarmony window context attachment is not connected', and IllegalArgumentException 'Activity client record must not be null to execute transaction item: ActivityResultItem'.",
-     "new_gap": "window context attachment, and an activity transaction delivered for a record direct launch does not have",
-     "row_for_new_gap": "app-framework has rows for the process table, dialogs and placement, none for window context or for result delivery"}
+    {
+      "key": "localsend",
+      "reached": "no first frame",
+      "verdict": "L1 right, mechanism and effect",
+      "evidence": "UnsatisfiedLinkError on libflutter.so. Its ANativeWindow_lock, ANativeWindow_unlockAndPost and __openat_2 imports are GLOBAL UND, confirmed with llvm-readelf, so dlopen cannot succeed.",
+      "new_gap": "the app's fallback copied libflutter.so into /data/data/<pkg>/app_lib and the kernel refused to map it: errno 13 on a file labelled data_app_el2_file. An app cannot map executable code out of its own data directory, which is what Flutter's loader and every ReLinker-style fallback does.",
+      "row_for_new_gap": "none: sandbox-policy models fifo and symlink, not execute-from-app-data"
+    },
+    {
+      "key": "subwaysurfers",
+      "reached": "no gameplay",
+      "verdict": "S1 right, mechanism and effect",
+      "evidence": "JNI FatalError: Unable to load library libunity.so: Error loading shared library libmediandk.so. The runtime ships no libmediandk, which is where the AMEDIAFORMAT_KEY_* symbols the map listed live.",
+      "new_gap": null,
+      "row_for_new_gap": null
+    },
+    {
+      "key": "vlc",
+      "reached": "onboarding activity, then died",
+      "verdict": "V1 untested: the app never got as far as loading its engine",
+      "evidence": "InflateException on layout/activity_onboarding line 9, caused by UnsupportedOperationException: Failed to resolve attribute at index 13, theme Theme.VLC.Transparent over Theme.MaterialComponents.NoActionBar.",
+      "new_gap": "a theme attribute reference the resource stack cannot resolve during inflation. No row models theme or attribute resolution at all.",
+      "row_for_new_gap": "none"
+    },
+    {
+      "key": "wikipedia",
+      "reached": "feed renders, after two gaps were closed",
+      "verdict": "W1 right about the app, wrong about the provider: nothing on the startup path needed a missing native symbol, as predicted. Two gaps the map did not model stopped it first, and with both closed the onboarding and the feed render.",
+      "evidence": "First: NullPointerException in TabUtil.accountManager from BaseActivity.onCreate, AccountManager.get(context) returned null. Then, past that, UnsatisfiedLinkError on java.lang.Math.rint in InitialOnboardingActivity. With the account service answered in process and libcore's math natives bound, the onboarding pages and the Community feed render, with network images, tabs and bottom navigation.",
+      "new_gap": "two. The account service is reached through AccountManager.get(context), a static framework helper, so no getSystemService call site exists in the app's dex and the service map had no row for it. And java.lang.Math's natives were not bound at all: the runtime ships no libjavacore, and its Runtime.nativeLoad reports success without opening any library whose path contains javacore, openjdk or icu_jni.",
+      "row_for_new_gap": "svc:account now covered by STATIC_SERVICE_ACCESSORS; the unbound-libcore-natives gap has no row yet"
+    },
+    {
+      "key": "firefox",
+      "reached": "Gecko started, then its own startup-crash screen",
+      "verdict": "F1 wrong: libxul loaded. F2 not reached. The svc:user row was right.",
+      "evidence": "With the bionic shim preloaded, Gecko threads run. Three failures follow: UnsupportedOperationException 'OH user service does not implement getUserSerialNumber' (the strict proxy the map flagged as svc:user), UnsupportedOperationException 'OpenHarmony window context attachment is not connected', and IllegalArgumentException 'Activity client record must not be null to execute transaction item: ActivityResultItem'.",
+      "new_gap": "window context attachment, and an activity transaction delivered for a record direct launch does not have",
+      "row_for_new_gap": "app-framework has rows for the process table, dialogs and placement, none for window context or for result delivery"
+    }
   ],
   "process_findings": [
-    {"id": "PF1", "finding": "A map is only valid for a stated launch configuration. Firefox was first launched without the bionic shim and died on __register_atfork, which the map counted as resolved because the shim exports it. The map was generated with the shim in the index and never says so.",
-     "fix": "record the provider inputs the resolution assumed, and have the launcher refuse or warn when a launch omits one of them"},
-    {"id": "PF2", "finding": "Two of five downloads were 32-bit packages behind an arm64 filename. The scan reported abi_status target-abi-unavailable before any prediction was written and nobody read it.",
-     "fix": "surface abi_status in the gap map's own summary, where a prediction is written, not only in the scan"},
-    {"id": "PF3", "finding": "Predicting the failing library is harder than predicting that native loading fails. Both native predictions named the right blocker; both Java-side predictions named the wrong screen.",
-     "fix": "state native predictions as 'this library cannot load' and Java-side ones as 'this call returns null', rather than as a screen"}
+    {
+      "id": "PF1",
+      "finding": "A map is only valid for a stated launch configuration. Firefox was first launched without the bionic shim and died on __register_atfork, which the map counted as resolved because the shim exports it. The map was generated with the shim in the index and never says so.",
+      "fix": "record the provider inputs the resolution assumed, and have the launcher refuse or warn when a launch omits one of them"
+    },
+    {
+      "id": "PF2",
+      "finding": "Two of five downloads were 32-bit packages behind an arm64 filename. The scan reported abi_status target-abi-unavailable before any prediction was written and nobody read it.",
+      "fix": "surface abi_status in the gap map's own summary, where a prediction is written, not only in the scan"
+    },
+    {
+      "id": "PF3",
+      "finding": "Predicting the failing library is harder than predicting that native loading fails. Both native predictions named the right blocker; both Java-side predictions named the wrong screen.",
+      "fix": "state native predictions as 'this library cannot load' and Java-side ones as 'this call returns null', rather than as a screen"
+    },
+    {
+      "id": "PF4",
+      "finding": "A provider step that reports success without doing anything is invisible to every check the harness has. The runtime's Runtime.nativeLoad returns \"already registered\" for any path containing javacore, openjdk or icu_jni, on the assumption those natives are statically linked in. Shipping a real libjavacore.so made that assumption false: the load logged success for three builds while java.lang.Math.rint stayed unimplemented, and no log line said otherwise.",
+      "fix": "a row for the runtime's own load short-circuits, listing which library names the provider will accept without opening. Diagnosis-wise: measure the boundary before theorising across it. Three build cycles went on class-loader association, RegisterNatives and the LD_PRELOAD shim; llvm-readelf and a 20-line on-device dlopen/dlsym probe ruled all three out in minutes and pointed at the loader."
+    }
   ],
-  "tally": {"headline mechanism right": 2, "wrong": 2, "untested": 1,
-            "existing rows confirmed on new apps": ["svc:user (Firefox)", "libc:constant-namespace (VLC, LocalSend: no page-size failures)"],
-            "new gap classes found": 5}
+  "tally": {
+    "headline mechanism right": 3,
+    "wrong": 1,
+    "untested": 1,
+    "reached a screen after fixes": [
+      "wikipedia"
+    ],
+    "existing rows confirmed on new apps": [
+      "svc:user (Firefox)",
+      "libc:constant-namespace (VLC, LocalSend: no page-size failures)"
+    ],
+    "new gap classes found": 6
+  }
 }
