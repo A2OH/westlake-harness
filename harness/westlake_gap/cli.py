@@ -232,12 +232,30 @@ def parser() -> argparse.ArgumentParser:
                           "for the exact Westlake commit they were measured on")
     gap.add_argument("--board-libs", type=Path,
                      help="library paths present on the board, one per line: finds packaged libraries a board library shadows")
+    gap.add_argument("--runtime-libs", type=Path,
+                     help="the staged native runtime: a directory, its artifacts.json, or a listing one per line. "
+                          "Finds libraries the runtime ships that its own loader answers without opening")
     gap.add_argument("--policy", type=Path, default=Path(__file__).parent / "data" / "oh-app-data-policy.json")
     gap.add_argument("--blockers", type=Path, help="known-blockers JSON: backtest the map against observed failures")
     gap.add_argument("--blockers-status", action="store_true",
                      help="report known blockers as open/closed against this provider instead of as a backtest")
     gap.add_argument("--out", required=True, type=Path, help="output directory")
     return root
+
+
+
+def _runtime_libraries(path: Path | None) -> list[str] | None:
+    """Library names the staged native runtime ships, from a directory, an artifacts.json or a listing."""
+    if path is None or not path.exists():
+        return None
+    if path.is_dir():
+        report = path / "artifacts.json"
+        if report.exists():
+            return sorted(read_json(report).get("artifacts", {}))
+        return sorted(p.name for p in path.iterdir() if p.suffix == ".so")
+    if path.suffix == ".json":
+        return sorted(read_json(path).get("artifacts", {}))
+    return [line.rsplit("/", 1)[-1] for line in path.read_text().split()]
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -401,6 +419,7 @@ def main(argv: list[str] | None = None) -> int:
                             observed=read_json(args.observed) if args.observed else None,
                             probe_results=read_json(args.probe_results) if args.probe_results else None,
                             board_paths=args.board_libs.read_text().split() if args.board_libs else None,
+                            runtime_libraries=_runtime_libraries(args.runtime_libs),
                             aosp_root=args.aosp)
         if args.westlake_label:
             gap_map["provider"]["westlake"] = {"branch": args.westlake_label, "commit": args.westlake_label, "uncommitted": []}

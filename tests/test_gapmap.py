@@ -523,6 +523,50 @@ class KeystoreAndLoaderOrder(unittest.TestCase):
             self.assertIn("Flags.updateServiceV2()", row["provider"])
             self.assertEqual(gapmap.webview_rows({"inventory": {"platform_method_names": {}}}, model), [])
 
+    def test_a_load_that_reports_success_without_opening_the_library(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="westlake-load-") as temp:
+            art = Path(temp) / "art-build"
+            _write(art / "stubs/openjdk_stub.c", """
+static jstring Runtime_nativeLoad(JNIEnv* env, jclass clazz, jstring filename,
+                                   jobject classLoader, jclass caller) {
+    const char* path = (*env)->GetStringUTFChars(env, filename, NULL);
+    if (strstr(path, "javacore") || strstr(path, "openjdk") ||
+        strstr(path, "icu_jni") || strstr(path, "icu-jni")) {
+        (*env)->ReleaseStringUTFChars(env, filename, path);
+        return NULL; /* null = success, already registered */
+    }
+    return JVM_NativeLoad(env, filename, classLoader, caller);
+}""")
+            model = gapmap.native_load_short_circuit(art)
+        self.assertEqual(model["names"], ["icu-jni", "icu_jni", "javacore", "openjdk"])
+        self.assertTrue(model["source"].startswith("art-build/stubs/openjdk_stub.c:"))
+        scan = {"inventory": {"elfs": [
+            {"name": "lib/arm64-v8a/libjavacore.so", "soname": "libjavacore.so"},
+            {"name": "lib/arm64-v8a/libplain.so", "soname": "libplain.so"}]}}
+        row = gapmap.silent_load_rows(scan, model)[0]
+        self.assertEqual((row["id"], row["verdict"], row["shim_class"]), ("load:silent-success", "hollow", "C3"))
+        self.assertIn("libjavacore.so", row["item"])
+        self.assertNotIn("libplain.so", row["item"])
+        self.assertIn("matched on javacore", row["provider"])
+        self.assertEqual(gapmap.silent_load_rows(
+            {"inventory": {"elfs": [{"name": "a/libplain.so", "soname": "libplain.so"}]}}, model), [],
+            "nothing matches the filter, nothing to claim")
+        self.assertEqual(gapmap.native_load_short_circuit(None)["names"], [], "no runtime, no claim")
+        self.assertEqual(gapmap.silent_load_rows(scan, {"names": [], "source": None}), [])
+
+        # The runtime shipping such a library is the case that actually bit, and it is a different
+        # claim: the filter is there because the runtime registers those natives itself, so the row
+        # says "verify the per-method coverage", not "these are unbound".
+        runtime = gapmap.silent_load_rows({"inventory": {"elfs": []}}, model,
+                                          ["libicu_jni.so", "libhwui.so", "libjavacore.so"])
+        self.assertEqual([r["id"] for r in runtime], ["load:runtime-silent-success"])
+        self.assertEqual((runtime[0]["verdict"], runtime[0]["effort"]), ("unresolved", "verify"))
+        self.assertIn("libicu_jni.so", runtime[0]["item"])
+        self.assertIn("libjavacore.so", runtime[0]["item"])
+        self.assertNotIn("libhwui.so", runtime[0]["item"])
+        self.assertEqual(gapmap.silent_load_rows({"inventory": {"elfs": []}}, model, ["libhwui.so"]), [])
+        self.assertEqual(gapmap.silent_load_rows({"inventory": {"elfs": []}}, model, None), [])
+
     def test_shadowed_libraries_and_their_importers(self) -> None:
         scan = {"inventory": {"elfs": [
             {"name": "config.arm64_v8a.apk!lib/arm64-v8a/libc++_shared.so", "soname": "libc++_shared.so", "needed": ["libc.so"]},

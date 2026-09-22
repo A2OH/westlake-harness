@@ -461,6 +461,99 @@ def webview_process_model(aosp_root: Path | None, westlake_root: Path) -> dict[s
     return {"multiprocess_forced": forced, "renderer_hosted": hosted}
 
 
+def native_load_short_circuit(art_build_root: Path | None) -> dict[str, Any]:
+    """Library names the runtime's Runtime.nativeLoad answers without opening anything.
+
+    The stub returns "already registered" -- a null error, which is success -- for a path matching
+    any of these, on the assumption that those natives are linked into the runtime itself. When
+    that assumption is wrong the caller is told the library loaded, JNI_OnLoad never runs, and the
+    methods stay unbound with nothing in the log to say so. Read from the stub rather than listed
+    here, because the only honest version of this row is the one the deployed runtime implements.
+    """
+    empty: dict[str, Any] = {"names": [], "source": None}
+    if art_build_root is None:
+        return empty
+    path = art_build_root / "stubs/openjdk_stub.c"
+    if not path.exists():
+        return empty
+    text = path.read_text(errors="replace")
+    body = re.search(r"Runtime_nativeLoad\(JNIEnv\* env.*?\n\}", text, re.S)
+    if not body:
+        return empty
+    accepted = re.search(r"if \(((?:strstr\(path, \"[\w-]+\"\)\s*\|\|\s*)*strstr\(path, \"[\w-]+\"\))\)\s*\{"
+                         r"[^{}]*?return NULL;", body.group(0), re.S)
+    if not accepted:
+        return empty
+    return {"names": sorted(set(re.findall(r"strstr\(path, \"([\w-]+)\"\)", accepted.group(1)))),
+            "source": f"art-build/stubs/openjdk_stub.c:{text.count(chr(10), 0, body.start()) + 1}"}
+
+
+def _matches(names: list[str], libraries: list[str]) -> dict[str, list[str]]:
+    hit: dict[str, list[str]] = defaultdict(list)
+    for library in libraries:
+        for name in names:
+            if name in library:
+                hit[name].append(library)
+    return hit
+
+
+def silent_load_rows(scan: dict[str, Any], model: dict[str, Any],
+                     runtime_libraries: list[str] | None = None) -> list[dict[str, Any]]:
+    """Libraries whose load the runtime answers without opening them.
+
+    Two sides, because the fix differs. An app that packages such a name loses its own natives.
+    The runtime shipping such a name is worse: the library exists precisely to supply something,
+    and the one component that would load it refuses to, while reporting success. That is the case
+    that cost three build cycles on 2026-09-22 (libjavacore.so, java.lang.Math.rint), so it is
+    checked even though it is a property of the provider rather than of the app.
+    """
+    names = model.get("names") or []
+    if not names:
+        return []
+    shim = ("ship the library under a name none of those substrings match, or narrow the stub to the "
+            "libraries the runtime really does link in. A load that reports success it did not perform "
+            "cannot be told from one that worked, so nothing downstream can detect this.")
+    rows = []
+    app = _matches(names, [elf.get("soname") or Path(elf["name"]).name
+                           for elf in scan["inventory"].get("elfs", [])])
+    if app:
+        libraries = sorted({library for found in app.values() for library in found})
+        rows.append(_row(
+            "native-loading", "load:silent-success",
+            f"Packaged libraries the runtime accepts without opening ({', '.join(libraries)})",
+            oh_touchpoint="Runtime.nativeLoad in the runtime's own OpenJDK stub",
+            verdict="hollow", shim_class="C3", effort="S", confidence=STATIC,
+            provider="the load returns success without a dlopen, so JNI_OnLoad never runs and the "
+                     f"library's natives stay unbound; matched on {', '.join(sorted(app))}",
+            provider_source=model["source"],
+            app_evidence=(f"{len(libraries)} packaged library matches the filter" if len(libraries) == 1
+                          else f"{len(libraries)} packaged libraries match the filter"),
+            shim=shim,
+        ))
+    runtime = _matches(names, sorted(set(runtime_libraries or [])))
+    if runtime:
+        libraries = sorted({library for found in runtime.values() for library in found})
+        rows.append(_row(
+            "native-loading", "load:runtime-silent-success",
+            f"Runtime libraries its own loader will not open ({', '.join(libraries)})",
+            oh_touchpoint="Runtime.nativeLoad in the runtime's own OpenJDK stub",
+            # Not "hollow": the filter exists because the runtime registers these natives itself, from
+            # its own stubs, and mostly it does. What cannot be seen from here is whether it registers
+            # all of them. On 2026-09-22 the Math table was missing exactly one method, rint, and the
+            # staged library that would have supplied it could not be loaded to say so.
+            verdict="unresolved", shim_class="C3", effort="verify", confidence=STATIC,
+            provider="the runtime stages these and then answers 'already registered' for them; their natives "
+                     "are bound only where one of its built-in stubs registers them, which is per-method and "
+                     f"not decidable from here; matched on {', '.join(sorted(runtime))}",
+            provider_source=model["source"],
+            app_evidence="a property of the runtime, not of this app: it holds for every app it launches",
+            shim="compare the staged library's methods against the tables the runtime's own stubs register "
+                 "(art-build/stubs, registerNativesOrSkip) and ship any remainder under a name the filter "
+                 "does not match. " + shim,
+        ))
+    return rows
+
+
 def webview_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
     called = scan["inventory"].get("platform_method_names", {}).get("Landroid/webkit/WebView;", [])
     if "<init>" not in called:
@@ -848,6 +941,7 @@ def build_map(
     probe_results: dict[str, Any] | None = None,
     board_paths: list[str] | None = None,
     aosp_root: Path | None = None,
+    runtime_libraries: list[str] | None = None,
 ) -> dict[str, Any]:
     westlake_services = services.westlake_service_model(westlake_root)
     pm = contracts.pm_adapter_model(westlake_root)
@@ -864,6 +958,10 @@ def build_map(
             + libc_constant_rows(scan, contracts.libc_constant_model(westlake_root))
             + security_rows(scan, contracts.keystore_model(westlake_root))
             + webview_rows(scan, webview_process_model(aosp_root, westlake_root))
+            # art-build sits beside the westlake checkout in the same workspace; absent, the row
+            # is simply not claimed.
+            + silent_load_rows(scan, native_load_short_circuit(westlake_root.parent / "art-build"),
+                               runtime_libraries)
             + sandbox_rows(scan, policy) + external_rows(facts, scan, refused_libraries(westlake_root)))
     gap_map = {
         "app": {"package": facts["package"], "version": facts["version_name"], "target_sdk": facts["target_sdk"],
