@@ -163,6 +163,18 @@ def parser() -> argparse.ArgumentParser:
     fw_cmd.add_argument("--graph-cache", type=Path)
     fw_cmd.add_argument("--out", required=True, type=Path)
 
+    res_cmd = commands.add_parser(
+        "oh-resolve",
+        help="resolve an APK's native imports against the board's libraries and the staged Westlake runtime",
+    )
+    res_cmd.add_argument("--scan", required=True, type=Path, help="scan JSON for the APK")
+    res_cmd.add_argument("--app-key", required=True)
+    res_cmd.add_argument("--lib-dir", action="append", type=Path, required=True,
+                         help="directory of libraries in the index (OH system libraries pulled from the board, the staged runtime, ...); repeat")
+    res_cmd.add_argument("--ndk-api-dir", type=Path, help="NDK stub libraries for one API level: names the NDK library declaring each missing symbol")
+    res_cmd.add_argument("--board", default="", help="board description recorded in the output")
+    res_cmd.add_argument("--out", required=True, type=Path, help="oh-import-resolution JSON to write")
+
     dep_cmd = commands.add_parser(
         "deploy-check",
         help="is every library the Westlake runtime asks for deployed, and is each deployed Westlake binary built from today's source",
@@ -297,6 +309,16 @@ def main(argv: list[str] | None = None) -> int:
         write_json(args.out, value)
         print(f"{summary['methods_with_code']} methods: " + ", ".join(f"{k} {v}" for k, v in summary["methods_by_stage"].items())
               + f" -> {args.out}")
+        return 0
+    if args.command == "oh-resolve":
+        from . import ohresolve
+
+        provided, libraries = ohresolve.index_exports(args.lib_dir)
+        app = ohresolve.resolve(read_json(args.scan), provided, ohresolve.ndk_declarations(args.ndk_api_dir))
+        write_json(args.out, {"board": {"description": args.board, "libraries_indexed": libraries},
+                              "apps": {args.app_key: app}})
+        print(f"{args.app_key}: {app['resolved']}/{app['symbols']} resolved, {len(app['missing'])} missing "
+              f"against {len(libraries)} libraries -> {args.out}")
         return 0
     if args.command == "deploy-check":
         from . import deploy

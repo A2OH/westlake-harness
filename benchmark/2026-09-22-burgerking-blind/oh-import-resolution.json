@@ -1,0 +1,87 @@
+{
+  "apps": {
+    "burgerking": {
+      "missing": [
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libimage_processing_util_jni.so"
+          ],
+          "surface": "libandroid",
+          "symbol": "ANativeWindow_lock"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libimage_processing_util_jni.so"
+          ],
+          "surface": "libandroid",
+          "symbol": "ANativeWindow_unlockAndPost"
+        }
+      ],
+      "resolved": 1278,
+      "symbols": 1280
+    }
+  },
+  "board": {
+    "description": "OpenHarmony 6.1.0.31, arm64: libc (musl), OpenSLES, EGL, GLESv2/v3, vulkan, z, plus the staged Westlake runtime of the McDonald's sign-in build and its source-built bionic shim",
+    "libraries_indexed": [
+      "bionic-shim-signin1/libwebview_bionic_shim.so",
+      "native-runtime-signin-ime3/libandroid.so",
+      "native-runtime-signin-ime3/libandroid_native_network_compat.so",
+      "native-runtime-signin-ime3/libandroidfw.so",
+      "native-runtime-signin-ime3/libbase.so",
+      "native-runtime-signin-ime3/libbinder_ndk.so",
+      "native-runtime-signin-ime3/libcutils.so",
+      "native-runtime-signin-ime3/libexpat.so",
+      "native-runtime-signin-ime3/libframework-connectivity-jni.so",
+      "native-runtime-signin-ime3/libframework-connectivity-tiramisu-jni.so",
+      "native-runtime-signin-ime3/libft2.so",
+      "native-runtime-signin-ime3/libgif.so",
+      "native-runtime-signin-ime3/libharfbuzz_ng.so",
+      "native-runtime-signin-ime3/libhwui.so",
+      "native-runtime-signin-ime3/libicu_jni.so",
+      "native-runtime-signin-ime3/libicui18n.so",
+      "native-runtime-signin-ime3/libicuuc.so",
+      "native-runtime-signin-ime3/libjavacrypto.so",
+      "native-runtime-signin-ime3/libjnigraphics.so",
+      "native-runtime-signin-ime3/libjpeg.so",
+      "native-runtime-signin-ime3/liblog.so",
+      "native-runtime-signin-ime3/libmedia_jni.so",
+      "native-runtime-signin-ime3/libminikin.so",
+      "native-runtime-signin-ime3/libnativehelper.so",
+      "native-runtime-signin-ime3/liboh_account_state.so",
+      "native-runtime-signin-ime3/liboh_adapter_bridge.so",
+      "native-runtime-signin-ime3/liboh_android_runtime.so",
+      "native-runtime-signin-ime3/liboh_connectivity_state.so",
+      "native-runtime-signin-ime3/liboh_hwui_shim.so",
+      "native-runtime-signin-ime3/liboh_ime_helper_capi.so",
+      "native-runtime-signin-ime3/liboh_permission_queries.so",
+      "native-runtime-signin-ime3/libpng.so",
+      "native-runtime-signin-ime3/libsoundpool.so",
+      "native-runtime-signin-ime3/libstats_jni.so",
+      "native-runtime-signin-ime3/libstatspull.so",
+      "native-runtime-signin-ime3/libstatssocket.so",
+      "native-runtime-signin-ime3/libstdc++.so",
+      "native-runtime-signin-ime3/libultrahdr.so",
+      "native-runtime-signin-ime3/libutils.so",
+      "native-runtime-signin-ime3/libwebp.so",
+      "native-runtime-signin-ime3/libwestlake_binder.so",
+      "native-runtime-signin-ime3/libwestlake_bionic.so",
+      "native-runtime-signin-ime3/libwestlake_libcore_linux.so",
+      "native-runtime-signin-ime3/libwestlake_runtime_boundary.so",
+      "native-runtime-signin-ime3/libwestlake_securec.so",
+      "native-runtime-signin-ime3/libwestlake_webp.so",
+      "native-runtime-signin-ime3/libwuffs.so",
+      "native-runtime-signin-ime3/libz.so",
+      "native-runtime-signin-ime3/libziparchive.so",
+      "oh-libs/libEGL.so",
+      "oh-libs/libGLESv2.so",
+      "oh-libs/libGLESv3.so",
+      "oh-libs/libOpenSLES.so",
+      "oh-libs/libc.so",
+      "oh-libs/libvulkan.so",
+      "oh-libs/libz.so"
+    ]
+  }
+}
