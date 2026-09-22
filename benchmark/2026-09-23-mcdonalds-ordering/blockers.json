@@ -3,21 +3,39 @@
   "description": "Failures McDonald's hit on the OH board on 2026-09-23, past the sign-in screen: the home dashboard and the ordering flow. Each names the map row that should have flagged it before the launch.",
   "baseline_westlake_commit": "f6dc615",
   "blockers": [
-    {"id": "M1", "screen": "home dashboard",
-     "symptom": "Realm: mmap() failed (size 496, offset 81944): Invalid argument. Its page size came from sysconf(_SC_PAGESIZE): bionic numbers that selector 39, OH musl reads 39 as _SC_BC_STRING_MAX and answers 1000, so Realm's power-of-two rounding produced an unaligned offset and the activity died opening its database",
-     "fix": "westlake 2f70628: the bionic shim carries the full bionic->musl selector table and applies it to the app's packaged libraries, not the WebView DSO alone",
-     "predicted_by": ["libc:constant-namespace"]},
-    {"id": "M2", "screen": "WebView start-up",
-     "symptom": "UserManager.getApplicationRestrictions reached the in-process IUserManager, which threw UnsupportedOperationException inside a JNI callback; Chromium aborted the process",
-     "fix": "westlake 9b8b861: restriction and profile queries answered",
-     "predicted_by": ["svc:user"]},
-    {"id": "M3", "screen": "ordering flow",
-     "symptom": "the app's bottom-navigation menu is empty, so McDBaseActivity.showSelector dereferences a null MenuItem: the ordering host loops on its loading animation and the restaurant picker takes the process down. The menu is built from configuration that ConfigHelper never loads (its map stays null); the configuration itself is present, bundled in assets/server_config.json and parsed into the app's own SDK store",
-     "fix": "open: the app's startup chain never completes the configuration step",
-     "predicted_by": []},
-    {"id": "M4", "screen": "welcome screen",
-     "symptom": "the app's Upgrade dialog is laid out wider than the 1200 px display on some launches (a window bounds of 1282 px was logged), putting its OK button off the right edge; with no working back key the dialog cannot be dismissed at all",
-     "fix": "open: window width comes out inconsistent between launches",
-     "predicted_by": ["wm:window-placement"]}
+    {
+      "id": "M1",
+      "screen": "home dashboard",
+      "symptom": "Realm: mmap() failed (size 496, offset 81944): Invalid argument. Its page size came from sysconf(_SC_PAGESIZE): bionic numbers that selector 39, OH musl reads 39 as _SC_BC_STRING_MAX and answers 1000, so Realm's power-of-two rounding produced an unaligned offset and the activity died opening its database",
+      "fix": "westlake 2f70628: the bionic shim carries the full bionic->musl selector table and applies it to the app's packaged libraries, not the WebView DSO alone",
+      "predicted_by": [
+        "libc:constant-namespace"
+      ]
+    },
+    {
+      "id": "M2",
+      "screen": "WebView start-up",
+      "symptom": "UserManager.getApplicationRestrictions reached the in-process IUserManager, which threw UnsupportedOperationException inside a JNI callback; Chromium aborted the process",
+      "fix": "westlake 9b8b861: restriction and profile queries answered",
+      "predicted_by": [
+        "svc:user"
+      ]
+    },
+    {
+      "id": "M3",
+      "screen": "ordering flow",
+      "symptom": "the ordering screens die on a null MenuItem in McDBaseActivity.showSelector: the requested tab is not in the bottom-navigation menu and neither is item id 7, the hardcoded fallback the app then dereferences. The home dashboard's own tab bar is populated, and a sampling method trace shows AppCoreUtils.readJsonFromFile and ConfigHelper.i both running, so the app's configuration does load: what is missing is the particular tab this code path falls back to",
+      "fix": "open: which tabs the menu ends up with, and why id 7 is not among them",
+      "predicted_by": []
+    },
+    {
+      "id": "M4",
+      "screen": "welcome screen",
+      "symptom": "the app's Upgrade dialog is laid out wider than the 1200 px display on some launches (a window bounds of 1282 px was logged), putting its OK button off the right edge; with no working back key the dialog cannot be dismissed at all",
+      "fix": "open: window width comes out inconsistent between launches",
+      "predicted_by": [
+        "wm:window-placement"
+      ]
+    }
   ]
 }

@@ -32,12 +32,13 @@ class ProbeSuite(unittest.TestCase):
         dialog = SUITE["dialog-before-window"]
         lines = ["[WL-DIALOG-ORDER] placement=CENTRED at 280,634 size=640x651",
                  "[WL-DIALOG-ORDER] width=FITS right=920 screenWidth=1200",
+                 "[WL-DIALOG-ORDER] alertWidth=FITS at 58 right=1141 screenWidth=1200",
                  "[WL-DIALOG-ORDER] button center=600,1075"]
         self.assertEqual(run_suite.tap_target(lines, dialog), (600, 1075))
         self.assertEqual(run_suite.evaluate(lines, dialog), "pending", "centred but not yet clicked")
         self.assertEqual(run_suite.evaluate(lines + ["[WL-DIALOG-ORDER] dialog button clicked"], dialog), "pass")
         # McDonald's upgrade dialog was centred and still unreachable: it ran off the right edge.
-        overflow = [lines[0], "[WL-DIALOG-ORDER] width=OVERFLOWS right=1290 screenWidth=1200", lines[2]]
+        overflow = [lines[0], "[WL-DIALOG-ORDER] alertWidth=OVERFLOWS at 58 right=1141 screenWidth=1083", lines[3]]
         self.assertEqual(run_suite.evaluate(overflow, dialog), "fail", "a window wider than the display")
         self.assertIn("button center=", run_suite.markers(dialog))
 

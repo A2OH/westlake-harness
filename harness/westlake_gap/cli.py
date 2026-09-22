@@ -188,6 +188,16 @@ def parser() -> argparse.ArgumentParser:
     dep_cmd.add_argument("--title", default="Deployment check")
     dep_cmd.add_argument("--out", required=True, type=Path, help="output directory")
 
+    trace_cmd = commands.add_parser(
+        "trace-methods",
+        help="decode an ART sampling trace from the board and list which of the app's own methods ran",
+    )
+    trace_cmd.add_argument("--trace", required=True, type=Path,
+                           help="trace file pulled from the device (WESTLAKE_METHOD_TRACE=<ms> writes it)")
+    trace_cmd.add_argument("--prefix", action="append", default=[],
+                           help="class prefix to report, e.g. com.mcdonalds; repeat. Default: every method")
+    trace_cmd.add_argument("--out", type=Path, help="write the report here instead of stdout")
+
     ndk_cmd = commands.add_parser(
         "ndk-coverage",
         help="measure the entire public NDK against a board's libraries and classify how each missing symbol is supplied",
@@ -351,6 +361,20 @@ def main(argv: list[str] | None = None) -> int:
         status = cov["summary"]["status"]
         print(f"{cov['summary']['symbols']} NDK symbols: OH {status.get('oh', 0)}, Westlake {status.get('westlake', 0)}, "
               f"missing {status.get('missing', 0)} -> {args.out}")
+        return 0
+    if args.command == "trace-methods":
+        from .methodtrace import markdown, parse, ran
+
+        trace = parse(args.trace.read_bytes())
+        prefixes = args.prefix or [""]
+        hits = ran(trace, prefixes)
+        report = markdown(trace, hits, prefixes)
+        if args.out:
+            args.out.parent.mkdir(parents=True, exist_ok=True)
+            args.out.write_text(report)
+        else:
+            print(report, end="")
+        print(f"{len(hits)} methods ran from {len(prefixes)} prefix(es), {trace['records']} samples", flush=True)
         return 0
     if args.command == "gap-map":
         from .contracts import manifest_facts

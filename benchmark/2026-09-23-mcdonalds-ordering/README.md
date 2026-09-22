@@ -23,7 +23,7 @@ screens that need the app's bottom-navigation menu die on a null (M3).
 |---|---|---|---|
 | M1 | home dashboard | Realm asked for the page size with bionic's selector number; OH musl reads 39 as `_SC_BC_STRING_MAX` and answered 1000, so Realm's rounding produced an unaligned mmap offset and the kernel refused it | closed (westlake `2f70628`) |
 | M2 | WebView start-up | the in-process `IUserManager` threw for a method it did not implement, inside a JNI callback, and Chromium aborted | closed (westlake `9b8b861`) |
-| M3 | ordering flow | the app's bottom-navigation menu is empty, so `showSelector` dereferences a null `MenuItem`: the ordering host loops on its loading animation, the restaurant picker takes the process down | **open** |
+| M3 | ordering flow | the ordering screens ask the bottom-navigation menu for a tab it does not have, and the hardcoded fallback `findItem(7)` is not there either, so `showSelector` dereferences null: the ordering host loops on its loading animation, the restaurant picker takes the process down | **open** |
 | M4 | welcome screen | the upgrade dialog is laid out wider than the display, putting its OK button off the right edge, and with no working back key it cannot be dismissed | **open** |
 
 ### M1 is a class, not an incident
@@ -35,7 +35,12 @@ row looks for them, and the first scan it ran on found a second instance nobody 
 `pathconf`, used by two of McDonald's packaged libraries, where bionic's `_PC_NAME_MAX` is 4 and
 musl's is 3. Fixed in the same shape (westlake `8984f3c`) before any app tripped over it.
 
-### M3: configuration the app never loads
+### M3: not the configuration, after all
+
+**The first diagnosis here was wrong, and the method trace is what corrected it.** The reasoning ran:
+the menu is empty, the menu comes from configuration, `ConfigHelper`'s map is filled by a startup
+step, therefore that step never runs. Every check below was spent ruling out reasons for a failure
+that was not happening.
 
 McDonald's builds its bottom navigation from configuration, not from a layout:
 
@@ -45,8 +50,9 @@ if (menu == null) menu = AppConfigurationManager.a().v("user_interface.applicati
 menu.iterator();      // throws when both are null; the app swallows it
 ```
 
-`ConfigHelper.v` reads an in-memory map that a startup step fills. That map stays null, so every
-lookup returns null and the menu keeps at most its Home tab. Ruled out so far, each with evidence:
+`ConfigHelper.v` reads an in-memory map that a startup step fills, and the theory was that the map
+stays null. These were ruled out one at a time, each with evidence, and all of them were answering
+the wrong question:
 
 - **not the backend, not Akamai**: the configuration ships in the APK, `assets/server_config.json`,
   with `tabCount: 5` and all 11 menu entries, and the app's own SDK store on the device contains
@@ -60,8 +66,21 @@ lookup returns null and the menu keeps at most its Home tab. Ruled out so far, e
 - **not CPU starvation**: the app polls `getPackageInfo("com.android.vending")` about 300 times a
   second while Play services are absent, but removing that cost (westlake `1415787`) changed nothing.
 
-What remains is the app's startup chain not completing the configuration step. Settling that needs
-method-level tracing, not class-load tracing.
+A sampling trace of the app's own methods (`WESTLAKE_METHOD_TRACE=45000`, decoded with
+`trace-methods`) ended it: `AppCoreUtils.readJsonFromFile` ran, and so did `ConfigHelper.i`, the
+method that fills the map. The configuration loads. The home dashboard's own tab bar is populated
+on screen, which said the same thing all along.
+
+What is actually wrong is narrower: the ordering screens ask the menu for a tab that is not there,
+and the fallback `findItem(7)` is not there either, so the app dereferences null. Which tabs the
+menu ends up with — and why the app's hardcoded fallback is not among them — is the open question.
+The app's feature flags arrive over the network (the trace is full of `SplitResponse` deserialisers),
+so a market configuration that never resolves is the first thing to look at.
+
+The lesson for the harness is about method, not about McDonald's: "the menu is empty, therefore its
+source never loaded" was an inference, and four checks were spent on it before anything measured the
+step itself. Class-load tracing could not settle it, because a class can be loaded and its body never
+run. That is the gap the trace tool fills.
 
 ### M4: the display width the app is told changes
 
@@ -99,3 +118,4 @@ Both were fixed, because a gap the harness cannot observe is a gap it cannot map
 | `libc:constant-namespace` row | libc calls carrying a constant each libc numbers for itself, and whether the shim translates them for the app's own libraries or only for WebView |
 | [asset-list probe](../../probes/asset-list) | an app that finds its assets only by listing them |
 | dialog probe, `alertWidth` | a dialog wider than the display, which is unreachable however well it is centred |
+| [`trace-methods`](../../harness/westlake_gap/methodtrace.py) | which of the app's own methods actually ran, from an ART sampling trace the runtime writes on request (`WESTLAKE_METHOD_TRACE=<ms>`) |
