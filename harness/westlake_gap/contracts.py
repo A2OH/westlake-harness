@@ -181,6 +181,20 @@ def direct_launch_am_model(westlake_root: Path) -> dict[str, Any]:
             "source": f"{path.relative_to(westlake_root)}:{line}" if stub else None}
 
 
+def window_adapter_model(westlake_root: Path) -> dict[str, Any]:
+    """Window-manager semantics the in-process IWindowSession must reproduce, checked in source."""
+    path = westlake_root / "framework/window/java/WindowSessionAdapter.java"
+    text = path.read_text(errors="replace") if path.exists() else ""
+    return {
+        # Android: an activity's dialogs stack above its base window whatever the add order.
+        "dialogs_above_base": _evidence(text, r"shouldHoldBack\(", path, westlake_root),
+        # Android: WMS places a window by LayoutParams.gravity/x/y (a dialog is centred).
+        "placement_from_gravity": _evidence(text, r"Gravity\.apply|attrs\.gravity", path, westlake_root),
+        # Android: FLAG_DIM_BEHIND puts a dim layer of dimAmount under the window.
+        "dim_behind": _evidence(text, r"FLAG_DIM_BEHIND|dimAmount", path, westlake_root),
+    }
+
+
 def _evidence(text: str, pattern: str, path: Path, root: Path) -> dict[str, Any]:
     match = re.search(pattern, text)
     if not match:

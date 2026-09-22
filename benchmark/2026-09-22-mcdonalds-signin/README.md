@@ -1,4 +1,4 @@
-# McDonald's 26.31.1 to the sign-in screen: probes first, then one launch
+# McDonald's 26.31.1 to the sign-in screen: probes first, then the launch
 
 Board: OpenHarmony 6.1.0.31, arm64, SELinux permissive for these runs (Realm's named pipe, B7).
 Stack: Westlake Java rebuilt from source; the native runtime staged on the board on 2026-09-19 is
@@ -16,13 +16,13 @@ bugs one crash at a time.
 
 The same signed probe APKs run unchanged on the board (`probes/*`).
 
-| Probe | `0231db6` | `4993809` | `f4e0366` |
-|---|---|---|---|
-| `service-metadata` (Firebase component discovery) | PASS | — | PASS |
-| `provider-manifest` (providers at bind) | **FAIL**: no provider created | PASS | PASS |
-| `running-app-processes` | **FAIL_NULL** | FAIL_NULL | PASS (both phases) |
-| `signin-layout` (the sign-in sheet's views, fonts and drawing) | — | — | PASS, screen confirmed |
-| `dialog-before-window` | — | — | **FAIL**: dialog hidden under its activity |
+| Probe | `0231db6` | `4993809` | `f4e0366` | `5df440b` |
+|---|---|---|---|---|
+| `service-metadata` (Firebase component discovery) | PASS | — | PASS | PASS |
+| `provider-manifest` (providers at bind) | **FAIL**: no provider created | PASS | PASS | PASS |
+| `running-app-processes` | **FAIL_NULL** | FAIL_NULL | PASS (both phases) | PASS |
+| `signin-layout` (the sign-in sheet's views, fonts and drawing) | — | — | PASS, screen confirmed | PASS |
+| `dialog-before-window` | — | — | **FAIL**: dialog hidden under its activity | PASS: dialog above, but at (0,0) |
 
 **Providers (B9, fixed in `4993809`).** `SourcePackageRegistry` left `ComponentInfo.processName`
 null for components without `android:process`; PackageManagerService fills that in before anyone
@@ -74,13 +74,28 @@ native raise-to-top at creation (§385), skipping it, and creating the base wind
 reproduces it without McDonald's: a red dialog shown from `onCreate` is invisible under the green
 activity.
 
-**This is the remaining blocker to the sign-in screen (B11).** The fix belongs in the native window
-client (`oh_window_manager_client.cpp`): give a base window its place below the dialogs already
-attached to its token, for example by creating the activity's session at launch, before `onCreate`
-can show a dialog. The Java side cannot do it, because the session is created against the window
-that `addToDisplay` receives. The bridge does not currently rebuild from source: 11 of its 50
-sources fail on OH headers missing from the header carrier (`json/json.h` from jsoncpp in 9 of them,
-plus an input-method and a bundle-manager header).
+**B11, fixed in `5df440b` without touching native code.** The native window client does not rebuild
+from source today (11 of the bridge's 50 sources fail on OH headers missing from the header
+carrier), so the fix had to be in Java, and it can be. Android gives a window no surface while its
+activity is not yet visible. The window adapter now does the same: a dialog added on an activity
+token whose base window has no OH session yet gets its input channel and frames at once, and its
+OH session right after the base window's. Creation order, which is what OpenHarmony stacks by, then
+equals Android's stacking order. A forced resize makes the dialog relayout onto its new surface. An
+activity that never adds a window releases its dialogs after 3 s, the previous behaviour.
+
+With it, **McDonald's shows its sign-in sheet on the board**: "Sign in or sign up", the terms and
+privacy links, and Continue with Facebook / Google / Email, above the sign-in activity. The 1140×405
+dialog turns out to be McDonald's "Upgrade" notice. The board has network, the reference phone had
+none, and the app's remote config asks this version to update. Two differences from Android remain,
+both now rows in the map:
+
+- `wm:window-placement` (S): every window is laid out at (0,0). Android centres a dialog, and WMS
+  places any window by its gravity and x/y. The "Upgrade" dialog and the probe's red dialog both sit
+  at the top-left.
+- `wm:dim-behind` (M): nothing is dimmed behind a dialog with `FLAG_DIM_BEHIND`; OpenHarmony has no
+  such flag, so the dim layer would have to be drawn.
+
+Touch on the sign-in buttons has not been tried yet.
 
 Also seen, not blocking: `SplashActivity`'s window stays in the window list after the sign-in
 activity starts (it is at the bottom; why it is not removed is not yet traced), and a WebView-provider
@@ -89,16 +104,17 @@ minute).
 
 ## What the map says now
 
-`../2026-09-21-gapmap/current/` is regenerated against `f4e0366` with these probe results applied. The
+`../2026-09-21-gapmap/current/` is regenerated against `5df440b` with these probe results applied. The
 new category **Activity, window & process contracts** holds `am:process-table` (read from the stub's
-handler source; measured PASS) and `wm:dialog-stacking` (measured FAIL, effort M). Both are on the
-recorded path: McDonald's executes `getRunningAppProcesses`, `getProcessMemoryInfo` and
-`Dialog.show` on its way to sign-in.
+handler source), `wm:dialog-stacking` (read from the window adapter: is a dialog held back until its
+activity's window exists), `wm:window-placement` and `wm:dim-behind`, each confirmed by a probe on
+the board. All are on the recorded path: McDonald's executes `getRunningAppProcesses`,
+`getProcessMemoryInfo` and `Dialog.show` on its way to sign-in.
 
 Against the 75d82d5 baseline, the updated harness predicts B10 and flags B9 and B11 for
 verification, each naming the probe that then decided it. B9 was flagged by the map before any
 launch. The `am:process-table` and `wm:dialog-stacking` rows were written after B10 and B11 were
 found, so those two outcomes are not blind predictions.
 
-Open before the sign-in screen: B11 (window stacking, native), and B7 (Realm's named pipe:
-OpenHarmony policy, the board runs permissive).
+Open: B7 (Realm's named pipe: an OpenHarmony policy change; the board runs permissive), and the two
+window rows above. Nothing else stands between McDonald's and its sign-in screen on this board.

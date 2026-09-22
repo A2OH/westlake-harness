@@ -365,7 +365,7 @@ AM_PROCESS_TABLE = {"getRunningAppProcesses": "getRunningAppProcesses", "getRunn
                     "getProcessMemoryInfo": "getProcessMemoryInfo"}
 
 
-def app_framework_rows(scan: dict[str, Any], am: dict[str, Any]) -> list[dict[str, Any]]:
+def app_framework_rows(scan: dict[str, Any], am: dict[str, Any], wm: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     rows = []
     names = scan["inventory"].get("platform_method_names", {})
     called = [name for name in AM_PROCESS_TABLE if name in names.get("Landroid/app/ActivityManager;", [])]
@@ -381,14 +381,38 @@ def app_framework_rows(scan: dict[str, Any], am: dict[str, Any]) -> list[dict[st
             provider_source=am["source"], app_evidence=f"app calls {', '.join(called)}",
             shim="answer with the caller's process: name, pid, uid, foreground importance, its package"))
     if "show" in names.get("Landroid/app/Dialog;", []):
+        wm = wm or {}
+        stacking = wm.get("dialogs_above_base", {})
         rows.append(_row(
             "app-framework", "wm:dialog-stacking", "Dialogs stack above their activity's window, whatever the add order",
-            oh_touchpoint="window_manager (sub-window z-order)", verdict="unverified", shim_class="CU", effort="verify",
+            oh_touchpoint="window_manager (sub-window z-order: creation order)",
+            verdict="supplied" if stacking.get("present") else "unverified",
+            shim_class="C0" if stacking.get("present") else "CU", effort="verify",
             confidence=STATIC, probe="probes/dialog-before-window",
-            provider="Android WindowToken order: TYPE_BASE_APPLICATION below the token's other windows",
+            provider=("a dialog's OH session is held back until its activity's window has one, so creation order is "
+                      "Android's stacking order" if stacking.get("present")
+                      else "Android WindowToken order: TYPE_BASE_APPLICATION below the token's other windows"),
+            provider_source=stacking.get("source"),
             app_evidence="app shows dialogs (Dialog.show referenced); a dialog shown from onCreate/onResume is added "
                          "before the activity's own window",
             shim="stack a base application window below the dialogs already attached to its token"))
+        for rid, key, item, shim, effort in (
+                ("wm:window-placement", "placement_from_gravity", "Windows placed by LayoutParams gravity and x/y (dialogs centred)",
+                 "compute the frame from gravity/x/y against the display, as WindowLayout.computeFrames does", "S"),
+                ("wm:dim-behind", "dim_behind", "FLAG_DIM_BEHIND dims what is under a dialog",
+                 "draw a dim layer of dimAmount under the window (OH has no dim flag)", "M")):
+            check = wm.get(key, {})
+            rows.append(_row(
+                "app-framework", rid, item, oh_touchpoint="window_manager (session rect)" if key == "placement_from_gravity"
+                else "render_service (a layer under the window)",
+                verdict="supplied" if check.get("present") else "missing",
+                shim_class="C0" if check.get("present") else "C6", effort="verify" if check.get("present") else effort,
+                confidence=STATIC, probe="probes/dialog-before-window (visible on screen)",
+                provider="applied in the window adapter" if check.get("present")
+                else "every window is laid out at (0,0) with no dim layer" if key == "placement_from_gravity"
+                else "no dim layer is drawn",
+                provider_source=check.get("source"),
+                app_evidence="app shows dialogs (Dialog.show referenced)", shim=shim))
     return rows
 
 
@@ -641,7 +665,8 @@ def build_map(
     java, java_excluded = java_api_rows(scan, api_levels)
     svc, dynamic = service_rows(scan, aosp_services, westlake_services)
     rows = (java + svc + package_manager_rows(scan, facts, pm)
-            + app_framework_rows(scan, contracts.direct_launch_am_model(westlake_root))
+            + app_framework_rows(scan, contracts.direct_launch_am_model(westlake_root),
+                                 contracts.window_adapter_model(westlake_root))
             + native_upcall_rows(scan)
             + (ndk_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root), ndk_cov) if ndk_cov
                else native_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root)))
@@ -726,7 +751,7 @@ def apply_observed(gap_map: dict[str, Any], scan: dict[str, Any], observed: dict
                 on_path, evidence = True, "done by the platform when the process is bound"
         elif category == "app-framework":
             owner, names = (("Landroid/app/ActivityManager;", tuple(AM_PROCESS_TABLE)) if rid == "am:process-table"
-                            else ("Landroid/app/Dialog;", ("show",)))
+                            else ("Landroid/app/Dialog;", ("show",)))  # every wm: row is triggered by showing a dialog
             states = {k.partition("->")[2].split("(")[0]: touch[k] for k in by_owner.get(owner, [])
                       if k.partition("->")[2].split("(")[0] in names}
             on_path = bool(states)

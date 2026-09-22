@@ -19,3 +19,8 @@ McDonald's sign-in bottom sheet is this case. Build with `./build.sh`.
 On the OpenHarmony board (Westlake `f4e0366`): only the green activity is visible. The board's
 window list has the activity's window, created second, on top. See
 `benchmark/2026-09-22-mcdonalds-signin/`.
+
+With Westlake `5df440b`, which holds a dialog's OpenHarmony session back until its activity's window
+has one, the red dialog shows above the green activity. It sits at the top-left rather than centred:
+the window adapter lays every window out at (0,0) (`wm:window-placement`), and nothing is dimmed
+behind it (`wm:dim-behind`).

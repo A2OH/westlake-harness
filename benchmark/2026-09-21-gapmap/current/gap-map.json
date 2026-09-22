@@ -121,15 +121,15 @@
       "symptom": "ActivityManager.getRunningAppProcesses() and getRunningServices() return null; Kochava AppUtil iterates both unchecked"
     },
     {
-      "fix": "none yet: the native window client must stack a base window below its token's dialogs",
+      "fix": "hold a dialog's OH session back until its activity's window has one (westlake 5df440b, Java only)",
       "found_by": "first McDonald's launch on the rebuilt stack, 2026-09-22; reproduced by probes/dialog-before-window; map row added after the fact",
       "id": "B11",
-      "outcome": "predicted",
+      "outcome": "missed: row claimed supplied",
       "predicted_by": [
         "wm:dialog-stacking"
       ],
       "row": "wm:dialog-stacking",
-      "row_verdict": "missing",
+      "row_verdict": "supplied",
       "symptom": "sign-in activity reached and drawing, screen white: the sign-in bottom sheet, a dialog shown before the activity's window, is stacked under that window"
     }
   ],
@@ -154,7 +154,7 @@
     "oh_board": "OpenHarmony 6.1.0.31, arm64, SELinux enforcing policy as loaded",
     "westlake": {
       "branch": "mcdonalds-signin-fixes",
-      "commit": "f4e0366953002a33db50b639beb814033c423b83",
+      "commit": "5df440b99e8de880c68b2a974a983d149fee70d9",
       "uncommitted": []
     }
   },
@@ -3419,7 +3419,7 @@
         "date": "2026-09-22",
         "passed": true,
         "verdict": "PASS_SERVICE_INFO_METADATA",
-        "westlake_commit": "f4e0366953002a33db50b639beb814033c423b83"
+        "westlake_commit": "5df440b99e8de880c68b2a974a983d149fee70d9"
       },
       "provider": "PMS-side direct-boot match defaults applied before PackageParser.isMatch",
       "provider_source": "framework/package-manager/java/SourcePackageRegistry.java:77",
@@ -3463,7 +3463,7 @@
         "date": "2026-09-22",
         "passed": true,
         "verdict": "PASS_QUERY_EXCLUDED_REMOTE_FILTERED",
-        "westlake_commit": "f4e0366953002a33db50b639beb814033c423b83"
+        "westlake_commit": "5df440b99e8de880c68b2a974a983d149fee70d9"
       },
       "shim": "install every main-process provider in initOrder before Application.onCreate",
       "shim_class": "C0",
@@ -3792,7 +3792,7 @@
         "date": "2026-09-22",
         "passed": true,
         "verdict": "PASS_SELF_VISIBLE (Application and Activity phases)",
-        "westlake_commit": "f4e0366953002a33db50b639beb814033c423b83"
+        "westlake_commit": "5df440b99e8de880c68b2a974a983d149fee70d9"
       },
       "provider": "answered with the caller's own process",
       "provider_source": "framework/appspawn-x/java/com/android/internal/os/AppSpawnXInit.java:1351",
@@ -3804,23 +3804,62 @@
       "app_evidence": "app shows dialogs (Dialog.show referenced); a dialog shown from onCreate/onResume is added before the activity's own window",
       "category": "app-framework",
       "confidence": "probe",
-      "effort": "M",
+      "effort": "none",
       "id": "wm:dialog-stacking",
       "item": "Dialogs stack above their activity's window, whatever the add order",
       "observed": {
         "evidence": "show executed",
         "on_path": true
       },
-      "oh_touchpoint": "window_manager (sub-window z-order)",
+      "oh_touchpoint": "window_manager (sub-window z-order: creation order)",
       "probe": "probes/dialog-before-window",
       "probe_result": {
         "date": "2026-09-22",
-        "passed": false,
-        "verdict": "FAIL: screen shows only the green activity; the red dialog shown from onCreate is under it",
-        "westlake_commit": "f4e0366953002a33db50b639beb814033c423b83"
+        "passed": true,
+        "verdict": "PASS: red dialog above the green activity (placed at (0,0), not centred)",
+        "westlake_commit": "5df440b99e8de880c68b2a974a983d149fee70d9"
       },
-      "provider": "OH stacks this app's sub-windows by creation order (raise, no raise and WINDOW_TYPE_MEDIA all measured: the last-created window is on top); the activity window, added after its dialogs, covers them",
+      "provider": "a dialog's OH session is held back until its activity's window has one, so creation order is Android's stacking order",
+      "provider_source": "framework/window/java/WindowSessionAdapter.java:168",
       "shim": "stack a base application window below the dialogs already attached to its token",
+      "shim_class": "C0",
+      "verdict": "supplied"
+    },
+    {
+      "app_evidence": "app shows dialogs (Dialog.show referenced)",
+      "category": "app-framework",
+      "confidence": "static",
+      "effort": "S",
+      "id": "wm:window-placement",
+      "item": "Windows placed by LayoutParams gravity and x/y (dialogs centred)",
+      "observed": {
+        "evidence": "show executed",
+        "on_path": true
+      },
+      "oh_touchpoint": "window_manager (session rect)",
+      "probe": "probes/dialog-before-window (visible on screen)",
+      "provider": "every window is laid out at (0,0) with no dim layer",
+      "provider_source": "framework/window/java/WindowSessionAdapter.java",
+      "shim": "compute the frame from gravity/x/y against the display, as WindowLayout.computeFrames does",
+      "shim_class": "C6",
+      "verdict": "missing"
+    },
+    {
+      "app_evidence": "app shows dialogs (Dialog.show referenced)",
+      "category": "app-framework",
+      "confidence": "static",
+      "effort": "M",
+      "id": "wm:dim-behind",
+      "item": "FLAG_DIM_BEHIND dims what is under a dialog",
+      "observed": {
+        "evidence": "show executed",
+        "on_path": true
+      },
+      "oh_touchpoint": "render_service (a layer under the window)",
+      "probe": "probes/dialog-before-window (visible on screen)",
+      "provider": "no dim layer is drawn",
+      "provider_source": "framework/window/java/WindowSessionAdapter.java",
+      "shim": "draw a dim layer of dimAmount under the window (OH has no dim flag)",
       "shim_class": "C6",
       "verdict": "missing"
     },

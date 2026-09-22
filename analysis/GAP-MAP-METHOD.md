@@ -126,7 +126,8 @@ providers were never created at bind (B9), and the direct-launch `IActivityManag
 process lists that an SDK iterates (B10). The first McDonald's launch after those fixes reached
 the sign-in activity and exposed a third: OpenHarmony stacks the app's windows by creation order,
 so a dialog shown before its activity's window is hidden under it (B11,
-`probes/dialog-before-window`). See `benchmark/2026-09-22-mcdonalds-signin/`.
+`probes/dialog-before-window`). Holding the dialog's session back until the activity's window has
+one fixed it, and McDonald's shows its sign-in screen. See `benchmark/2026-09-22-mcdonalds-signin/`.
 
 ## Running it
 

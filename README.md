@@ -218,8 +218,9 @@ to **observed** (the full app on the device). The launch becomes acceptance rath
 `--blockers` replays failures already paid for. Against the provider McDonald's actually ran on,
 the map flags **6 of its 8** board failures before any launch
 ([benchmark](benchmark/2026-09-21-gapmap/README.md)). The probes then found two more before the
-app reached them, and the first launch after those fixes reached the sign-in activity with one
-blocker left: window stacking ([benchmark](benchmark/2026-09-22-mcdonalds-signin/README.md)).
+app reached them. The first launch after those fixes reached the sign-in activity and exposed one
+more, window stacking, which a probe reproduced and a Java fix closed: McDonald's now shows its
+sign-in screen on the board ([benchmark](benchmark/2026-09-22-mcdonalds-signin/README.md)).
 
 ### Which gaps are on the path: recorded, not guessed
 

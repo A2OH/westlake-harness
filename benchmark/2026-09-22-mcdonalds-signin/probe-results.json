@@ -26,6 +26,11 @@
     {"probe": "dialog-before-window", "westlake_commit": "f4e0366953002a33db50b639beb814033c423b83", "date": "2026-09-22",
      "verdict": "FAIL: screen shows only the green activity; the red dialog shown from onCreate is under it", "passed": false,
      "effort": "M", "shim_class": "C6",
-     "finding": "OH stacks this app's sub-windows by creation order (raise, no raise and WINDOW_TYPE_MEDIA all measured: the last-created window is on top); the activity window, added after its dialogs, covers them"}
+     "finding": "OH stacks this app's sub-windows by creation order (raise, no raise and WINDOW_TYPE_MEDIA all measured: the last-created window is on top); the activity window, added after its dialogs, covers them"},
+    {"probe": "service-metadata", "westlake_commit": "5df440b99e8de880c68b2a974a983d149fee70d9", "date": "2026-09-22", "verdict": "PASS_SERVICE_INFO_METADATA", "passed": true},
+    {"probe": "provider-manifest", "westlake_commit": "5df440b99e8de880c68b2a974a983d149fee70d9", "date": "2026-09-22", "verdict": "PASS_QUERY_EXCLUDED_REMOTE_FILTERED", "passed": true},
+    {"probe": "running-app-processes", "westlake_commit": "5df440b99e8de880c68b2a974a983d149fee70d9", "date": "2026-09-22", "verdict": "PASS_SELF_VISIBLE (Application and Activity phases)", "passed": true},
+    {"probe": "signin-layout", "westlake_commit": "5df440b99e8de880c68b2a974a983d149fee70d9", "date": "2026-09-22", "verdict": "PASS_SIGNIN_LAYOUT_DRAWN views=17 zeroSized=0", "passed": true},
+    {"probe": "dialog-before-window", "westlake_commit": "5df440b99e8de880c68b2a974a983d149fee70d9", "date": "2026-09-22", "verdict": "PASS: red dialog above the green activity (placed at (0,0), not centred)", "passed": true}
   ]
 }

@@ -14,7 +14,7 @@ from pathlib import Path
 
 from test_known_answers import _find_android_d8, _run, _write
 from westlake_gap import gapmap, services
-from westlake_gap.contracts import direct_launch_am_model, pm_adapter_model
+from westlake_gap.contracts import direct_launch_am_model, pm_adapter_model, window_adapter_model
 from westlake_gap.scanner import inventory_dex
 
 
@@ -235,6 +235,25 @@ class AppFrameworkContracts(unittest.TestCase):
         self.assertEqual(answered["answered"], ["getRunningAppProcesses", "getServices"])
         rows = {r["id"]: r for r in gapmap.app_framework_rows(scan, answered)}
         self.assertEqual(rows["am:process-table"]["verdict"], "supplied")
+
+    def test_window_semantics_from_source(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="westlake-wm-") as temp:
+            root = Path(temp)
+            adapter = root / "framework/window/java/WindowSessionAdapter.java"
+            # A comment naming ViewRootImpl's computeFrames is not placement support.
+            _write(adapter, """class WindowSessionAdapter {
+                // ViewRootImpl calls mWindowLayout.computeFrames(...) in LOCAL_LAYOUT mode
+                int addToDisplay() { if (shouldHoldBack(type, token)) return holdBack(); return 0; }
+            }""")
+            wm = window_adapter_model(root)
+            self.assertTrue(wm["dialogs_above_base"]["present"])
+            self.assertFalse(wm["placement_from_gravity"]["present"])
+            self.assertFalse(wm["dim_behind"]["present"])
+            scan = {"inventory": {"platform_method_names": {"Landroid/app/Dialog;": ["show"]}}}
+            rows = {r["id"]: r for r in gapmap.app_framework_rows(scan, {"proxy_stub": False, "answered": [], "source": None}, wm)}
+            self.assertEqual(rows["wm:dialog-stacking"]["verdict"], "supplied")
+            self.assertEqual((rows["wm:window-placement"]["verdict"], rows["wm:window-placement"]["effort"]), ("missing", "S"))
+            self.assertEqual(rows["wm:dim-behind"]["verdict"], "missing")
 
     def test_probe_results_apply_only_to_their_commit(self) -> None:
         def fresh():
