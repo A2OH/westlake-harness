@@ -193,11 +193,12 @@ and 8 enumerate.
 
 | Surface | App side | Provider side |
 |---|---|---|
-| System services | `getSystemService(String\|Class)`, `ContextCompat`, `ServiceManager` call sites and the manager methods called | AOSP `SystemServiceRegistry` and mainline initializers (name → manager → binders, including lazily fetched ones) × Westlake `OHServiceManager`, runtime seeds, `AppSpawnXInit` overrides → `supplied` / `hollow` / `null` / `inert` / `unresolved` |
+| System services | `getSystemService(String\|Class)`, `ContextCompat`, `ServiceManager` call sites and the manager methods called; Kotlin non-null casts of the manager (`as UiModeManager` throws on null instead of skipping) | AOSP `SystemServiceRegistry` and mainline initializers (name → manager → binders, including lazily fetched ones) × Westlake `OHServiceManager`, runtime seeds, binders published into `ServiceManager.sCache` anywhere in the tree → `supplied` / `strict` (answers some methods, throws for the rest) / `hollow` / `null` / `inert` / `unresolved` |
+| Keystore & crypto providers | JCA `getInstance(type, provider)` calls and the `"AndroidKeyStore"` constant | whether the runtime installs a provider under that name (Android's zygote does), and what backs it |
 | Package manager & manifest | components, `<meta-data>`, `directBootAware`, providers and `initOrder`, splits, processes; `PackageManager` calls | `PackageManagerAdapter` method by method (bridged, or stub and what it returns); PMS semantics the source-app path must reproduce |
-| Activity, window & process contracts | `ActivityManager` process-table queries, `Dialog.show` | what system_server answers, answered in-process in direct launch: the `IActivityManager` stub handler (null for any object result it does not answer by name), Android window stacking; decided by probes |
+| Activity, window & process contracts | `ActivityManager` process-table queries, `Dialog.show`, `new WebView` | what system_server answers, answered in-process in direct launch: the `IActivityManager` stub handler (null for any object result it does not answer by name), Android window stacking; decided by probes. WebView's sandboxed renderer process, which AOSP's `WebViewDelegate` forces on under the update-service flag |
 | Sandbox policy | objects the code creates | OH SELinux decision for the app domain, queried from the loaded kernel policy (`probes/avq.c`, `harness/westlake_gap/data/oh-app-data-policy.json`), beside the AOSP rule |
-| Loading & packaging | `extractNativeLibs`, split ABI libraries | OH linker capability (board test) and the launcher's extraction |
+| Loading & packaging | `extractNativeLibs`, split ABI libraries, packaged libraries and their DT_NEEDED graph | OH linker capability (board test), the launcher's extraction, and board libraries of the same name that the child's search path finds first (`--board-libs`) |
 | External services & SDKs | GMS/Firebase markers; device-probing SDKs | no Google services on OH; the loader's refusal list |
 
 ### The output: one gap map per APK
@@ -221,6 +222,14 @@ the map flags **6 of its 8** board failures before any launch
 app reached them. The first launch after those fixes reached the sign-in activity and exposed one
 more, window stacking, which a probe reproduced and a Java fix closed: McDonald's now shows its
 sign-in screen on the board ([benchmark](benchmark/2026-09-22-mcdonalds-signin/README.md)).
+
+Burger King was the first blind test: predictions committed before any launch, scored after
+([benchmark](benchmark/2026-09-22-burgerking-blind/README.md)). Six were right and four wrong, and
+all four wrong ones were startup blockers that the map said would be fine. The blind map had a row
+for 2 of the 5 blockers. Each miss is now a check: shadowed libraries, JCA providers, Kotlin
+non-null casts of null services, throwing service proxies, and WebView's renderer process. With
+them, the same APK against the same provider backtests 5 of 5. That rescan was written after the
+fact, so the next app is the real test.
 
 ### Is the build under test what the source says?
 
