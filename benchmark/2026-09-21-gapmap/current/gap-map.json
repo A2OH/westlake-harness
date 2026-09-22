@@ -131,6 +131,72 @@
       "row": "wm:dialog-stacking",
       "row_verdict": "supplied",
       "symptom": "sign-in activity reached and drawing, screen white: the sign-in bottom sheet, a dialog shown before the activity's window, is stacked under that window"
+    },
+    {
+      "fix": "place by WindowLayout and route touches to the window under the pointer (westlake f6dc615)",
+      "found_by": "sign-in screenshot, 2026-09-22; row read from the window adapter source",
+      "id": "B12",
+      "outcome": "missed: row claimed supplied",
+      "predicted_by": [
+        "wm:window-placement"
+      ],
+      "row": "wm:window-placement",
+      "row_verdict": "supplied",
+      "symptom": "dialogs drawn at the top-left instead of centred; taps on a moved window missed it"
+    },
+    {
+      "fix": "dim layer window under the dimming window (westlake f6dc615)",
+      "found_by": "sign-in screenshot, 2026-09-22; row read from the window adapter source",
+      "id": "B13",
+      "outcome": "missed: row claimed supplied",
+      "predicted_by": [
+        "wm:dim-behind"
+      ],
+      "row": "wm:dim-behind",
+      "row_verdict": "supplied",
+      "symptom": "nothing dimmed behind a FLAG_DIM_BEHIND dialog"
+    },
+    {
+      "fix": "source-built helper added to the runtime (westlake tools/build_native.py, byte-identical to earlier builds)",
+      "found_by": "tap on the email field, 2026-09-22. No row: the map does not check that Westlake's own helper libraries are staged",
+      "id": "B14",
+      "outcome": "missed: no row",
+      "predicted_by": [],
+      "row": null,
+      "row_verdict": null,
+      "symptom": "focusing the email field shows no keyboard: liboh_ime_helper_capi.so is not in the staged runtime (dlopen errno 2)"
+    },
+    {
+      "fix": "IME insets on the focused window against the physical display (westlake f6dc615)",
+      "found_by": "typing test, 2026-09-22. No row: an IME-insets probe is the missing check",
+      "id": "B15",
+      "outcome": "missed: no row",
+      "predicted_by": [],
+      "row": null,
+      "row_verdict": null,
+      "symptom": "the keyboard covers the focused field: the occupied area was measured against a dialog window's own size and applied to the reporting window"
+    },
+    {
+      "fix": "source-built bionic shim with the loader refusal replaces the captured copy (manifest 66853c2)",
+      "found_by": "launch with the WebView input, 2026-09-22 (B3 again, through a stale shim)",
+      "id": "B16",
+      "outcome": "flagged for verification",
+      "predicted_by": [
+        "env:akamai-bot-manager"
+      ],
+      "row": "env:akamai-bot-manager",
+      "row_verdict": "refused",
+      "symptom": "with the WebView supplied, Akamai's libakamaibmp.so loads and kills the process with SIGILL"
+    },
+    {
+      "fix": "local DestroyActivityItem when no OH ability stands behind the activity (westlake 4fbb09b)",
+      "found_by": "window list during the sign-in run, 2026-09-22. No row: an activity-finish probe is the missing check",
+      "id": "B17",
+      "outcome": "missed: no row",
+      "predicted_by": [],
+      "row": null,
+      "row_verdict": null,
+      "symptom": "a finished activity is never destroyed in direct launch; its window stays in the window list"
     }
   ],
   "notes": {
@@ -154,7 +220,7 @@
     "oh_board": "OpenHarmony 6.1.0.31, arm64, SELinux enforcing policy as loaded",
     "westlake": {
       "branch": "mcdonalds-signin-fixes",
-      "commit": "5df440b99e8de880c68b2a974a983d149fee70d9",
+      "commit": "f6dc615029471f5d57051c9552f44df53cfb9ac5",
       "uncommitted": []
     }
   },
@@ -3418,8 +3484,8 @@
       "probe_result": {
         "date": "2026-09-22",
         "passed": true,
-        "verdict": "PASS_SERVICE_INFO_METADATA",
-        "westlake_commit": "5df440b99e8de880c68b2a974a983d149fee70d9"
+        "verdict": "PASS_SERVICE_INFO_METADATA (SELinux enforcing)",
+        "westlake_commit": "f6dc615029471f5d57051c9552f44df53cfb9ac5"
       },
       "provider": "PMS-side direct-boot match defaults applied before PackageParser.isMatch",
       "provider_source": "framework/package-manager/java/SourcePackageRegistry.java:77",
@@ -3462,8 +3528,8 @@
       "probe_result": {
         "date": "2026-09-22",
         "passed": true,
-        "verdict": "PASS_QUERY_EXCLUDED_REMOTE_FILTERED",
-        "westlake_commit": "5df440b99e8de880c68b2a974a983d149fee70d9"
+        "verdict": "PASS_QUERY_EXCLUDED_REMOTE_FILTERED (SELinux enforcing)",
+        "westlake_commit": "f6dc615029471f5d57051c9552f44df53cfb9ac5"
       },
       "shim": "install every main-process provider in initOrder before Application.onCreate",
       "shim_class": "C0",
@@ -3791,8 +3857,8 @@
       "probe_result": {
         "date": "2026-09-22",
         "passed": true,
-        "verdict": "PASS_SELF_VISIBLE (Application and Activity phases)",
-        "westlake_commit": "5df440b99e8de880c68b2a974a983d149fee70d9"
+        "verdict": "PASS_SELF_VISIBLE, both phases (SELinux enforcing)",
+        "westlake_commit": "f6dc615029471f5d57051c9552f44df53cfb9ac5"
       },
       "provider": "answered with the caller's own process",
       "provider_source": "framework/appspawn-x/java/com/android/internal/os/AppSpawnXInit.java:1351",
@@ -3816,11 +3882,11 @@
       "probe_result": {
         "date": "2026-09-22",
         "passed": true,
-        "verdict": "PASS: red dialog above the green activity (placed at (0,0), not centred)",
-        "westlake_commit": "5df440b99e8de880c68b2a974a983d149fee70d9"
+        "verdict": "PASS: dialog above the dimmed activity, placement=CENTRED at 280,634, button click delivered at screen coordinates (SELinux enforcing)",
+        "westlake_commit": "f6dc615029471f5d57051c9552f44df53cfb9ac5"
       },
       "provider": "a dialog's OH session is held back until its activity's window has one, so creation order is Android's stacking order",
-      "provider_source": "framework/window/java/WindowSessionAdapter.java:168",
+      "provider_source": "framework/window/java/WindowSessionAdapter.java:370",
       "shim": "stack a base application window below the dialogs already attached to its token",
       "shim_class": "C0",
       "verdict": "supplied"
@@ -3828,8 +3894,8 @@
     {
       "app_evidence": "app shows dialogs (Dialog.show referenced)",
       "category": "app-framework",
-      "confidence": "static",
-      "effort": "S",
+      "confidence": "probe",
+      "effort": "none",
       "id": "wm:window-placement",
       "item": "Windows placed by LayoutParams gravity and x/y (dialogs centred)",
       "observed": {
@@ -3837,18 +3903,24 @@
         "on_path": true
       },
       "oh_touchpoint": "window_manager (session rect)",
-      "probe": "probes/dialog-before-window (visible on screen)",
-      "provider": "every window is laid out at (0,0) with no dim layer",
-      "provider_source": "framework/window/java/WindowSessionAdapter.java",
+      "probe": "probes/dialog-before-window",
+      "probe_result": {
+        "date": "2026-09-22",
+        "passed": true,
+        "verdict": "PASS: dialog above the dimmed activity, placement=CENTRED at 280,634, button click delivered at screen coordinates (SELinux enforcing)",
+        "westlake_commit": "f6dc615029471f5d57051c9552f44df53cfb9ac5"
+      },
+      "provider": "applied in the window adapter",
+      "provider_source": "framework/window/java/WindowSessionAdapter.java:346",
       "shim": "compute the frame from gravity/x/y against the display, as WindowLayout.computeFrames does",
-      "shim_class": "C6",
-      "verdict": "missing"
+      "shim_class": "C0",
+      "verdict": "supplied"
     },
     {
       "app_evidence": "app shows dialogs (Dialog.show referenced)",
       "category": "app-framework",
-      "confidence": "static",
-      "effort": "M",
+      "confidence": "probe",
+      "effort": "none",
       "id": "wm:dim-behind",
       "item": "FLAG_DIM_BEHIND dims what is under a dialog",
       "observed": {
@@ -3856,12 +3928,18 @@
         "on_path": true
       },
       "oh_touchpoint": "render_service (a layer under the window)",
-      "probe": "probes/dialog-before-window (visible on screen)",
-      "provider": "no dim layer is drawn",
-      "provider_source": "framework/window/java/WindowSessionAdapter.java",
+      "probe": "probes/dialog-before-window",
+      "probe_result": {
+        "date": "2026-09-22",
+        "passed": true,
+        "verdict": "PASS: dialog above the dimmed activity, placement=CENTRED at 280,634, button click delivered at screen coordinates (SELinux enforcing)",
+        "westlake_commit": "f6dc615029471f5d57051c9552f44df53cfb9ac5"
+      },
+      "provider": "applied in the window adapter",
+      "provider_source": "framework/window/java/WindowSessionAdapter.java:84",
       "shim": "draw a dim layer of dimAmount under the window (OH has no dim flag)",
-      "shim_class": "C6",
-      "verdict": "missing"
+      "shim_class": "C0",
+      "verdict": "supplied"
     },
     {
       "app_evidence": "e.g. android/graphics/Path",

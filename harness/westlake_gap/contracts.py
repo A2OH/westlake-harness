@@ -189,7 +189,10 @@ def window_adapter_model(westlake_root: Path) -> dict[str, Any]:
         # Android: an activity's dialogs stack above its base window whatever the add order.
         "dialogs_above_base": _evidence(text, r"shouldHoldBack\(", path, westlake_root),
         # Android: WMS places a window by LayoutParams.gravity/x/y (a dialog is centred).
-        "placement_from_gravity": _evidence(text, r"Gravity\.apply|attrs\.gravity", path, westlake_root),
+        # Android's own WindowLayout, or a hand-written gravity application. A comment naming
+        # ViewRootImpl's mWindowLayout.computeFrames is not support, hence "WindowLayout()".
+        "placement_from_gravity": _evidence(
+            text, r"WindowLayout\(\)\s*\.computeFrames\(|Gravity\.apply|attrs\.gravity", path, westlake_root),
         # Android: FLAG_DIM_BEHIND puts a dim layer of dimAmount under the window.
         "dim_behind": _evidence(text, r"FLAG_DIM_BEHIND|dimAmount", path, westlake_root),
     }

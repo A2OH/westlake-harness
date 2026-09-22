@@ -407,7 +407,7 @@ def app_framework_rows(scan: dict[str, Any], am: dict[str, Any], wm: dict[str, A
                 else "render_service (a layer under the window)",
                 verdict="supplied" if check.get("present") else "missing",
                 shim_class="C0" if check.get("present") else "C6", effort="verify" if check.get("present") else effort,
-                confidence=STATIC, probe="probes/dialog-before-window (visible on screen)",
+                confidence=STATIC, probe="probes/dialog-before-window",
                 provider="applied in the window adapter" if check.get("present")
                 else "every window is laid out at (0,0) with no dim layer" if key == "placement_from_gravity"
                 else "no dim layer is drawn",

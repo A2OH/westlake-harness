@@ -105,9 +105,38 @@ activity starts (it is at the bottom; why it is not removed is not yet traced), 
 startup retry loops continuously (`configured provider unavailable`, about 5,600 retries in the first
 minute).
 
+## Past the sign-in screen: placement, dim, touch, keyboard, SELinux
+
+With the sheet on screen, the remaining differences from Android were fixed and checked on the
+board, this time under **enforcing** SELinux:
+
+| Issue | Cause | Fix |
+|---|---|---|
+| Dialogs at the top-left (B12) | every window laid out at (0,0); relayout gets LayoutParams only when they change | Android's `WindowLayout` places windows that do not fill the display; the render node is moved to the frame after each relayout (westlake `f6dc615`) |
+| Taps on a moved window missed it | the native tap channel delivers raw screen coordinates to one root | `OHTouchInjector` picks the topmost touchable (or touch-modal) window under the pointer by OH session order and offsets the event into it |
+| No dim behind dialogs (B13) | OpenHarmony has no `FLAG_DIM_BEHIND` | a translucent black window created just below the dimming window; only the topmost one per token is drawn, inactive ones transparent because hiding an OH window does not take effect |
+| No keyboard (B14) | `liboh_ime_helper_capi.so` missing from the staged runtime | source-built (byte-identical to the earlier builds) and added to the runtime |
+| Keyboard covers the field (B15) | the occupied area was measured against a dialog window's own size and applied to the reporting window | IME insets on the focused window against the physical display; the sheet moves above the keyboard |
+| A finished activity's window stays (B17) | `finishActivity` relied on OH `TerminateAbility`, absent in direct launch | a local `DestroyActivityItem` (westlake `4fbb09b`) |
+| Dialog released too early | held-back fallback fired at 3 s while McDonald's onCreate was still running | wait while the activity is not yet resumed, up to 60 s |
+| Realm's pipe under enforcing (B7) | app data inherits `appdat`, where OH denies `fifo_file` | the launcher relabels the app's data tree `data_app_el2_file` (manifest `66853c2`); OH policy unchanged |
+| WebView startup loop | no WebView provider staged for McDonald's | the WebView input is supplied |
+| Akamai SIGILL with the WebView (B16) | the WebView input's captured shim predates the loader refusal | `--bionic-shim-build`: a source-built shim replaces it |
+
+Checked on the board: the Upgrade notice centred under a single dim with the sign-in sheet on top;
+taps reach the sheet with no aiming; the OH keyboard ("Westlake Pinyin") opens for the email field,
+the sheet moves above it, and keys typed on it land in the field. `dialog-before-window` now also
+checks centring and a tap on its dialog's button.
+
+Still open, not blocking: under enforcing SELinux the app's worker threads are denied writes to a
+datagram socket inherited from the launcher's `su` process (most likely its log connection), so
+some logging is lost; the fix is in the native launcher (open the log afresh in the child). Real
+finger input still goes through the tap channel (`touchfwd`); OH's own input dispatcher does not
+know Westlake's windows.
+
 ## What the map says now
 
-`../2026-09-21-gapmap/current/` is regenerated against `5df440b` with these probe results applied. The
+`../2026-09-21-gapmap/current/` is regenerated against `f6dc615` with these probe results applied. The
 new category **Activity, window & process contracts** holds `am:process-table` (read from the stub's
 handler source), `wm:dialog-stacking` (read from the window adapter: is a dialog held back until its
 activity's window exists), `wm:window-placement` and `wm:dim-behind`, each confirmed by a probe on
@@ -119,5 +148,5 @@ verification, each naming the probe that then decided it. B9 was flagged by the 
 launch. The `am:process-table` and `wm:dialog-stacking` rows were written after B10 and B11 were
 found, so those two outcomes are not blind predictions.
 
-Open: B7 (Realm's named pipe: an OpenHarmony policy change; the board runs permissive), and the two
-window rows above. Nothing else stands between McDonald's and its sign-in screen on this board.
+B14, B15 and B17 had no row: the map does not yet check that Westlake's own helper libraries are
+staged, and IME insets and activity finish need probes of their own. They are recorded as misses.

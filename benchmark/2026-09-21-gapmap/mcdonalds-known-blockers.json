@@ -27,6 +27,24 @@
      "found_by": "probes/running-app-processes on 2026-09-21; map row added 2026-09-22"},
     {"id": "B11", "symptom": "sign-in activity reached and drawing, screen white: the sign-in bottom sheet, a dialog shown before the activity's window, is stacked under that window",
      "fix": "hold a dialog's OH session back until its activity's window has one (westlake 5df440b, Java only)", "predicted_by": ["wm:dialog-stacking"],
-     "found_by": "first McDonald's launch on the rebuilt stack, 2026-09-22; reproduced by probes/dialog-before-window; map row added after the fact"}
+     "found_by": "first McDonald's launch on the rebuilt stack, 2026-09-22; reproduced by probes/dialog-before-window; map row added after the fact"},
+    {"id": "B12", "symptom": "dialogs drawn at the top-left instead of centred; taps on a moved window missed it",
+     "fix": "place by WindowLayout and route touches to the window under the pointer (westlake f6dc615)", "predicted_by": ["wm:window-placement"],
+     "found_by": "sign-in screenshot, 2026-09-22; row read from the window adapter source"},
+    {"id": "B13", "symptom": "nothing dimmed behind a FLAG_DIM_BEHIND dialog",
+     "fix": "dim layer window under the dimming window (westlake f6dc615)", "predicted_by": ["wm:dim-behind"],
+     "found_by": "sign-in screenshot, 2026-09-22; row read from the window adapter source"},
+    {"id": "B14", "symptom": "focusing the email field shows no keyboard: liboh_ime_helper_capi.so is not in the staged runtime (dlopen errno 2)",
+     "fix": "source-built helper added to the runtime (westlake tools/build_native.py, byte-identical to earlier builds)", "predicted_by": [],
+     "found_by": "tap on the email field, 2026-09-22. No row: the map does not check that Westlake's own helper libraries are staged"},
+    {"id": "B15", "symptom": "the keyboard covers the focused field: the occupied area was measured against a dialog window's own size and applied to the reporting window",
+     "fix": "IME insets on the focused window against the physical display (westlake f6dc615)", "predicted_by": [],
+     "found_by": "typing test, 2026-09-22. No row: an IME-insets probe is the missing check"},
+    {"id": "B16", "symptom": "with the WebView supplied, Akamai's libakamaibmp.so loads and kills the process with SIGILL",
+     "fix": "source-built bionic shim with the loader refusal replaces the captured copy (manifest 66853c2)", "predicted_by": ["env:akamai-bot-manager"],
+     "found_by": "launch with the WebView input, 2026-09-22 (B3 again, through a stale shim)"},
+    {"id": "B17", "symptom": "a finished activity is never destroyed in direct launch; its window stays in the window list",
+     "fix": "local DestroyActivityItem when no OH ability stands behind the activity (westlake 4fbb09b)", "predicted_by": [],
+     "found_by": "window list during the sign-in run, 2026-09-22. No row: an activity-finish probe is the missing check"}
   ]
 }

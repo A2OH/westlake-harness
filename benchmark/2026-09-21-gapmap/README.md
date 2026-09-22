@@ -8,7 +8,7 @@ the scan reproduces the 2026-09-18 findings exactly (1106/1106) and adds service
 |---|---|
 | `mcdonalds-known-blockers.json` | The failures McDonald's hit on the board (B1–B8 through 2026-09-18, B9–B11 found on 2026-09-21/22), each naming the row that should predict it |
 | `backtest-75d82d5/` | Map against the provider McDonald's actually ran on (Westlake `75d82d5`, launcher `f229702`) |
-| `current/` | Map against today's provider (Westlake `5df440b`), with the board's probe results applied (`../2026-09-22-mcdonalds-signin/`) |
+| `current/` | Map against today's provider (Westlake `f6dc615`), with the board's probe results applied (`../2026-09-22-mcdonalds-signin/`) |
 | `runtime-lock-source-build.json` | Lock of the runtime McDonald's runs on: 9 boot jars and 48 libraries pulled from the board |
 | `mcdonalds-scan.json` | The scan against that runtime, with `service_requests`, `platform_method_names` and `native_upcalls` (`--platform-jar android-34`) |
 | `toutiao-native-upcalls.json` | Java APIs Toutiao 13.9.0's native libraries call back into, per library |

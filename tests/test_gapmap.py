@@ -255,6 +255,15 @@ class AppFrameworkContracts(unittest.TestCase):
             self.assertEqual((rows["wm:window-placement"]["verdict"], rows["wm:window-placement"]["effort"]), ("missing", "S"))
             self.assertEqual(rows["wm:dim-behind"]["verdict"], "missing")
 
+            _write(adapter, """class WindowSessionAdapter {
+                Rect place() { new android.view.WindowLayout().computeFrames(attrs, state, safe, bounds,
+                        mode, w, h, types, 1f, frames); return frames.frame; }
+                float dim(LayoutParams attrs) { return (attrs.flags & FLAG_DIM_BEHIND) != 0 ? attrs.dimAmount : 0f; }
+            }""")
+            wm = window_adapter_model(root)
+            self.assertTrue(wm["placement_from_gravity"]["present"], "a call to Android's WindowLayout places windows")
+            self.assertTrue(wm["dim_behind"]["present"])
+
     def test_probe_results_apply_only_to_their_commit(self) -> None:
         def fresh():
             return {"provider": {"westlake": {"commit": "f4e0366953002a33"}},

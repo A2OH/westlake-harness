@@ -1,6 +1,6 @@
 # com.mcdonalds.app 26.31.1 → OpenHarmony: API shim gap map
 
-Provider: Westlake `mcdonalds-signin-fixes` @ `5df440b99e`; OH board: OpenHarmony 6.1.0.31, arm64, SELinux enforcing policy as loaded. Target SDK 35.
+Provider: Westlake `mcdonalds-signin-fixes` @ `f6dc615029`; OH board: OpenHarmony 6.1.0.31, arm64, SELinux enforcing policy as loaded. Target SDK 35.
 
 ## Summary
 
@@ -9,7 +9,7 @@ Provider: Westlake `mcdonalds-signin-fixes` @ `5df440b99e`; OH board: OpenHarmon
 | Java framework API | APK dex references − Westlake boot jars, filtered by API level | 17 | 17 | 16×verify, 1×S |
 | System services | getSystemService name → AOSP fetcher/binder → Westlake provision → OH subsystem | 33 | 23 | 1×verify, 10×S, 11×M, 1×L |
 | Package manager & manifest | manifest features and PackageManager calls → Westlake PM semantics | 21 | 18 | 12×S, 6×M |
-| Activity, window & process contracts | what system_server would answer, answered in-process by Westlake in direct launch → white-box probes | 4 | 2 | 1×S, 1×M |
+| Activity, window & process contracts | what system_server would answer, answered in-process by Westlake in direct launch → white-box probes | 4 | 0 | — |
 | Java APIs called from native code | JNIEnv FindClass/Get*ID names in packaged .so → Westlake boot jars | 6 | 0 | — |
 | Native platform symbols | packaged .so imports → OpenHarmony plus the NDK Westlake packages (package / libc-abi / weld / absence) | 3 | 2 | 1×S, 1×M |
 | Native loading & packaging | how the libraries are packaged → what the OH linker can map | 1 | 0 | — |
@@ -22,13 +22,12 @@ Effort: **XS** hours: configuration, labelling, or forwarding one symbol; **S** 
 
 Recorded on real Android with full method tracing: 44451 methods executed (25957 of them the app's own), app libraries loaded: libakamaibmp.so, librealm-jni.so, librealmc.so.
 
-**44 of the 69 open gaps were touched on this path; 25 were not.**
+**42 of the 67 open gaps were touched on this path; 25 were not.**
 
 | Gap | Category | Verdict | Effort | How we know |
 |---|---|---|---|---|
 | Create fifo_file in app data | Process sandbox & policy | denied | OH | loaded: librealm-jni.so, librealmc.so |
 | phone | System services | inert | L | 3 of 13 requesting methods ran; TelephonyManager code executed |
-| FLAG_DIM_BEHIND dims what is under a dialog | Activity, window & process contracts | missing | M | show executed |
 | Google Play services | External services & SDK behaviour | absent | M | 1979 of its methods executed |
 | PackageManager.queryBroadcastReceivers | Package manager & manifest | stub | M | referenced |
 | PackageManager.queryIntentContentProviders | Package manager & manifest | stub | M | executed |
@@ -43,7 +42,6 @@ Recorded on real Android with full method tracing: 44451 methods executed (25957
 | uimode | System services | null | M | 1 of 19 requesting methods ran; UiModeManager code executed |
 | user | System services | hollow | M | 1 of 8 requesting methods ran; UserManager code executed |
 | wifi | System services | null | M | 0 of 5 requesting methods ran; WifiManager code executed |
-| Windows placed by LayoutParams gravity and x/y (dialogs centred) | Activity, window & process contracts | missing | S | show executed |
 | Java library | Java framework API | missing | S | 10 members executed, 0 more referenced by executed methods, of 44 |
 | bionic libc ABI: 10 symbols to translate onto musl | Native platform symbols | missing | S | loaded: libakamaibmp.so |
 | PackageManager.getComponentEnabledSetting | Package manager & manifest | stub | S | executed |
@@ -75,7 +73,7 @@ Recorded on real Android with full method tracing: 44451 methods executed (25957
 
 ## Known blockers: status against this provider
 
-Of 11 blockers already hit on the board: **7** closed per source (confirm on device), **3** open, **1** open (verify).
+Of 17 blockers already hit on the board: **9** closed per source (confirm on device), **3** open, **3** no row, **2** open (verify).
 
 | Blocker | Symptom on device | Row | Status |
 |---|---|---|---|
@@ -90,6 +88,12 @@ Of 11 blockers already hit on the board: **7** closed per source (confirm on dev
 | B9 | no content provider from the manifest is created before Application.onCreate (Firebase, Forter, ML Kit initializers never run) | `pm:providers` (supplied) | closed per source (confirm on device) |
 | B10 | ActivityManager.getRunningAppProcesses() and getRunningServices() return null; Kochava AppUtil iterates both unchecked | `am:process-table` (supplied) | closed per source (confirm on device) |
 | B11 | sign-in activity reached and drawing, screen white: the sign-in bottom sheet, a dialog shown before the activity's window, is stacked under that window | `wm:dialog-stacking` (supplied) | closed per source (confirm on device) |
+| B12 | dialogs drawn at the top-left instead of centred; taps on a moved window missed it | `wm:window-placement` (supplied) | closed per source (confirm on device) |
+| B13 | nothing dimmed behind a FLAG_DIM_BEHIND dialog | `wm:dim-behind` (supplied) | closed per source (confirm on device) |
+| B14 | focusing the email field shows no keyboard: liboh_ime_helper_capi.so is not in the staged runtime (dlopen errno 2) | `—` (—) | no row |
+| B15 | the keyboard covers the focused field: the occupied area was measured against a dialog window's own size and applied to the reporting window | `—` (—) | no row |
+| B16 | with the WebView supplied, Akamai's libakamaibmp.so loads and kills the process with SIGILL | `env:akamai-bot-manager` (refused) | open (verify) |
+| B17 | a finished activity is never destroyed in direct launch; its window stays in the window list | `—` (—) | no row |
 
 ## Java framework API
 
@@ -189,10 +193,10 @@ _what system_server would answer, answered in-process by Westlake in direct laun
 
 | Item | Verdict | Class | Effort | On path | OH touchpoint | Shim / evidence |
 |---|---|---|---|---|---|---|
-| FLAG_DIM_BEHIND dims what is under a dialog | missing | C6 | M | yes | render_service (a layer under the window) | draw a dim layer of dimAmount under the window (OH has no dim flag)<br>app shows dialogs (Dialog.show referenced) `framework/window/java/WindowSessionAdapter.java` — probe: `probes/dialog-before-window (visible on screen)` |
-| Windows placed by LayoutParams gravity and x/y (dialogs centred) | missing | C6 | S | yes | window_manager (session rect) | compute the frame from gravity/x/y against the display, as WindowLayout.computeFrames does<br>app shows dialogs (Dialog.show referenced) `framework/window/java/WindowSessionAdapter.java` — probe: `probes/dialog-before-window (visible on screen)` |
 | ActivityManager process-table queries (getRunningAppProcesses, getRunningServices, getProcessMemoryInfo) | supplied | C0 | none | yes | none (the caller's own process is the answer) | answer with the caller's process: name, pid, uid, foreground importance, its package<br>app calls getRunningAppProcesses, getRunningServices, getProcessMemoryInfo `framework/appspawn-x/java/com/android/internal/os/AppSpawnXInit.java:1351` — probe: `probes/running-app-processes` |
-| Dialogs stack above their activity's window, whatever the add order | supplied | C0 | none | yes | window_manager (sub-window z-order: creation order) | stack a base application window below the dialogs already attached to its token<br>app shows dialogs (Dialog.show referenced); a dialog shown from onCreate/onResume is added before the activity's own window `framework/window/java/WindowSessionAdapter.java:168` — probe: `probes/dialog-before-window` |
+| Dialogs stack above their activity's window, whatever the add order | supplied | C0 | none | yes | window_manager (sub-window z-order: creation order) | stack a base application window below the dialogs already attached to its token<br>app shows dialogs (Dialog.show referenced); a dialog shown from onCreate/onResume is added before the activity's own window `framework/window/java/WindowSessionAdapter.java:370` — probe: `probes/dialog-before-window` |
+| Windows placed by LayoutParams gravity and x/y (dialogs centred) | supplied | C0 | none | yes | window_manager (session rect) | compute the frame from gravity/x/y against the display, as WindowLayout.computeFrames does<br>app shows dialogs (Dialog.show referenced) `framework/window/java/WindowSessionAdapter.java:346` — probe: `probes/dialog-before-window` |
+| FLAG_DIM_BEHIND dims what is under a dialog | supplied | C0 | none | yes | render_service (a layer under the window) | draw a dim layer of dimAmount under the window (OH has no dim flag)<br>app shows dialogs (Dialog.show referenced) `framework/window/java/WindowSessionAdapter.java:84` — probe: `probes/dialog-before-window` |
 
 ## Java APIs called from native code
 
