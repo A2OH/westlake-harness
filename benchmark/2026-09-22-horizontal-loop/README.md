@@ -446,3 +446,32 @@ sound through the standard players hit it.
 
 Also fixed along the way: both deployers sent files with a flat 55 s timeout, which held over USB
 and failed over wireless debugging. Send timeouts are now sized from the file.
+
+## Termux, followed to the bottom
+
+"Is Termux working?" — its UI rendered, but the terminal was empty. Following it down took three
+more framework fixes and ended at two OS-level walls.
+
+| layer | cause | fix |
+|---|---|---|
+| service crashed in `onCreate` | SDK 31 PendingIntent rule applied to an SDK 28 app: direct launch passed an **empty** `disabledCompatChanges`, which enables every target-gated change for every app | generate the gated-change table from `@ChangeId` annotations (290 changes); disable per target SDK |
+| `startForeground` NPE | in-process services attached with a null `IActivityManager` | pass `ActivityManager.getService()` |
+| installer never ran | consequence of the above | — |
+
+The compat one is the most consequential fix of the whole loop and it is not Termux's: every app
+had every Android 12–15 behaviour change forced on, and the 64 `@Disabled` changes on as well. The
+five drawing apps were re-run against it and all still draw.
+
+With those, the service starts, the bootstrap installs, and the terminal renders a real session.
+It then stops at two things that are **the OS, not the framework**:
+
+1. **No Android dynamic linker.** Termux's binaries name `/system/bin/linker64` as their ELF
+   interpreter; OH has none, so `exec` fails with `ENOENT`. Shown on screen:
+   `exec("/data/data/com.termux/files/usr/bin/login"): No such file or directory`.
+2. **No symlinks in app data.** The bootstrap creates 1,146. Under enforcing it creates **0** and
+   shows *"Unable to install bootstrap"*; OH's policy `neverallow`s `lnk_file` for app domains, so an
+   allow rule cannot fix it. (Measured on this build, not only from the earlier policy query.)
+
+Both affect any app that ships and executes its own Android binaries, not just Termux. The installer
+run that got past (2) was made with SELinux briefly permissive to capture app logs; it was restored
+to enforcing immediately after.
