@@ -64,6 +64,25 @@ failed, which is `libvision_core.so` plus `libc++_shared.so`. Measured:
 Isolating more than necessary is not free, which is the general lesson: `--android-native-target`
 changes which libraries a library can see, and that cuts both ways.
 
+### The empty feed is not a transport failure
+
+No app-level network instrument was needed, because the OS owns the sockets. `/proc/<pid>/net/tcp6`
+shows Toutiao's own uid holding four HTTPS connections, three ESTABLISHED and unchanged across
+samples, with 23 socket fds. The app reaches its servers, completes TLS and goes idle: it is not
+retrying and not failing to connect.
+
+One peer reverse-resolves to `ec2-…us-west-2.compute.amazonaws.com` — an overseas edge for an app
+whose content APIs are domestic. An empty feed may therefore be the backend's correct answer to an
+unregistered, out-of-region device, in which case it is not a platform gap and no shim can fix it.
+Deciding that needs the response body, which is inside TLS.
+
+This is worth stating as a rule: **an app showing no content is only a platform gap if the platform
+caused it.** Counting this one before the response is read would inflate the map with something
+Westlake cannot supply.
+
+The board has no `xt_qtaguid` or BPF accounting, so per-uid byte totals are unavailable, and the
+netns TCP counters are system-wide — they cannot be attributed to one app.
+
 ## McDonald's: M3 confirmed, M4 corrected
 
 **M3 reproduces**, with a stack the earlier record did not have:

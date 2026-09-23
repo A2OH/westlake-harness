@@ -26,7 +26,8 @@
     "an earlier version of this record named a null function pointer in libtttext_lite.so as Toutiao's blocker at ~85% confidence. That crash was caused by isolating 67 libraries rather than 2: libtttext_lite.so has seven weak undefined pthread_* references, and a weak symbol that does not resolve binds to zero, so calling it gives SIGSEGV at address 0 with frame #00 'Not mapped'. Neither the non-isolated run nor the two-library run shows it.",
     "the 67-library set was the wrong closure: it listed every library that REACHES libc++_shared.so through DT_NEEDED, when the fix needs the forward closure of the library that actually failed, which is libvision_core.so plus libc++_shared.so."
    ],
-   "still_open": "why the feed content area is empty. The recorded device_register/device_id note remains unverified: nothing in this run's log mentions device registration."
+   "still_open": "why the feed content area is empty -- but it is not a transport failure. With root on the board, /proc/<pid>/net/tcp6 shows the app's own uid holding four HTTPS connections, three ESTABLISHED and stable across samples with no churn, and 23 socket fds. The app reaches its servers, completes TLS and goes idle. One peer reverse-resolves to ec2-...us-west-2.compute.amazonaws.com, an overseas edge for an app whose content APIs are domestic, so an empty feed may be the backend's correct answer to an unregistered out-of-region device rather than anything a shim can supply. Deciding that needs the response body, which is inside TLS.",
+   "not_a_gap_until_shown": "an app showing no content is only a platform gap if the platform caused it. Counting this one before the response is read would inflate the map with something no shim can fix."
   }
  },
  "runtime_lookup_candidates": {
@@ -51,5 +52,6 @@
   },
   "for_scale": "the McDonald's map has 92 rows and 40 gaps, of which 2 are native-symbol gaps"
  },
- "method_note_isolation": "--android-native-target moves a library into an isolated Android namespace so DT_NEEDED picks the APK's copy. Isolating more than necessary is not free: a library whose weak libc references resolve in the default namespace can find them unresolved in the isolated one, and a weak symbol binds to zero rather than failing the load. Use the forward dependency closure of the library that failed, not every library that reaches the shadowed one."
+ "method_note_isolation": "--android-native-target moves a library into an isolated Android namespace so DT_NEEDED picks the APK's copy. Isolating more than necessary is not free: a library whose weak libc references resolve in the default namespace can find them unresolved in the isolated one, and a weak symbol binds to zero rather than failing the load. Use the forward dependency closure of the library that failed, not every library that reaches the shadowed one.",
+ "method_note_network": "There is no app-level network instrument and none was needed: the OS owns the sockets. /proc/<pid>/net/tcp6 gives per-connection state and the owning uid, netstat names the peers, and sampling twice distinguishes an idle keep-alive from a retry loop. No xt_qtaguid or BPF accounting on this board, so per-uid byte totals are not available and the netns TCP counters are system-wide -- they cannot be attributed to one app."
 }
