@@ -1,0 +1,221 @@
+{
+ "date": "2026-09-22",
+ "build": "framework-signin-device27",
+ "shim": "bionic-shim-nw1",
+ "method": "horizontal: one launch per app, no per-app iteration; score the first blocker only",
+ "apps_launched": 10,
+ "apps_rendering": 2,
+ "adapter_refusals_UnsupportedOperationException": 0,
+ "results": [
+  {
+   "app": "aegis",
+   "outcome": "launched",
+   "category": null,
+   "blocking_api": null,
+   "signal": "UI rendered; confirmed by screenshot",
+   "confidence": "observed-on-device",
+   "stderr_lines": 633
+  },
+  {
+   "app": "antennapod",
+   "outcome": "drawing",
+   "category": null,
+   "blocking_api": null,
+   "signal": "22 relayouts and traversals; no activity screenshot taken",
+   "confidence": "observed-on-device",
+   "stderr_lines": 681
+  },
+  {
+   "app": "markor",
+   "outcome": "bind-failed",
+   "category": "package-manager",
+   "blocking_api": "IPackageManager.resolveContentProvider(authority, flags, userId)",
+   "signal": "Couldn't find meta-data for provider with authority net.gsantner.markor.provider",
+   "confidence": "observed-on-device",
+   "stderr_lines": 390
+  },
+  {
+   "app": "anki",
+   "outcome": "bind-failed",
+   "category": "package-manager",
+   "blocking_api": "IPackageManager.resolveContentProvider(authority, flags, userId)",
+   "signal": "Couldn't find meta-data for provider with authority com.squareup.leakcanary.fileprovider.com.ichi2.anki",
+   "confidence": "observed-on-device",
+   "stderr_lines": 410
+  },
+  {
+   "app": "ooniprobe",
+   "outcome": "bind-failed",
+   "category": "system-services",
+   "blocking_api": "LocaleManager",
+   "signal": "NPE: setOverrideLocaleConfig on a null object reference",
+   "confidence": "observed-on-device",
+   "stderr_lines": 402
+  },
+  {
+   "app": "termux",
+   "outcome": "activity-failed",
+   "category": "system-services",
+   "blocking_api": "bindService",
+   "signal": "RuntimeException: bindService() failed",
+   "confidence": "observed-on-device",
+   "stderr_lines": 411
+  },
+  {
+   "app": "mindustry",
+   "outcome": "init-failed",
+   "category": "native-symbols",
+   "blocking_api": "libOpenSLES SL_IID_* data symbols",
+   "signal": "Error relocating libarc.so: SL_IID_ANDROIDSIMPLEBUFFERQUEUE: symbol not found",
+   "confidence": "observed-on-device",
+   "stderr_lines": 448
+  },
+  {
+   "app": "opencamera",
+   "outcome": "init-failed",
+   "category": "native-upcalls",
+   "blocking_api": "android.hardware.Camera._getNumberOfCameras",
+   "signal": "UnsatisfiedLinkError: No implementation found",
+   "confidence": "observed-on-device",
+   "stderr_lines": 418
+  },
+  {
+   "app": "newpipe",
+   "outcome": "crashed",
+   "category": "native-loading",
+   "blocking_api": "ASurfaceTransaction_* via libandroid.so",
+   "signal": "Unable to load function ASurfaceTransaction_*; Fatal signal 5 (SIGTRAP)",
+   "confidence": "observed-on-device",
+   "stderr_lines": 462
+  },
+  {
+   "app": "ppsspp",
+   "outcome": "no-surface",
+   "category": "app-framework",
+   "blocking_api": "OH window session for the activity",
+   "signal": "held back 1139x319: no surface until its activity's window has an OH session",
+   "confidence": "observed-on-device",
+   "stderr_lines": 374
+  }
+ ],
+ "repeated_blockers": [
+  {
+   "api": "IPackageManager.resolveContentProvider(authority, flags, userId)",
+   "category": "package-manager",
+   "apps_killed": [
+    "markor",
+    "anki"
+   ],
+   "apps_declaring_fileprovider_authority": [
+    "aegis",
+    "anki",
+    "antennapod",
+    "markor",
+    "ooniprobe",
+    "newpipe"
+   ],
+   "note": "only repeated blocker in the corpus; every other one was hit by exactly one app"
+  }
+ ],
+ "harness_errors_excluded_from_scoring": [
+  {
+   "app": "anki",
+   "error": "hdc connect failed status:-4039",
+   "action": "re-run; the re-run produced the scored result"
+  }
+ ],
+ "round2": {
+  "build": "framework-signin-device28",
+  "change": "IPackageManager.resolveContentProvider(authority, flags, userId) implemented (was logStub + return null); looks the authority up in the ProviderInfo list the component-keyed path already builds",
+  "apps_rendering": 3,
+  "results": [
+   {
+    "app": "markor",
+    "round1": "bind-failed",
+    "round2": "rendering",
+    "verdict": "CLOSED",
+    "evidence": "resolveContentProvider net.gsantner.markor.provider -> androidx.core.content.FileProvider metadata=1; 0 throws; 390 -> 759 stderr lines; relayout=18 fatal=0; UI confirmed by screenshot"
+   },
+   {
+    "app": "anki",
+    "round1": "bind-failed",
+    "round2": "crashed-later",
+    "verdict": "ADVANCED",
+    "evidence": "resolveContentProvider com.squareup.leakcanary.fileprovider.com.ichi2.anki -> leakcanary.internal.LeakCanaryFileProvider metadata=1; 0 throws; binding succeeded; 410 -> 533 lines; now SIGTRAP in CrBrowserMain on ASurfaceTransaction_*"
+   },
+   {
+    "app": "aegis",
+    "round1": "rendering",
+    "round2": "rendering",
+    "verdict": "UNCHANGED",
+    "evidence": "631 vs 633 lines, relayout=18, fatal=0"
+   },
+   {
+    "app": "antennapod",
+    "round1": "drawing",
+    "round2": "drawing",
+    "verdict": "UNCHANGED",
+    "evidence": "668 vs 681 lines, relayout=18, fatal=0"
+   },
+   {
+    "app": "ooniprobe",
+    "round1": "bind-failed",
+    "round2": "bind-failed",
+    "verdict": "UNCHANGED",
+    "evidence": "402 lines both rounds; dies in Application.onCreate on LocaleManager before any provider is instantiated; resolveContentProvider never called"
+   },
+   {
+    "app": "newpipe",
+    "round1": "crashed",
+    "round2": "crashed",
+    "verdict": "UNCHANGED",
+    "evidence": "461 vs 462 lines; 13 ASurfaceTransaction_* load failures then SIGTRAP"
+   },
+   {
+    "app": "termux",
+    "round1": "activity-failed",
+    "round2": "activity-failed",
+    "verdict": "UNCHANGED",
+    "evidence": "411 lines both rounds; declares 2 providers with 0 meta-data"
+   },
+   {
+    "app": "mindustry",
+    "round1": "init-failed",
+    "round2": "init-failed",
+    "verdict": "UNCHANGED",
+    "evidence": "448 lines both rounds; declares no providers"
+   },
+   {
+    "app": "opencamera",
+    "round1": "init-failed",
+    "round2": "init-failed",
+    "verdict": "UNCHANGED",
+    "evidence": "418 lines both rounds"
+   },
+   {
+    "app": "ppsspp",
+    "round1": "no-surface",
+    "round2": "no-surface",
+    "verdict": "UNCHANGED",
+    "evidence": "374 lines both rounds; declares no providers"
+   }
+  ],
+  "control": "ppsspp, mindustry and termux are byte-identical in line count across rounds and never call resolveContentProvider -- the change is inert for apps that do not use it",
+  "next_top_roi": {
+   "api": "ASurfaceTransaction_* resolved via dlopen(\"libandroid.so\")",
+   "category": "native-loading",
+   "apps_killed": [
+    "newpipe",
+    "anki"
+   ],
+   "note": "anki reached this only after the provider gap closed; it was hidden behind it"
+  },
+  "harness_errors_excluded_from_scoring": [
+   {
+    "app": "aegis",
+    "error": "staging: host_spawn no such file or directory",
+    "action": "re-run; the re-run produced the scored result"
+   }
+  ]
+ }
+}
