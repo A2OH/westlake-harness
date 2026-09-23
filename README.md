@@ -41,6 +41,51 @@ manager semantics, kernel policy, library loading) are checked against models ex
 Westlake and OpenHarmony sources, and the result is one **gap map** per APK: every place it touches
 OpenHarmony, the shim each gap needs, and what that shim costs.
 
+### Necessary, but not sufficient
+
+That claim still holds, and every map starts there. It is not the whole surface. Subtraction reads
+*declarations*, and three things an app depends on declare nothing. Each was measured this week,
+and each had already been counted as fine:
+
+- **A symbol resolved by name at runtime.** `dlopen` plus `dlsym` declares nothing: the name is a
+  string, there is no undefined symbol and no `DT_NEEDED`, so a missing entry point returns null
+  instead of failing the load. An app missing fourteen NDK SurfaceControl functions still scanned
+  as **288 of 289 resolved**, and losing them cost hardware compositing with nothing logged
+  ([probe](probes/runtime-resolve/README.md)).
+- **Two libraries with the same soname.** Which one a caller gets is decided at load time by
+  search-path order. Both files were named `libandroid.so`; only one exported the NDK
+  SurfaceControl surface, and the search path reached the other first. No import list and no
+  symbol table can express that ([probe](probes/webview-boundaries/README.md)).
+- **A provider that reports success without acting.** The runtime's `Runtime.nativeLoad` answers
+  "already registered" for any library path containing `javacore`, `openjdk` or `icu_jni`, on the
+  assumption that those natives are linked into the runtime itself. Shipping a real
+  `libjavacore.so` made the assumption false: the load logged success for three builds while
+  `java.lang.Math.rint` stayed unimplemented, and no log line said otherwise
+  ([evidence](benchmark/2026-09-23-five-app-validation/results.json)).
+
+None of the three is found by reading harder. Each has to be put to the component that decides it,
+and that is the layer the **runtime instruments** add. `probes/runtime-resolve` performs the
+`dlopen`/`dlsym` the app would, inside its mount namespace and uid, and reports resolved or null
+**and which file answered**. `probes/webview-boundaries` reports the shadowed pairs on the real
+search path, and found `libjnigraphics.so` in the same position before anything had tripped over
+it. `probes/network-capture` names the hosts an app asked for, because the app's own stack logs
+nothing we control. For a row of this kind a static verdict is not a cautious answer, it is a wrong
+one stated authoritatively — which is what `288 of 289 resolved` was.
+
+The same honesty runs the other way, and it is a rule rather than a caveat: **an app showing no
+content is only a platform gap if the platform caused it.** A connection that never opens, or opens
+and fails, is ours. A backend that answers and declines to send data is not something a shim can
+fix, and counting it would inflate the map. Toutiao's empty feed is the second kind — three idle
+`ESTABLISHED` HTTPS connections, and a consent tap after which server data was fetched and
+rendered while the article feed alone stayed empty ([method](analysis/GAP-MAP-METHOD.md)).
+
+The layering earns its place where it has been tried. Re-running the five-app corpus against the
+current build moved **four of five** apps, and every native and loader blocker in it is now closed:
+missing NDK symbols, same-name shadowing, and the libc++ namespace collision. What remains is
+framework surface, resources, and one NDK library absent from the board altogether — a different
+kind of work from where the corpus started
+([benchmark](benchmark/2026-09-23-five-app-validation/README.md)).
+
 ---
 
 ## Layout
