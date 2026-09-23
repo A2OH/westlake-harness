@@ -78,5 +78,42 @@
       "libc:constant-namespace (VLC, LocalSend: no page-size failures)"
     ],
     "new gap classes found": 6
+  },
+  "rerun_2026_09_23": {
+    "provider": "Westlake 532633d, framework build 26, bionic shim with WebView library resolution and the font root derived from the staged runtime",
+    "why": "the same five apps, re-launched after a day of fixes, scored against the failures this file already records rather than against recollection",
+    "apps": {
+      "wikipedia": {
+        "was": "no first screen (AccountManager null)",
+        "now": "onboarding, feed, article with rendered and scrolling WebView content",
+        "moved": true
+      },
+      "localsend": {
+        "was": "libflutter.so would not load: ANativeWindow_lock, ANativeWindow_unlockAndPost, __openat_2 all missing",
+        "now": "the engine loads; blocked on android.view.SurfaceControl.nativeSetDesiredHdrHeadroom(JJF)V, unregistered",
+        "moved": true,
+        "next": "RegisterNatives from a small library, the pattern that supplied Math.rint without the native chain"
+      },
+      "vlc": {
+        "was": "libvlcjni.so predicted to fail linking against the board's libc++",
+        "now": "symbol not found = 0 with the forward closure of libvlcjni.so isolated (3 libraries); blocked on InflateException, Failed to resolve attribute at index 13",
+        "moved": true,
+        "next": "no row models theme or attribute resolution"
+      },
+      "firefox": {
+        "was": "window context, getUserSerialNumber, and an activity result item",
+        "now": "the window context throw is gone (0 occurrences); the other two remain",
+        "moved": true,
+        "next": "svc:user getUserSerialNumber is the same strict-proxy shape as the window context, and should answer rather than throw"
+      },
+      "subwaysurfers": {
+        "was": "libunity.so cannot load: libmediandk.so is not on the board",
+        "now": "unchanged",
+        "moved": false,
+        "next": "libmediandk is absent entirely, and is also 24-36 of the runtime-lookup candidates in Toutiao and the WebView engine"
+      }
+    },
+    "reading": "every native and loader blocker in this corpus is now closed -- missing NDK symbols, same-name shadowing, and the libc++ namespace collision. Four of five apps moved. What remains is framework surface (a strict proxy that throws, an unregistered JNI method, activity result delivery), resources (theme attribute resolution), and one genuinely absent NDK library.",
+    "method": "the isolation set for VLC was computed as the forward closure of the library that fails, not every library that reaches the shadowed one. The reverse closure is what broke a working library in Toutiao earlier the same day."
   }
 }
