@@ -163,6 +163,41 @@ def parser() -> argparse.ArgumentParser:
     fw_cmd.add_argument("--graph-cache", type=Path)
     fw_cmd.add_argument("--out", required=True, type=Path)
 
+    res_cmd = commands.add_parser(
+        "oh-resolve",
+        help="resolve an APK's native imports against the board's libraries and the staged Westlake runtime",
+    )
+    res_cmd.add_argument("--scan", required=True, type=Path, help="scan JSON for the APK")
+    res_cmd.add_argument("--app-key", required=True)
+    res_cmd.add_argument("--lib-dir", action="append", type=Path, required=True,
+                         help="directory of libraries in the index (OH system libraries pulled from the board, the staged runtime, ...); repeat")
+    res_cmd.add_argument("--ndk-api-dir", type=Path, help="NDK stub libraries for one API level: names the NDK library declaring each missing symbol")
+    res_cmd.add_argument("--board", default="", help="board description recorded in the output")
+    res_cmd.add_argument("--out", required=True, type=Path, help="oh-import-resolution JSON to write")
+
+    dep_cmd = commands.add_parser(
+        "deploy-check",
+        help="is every library the Westlake runtime asks for deployed, and is each deployed Westlake binary built from today's source",
+    )
+    dep_cmd.add_argument("--westlake", required=True, type=Path, help="Westlake source tree")
+    dep_cmd.add_argument("--report", action="append", type=Path, default=[],
+                         help="framework build report and/or app launch report (device-report.json): what was staged, with hashes; repeat")
+    dep_cmd.add_argument("--staged-dir", action="append", type=Path, default=[],
+                         help="local directory holding staged binaries (runtime package, WebView input, ...), matched by hash; repeat")
+    dep_cmd.add_argument("--board-libs", type=Path, help="library paths present on the board, one per line")
+    dep_cmd.add_argument("--title", default="Deployment check")
+    dep_cmd.add_argument("--out", required=True, type=Path, help="output directory")
+
+    trace_cmd = commands.add_parser(
+        "trace-methods",
+        help="decode an ART sampling trace from the board and list which of the app's own methods ran",
+    )
+    trace_cmd.add_argument("--trace", required=True, type=Path,
+                           help="trace file pulled from the device (WESTLAKE_METHOD_TRACE=<ms> writes it)")
+    trace_cmd.add_argument("--prefix", action="append", default=[],
+                           help="class prefix to report, e.g. com.mcdonalds; repeat. Default: every method")
+    trace_cmd.add_argument("--out", type=Path, help="write the report here instead of stdout")
+
     ndk_cmd = commands.add_parser(
         "ndk-coverage",
         help="measure the entire public NDK against a board's libraries and classify how each missing symbol is supplied",
@@ -192,12 +227,35 @@ def parser() -> argparse.ArgumentParser:
     gap.add_argument("--ndk-coverage", type=Path,
                      help="ndk-coverage.json: classify native gaps by how the NDK supplies them (package / libc-abi / weld / absence)")
     gap.add_argument("--observed", type=Path, help="trace-observe output: mark each gap touched or not on a recorded real-Android run")
+    gap.add_argument("--probe-results", type=Path,
+                     help="white-box probe results measured on the board: they replace the static verdict of the rows they back, "
+                          "for the exact Westlake commit they were measured on")
+    gap.add_argument("--board-libs", type=Path,
+                     help="library paths present on the board, one per line: finds packaged libraries a board library shadows")
+    gap.add_argument("--runtime-libs", type=Path,
+                     help="the staged native runtime: a directory, its artifacts.json, or a listing one per line. "
+                          "Finds libraries the runtime ships that its own loader answers without opening")
     gap.add_argument("--policy", type=Path, default=Path(__file__).parent / "data" / "oh-app-data-policy.json")
     gap.add_argument("--blockers", type=Path, help="known-blockers JSON: backtest the map against observed failures")
     gap.add_argument("--blockers-status", action="store_true",
                      help="report known blockers as open/closed against this provider instead of as a backtest")
     gap.add_argument("--out", required=True, type=Path, help="output directory")
     return root
+
+
+
+def _runtime_libraries(path: Path | None) -> list[str] | None:
+    """Library names the staged native runtime ships, from a directory, an artifacts.json or a listing."""
+    if path is None or not path.exists():
+        return None
+    if path.is_dir():
+        report = path / "artifacts.json"
+        if report.exists():
+            return sorted(read_json(report).get("artifacts", {}))
+        return sorted(p.name for p in path.iterdir() if p.suffix == ".so")
+    if path.suffix == ".json":
+        return sorted(read_json(path).get("artifacts", {}))
+    return [line.rsplit("/", 1)[-1] for line in path.read_text().split()]
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -282,6 +340,27 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{summary['methods_with_code']} methods: " + ", ".join(f"{k} {v}" for k, v in summary["methods_by_stage"].items())
               + f" -> {args.out}")
         return 0
+    if args.command == "oh-resolve":
+        from . import ohresolve
+
+        provided, libraries = ohresolve.index_exports(args.lib_dir)
+        app = ohresolve.resolve(read_json(args.scan), provided, ohresolve.ndk_declarations(args.ndk_api_dir))
+        write_json(args.out, {"board": {"description": args.board, "libraries_indexed": libraries},
+                              "apps": {args.app_key: app}})
+        print(f"{args.app_key}: {app['resolved']}/{app['symbols']} resolved, {len(app['missing'])} missing "
+              f"against {len(libraries)} libraries -> {args.out}")
+        return 0
+    if args.command == "deploy-check":
+        from . import deploy
+
+        result = deploy.check(args.westlake, [read_json(r) for r in args.report], args.staged_dir, args.board_libs)
+        args.out.mkdir(parents=True, exist_ok=True)
+        write_json(args.out / "deploy-check.json", result)
+        (args.out / "DEPLOY-CHECK.md").write_text(deploy.markdown(result, args.title))
+        summary = result["summary"]
+        print(f"{summary['loads']} libraries asked for, {summary['staged_files']} staged: "
+              f"missing {summary['missing'] or 'none'}; older than source {summary['older_than_source'] or 'none'} -> {args.out}")
+        return 1 if summary["missing"] or summary["older_than_source"] else 0
     if args.command == "ndk-coverage":
         from . import ndk
 
@@ -300,6 +379,20 @@ def main(argv: list[str] | None = None) -> int:
         status = cov["summary"]["status"]
         print(f"{cov['summary']['symbols']} NDK symbols: OH {status.get('oh', 0)}, Westlake {status.get('westlake', 0)}, "
               f"missing {status.get('missing', 0)} -> {args.out}")
+        return 0
+    if args.command == "trace-methods":
+        from .methodtrace import markdown, parse, ran
+
+        trace = parse(args.trace.read_bytes())
+        prefixes = args.prefix or [""]
+        hits = ran(trace, prefixes)
+        report = markdown(trace, hits, prefixes)
+        if args.out:
+            args.out.parent.mkdir(parents=True, exist_ok=True)
+            args.out.write_text(report)
+        else:
+            print(report, end="")
+        print(f"{len(hits)} methods ran from {len(prefixes)} prefix(es), {trace['records']} samples", flush=True)
         return 0
     if args.command == "gap-map":
         from .contracts import manifest_facts
@@ -323,7 +416,11 @@ def main(argv: list[str] | None = None) -> int:
         gap_map = build_map(scan, manifest_facts(args.apk), levels, aosp, args.westlake, oh,
                             read_json(args.policy), args.manifest_repo,
                             ndk_cov=read_json(args.ndk_coverage) if args.ndk_coverage else None,
-                            observed=read_json(args.observed) if args.observed else None)
+                            observed=read_json(args.observed) if args.observed else None,
+                            probe_results=read_json(args.probe_results) if args.probe_results else None,
+                            board_paths=args.board_libs.read_text().split() if args.board_libs else None,
+                            runtime_libraries=_runtime_libraries(args.runtime_libs),
+                            aosp_root=args.aosp)
         if args.westlake_label:
             gap_map["provider"]["westlake"] = {"branch": args.westlake_label, "commit": args.westlake_label, "uncommitted": []}
         results = None

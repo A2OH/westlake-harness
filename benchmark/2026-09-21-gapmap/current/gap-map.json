@@ -95,6 +95,108 @@
       "row": "pm:component-metadata",
       "row_verdict": "supplied",
       "symptom": "Firebase Instance ID component is not present (component discovery found no registrars)"
+    },
+    {
+      "fix": "default ComponentInfo.processName to the application's process (westlake 4993809)",
+      "found_by": "probes/provider-manifest on 2026-09-21, before any McDonald's launch reached it",
+      "id": "B9",
+      "outcome": "missed: row claimed supplied",
+      "predicted_by": [
+        "pm:providers"
+      ],
+      "row": "pm:providers",
+      "row_verdict": "supplied",
+      "symptom": "no content provider from the manifest is created before Application.onCreate (Firebase, Forter, ML Kit initializers never run)"
+    },
+    {
+      "fix": "answer with the caller's own process (westlake f4e0366)",
+      "found_by": "probes/running-app-processes on 2026-09-21; map row added 2026-09-22",
+      "id": "B10",
+      "outcome": "missed: row claimed supplied",
+      "predicted_by": [
+        "am:process-table"
+      ],
+      "row": "am:process-table",
+      "row_verdict": "supplied",
+      "symptom": "ActivityManager.getRunningAppProcesses() and getRunningServices() return null; Kochava AppUtil iterates both unchecked"
+    },
+    {
+      "fix": "hold a dialog's OH session back until its activity's window has one (westlake 5df440b, Java only)",
+      "found_by": "first McDonald's launch on the rebuilt stack, 2026-09-22; reproduced by probes/dialog-before-window; map row added after the fact",
+      "id": "B11",
+      "outcome": "missed: row claimed supplied",
+      "predicted_by": [
+        "wm:dialog-stacking"
+      ],
+      "row": "wm:dialog-stacking",
+      "row_verdict": "supplied",
+      "symptom": "sign-in activity reached and drawing, screen white: the sign-in bottom sheet, a dialog shown before the activity's window, is stacked under that window"
+    },
+    {
+      "fix": "place by WindowLayout and route touches to the window under the pointer (westlake f6dc615)",
+      "found_by": "sign-in screenshot, 2026-09-22; row read from the window adapter source",
+      "id": "B12",
+      "outcome": "missed: row claimed supplied",
+      "predicted_by": [
+        "wm:window-placement"
+      ],
+      "row": "wm:window-placement",
+      "row_verdict": "supplied",
+      "symptom": "dialogs drawn at the top-left instead of centred; taps on a moved window missed it"
+    },
+    {
+      "fix": "dim layer window under the dimming window (westlake f6dc615)",
+      "found_by": "sign-in screenshot, 2026-09-22; row read from the window adapter source",
+      "id": "B13",
+      "outcome": "missed: row claimed supplied",
+      "predicted_by": [
+        "wm:dim-behind"
+      ],
+      "row": "wm:dim-behind",
+      "row_verdict": "supplied",
+      "symptom": "nothing dimmed behind a FLAG_DIM_BEHIND dialog"
+    },
+    {
+      "fix": "source-built helper added to the runtime (westlake tools/build_native.py, byte-identical to earlier builds)",
+      "found_by": "tap on the email field, 2026-09-22. No row: the map does not check that Westlake's own helper libraries are staged",
+      "id": "B14",
+      "outcome": "missed: no row",
+      "predicted_by": [],
+      "row": null,
+      "row_verdict": null,
+      "symptom": "focusing the email field shows no keyboard: liboh_ime_helper_capi.so is not in the staged runtime (dlopen errno 2)"
+    },
+    {
+      "fix": "IME insets on the focused window against the physical display (westlake f6dc615)",
+      "found_by": "typing test, 2026-09-22. No row: an IME-insets probe is the missing check",
+      "id": "B15",
+      "outcome": "missed: no row",
+      "predicted_by": [],
+      "row": null,
+      "row_verdict": null,
+      "symptom": "the keyboard covers the focused field: the occupied area was measured against a dialog window's own size and applied to the reporting window"
+    },
+    {
+      "fix": "source-built bionic shim with the loader refusal replaces the captured copy (manifest 66853c2)",
+      "found_by": "launch with the WebView input, 2026-09-22 (B3 again, through a stale shim)",
+      "id": "B16",
+      "outcome": "flagged for verification",
+      "predicted_by": [
+        "env:akamai-bot-manager"
+      ],
+      "row": "env:akamai-bot-manager",
+      "row_verdict": "refused",
+      "symptom": "with the WebView supplied, Akamai's libakamaibmp.so loads and kills the process with SIGILL"
+    },
+    {
+      "fix": "local DestroyActivityItem when no OH ability stands behind the activity (westlake 4fbb09b)",
+      "found_by": "window list during the sign-in run, 2026-09-22. No row: an activity-finish probe is the missing check",
+      "id": "B17",
+      "outcome": "missed: no row",
+      "predicted_by": [],
+      "row": null,
+      "row_verdict": null,
+      "symptom": "a finished activity is never destroyed in direct launch; its window stays in the window list"
     }
   ],
   "notes": {
@@ -117,19 +219,9 @@
   "provider": {
     "oh_board": "OpenHarmony 6.1.0.31, arm64, SELinux enforcing policy as loaded",
     "westlake": {
-      "branch": "jobscheduler-service-stub",
-      "commit": "c279d162c18ff33a7edaba0a200af3ab3ba68b10",
-      "uncommitted": [
-        "framework/android-runtime/src/AndroidRuntime.cpp",
-        "framework/core/java/OHServiceManager.java",
-        "framework/package-manager/java/PackageManagerAdapter.java",
-        "framework/package-manager/java/SourcePackageRegistry.java",
-        "framework/package-manager/java/SplitApkResolver.java",
-        "native/android-runtime-sources.json",
-        "native/android-runtime15-sources.json",
-        "framework/android-runtime/src/android_view_VelocityTracker.cpp",
-        "framework/core/java/LocationManagerAdapter.java"
-      ]
+      "branch": "mcdonalds-signin-fixes",
+      "commit": "f6dc615029471f5d57051c9552f44df53cfb9ac5",
+      "uncommitted": []
     }
   },
   "rows": [
@@ -2587,7 +2679,7 @@
       },
       "oh_touchpoint": "audio_framework",
       "provider": "IAudioService dynamic proxy returning type defaults for every method",
-      "provider_source": "framework/appspawn-x/java/com/android/internal/os/AppSpawnXInit.java:1560",
+      "provider_source": "framework/appspawn-x/java/com/android/internal/os/AppSpawnXInit.java:1569",
       "shim": "replace the hollow binder with an implementation over audio_framework",
       "shim_class": "C9",
       "verdict": "hollow"
@@ -2941,7 +3033,7 @@
       },
       "oh_touchpoint": "resourceschedule/work_scheduler",
       "provider": "no-op IJobScheduler: schedule()/enqueue() return RESULT_SUCCESS, jobs never run",
-      "provider_source": "framework/appspawn-x/java/com/android/internal/os/AppSpawnXInit.java:2079",
+      "provider_source": "framework/appspawn-x/java/com/android/internal/os/AppSpawnXInit.java:2088",
       "shim": "replace the hollow binder with an implementation over resourceschedule/work_scheduler",
       "shim_class": "C9",
       "verdict": "hollow"
@@ -3379,8 +3471,8 @@
     {
       "app_evidence": "9 components carry meta-data (2 directBootAware, e.g. ComponentDiscoveryService, MlKitComponentDiscoveryService); app calls ['getActivityInfo', 'getApplicationInfo', 'getPackageInfo', 'getProviderInfo', 'getReceiverInfo', 'getServiceInfo']",
       "category": "package-manager",
-      "confidence": "static",
-      "effort": "verify",
+      "confidence": "probe",
+      "effort": "none",
       "id": "pm:component-metadata",
       "item": "Component lookups return manifest <meta-data>",
       "observed": {
@@ -3389,6 +3481,12 @@
       },
       "oh_touchpoint": "none (answered from the APK inside Westlake)",
       "probe": "probes/service-metadata",
+      "probe_result": {
+        "date": "2026-09-21",
+        "passed": true,
+        "verdict": "[WL-SERVICE-META] verdict=PASS_SERVICE_INFO_METADATA info=true metadata=2 registrar=org.westlake.probe.ComponentRegistrar second=second-value",
+        "westlake_commit": "f6dc615029471f5d57051c9552f44df53cfb9ac5"
+      },
       "provider": "PMS-side direct-boot match defaults applied before PackageParser.isMatch",
       "provider_source": "framework/package-manager/java/SourcePackageRegistry.java:77",
       "shim": "apply updateFlagsForComponent semantics in the source-app PM path",
@@ -3417,8 +3515,8 @@
     {
       "app_evidence": "FileProvider, InitializationProvider, McdAppEngageHeroImageFileProvider, MlKitInitProvider@99, FirebaseInitProvider@100, FacebookInitProvider, SplitAppStartProvider@300, FTRHXContentProvider, AppStartContentProvider@100",
       "category": "package-manager",
-      "confidence": "static",
-      "effort": "verify",
+      "confidence": "probe",
+      "effort": "none",
       "id": "pm:providers",
       "item": "Content providers installed at bind (9, initOrder honoured)",
       "observed": {
@@ -3427,9 +3525,15 @@
       },
       "oh_touchpoint": "none",
       "probe": "probes/provider-manifest",
+      "probe_result": {
+        "date": "2026-09-21",
+        "passed": true,
+        "verdict": "[WL-PROVIDER-PROBE] verdict=PASS_QUERY_EXCLUDED_REMOTE_FILTERED mainProviderCreates=1 remoteProviderCreates=0",
+        "westlake_commit": "f6dc615029471f5d57051c9552f44df53cfb9ac5"
+      },
       "shim": "install every main-process provider in initOrder before Application.onCreate",
-      "shim_class": "CU",
-      "verdict": "unverified"
+      "shim_class": "C0",
+      "verdict": "supplied"
     },
     {
       "category": "package-manager",
@@ -3738,6 +3842,106 @@
       "verdict": "stub"
     },
     {
+      "app_evidence": "app calls getRunningAppProcesses, getRunningServices, getProcessMemoryInfo",
+      "category": "app-framework",
+      "confidence": "probe",
+      "effort": "none",
+      "id": "am:process-table",
+      "item": "ActivityManager process-table queries (getRunningAppProcesses, getRunningServices, getProcessMemoryInfo)",
+      "observed": {
+        "evidence": "getProcessMemoryInfo executed, getRunningAppProcesses executed, getRunningServices referenced",
+        "on_path": true
+      },
+      "oh_touchpoint": "none (the caller's own process is the answer)",
+      "probe": "probes/running-app-processes",
+      "probe_result": {
+        "date": "2026-09-21",
+        "passed": true,
+        "verdict": "[WL-RUNNING-PROCS] phase=application verdict=PASS_SELF_VISIBLE manager=true listNull=false count=1 myPid=4470 myUid=20010054 pidSeen=true uidSeen=true nameSeen=true | [WL-RUNNING-PROCS] phase=activity verdict=PASS_SELF_VISIBLE manager=true listNull=false count=1 myPid=4470 myUid=20010054 pidSeen=true uidSeen=true nameSeen=true",
+        "westlake_commit": "f6dc615029471f5d57051c9552f44df53cfb9ac5"
+      },
+      "provider": "answered with the caller's own process",
+      "provider_source": "framework/appspawn-x/java/com/android/internal/os/AppSpawnXInit.java:1351",
+      "shim": "answer with the caller's process: name, pid, uid, foreground importance, its package",
+      "shim_class": "C0",
+      "verdict": "supplied"
+    },
+    {
+      "app_evidence": "app shows dialogs (Dialog.show referenced); a dialog shown from onCreate/onResume is added before the activity's own window",
+      "category": "app-framework",
+      "confidence": "probe",
+      "effort": "none",
+      "id": "wm:dialog-stacking",
+      "item": "Dialogs stack above their activity's window, whatever the add order",
+      "observed": {
+        "evidence": "show executed",
+        "on_path": true
+      },
+      "oh_touchpoint": "window_manager (sub-window z-order: creation order)",
+      "probe": "probes/dialog-before-window",
+      "probe_result": {
+        "date": "2026-09-21",
+        "passed": true,
+        "verdict": "[WL-DIALOG-ORDER] placement=CENTRED at 280,634 size=640x651 screenWidth=1200 | [WL-DIALOG-ORDER] dialog button clicked",
+        "westlake_commit": "f6dc615029471f5d57051c9552f44df53cfb9ac5"
+      },
+      "provider": "a dialog's OH session is held back until its activity's window has one, so creation order is Android's stacking order",
+      "provider_source": "framework/window/java/WindowSessionAdapter.java:370",
+      "shim": "stack a base application window below the dialogs already attached to its token",
+      "shim_class": "C0",
+      "verdict": "supplied"
+    },
+    {
+      "app_evidence": "app shows dialogs (Dialog.show referenced)",
+      "category": "app-framework",
+      "confidence": "probe",
+      "effort": "none",
+      "id": "wm:window-placement",
+      "item": "Windows placed by LayoutParams gravity and x/y (dialogs centred)",
+      "observed": {
+        "evidence": "show executed",
+        "on_path": true
+      },
+      "oh_touchpoint": "window_manager (session rect)",
+      "probe": "probes/dialog-before-window",
+      "probe_result": {
+        "date": "2026-09-21",
+        "passed": true,
+        "verdict": "[WL-DIALOG-ORDER] placement=CENTRED at 280,634 size=640x651 screenWidth=1200 | [WL-DIALOG-ORDER] dialog button clicked",
+        "westlake_commit": "f6dc615029471f5d57051c9552f44df53cfb9ac5"
+      },
+      "provider": "applied in the window adapter",
+      "provider_source": "framework/window/java/WindowSessionAdapter.java:346",
+      "shim": "compute the frame from gravity/x/y against the display, as WindowLayout.computeFrames does",
+      "shim_class": "C0",
+      "verdict": "supplied"
+    },
+    {
+      "app_evidence": "app shows dialogs (Dialog.show referenced)",
+      "category": "app-framework",
+      "confidence": "probe",
+      "effort": "none",
+      "id": "wm:dim-behind",
+      "item": "FLAG_DIM_BEHIND dims what is under a dialog",
+      "observed": {
+        "evidence": "show executed",
+        "on_path": true
+      },
+      "oh_touchpoint": "render_service (a layer under the window)",
+      "probe": "probes/dialog-before-window",
+      "probe_result": {
+        "date": "2026-09-21",
+        "passed": true,
+        "verdict": "[WL-DIALOG-ORDER] placement=CENTRED at 280,634 size=640x651 screenWidth=1200 | [WL-DIALOG-ORDER] dialog button clicked",
+        "westlake_commit": "f6dc615029471f5d57051c9552f44df53cfb9ac5"
+      },
+      "provider": "applied in the window adapter",
+      "provider_source": "framework/window/java/WindowSessionAdapter.java:84",
+      "shim": "draw a dim layer of dimAmount under the window (OH has no dim flag)",
+      "shim_class": "C0",
+      "verdict": "supplied"
+    },
+    {
       "app_evidence": "e.g. android/graphics/Path",
       "category": "native-upcalls",
       "confidence": "static",
@@ -3962,7 +4166,7 @@
       },
       "oh_touchpoint": "OH dynamic linker (cannot map zip!/ members: board test 2026-09-18)",
       "provider": "launcher extracts split libraries to a real directory",
-      "provider_source": "manifest/tools/prepare_app.py:73",
+      "provider_source": "manifest/tools/prepare_app.py:75",
       "shim": "extract at install/launch, or teach the loader zip-member mapping (WebView needs the latter too)",
       "shim_class": "C0",
       "verdict": "supplied"

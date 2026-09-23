@@ -64,6 +64,10 @@ OpenHarmony, the shim each gap needs, and what that shim costs.
 | `harness/westlake_gap/platformapi.py` | API-level classifier (`annotate-api-levels`): splits an absence list into what a reference device could actually reach, what postdates it, and what was never Android. Cut McDonald's 138 absences to 58. |
 | `harness/westlake_gap/gapmap.py`, `services.py`, `contracts.py` | `gap-map` command. `services.py` joins the APK's `getSystemService` requests with AOSP's registry and what Westlake answers for each binder; `contracts.py` models the package manager and manifest contract; `data/oh-app-data-policy.json` is the OH app-data policy, queried from the kernel. |
 | `probes/avq.c` | Asks the loaded SELinux policy for an access decision through `/sys/fs/selinux/access`; this is how the OH app-data matrix was measured. |
+| `probes/` + `probes/run_suite.py` | White-box probes: small APKs launched on the board whose pass/fail markers replace a row's static verdict with a measurement. `suite.json` declares the markers. |
+| `probes/webview-boundaries/` | The three boundaries that decide whether an app can open a WebView screen: the multiprocess decision a compiled-in flag makes before the update service is ever asked, same-named libraries on the search path, and the window context whose throw aborts the process because every JNI return runs `CheckException`. Found `libjnigraphics.so` shadowed before anything had tripped over it. |
+| `probes/runtime-resolve/` | **What the loader actually answers.** Performs the `dlopen`/`dlsym` an app would, inside its mount namespace and uid, and reports resolved/null **and which file answered**. The runtime half of `sym:runtime-resolved`: a name looked up at runtime is declared nowhere, so a missing one returns null instead of failing the load — an engine missing fourteen NDK entry points still scanned as 288 of 289 resolved. |
+| `probes/network-capture/` | **What the app actually put on the wire.** `AF_PACKET` capture to pcap plus a reader that names DNS queries and TLS SNI. An app's own stack logs nothing we control, so "was the request even sent" was unanswerable from the app side — but the OS owns the sockets. Answers *was it asked, and of whom*; the response body is inside TLS. |
 | `harness/jniprobe/` | Frida agent and scenario drivers that record `RegisterNatives`, `dlopen` and `dlsym` from a running app, plus the Frida-17 and Magisk obstacles the first run hit. |
 | `tests/` | Executable known-answer fixtures: `ColorMatrix.set`, a Conscrypt existence probe, an unbound vendor native, and an arm64 JNI library whose platform-coupled and pure methods are known in advance. |
 | `corpus/` | Reproducible top-ten selection plus exact download hashes. APK/XAPK binaries are deliberately ignored. |
@@ -193,10 +197,12 @@ and 8 enumerate.
 
 | Surface | App side | Provider side |
 |---|---|---|
-| System services | `getSystemService(String\|Class)`, `ContextCompat`, `ServiceManager` call sites and the manager methods called | AOSP `SystemServiceRegistry` and mainline initializers (name → manager → binders, including lazily fetched ones) × Westlake `OHServiceManager`, runtime seeds, `AppSpawnXInit` overrides → `supplied` / `hollow` / `null` / `inert` / `unresolved` |
+| System services | `getSystemService(String\|Class)`, `ContextCompat`, `ServiceManager` call sites and the manager methods called; Kotlin non-null casts of the manager (`as UiModeManager` throws on null instead of skipping) | AOSP `SystemServiceRegistry` and mainline initializers (name → manager → binders, including lazily fetched ones) × Westlake `OHServiceManager`, runtime seeds, binders published into `ServiceManager.sCache` anywhere in the tree → `supplied` / `strict` (answers some methods, throws for the rest) / `hollow` / `null` / `inert` / `unresolved` |
+| Keystore & crypto providers | JCA `getInstance(type, provider)` calls and the `"AndroidKeyStore"` constant | whether the runtime installs a provider under that name (Android's zygote does), and what backs it |
 | Package manager & manifest | components, `<meta-data>`, `directBootAware`, providers and `initOrder`, splits, processes; `PackageManager` calls | `PackageManagerAdapter` method by method (bridged, or stub and what it returns); PMS semantics the source-app path must reproduce |
+| Activity, window & process contracts | `ActivityManager` process-table queries, `Dialog.show`, `new WebView` | what system_server answers, answered in-process in direct launch: the `IActivityManager` stub handler (null for any object result it does not answer by name), Android window stacking; decided by probes. WebView's sandboxed renderer process, which AOSP's `WebViewDelegate` forces on under the update-service flag |
 | Sandbox policy | objects the code creates | OH SELinux decision for the app domain, queried from the loaded kernel policy (`probes/avq.c`, `harness/westlake_gap/data/oh-app-data-policy.json`), beside the AOSP rule |
-| Loading & packaging | `extractNativeLibs`, split ABI libraries | OH linker capability (board test) and the launcher's extraction |
+| Loading & packaging | `extractNativeLibs`, split ABI libraries, packaged libraries and their DT_NEEDED graph | OH linker capability (board test), the launcher's extraction, and board libraries of the same name that the child's search path finds first (`--board-libs`) |
 | External services & SDKs | GMS/Firebase markers; device-probing SDKs | no Google services on OH; the loader's refusal list |
 
 ### The output: one gap map per APK
@@ -212,10 +218,52 @@ an **effort** tier, the **OH touchpoint**, provider and app evidence, and the **
 | verify | the source claims it; run the named probe before trusting it |
 
 A row's confidence moves from **static** (APK + provider source) to **probe** (a white-box probe
-passed on the board) to **observed** (the full app on the device). The launch becomes acceptance
-rather than discovery. `--blockers` replays failures already paid for. Against the provider
-McDonald's actually ran on, the map flags **6 of its 8** board failures before any launch
-([benchmark](benchmark/2026-09-21-gapmap/README.md)).
+ran on the board; `--probe-results` applies it, for the exact Westlake commit it was measured on)
+to **observed** (the full app on the device). The launch becomes acceptance rather than discovery.
+`--blockers` replays failures already paid for. Against the provider McDonald's actually ran on,
+the map flags **6 of its 8** board failures before any launch
+([benchmark](benchmark/2026-09-21-gapmap/README.md)). The probes then found two more before the
+app reached them. The first launch after those fixes reached the sign-in activity and exposed one
+more, window stacking, which a probe reproduced and a Java fix closed: McDonald's now shows its
+sign-in screen on the board ([benchmark](benchmark/2026-09-22-mcdonalds-signin/README.md)).
+
+Burger King was the first blind test: predictions committed before any launch, scored after
+([benchmark](benchmark/2026-09-22-burgerking-blind/README.md)). Six were right and four wrong, and
+all four wrong ones were startup blockers that the map said would be fine. The blind map had a row
+for 2 of the 5 blockers. Each miss is now a check: shadowed libraries, JCA providers, Kotlin
+non-null casts of null services, throwing service proxies, and WebView's renderer process. With
+them, the same APK against the same provider backtests 5 of 5. That rescan was written after the
+fact, so the next app is the real test.
+
+### Is the build under test what the source says?
+
+Two McDonald's blockers passed every check against the provider's source and still failed on the
+board, because what was deployed was not that source. `deploy-check` needs no device: it collects
+every library the Westlake runtime asks for by name (`System.loadLibrary`, `dlopen` literals),
+compares them with what the build and launch reports say was staged and with the board's own
+libraries, and for each staged Westlake binary looks up its sources' log strings in the binary. A
+file whose strings are only partly present was compiled from an older version of that file.
+
+```bash
+westlake-apk-gap deploy-check --westlake <westlake tree> --report <framework device-report.json> \
+  --report <app device-report.json> --staged-dir <runtime package> --staged-dir <WebView input> \
+  --board-libs benchmark/2026-09-18-oh-board/oh-board-libraries.txt --out out/
+```
+
+Run on the McDonald's configurations as they were, it reports the missing keyboard helper
+(`liboh_ime_helper_capi.so`), the WebView never staged, and the WebView input's bionic shim
+older than its source (missing the refusal of Akamai's self-trapping library). Each of those cost a
+launch. On the final build it reports that the deployed native bridge and runtime predate their
+source, which is the part that cannot currently be rebuilt
+([evidence](benchmark/2026-09-22-mcdonalds-signin/deploy-check/)).
+
+### The probe suite, on every build
+
+`probes/run_suite.py` runs every white-box probe in `probes/suite.json` against one build: it checks
+each APK against its pin, stages and launches it, watches its log for pass and fail markers, does
+its interaction (a tap where the probe says its button is), stops it, and merges the verdicts into
+the probe-results file `gap-map --probe-results` reads, keyed by the exact Westlake commit (a dirty
+tree never matches). One command; exit status 1 if any probe fails.
 
 ### Which gaps are on the path: recorded, not guessed
 

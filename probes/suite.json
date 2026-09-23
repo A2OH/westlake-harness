@@ -1,0 +1,97 @@
+{
+  "description": "The white-box probes run on every build by probes/run_suite.py. Markers are fixed strings looked for in the probe child's log; all 'pass' markers must appear, any 'fail' marker ends the probe. A 'tap' action writes the coordinates a probe logs into the tap channel.",
+  "probes": [
+    {
+      "name": "service-metadata",
+      "lock_key": "service-metadata-probe",
+      "apk": "service-metadata/out/service-metadata-probe.apk",
+      "pass": [
+        "verdict=PASS_SERVICE_INFO_METADATA"
+      ],
+      "fail": [
+        "[WL-SERVICE-META] verdict=FAIL"
+      ]
+    },
+    {
+      "name": "provider-manifest",
+      "lock_key": "provider-manifest-probe",
+      "apk": "provider-manifest/out/provider-manifest-probe.apk",
+      "pass": [
+        "[WL-PROVIDER-PROBE] verdict=PASS"
+      ],
+      "fail": [
+        "[WL-PROVIDER-PROBE] verdict=FAIL"
+      ]
+    },
+    {
+      "name": "running-app-processes",
+      "lock_key": "running-app-processes-probe",
+      "apk": "running-app-processes/out/running-app-processes-probe.apk",
+      "pass": [
+        "phase=application verdict=PASS_SELF_VISIBLE",
+        "phase=activity verdict=PASS_SELF_VISIBLE"
+      ],
+      "fail": [
+        "verdict=FAIL_NULL",
+        "verdict=FAIL_SELF_MISSING"
+      ]
+    },
+    {
+      "name": "signin-layout",
+      "lock_key": "signin-layout-probe",
+      "apk": "signin-layout/out/signin-layout-probe.apk",
+      "pass": [
+        "verdict=PASS_SIGNIN_LAYOUT_DRAWN"
+      ],
+      "fail": [
+        "[WL-SIGNIN-LAYOUT] verdict=FAIL"
+      ]
+    },
+    {
+      "name": "dialog-before-window",
+      "lock_key": "dialog-before-window-probe",
+      "apk": "dialog-before-window/out/dialog-before-window-probe.apk",
+      "pass": [
+        "placement=CENTRED",
+        "width=FITS",
+        "alertWidth=FITS",
+        "dialog button clicked"
+      ],
+      "fail": [
+        "placement=NOT_CENTRED",
+        "width=OVERFLOWS",
+        "alertWidth=OVERFLOWS"
+      ],
+      "tap": {
+        "after": "button center=",
+        "pattern": "button center=(\\d+),(\\d+)"
+      }
+    },
+    {
+      "name": "asset-list",
+      "lock_key": "asset-list-probe",
+      "apk": "asset-list/out/asset-list-probe.apk",
+      "pass": [
+        "verdict=PASS_ASSETS_LISTED"
+      ],
+      "fail": [
+        "[WL-ASSET-LIST] verdict=FAIL"
+      ]
+    },
+    {
+      "name": "webview-boundaries",
+      "lock_key": "webview-boundaries-probe",
+      "apk": "webview-boundaries/out/webview-boundaries-probe.apk",
+      "pass": [
+        "phase=multiprocess verdict=PASS_SINGLE_PROCESS",
+        "phase=searchpath verdict=",
+        "phase=windowcontext verdict=PASS_ANSWERED"
+      ],
+      "fail": [
+        "phase=multiprocess verdict=FAIL",
+        "phase=searchpath verdict=FAIL",
+        "phase=windowcontext verdict=FAIL"
+      ]
+    }
+  ]
+}

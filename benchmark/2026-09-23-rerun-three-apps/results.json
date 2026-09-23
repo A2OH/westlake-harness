@@ -1,0 +1,57 @@
+{
+ "provider": "Westlake 532633d, framework build 26, bionic shim with WebView library resolution and the font root derived from the staged runtime, SELinux enforcing",
+ "question": "where is each app actually blocked, measured rather than recalled",
+ "apps": {
+  "wikipedia": {
+   "reaches": "onboarding, feed, article with rendered and scrolling web content",
+   "blocked_at": null,
+   "confidence": "high",
+   "note": "not blocked on this path; five blockers were closed to get here"
+  },
+  "mcdonalds": {
+   "reaches": "sign-in sheet, welcome screen, home dashboard with five bottom tabs",
+   "blocked_at": "NavHostActivity.showSelector: setChecked on a null MenuItem, at 'Start an Order'",
+   "confidence": "high on the site, low on the cause",
+   "corrections": [
+    "M4 is not a blocker: the clipped OK button responds at x~1045 and the dialog dismisses",
+    "the menu is not empty: the dashboard shows all five tabs, so the configuration loaded"
+   ]
+  },
+  "toutiao": {
+   "reaches": "full feed chrome, nine category tabs, bottom navigation, empty content area",
+   "blocked_at": "unknown: the feed content area is empty and nothing in the log explains it",
+   "confidence": "low on the cause; high that libvision_core.so now loads",
+   "closed": "load:shadowed-by-board, by isolating libvision_core.so together with libc++_shared.so. libvision_core.so maps and its load failure is gone.",
+   "retracted": [
+    "an earlier version of this record named a null function pointer in libtttext_lite.so as Toutiao's blocker at ~85% confidence. That crash was caused by isolating 67 libraries rather than 2: libtttext_lite.so has seven weak undefined pthread_* references, and a weak symbol that does not resolve binds to zero, so calling it gives SIGSEGV at address 0 with frame #00 'Not mapped'. Neither the non-isolated run nor the two-library run shows it.",
+    "the 67-library set was the wrong closure: it listed every library that REACHES libc++_shared.so through DT_NEEDED, when the fix needs the forward closure of the library that actually failed, which is libvision_core.so plus libc++_shared.so."
+   ],
+   "still_open": "why the feed content area is empty. Not a transport failure: the app's uid holds four HTTPS connections, three ESTABLISHED and stable, 23 socket fds, no retry loop. The prior diagnosis stands and is well evidenced -- no article cells in the adapter, every IConnectivityManager call answered, DNS/routing/TCP confirmed working -- and attributes the emptiness to the app's anti-abuse layer rejecting the environment. Today adds one detail: a peer resolving to an AWS us-west-2 edge, which suggests the rejected environment may include apparent region.",
+   "not_a_gap_until_shown": "an app showing no content is only a platform gap if the platform caused it. Counting this one before the response is read would inflate the map with something no shim can fix."
+  }
+ },
+ "runtime_lookup_candidates": {
+  "note": "unresolved, decidable_by=probe: a string of the right shape may never be passed to dlsym",
+  "toutiao": {
+   "libraries": 138,
+   "candidates": 67,
+   "by_ndk_library": {
+    "libmediandk.so": 36,
+    "libandroid.so": 24,
+    "libnativewindow.so": 7
+   }
+  },
+  "mcdonalds": {
+   "libraries": 10,
+   "candidates": 50,
+   "by_ndk_library": {
+    "libneuralnetworks.so": 37,
+    "libandroid.so": 8,
+    "libnativewindow.so": 5
+   }
+  },
+  "for_scale": "the McDonald's map has 92 rows and 40 gaps, of which 2 are native-symbol gaps"
+ },
+ "method_note_isolation": "--android-native-target moves a library into an isolated Android namespace so DT_NEEDED picks the APK's copy. Isolating more than necessary is not free: a library whose weak libc references resolve in the default namespace can find them unresolved in the isolated one, and a weak symbol binds to zero rather than failing the load. Use the forward dependency closure of the library that failed, not every library that reaches the shadowed one.",
+ "method_note_network": "There is no app-level network instrument and none was needed: the OS owns the sockets. /proc/<pid>/net/tcp6 gives per-connection state and the owning uid, netstat names the peers, and sampling twice distinguishes an idle keep-alive from a retry loop. No xt_qtaguid or BPF accounting on this board, so per-uid byte totals are not available and the netns TCP counters are system-wide -- they cannot be attributed to one app."
+}

@@ -1,0 +1,27 @@
+{
+  "app": "com.emn8.mobilem8.nativeapp.bk 7.82.0",
+  "description": "Failures Burger King hit on the OH board after the blind predictions were committed, in the order they surfaced. Each names the map row that should have flagged it before any launch.",
+  "baseline_westlake_commit": "f6dc615",
+  "blockers": [
+    {"id": "B1", "launch": 1,
+     "symptom": "MainApplication.onCreate: libreactnative.so fails to relocate _ZNSt6__ndk119__shared_weak_count14__release_weakEv; its DT_NEEDED libc++_shared.so resolved to /system/lib64/libc++_shared.so, which the child's search path puts before the app's library directory",
+     "fix": "load the APK's libraries in the isolated Android namespace (launcher --android-native-target, 20 libraries)",
+     "predicted_by": ["load:shadowed-by-board"]},
+    {"id": "B2", "launch": 3,
+     "symptom": "JS fatal while the bundle loads: 'Exception in HostFunction: AndroidKeyStore not found' (expo-secure-store opens KeyStore.getInstance(\"AndroidKeyStore\")); ReactHost destroys the instance, the window stays empty",
+     "fix": "westlake 21fdcda: software AndroidKeyStore provider installed at bind",
+     "predicted_by": ["jca:AndroidKeyStore"]},
+    {"id": "B3", "launch": 5,
+     "symptom": "'null cannot be cast to non-null type android.app.UiModeManager' in a JS host function (React Native AndroidInfoModule.uiMode); a module fails to initialise, ExpoRoot throws 'Cannot read property initScreensFeatureFlags of undefined', the app shows its native 'Something went wrong' dialog",
+     "fix": "westlake d689e67: uimode (and power, alarm, clipboard) answered in process",
+     "predicted_by": ["svc:uimode"]},
+    {"id": "B4", "launch": 6,
+     "symptom": "WebView start-up: UserManager.getApplicationRestrictions reaches the in-process IUserManager, which throws UnsupportedOperationException inside a JNI callback; Chromium aborts ([FATAL:jni_android.cc(315)], SIGTRAP)",
+     "fix": "westlake 9b8b861: restriction and profile queries answered",
+     "predicted_by": ["svc:user"]},
+    {"id": "B5", "launch": 7,
+     "symptom": "WebView binds its sandboxed renderer (org.chromium.content.app.SandboxedProcessService0); direct launch cannot start it and Chromium's main thread traps (SIGTRAP on CrBrowserMain)",
+     "fix": "open: host the renderer process, or build the framework with the update-service flag off so WebView runs single-process",
+     "predicted_by": ["wv:renderer-process"]}
+  ]
+}

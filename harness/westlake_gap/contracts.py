@@ -148,6 +148,138 @@ def pm_adapter_model(westlake_root: Path) -> dict[str, Any]:
     }
 
 
+def _braced_block(text: str, start: int) -> str:
+    """The body of the first {...} block at or after start, braces balanced."""
+    open_at = text.find("{", start)
+    if open_at < 0:
+        return ""
+    depth = 0
+    for index in range(open_at, len(text)):
+        if text[index] == "{":
+            depth += 1
+        elif text[index] == "}":
+            depth -= 1
+            if depth == 0:
+                return text[open_at + 1:index]
+    return text[open_at + 1:]
+
+
+def direct_launch_am_model(westlake_root: Path) -> dict[str, Any]:
+    """What an app gets from IActivityManager in direct launch, where there is no system_server.
+
+    AppSpawnXInit installs a java.lang.reflect.Proxy for IActivityManager whose handler returns a
+    type default for every method it does not answer by name: null for any object result, 0 or
+    false otherwise. The methods it answers are read from the handler's label-specific block.
+    """
+    path = westlake_root / "framework/appspawn-x/java/com/android/internal/os/AppSpawnXInit.java"
+    text = path.read_text(errors="replace") if path.exists() else ""
+    stub = re.search(r'makeProxyStub\(\s*"AdapterIAM-stub"', text)
+    guard = text.find('"AdapterIAM-stub".equals(label)')
+    answered = sorted(set(re.findall(r'"(\w+)"\.equals\(name\)', _braced_block(text, guard)))) if guard >= 0 else []
+    line = text.count("\n", 0, stub.start()) + 1 if stub else None
+    return {"proxy_stub": stub is not None, "answered": answered,
+            "source": f"{path.relative_to(westlake_root)}:{line}" if stub else None}
+
+
+def window_adapter_model(westlake_root: Path) -> dict[str, Any]:
+    """Window-manager semantics the in-process IWindowSession must reproduce, checked in source."""
+    path = westlake_root / "framework/window/java/WindowSessionAdapter.java"
+    text = path.read_text(errors="replace") if path.exists() else ""
+    return {
+        # Android: an activity's dialogs stack above its base window whatever the add order.
+        "dialogs_above_base": _evidence(text, r"shouldHoldBack\(", path, westlake_root),
+        # Android: WMS places a window by LayoutParams.gravity/x/y (a dialog is centred).
+        # Android's own WindowLayout, or a hand-written gravity application. A comment naming
+        # ViewRootImpl's mWindowLayout.computeFrames is not support, hence "WindowLayout()".
+        "placement_from_gravity": _evidence(
+            text, r"WindowLayout\(\)\s*\.computeFrames\(|Gravity\.apply|attrs\.gravity", path, westlake_root),
+        # Android: FLAG_DIM_BEHIND puts a dim layer of dimAmount under the window.
+        "dim_behind": _evidence(text, r"FLAG_DIM_BEHIND|dimAmount", path, westlake_root),
+    }
+
+
+# JCA providers only Android's zygote installs (AndroidKeyStoreProvider.install), not libcore's defaults.
+ANDROID_JCA_PROVIDERS = {"AndroidKeyStore", "AndroidKeyStoreBCWorkaround"}
+
+
+def keystore_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether the runtime installs an "AndroidKeyStore" provider, and what answers it.
+
+    On Android the zygote calls AndroidKeyStoreProvider.install() (ZygoteInit.warmUpJcaProviders);
+    that provider's operations go to the keystore2 system service. Having the class in the boot jars
+    is not enough: KeyStore.getInstance("AndroidKeyStore") throws until something installs it. A
+    runtime may instead install its own Provider registered under that name (software or HUKS keys).
+    """
+    aosp_install = re.compile(r"AndroidKeyStoreProvider\s*\.\s*install\s*\(")
+    backend = re.compile(r"android\.system\.keystore2|IKeystoreService|OH_Huks_|\bHuks\w*\(")
+    sources = {}
+    framework = westlake_root / "framework"
+    for path in sorted(framework.rglob("*.java")) if framework.exists() else []:
+        sources[path] = _strip_java_comments(path.read_text(errors="replace"))
+
+    def first(pattern: re.Pattern[str]) -> dict[str, Any]:
+        for path, text in sources.items():
+            match = pattern.search(text)
+            if match:
+                return {"present": True, "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, match.start()) + 1}"}
+        return {"present": False, "source": None}
+
+    replacement = {"present": False, "source": None}
+    for path, text in sources.items():
+        declared = re.search(r"\bclass\s+(\w+)\s+extends\s+(?:java\.security\.)?Provider\b", text)
+        if not declared or '"AndroidKeyStore"' not in text:
+            continue
+        name = declared.group(1)
+        # Declared is not installed: code elsewhere must call its installer or add it to the list.
+        installer = re.compile(rf"\b{name}\s*\.\s*install\s*\(|(?:add|insert)Provider\w*\(\s*new\s+{name}\b")
+        if any(installer.search(other) for where, other in sources.items() if where != path):
+            replacement = {"present": True, "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, declared.start()) + 1}",
+                           "hardware_backed": bool(backend.search(text))}
+            break
+    return {"installed": first(aosp_install), "replacement": replacement, "backend": first(backend)}
+
+
+def _strip_java_comments(text: str) -> str:
+    """Blank out comments but keep line numbers: a comment naming an API is not support for it."""
+    def blank(match: re.Match[str]) -> str:
+        return re.sub(r"[^\n]", " ", match.group(0))
+    return re.sub(r'/\*.*?\*/|//[^\n]*|"(?:\\.|[^"\\\n])*"', lambda m: m.group(0) if m.group(0).startswith('"') else blank(m),
+                  text, flags=re.S)
+
+
+# libc calls whose *arguments* are constants each libc numbers for itself. The name resolves and
+# the call returns a plausible number, so nothing fails at load time: bionic's _SC_PAGESIZE is 39,
+# OH musl reads 39 as _SC_BC_STRING_MAX and answers 1000, and McDonald's Realm rounded its mmap
+# offsets with that until the kernel rejected the unaligned offset.
+LIBC_CONSTANT_NAMESPACE_CALLS = {"sysconf", "pathconf", "fpathconf", "confstr"}
+
+
+def libc_constant_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether the bionic shim translates those constants, and for which callers.
+
+    Translating for the WebView DSO alone is not enough: every library the APK packages is built
+    against bionic and asks the same questions.
+    """
+    path = westlake_root / "framework/webview-shim/webview_bionic_shim.c"
+    if not path.exists():
+        return {"translated": [], "scope": "none", "source": None}
+    text = _strip_java_comments(path.read_text(errors="replace"))
+    translated = sorted(name for name in LIBC_CONSTANT_NAMESPACE_CALLS
+                        if re.search(rf"^\s*(?:long|int|size_t)\s+{name}\s*\(", text, re.M))
+    scope = "none"
+    if translated:
+        body = _braced_block(text, text.index(f"{translated[0]}("))
+        if "caller_is_android_dso" in body:
+            scope = "packaged-libraries"
+        elif "caller_is_webview" in body:
+            scope = "webview-only"
+        else:
+            scope = "all-callers"
+    line = text.count(chr(10), 0, text.index(f"{translated[0]}(")) + 1 if translated else None
+    return {"translated": translated, "scope": scope,
+            "source": f"{path.relative_to(westlake_root)}:{line}" if translated else None}
+
+
 def _evidence(text: str, pattern: str, path: Path, root: Path) -> dict[str, Any]:
     match = re.search(pattern, text)
     if not match:

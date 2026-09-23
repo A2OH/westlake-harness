@@ -1,0 +1,10 @@
+{
+  "description": "Westlake-built libraries whose sources are not in native/libraries.json or tools/build_native.py. Paths are relative to the Westlake tree; a manifest contributes its westlake/ sources.",
+  "artifacts": {
+    "liboh_adapter_bridge.so": {"manifest": "native/bridge15-sources.json"},
+    "liboh_android_runtime.so": {"manifest": "native/android-runtime15-sources.json"},
+    "liboh_hwui_shim.so": {"manifest": "native/hwui-shim-sources.json"},
+    "libwestlake_bionic.so": {"manifest": "native/bionic-abi-sources.json"},
+    "libwebview_bionic_shim.so": {"sources": ["framework/webview-shim/webview_bionic_shim.c"]}
+  }
+}

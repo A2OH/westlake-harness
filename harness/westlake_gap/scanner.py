@@ -26,6 +26,7 @@ from androguard.core.apk import APK
 from androguard.core.dex import DEX, HiddenApiClassDataItem
 from loguru import logger
 
+from .contracts import ANDROID_JCA_PROVIDERS
 from .native import (
     abi_from_archive_name,
     abi_from_machine,
@@ -307,6 +308,8 @@ def read_elf(
             "exported_symbols": sorted(exports),
             "undefined_symbols": sorted(undefined),
             "undefined_weak_symbols": sorted(undefined_weak),
+            "runtime_symbol_candidates": runtime_symbol_candidates(
+                raw, set(exports or ()) | set(undefined) | set(undefined_weak)),
             "jni_exports": sorted(name for name in exports if name.startswith("Java_")),
             "has_jni_onload": "JNI_OnLoad" in exports,
             "jni_registration_entries": registration_entries,
@@ -321,6 +324,35 @@ def read_elf(
                 os.unlink(temp_name)
             except FileNotFoundError:
                 pass
+
+
+#: A platform entry point looked up by name at runtime: AFoo_bar, ASurfaceTransaction_setBuffer.
+#: Deliberately narrow. Every string in a binary is a candidate for dlsym and almost none of them
+#: are, so this matches the shape the NDK gives its C entry points and leaves the rest alone.
+#: Matched against whole NUL-terminated strings, not anywhere in the file: the name handed to
+#: dlsym is its own string literal, while the same letters inside a mangled C++ symbol or a longer
+#: identifier are not a lookup. Anchoring cuts an engine's candidates by roughly ten times, which
+#: matters because this list is what the on-device probe has to resolve one by one.
+_RUNTIME_SYMBOL_SHAPE = re.compile(rb"[\x00-\x1f\"' ]([A-Z][A-Za-z0-9]{2,}_[A-Za-z0-9_]{2,})\x00")
+
+
+def runtime_symbol_candidates(data: bytes, declared: set[str]) -> list[str]:
+    """Platform entry points this ELF can reach by name at runtime rather than by declaring them.
+
+    A dlopen/dlsym pair leaves nothing in the symbol table: the name exists only as a string, so
+    the library never says it needs the function and a missing one is not a load failure. That is
+    why an engine looking up fourteen NDK SurfaceControl entry points still scanned as 288 of 289
+    resolved, and why losing them cost hardware compositing with no error anywhere.
+
+    These are candidates and nothing more. A name of the right shape may never be passed to dlsym,
+    may sit behind a version check that never fires, or may be one of several the caller tries in
+    turn. Names built at runtime do not appear at all. Deciding any of them means performing the
+    lookup on the board; this only narrows where to look.
+    """
+    found = {match.decode("ascii", "ignore") for match in _RUNTIME_SYMBOL_SHAPE.findall(data)}
+    # A name it already imports is covered by the ordinary undefined-symbol check, which is
+    # stronger evidence: the loader refuses to load the library at all when one is missing.
+    return sorted(found - declared)
 
 
 def _dynamic_symbols(data: bytes) -> tuple[set[str] | None, set[str], set[str]]:
@@ -471,6 +503,8 @@ class DexInventory:
     probes: list[dict[str, Any]] = field(default_factory=list)
     load_libraries: list[dict[str, Any]] = field(default_factory=list)
     service_requests: list[dict[str, Any]] = field(default_factory=list)
+    jca_requests: list[dict[str, Any]] = field(default_factory=list)
+    nonnull_casts: list[dict[str, Any]] = field(default_factory=list)
     native_methods: list[dict[str, Any]] = field(default_factory=list)
 
 
@@ -552,6 +586,16 @@ def _inventory_instructions(dex: DEX, method: Any, caller: dict[str, Any], out: 
         if name in {"const-string", "const-string/jumbo"} and registers:
             string_regs[registers[0]] = str(instruction.get_string())
             class_regs.pop(registers[0], None)
+            if string_regs[registers[0]].startswith(KOTLIN_NONNULL_CAST + "android."):
+                # Kotlin's `x as T` on a platform type: the message is the only trace in the dex
+                # that a null result throws here instead of being checked.
+                out.nonnull_casts.append({**caller, "offset": offset,
+                                          "type": string_regs[registers[0]][len(KOTLIN_NONNULL_CAST):]})
+            if string_regs[registers[0]] in ANDROID_JCA_PROVIDERS:
+                # Libraries keep the provider name in a constant and pass it on through fields and
+                # helpers, so the name itself is evidence even where the getInstance call is not.
+                out.jca_requests.append({**caller, "offset": offset, "api": "provider name",
+                                         "provider": string_regs[registers[0]]})
             continue
         if name == "const-class" and registers:
             try:
@@ -588,6 +632,7 @@ def _inventory_instructions(dex: DEX, method: Any, caller: dict[str, Any], out: 
                         out.method_sites[key].append({**caller, "offset": offset, "opcode": name})
                 _detect_string_call(key, registers, string_regs, caller, offset, out)
                 _detect_service_call(key, registers, string_regs, class_regs, caller, offset, out)
+                _detect_jca_call(key, registers, string_regs, caller, offset, out)
             except (IndexError, TypeError, ValueError):
                 pass
         elif (
@@ -651,6 +696,24 @@ def _detect_string_call(
 # Calls that ask the platform for a service by name or by manager class. The argument register
 # for each: instance getSystemService(String|Class) takes it after `this`; the static forms take it
 # first (ServiceManager) or second (ContextCompat, after the Context).
+# Services an app reaches without ever naming them: a static framework accessor calls
+# getSystemService inside the platform, so the app's dex holds no call site at all. Wikipedia died
+# in onCreate on a null AccountManager.get(context) and its map had no row for the account service.
+STATIC_SERVICE_ACCESSORS = {
+    ("Landroid/accounts/AccountManager;", "get"): "account",
+    ("Landroid/accounts/AccountManager;", "getInstance"): "account",
+    ("Landroid/view/LayoutInflater;", "from"): "layout_inflater",
+    ("Landroid/view/accessibility/AccessibilityManager;", "getInstance"): "accessibility",
+    ("Landroid/telephony/SubscriptionManager;", "from"): "telephony_subscription_service",
+    ("Landroid/telephony/TelephonyManager;", "from"): "phone",
+    ("Landroid/app/NotificationManagerCompat;", "from"): "notification",
+    ("Landroidx/core/app/NotificationManagerCompat;", "from"): "notification",
+    ("Landroid/net/ConnectivityManager;", "from"): "connectivity",
+    ("Landroid/os/storage/StorageManager;", "from"): "storage",
+    ("Landroid/media/AudioManager;", "from"): "audio",
+    ("Landroid/view/inputmethod/InputMethodManager;", "getInstance"): "input_method",
+}
+
 _SERVICE_BY_NAME = {"(Ljava/lang/String;)Ljava/lang/Object;"}
 _SERVICE_BY_CLASS = {"(Ljava/lang/Class;)Ljava/lang/Object;"}
 
@@ -675,10 +738,46 @@ def _detect_service_call(
             request = {"api": f"{owner}->getSystemService", "manager_class": class_regs.get(registers[1])}
     elif owner == "Landroid/os/ServiceManager;" and name in {"getService", "checkService", "getServiceOrThrow"} and registers:
         request = {"api": f"ServiceManager.{name}", "service": string_regs.get(registers[0]), "binder_direct": True}
+    elif (owner, name) in STATIC_SERVICE_ACCESSORS:
+        request = {"api": f"{owner.strip('L;').rsplit('/', 1)[-1]}.{name}",
+                   "service": STATIC_SERVICE_ACCESSORS[(owner, name)], "via_static_accessor": True}
     if request is None:
         return
     request["dynamic"] = request.get("service") is None and request.get("manager_class") is None
     out.service_requests.append({**caller, "offset": offset, "call_owner": owner, **request})
+
+
+KOTLIN_NONNULL_CAST = "null cannot be cast to non-null type "
+
+# JCA engine classes: getInstance(type[, provider]) picks an implementation by name at run time, so
+# the class being present in the boot jars says nothing about whether the named one is installed.
+JCA_ENGINES = {
+    "Ljava/security/KeyStore;", "Ljava/security/KeyPairGenerator;", "Ljava/security/KeyFactory;",
+    "Ljava/security/Signature;", "Ljava/security/MessageDigest;", "Ljava/security/SecureRandom;",
+    "Ljava/security/AlgorithmParameters;", "Ljava/security/cert/CertificateFactory;",
+    "Ljavax/crypto/Cipher;", "Ljavax/crypto/KeyGenerator;", "Ljavax/crypto/Mac;", "Ljavax/crypto/SecretKeyFactory;",
+    "Ljavax/crypto/KeyAgreement;", "Ljavax/net/ssl/SSLContext;", "Ljavax/net/ssl/TrustManagerFactory;",
+    "Ljavax/net/ssl/KeyManagerFactory;",
+}
+
+
+def _detect_jca_call(
+    key: tuple[str, str, str],
+    registers: list[int],
+    string_regs: dict[int, str],
+    caller: dict[str, Any],
+    offset: int,
+    out: DexInventory,
+) -> None:
+    owner, name, descriptor = key
+    if owner not in JCA_ENGINES or name != "getInstance" or not registers or not descriptor.startswith("(Ljava/lang/String;"):
+        return
+    request = {"api": owner.strip("L;").rsplit("/", 1)[-1] + ".getInstance", "type": string_regs.get(registers[0])}
+    if descriptor.startswith("(Ljava/lang/String;Ljava/lang/String;)") and len(registers) >= 2:
+        request["provider"] = string_regs.get(registers[1])
+    elif descriptor.startswith("(Ljava/lang/String;Ljava/security/Provider;)"):
+        request["provider"] = "(Provider object)"
+    out.jca_requests.append({**caller, "offset": offset, **request})
 
 
 def _method_names_by_owner(method_refs: Iterable[tuple[str, str, str]]) -> dict[str, list[str]]:
@@ -1307,6 +1406,8 @@ def scan_apk(
             "existence_probes": inventory.probes,
             "load_library_calls": inventory.load_libraries,
             "service_requests": inventory.service_requests,
+            "jca_requests": inventory.jca_requests,
+            "nonnull_casts": inventory.nonnull_casts,
             "native_upcalls": native_upcalls if platform_members is not None else None,
             "platform_method_names": _method_names_by_owner(inventory.method_refs),
             "declared_native_methods": native_findings,

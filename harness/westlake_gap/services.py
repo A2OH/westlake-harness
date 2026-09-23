@@ -73,6 +73,7 @@ HOLLOW = "hollow"                # something non-null answers, but calls return 
 NULL = "null"                    # getSystemService returns null / fetcher throws (C4 or C5)
 INERT = "inert"                  # manager returned, but its (optional) binder is null: calls NPE or no-op
 UNRESOLVED = "unresolved"        # binder fetched through a helper or native service the static read cannot follow
+STRICT = "strict"                # a local proxy answers a few methods and throws for every other call
 UNREGISTERED = "not-a-platform-service"  # no AOSP fetcher: vendor/OEM/app-private name
 
 # Managers whose fetcher needs nothing from ServiceManager at all.
@@ -266,6 +267,27 @@ def westlake_service_model(westlake_root: Path) -> dict[str, list[dict[str, Any]
         add(match.group(1), "local-fetcher", "AppSpawnXInit replaces the SystemServiceRegistry fetcher", init, java, match.start())
     for match in re.finditer(r'(?:cache\.put|put\.invoke\(cache,)\s*\(?\s*"([^"]+)"', java):
         add(match.group(1), "cached-binder", "AppSpawnXInit seeds ServiceManager.sCache with a binder", init, java, match.start())
+    # Other adapters publish their own binder into ServiceManager.sCache at run time, replacing
+    # whatever the native runtime seeded. A proxy whose fallback throws is not hollow: callers
+    # that expect a value (or a checked RemoteException) get an unchecked exception instead.
+    for path in sorted((westlake_root / "framework").rglob("*.java")):
+        if path == init:
+            continue
+        source = path.read_text(errors="replace")
+        if "sCache" not in source:
+            continue
+        for match in re.finditer(r'\.put\(\s*"([^"]+)"\s*,', source):
+            if "throw new UnsupportedOperationException(" in source and "Proxy.newProxyInstance" in source:
+                answered = sorted({n for pair in re.findall(r'name\.equals\("(\w+)"\)|case "(\w+)":', source) for n in pair if n}
+                                  - {"asBinder", "toString", "hashCode", "equals"})
+                add(match.group(1), "strict-proxy",
+                    f"local proxy answers {', '.join(answered)}; every other call throws UnsupportedOperationException",
+                    path, source, match.start())
+                model[match.group(1)][-1]["answered"] = answered
+            else:
+                add(match.group(1), "cached-binder", f"{path.stem} seeds ServiceManager.sCache with a binder",
+                    path, source, match.start())
+
     audio = java.find("private static void installAudioServiceStub")
     if audio >= 0:
         add("audio", "hollow-proxy", "IAudioService dynamic proxy returning type defaults for every method", init, java, audio)
@@ -275,7 +297,7 @@ def westlake_service_model(westlake_root: Path) -> dict[str, list[dict[str, Any]
     return dict(model)
 
 
-_RANK = {"local-impl": 6, "adapter": 5, "cached-binder": 4, "adapter-conditional": 3,
+_RANK = {"local-impl": 6, "adapter": 5, "cached-binder": 4, "strict-proxy": 4, "adapter-conditional": 3,
          "local-fetcher": 2, "hollow-proxy": 1, "hollow-binder": 1, "explicit-null": 0}
 
 
@@ -288,6 +310,10 @@ def provision_verdict(provisions: list[dict[str, Any]]) -> tuple[str, dict[str, 
     # A hollow proxy installed as the fetcher overrides whatever binder sits underneath it.
     if any(p["kind"] == "hollow-proxy" for p in provisions):
         return HOLLOW, next(p for p in provisions if p["kind"] == "hollow-proxy")
+    # Published at run time, it replaces a seeded bare binder of the same name.
+    strict = [p for p in provisions if p["kind"] == "strict-proxy"]
+    if strict:
+        return STRICT, strict[0]
     if strongest["kind"] in {"local-impl", "adapter", "cached-binder", "adapter-conditional", "local-fetcher"}:
         return SUPPLIED, strongest
     if hollow:
@@ -366,13 +392,13 @@ def service_map(
 
 
 def _order(verdict: str) -> int:
-    return {NULL: 0, INERT: 1, HOLLOW: 2, UNRESOLVED: 3, SUPPLIED: 4}.get(verdict, 4)
+    return {NULL: 0, INERT: 1, STRICT: 2, HOLLOW: 2, UNRESOLVED: 3, SUPPLIED: 4}.get(verdict, 4)
 
 
 def _shim_class(verdict: str, analog: str | None) -> str:
     if verdict == SUPPLIED:
         return "C0"
-    if verdict == HOLLOW:
+    if verdict in {HOLLOW, STRICT}:
         return "C9"
     if verdict == UNRESOLVED:
         return "CU"

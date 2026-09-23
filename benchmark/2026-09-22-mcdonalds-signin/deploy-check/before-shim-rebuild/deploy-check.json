@@ -1,0 +1,746 @@
+{
+  "freshness": [
+    {
+      "absent": 0,
+      "absent_examples": [],
+      "artifact": "libandroid_native_network_compat.so",
+      "files_compiled_in": 1,
+      "sha256": "f6c354d1513071533fddcc91749f44e57a626177a584fb1bb9f48bf6446ef01e",
+      "sources": [
+        "framework/appspawn-x/bionic_compat/src/android_native_network_compat.c"
+      ],
+      "stale_files": [],
+      "strings": 12,
+      "verdict": "matches source"
+    },
+    {
+      "absent": 1,
+      "absent_examples": [
+        {
+          "source": "framework/window/jni/oh_window_manager_client.cpp",
+          "string": "[WESTLAKE-GONW] 4 GetSurface returned"
+        }
+      ],
+      "artifact": "liboh_adapter_bridge.so",
+      "files_compiled_in": 21,
+      "sha256": "da350a1d79e59aa4a9065adc5a6827762aac96bec4bbcae28b216169acaa97d0",
+      "sources": [
+        "framework/core/jni/adapter_bridge.cpp",
+        "framework/core/jni/oh_callback_handler.cpp",
+        "framework/core/jni/oh_environment.cpp",
+        "framework/activity/jni/oh_ability_manager_client.cpp",
+        "framework/activity/jni/oh_app_mgr_client.cpp",
+        "framework/activity/jni/app_scheduler_adapter.cpp",
+        "framework/activity/jni/ability_scheduler_adapter.cpp",
+        "framework/activity/jni/ability_connection_adapter.cpp",
+        "framework/activity/jni/intent_want_converter.cpp",
+        "framework/activity/jni/lifecycle_state_mapper.cpp",
+        "framework/activity/jni/activity_manager_adapter.cpp",
+        "framework/activity/jni/activity_task_manager_adapter.cpp",
+        "framework/window/jni/oh_window_manager_client.cpp",
+        "framework/window/jni/oh_window_policy.cpp",
+        "framework/window/jni/oh_anativewindow_shim.cpp",
+        "framework/window/jni/oh_input_bridge.cpp",
+        "framework/window/jni/oh_input_manager_bridge.cpp",
+        "framework/window/jni/window_callback_adapter.cpp",
+        "framework/window/jni/session_stage_adapter.cpp",
+        "framework/window/jni/window_manager_agent_adapter.cpp",
+        "framework/window/jni/display_manager_adapter_jni.cpp",
+        "framework/window/jni/window_manager_adapter.cpp",
+        "framework/window/jni/window_session_adapter.cpp",
+        "framework/window/jni/input_event_bridge.cpp",
+        "framework/surface/jni/oh_surface_bridge.cpp",
+        "framework/surface/jni/oh_graphic_buffer_producer.cpp",
+        "framework/surface/jni/oh_canvas_renderer.cpp",
+        "framework/surface/jni/oh_egl_surface_adapter.cpp",
+        "framework/broadcast/jni/oh_common_event_client.cpp",
+        "framework/broadcast/jni/common_event_subscriber_adapter.cpp",
+        "framework/contentprovider/jni/oh_datashare_client.cpp",
+        "framework/package-manager/jni/oh_bundle_mgr_client.cpp",
+        "framework/core/jni/oh_mediacodec_shim.cpp",
+        "framework/core/jni/oh_audiotrack_shim.cpp",
+        "framework/core/jni/android_log_hilog_bridge.cpp",
+        "framework/activity/jni/oh_inproc_service.cpp",
+        "framework/window/jni/window_event_channel_adapter.cpp",
+        "framework/window/jni/oh_ime_metadata.cpp",
+        "framework/window/jni/input_method_bridge.cpp",
+        "framework/window/jni/wl_window_stub.cpp",
+        "framework/surface/jni/rs_surface_helper.cpp",
+        "framework/surface/jni/surface_oh_helper.cpp",
+        "framework/surface/jni/oh_surface_texture_jni.cpp",
+        "framework/surface/jni/oh_texture_view_jni.cpp",
+        "framework/package-manager/jni/apk_manifest_jni.cpp",
+        "framework/package-manager/jni/apk_manifest_parser.cpp",
+        "framework/package-manager/jni/axml_parser.cpp",
+        "framework/package-manager/jni/permission_mapper.cpp"
+      ],
+      "stale_files": [
+        "framework/window/jni/oh_window_manager_client.cpp"
+      ],
+      "strings": 335,
+      "verdict": "older than source"
+    },
+    {
+      "absent": 29,
+      "absent_examples": [
+        {
+          "source": "framework/android-runtime/src/AndroidRuntime.cpp",
+          "string": "[WESTLAKE-458] WlAmsBind.install not found"
+        },
+        {
+          "source": "framework/android-runtime/src/AndroidRuntime.cpp",
+          "string": "[WESTLAKE-458] adapter/compat/WlAmsBind NOT FOUND"
+        },
+        {
+          "source": "framework/android-runtime/src/AndroidRuntime.cpp",
+          "string": "[WESTLAKE-458] ams bind:"
+        },
+        {
+          "source": "framework/android-runtime/src/AndroidRuntime.cpp",
+          "string": "[WESTLAKE-459] WlAudioFocus NOT FOUND"
+        },
+        {
+          "source": "framework/android-runtime/src/AndroidRuntime.cpp",
+          "string": "[WESTLAKE-459] audio focus:"
+        }
+      ],
+      "artifact": "liboh_android_runtime.so",
+      "files_compiled_in": 11,
+      "sha256": "128dfe14c429caab6036140ab75825212fd840c9d584234f6074c79592cbd29f",
+      "sources": [
+        "framework/android-runtime/src/AndroidRuntime.cpp",
+        "framework/android-runtime/src/android_animation_PropertyValuesHolder.cpp",
+        "framework/android-runtime/src/android_app_Activity.cpp",
+        "framework/android-runtime/src/android_content_res_ApkAssets_aosp.cpp",
+        "framework/android-runtime/src/android_graphics_compat_shim.cpp",
+        "framework/android-runtime/src/android_input_InputEventLabels_aosp.cpp",
+        "framework/android-runtime/src/android_input_Input_aosp.cpp",
+        "framework/android-runtime/src/android_os_GraphicsEnvironment.cpp",
+        "framework/android-runtime/src/android_os_incremental_IncrementalManager.cpp",
+        "native/android_message_queue.cpp",
+        "framework/android-runtime/src/android_os_Process.cpp",
+        "framework/android-runtime/src/android_os_SystemClock.cpp",
+        "framework/android-runtime/src/android_os_SystemProperties.cpp",
+        "framework/android-runtime/src/android_os_Trace.cpp",
+        "framework/android-runtime/src/android_util_AssetManager_aosp.cpp",
+        "framework/android-runtime/src/android_util_EventLog.cpp",
+        "framework/android-runtime/src/android_util_Log.cpp",
+        "framework/android-runtime/src/android_util_StringBlock_aosp.cpp",
+        "framework/android-runtime/src/android_util_XmlBlock_aosp.cpp",
+        "framework/android-runtime/src/android_view_DisplayEventReceiver.cpp",
+        "framework/android-runtime/src/android_view_InputChannel.cpp",
+        "framework/android-runtime/src/android_view_InputEventReceiver.cpp",
+        "framework/android-runtime/src/android_view_KeyCharacterMap_aosp.cpp",
+        "framework/android-runtime/src/android_view_MotionEvent_aosp.cpp",
+        "framework/android-runtime/src/android_view_VelocityTracker.cpp",
+        "framework/android-runtime/src/android_view_SurfaceControl.cpp",
+        "framework/android-runtime/src/android_view_SurfaceSession.cpp",
+        "framework/android-runtime/src/class_library_services.cpp",
+        "framework/android-runtime/src/com_android_internal_os_ClassLoaderFactory.cpp",
+        "framework/android-runtime/src/com_android_internal_util_VirtualRefBasePtr_aosp.cpp",
+        "framework/android-runtime/src/libart_log_bridge.cpp",
+        "framework/android-runtime/src/libcore_io_Memory.cpp",
+        "framework/android-runtime/src/libcore_util_NativeAllocationRegistry_guard.cpp",
+        "framework/sqlite/android_database_CursorWindow.cpp",
+        "framework/sqlite/android_database_SQLiteCommon.cpp",
+        "framework/sqlite/android_database_SQLiteConnection.cpp",
+        "framework/sqlite/wl_CursorWindow.cpp",
+        "framework/sqlite/wl_sqlite3_android.cpp",
+        "framework/android-runtime/src/oh_process_cpu_time.cpp"
+      ],
+      "stale_files": [
+        "framework/android-runtime/src/AndroidRuntime.cpp",
+        "framework/android-runtime/src/android_graphics_compat_shim.cpp",
+        "framework/android-runtime/src/android_view_DisplayEventReceiver.cpp"
+      ],
+      "strings": 173,
+      "verdict": "older than source"
+    },
+    {
+      "absent": 0,
+      "absent_examples": [],
+      "artifact": "liboh_hwui_shim.so",
+      "files_compiled_in": 3,
+      "sha256": "e6afc2ddfbfbb5771c7d6c75c23ac3a8ab44dbc5fea81c393fe25774573f9dc0",
+      "sources": [
+        "framework/hwui-shim/jni/oh_native_window_shim.c",
+        "framework/hwui-shim/jni/oh_choreographer_shim.c",
+        "framework/hwui-shim/jni/oh_hardwarebuffer_shim.c",
+        "framework/hwui-shim/jni/atrace_compat.c",
+        "framework/hwui-shim/jni/sync_wait_compat.c",
+        "framework/hwui-shim/jni/ashmem_compat.c",
+        "framework/hwui-shim/jni/oh_display_shim.c",
+        "framework/hwui-shim/jni/wl_gl_trace.c",
+        "framework/hwui-shim/jni/wl_looper_trace.c",
+        "framework/hwui-shim/jni/oh_minikin_shim.cpp",
+        "framework/hwui-shim/jni/oh_skia_ahb_shim.cpp",
+        "framework/hwui-shim/jni/oh_graphicsstats_shim.cpp"
+      ],
+      "stale_files": [],
+      "strings": 12,
+      "verdict": "matches source"
+    },
+    {
+      "absent": 1,
+      "absent_examples": [
+        {
+          "source": "framework/window/jni/oh_ime_helper_capi.cpp",
+          "string": "[OH_IME_CAPI] keyboard area window="
+        }
+      ],
+      "artifact": "liboh_ime_helper_capi.so",
+      "files_compiled_in": 1,
+      "sha256": "f250bc32f56bfc820ce3a72e1ebdef5a61ed5da3b1110a70772ea975c227c687",
+      "sources": [
+        "framework/window/jni/oh_ime_helper_capi.cpp"
+      ],
+      "stale_files": [
+        "framework/window/jni/oh_ime_helper_capi.cpp"
+      ],
+      "strings": 5,
+      "verdict": "older than source"
+    },
+    {
+      "absent": 0,
+      "absent_examples": [],
+      "artifact": "libsoundpool.so",
+      "files_compiled_in": 1,
+      "sha256": "60b1b79c1978b74a193f4cccd5d473d9bdd0b478c5f632f2462871b6be17a695",
+      "sources": [
+        "framework/core/jni/oh_soundpool_jni.c"
+      ],
+      "stale_files": [],
+      "strings": 2,
+      "verdict": "matches source"
+    },
+    {
+      "absent": 0,
+      "absent_examples": [],
+      "artifact": "libwestlake_bionic.so",
+      "files_compiled_in": 2,
+      "sha256": "99baf31def2a4d908f688d7ae0cc50284640fdd4c65212bf6d37bf989c1dcedd",
+      "sources": [
+        "framework/appspawn-x/bionic_compat/src/bionic_assert_compat.c",
+        "framework/appspawn-x/bionic_compat/src/bionic_stdio_compat.c",
+        "native/oh_fd_set.c"
+      ],
+      "stale_files": [],
+      "strings": 5,
+      "verdict": "matches source"
+    },
+    {
+      "absent": 1,
+      "absent_examples": [
+        {
+          "source": "framework/webview-shim/webview_bionic_shim.c",
+          "string": "[WESTLAKE-LOADER] refusing self-trapping library:"
+        }
+      ],
+      "artifact": "webview-t-lib/libwebview_bionic_shim.so",
+      "files_compiled_in": 1,
+      "sha256": "e2103f79086810bd92b471c49011bb4ce1ae2a0ab1cb26ddfe012aa287104b23",
+      "sources": [
+        "framework/webview-shim/webview_bionic_shim.c"
+      ],
+      "stale_files": [
+        "framework/webview-shim/webview_bionic_shim.c"
+      ],
+      "strings": 16,
+      "verdict": "older than source"
+    }
+  ],
+  "loads": [
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "/data/local/tmp/asx/webview-t-lib/libwebviewchromium.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/webview-shim/oh_webview_navigation_probe.cpp:41",
+        "framework/webview-shim/oh_webview_navigation_probe.cpp:66",
+        "framework/webview-shim/oh_webview_navigation_probe.cpp:553"
+      ],
+      "status": "staged"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "/system/lib/ld-musl-aarch64.so.1",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/webview-shim/webview_bionic_shim.c:516"
+      ],
+      "status": "board"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "/system/lib/liboh_adapter_bridge.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/android-runtime/src/android_graphics_compat_shim.cpp:501"
+      ],
+      "status": "staged"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "/system/lib/ndk/libnative_media_acodec.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/core/jni/oh_mediacodec_shim.cpp:72"
+      ],
+      "status": "board"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "/system/lib/ndk/libnative_media_core.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/core/jni/oh_mediacodec_shim.cpp:74"
+      ],
+      "status": "board"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "/system/lib/ndk/libohaudio.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/core/jni/oh_audiotrack_shim.cpp:74"
+      ],
+      "status": "board"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "/system/lib64/libc.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/appspawn-x/bionic_compat/src/android_native_network_compat.c:35",
+        "framework/webview-shim/webview_bionic_shim.c:510"
+      ],
+      "status": "board"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "/system/lib64/platformsdk/libEGL.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/player-gl-shim/player_egl_trace.c:136"
+      ],
+      "status": "board"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "/system/lib64/platformsdk/libGLESv3.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/player-gl-shim/player_gl_trace.c:35"
+      ],
+      "status": "board"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "/system/lib64/platformsdk/libaccesstoken_sdk.z.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/package-manager/jni/oh_permission_queries.cpp:23"
+      ],
+      "status": "board"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "/system/lib64/platformsdk/libtokenid_sdk.z.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/package-manager/jni/oh_permission_queries.cpp:22"
+      ],
+      "status": "board"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "libEGL.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/hwui-shim/jni/wl_egl_trace.c:27",
+        "framework/android-runtime/src/oh_egl_boundary.cpp:34"
+      ],
+      "status": "board"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "libEGL_impl.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/hwui-shim/jni/wl_egl_trace.c:28"
+      ],
+      "status": "board"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "libGLESv2.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/hwui-shim/jni/wl_gl_trace.c:26"
+      ],
+      "status": "board"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "libGLESv3.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/hwui-shim/jni/wl_gl_trace.c:25"
+      ],
+      "status": "board"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "libability_access_control.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/core/jni/oh_connectivity_state.c:160"
+      ],
+      "status": "board"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "libandroid.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/hwui-shim/jni/oh_choreographer_shim.c:4",
+        "framework/webview-shim/libandroid_choreographer_api33_forwarder.c:5",
+        "framework/webview-shim/libandroid_webview_shim.c:1216",
+        "framework/android-runtime/src/android_graphics_compat_shim.cpp:911",
+        "framework/android-runtime/src/android_view_SurfaceControl.cpp:1093",
+        "framework/window/jni/oh_window_manager_client.cpp:2776"
+      ],
+      "status": "staged"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "libart.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/window/jni/window_session_adapter.cpp:142",
+        "framework/window/jni/window_session_adapter.cpp:143"
+      ],
+      "status": "staged"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "libavplayer.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/core/jni/oh_soundpool_jni.c:458"
+      ],
+      "status": "board"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "libbegetutil.z.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/appspawn-x/bionic_compat/src/bionic_assert_compat.c:54"
+      ],
+      "status": "board"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "libc.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/appspawn-x/bionic_compat/src/android_native_network_compat.c:33",
+        "framework/webview-shim/webview_bionic_shim.c:507"
+      ],
+      "status": "board"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "libhwui.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/android-runtime/include/AndroidRuntime.cpp:71",
+        "framework/android-runtime/src/AndroidRuntime.cpp:130",
+        "framework/android-runtime/src/android_graphics_Typeface.cpp:25",
+        "framework/android-runtime/src/android_graphics_Typeface.cpp:112",
+        "framework/android-runtime/src/android_graphics_Typeface.cpp:113",
+        "framework/appspawn-x/src/AndroidRuntime.cpp:61",
+        "framework/surface/jni/oh_texture_layer_probe_jni.cpp:472"
+      ],
+      "status": "staged"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "libicuuc.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/android-runtime/src/AndroidRuntime.cpp:480",
+        "framework/window/jni/oh_window_manager_client.cpp:844",
+        "framework/window/jni/oh_window_manager_client.cpp:845"
+      ],
+      "status": "staged"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "libjavacore.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/android-runtime/include/AndroidRuntime.cpp:280",
+        "framework/android-runtime/src/AndroidRuntime.cpp:3812",
+        "framework/android-runtime/src/libcore_util_NativeAllocationRegistry_guard.cpp:121",
+        "framework/android-runtime/src/libcore_util_NativeAllocationRegistry_guard.cpp:123",
+        "framework/appspawn-x/src/AndroidRuntime.cpp:228"
+      ],
+      "status": "missing"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "libjnigraphics.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/appspawn-x/src/source_framework_contracts.cpp:571"
+      ],
+      "status": "staged"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "libmali.so.0",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/android-runtime/src/adapter_bridge.cpp:65",
+        "framework/core/jni/adapter_bridge.cpp:93"
+      ],
+      "status": "board"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "libnative_media_acodec.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/core/jni/oh_mediacodec_shim.cpp:71"
+      ],
+      "status": "board"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "libnative_media_core.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/core/jni/oh_mediacodec_shim.cpp:73"
+      ],
+      "status": "board"
+    },
+    {
+      "how": [
+        "System.loadLibrary",
+        "dlopen"
+      ],
+      "name": "liboh_adapter_bridge.so",
+      "on_failure": "throws",
+      "sites": [
+        "framework/appspawn-x/java/com/android/internal/os/AppSpawnXInit.java:898",
+        "framework/core/java/OHEnvironment.java:22",
+        "framework/webview-shim/libandroid_surfacecontrol_legacy_forwarder.c:15",
+        "framework/webview-shim/libandroid_webview_core_shim.c:135",
+        "framework/webview-shim/libandroid_webview_shim.c:420",
+        "framework/android-runtime/src/android_graphics_compat_shim.cpp:492",
+        "framework/android-runtime/src/android_graphics_compat_shim.cpp:496",
+        "framework/appspawn-x/src/appspawnx_runtime.cpp:544",
+        "framework/appspawn-x/src/appspawnx_runtime.cpp:925",
+        "framework/appspawn-x/src/appspawnx_runtime.cpp:929",
+        "framework/appspawn-x/src/child_main.cpp:1425",
+        "framework/appspawn-x/src/child_main.cpp:1426",
+        "framework/appspawn-x/src/source_framework_contracts.cpp:118",
+        "framework/appspawn-x/src/source_framework_contracts.cpp:120"
+      ],
+      "status": "staged"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "liboh_android_runtime.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/android-runtime/src/adapter_bridge.cpp:1011",
+        "framework/android-runtime/src/adapter_bridge.cpp:1015",
+        "framework/appspawn-x/src/appspawnx_runtime.cpp:532",
+        "framework/window/jni/input_event_bridge.cpp:72",
+        "framework/window/jni/input_event_bridge.cpp:74",
+        "framework/window/jni/window_session_adapter.cpp:263",
+        "framework/window/jni/window_session_adapter.cpp:264"
+      ],
+      "status": "staged"
+    },
+    {
+      "how": [
+        "System.loadLibrary"
+      ],
+      "name": "liboh_connectivity_state.so",
+      "on_failure": "throws",
+      "sites": [
+        "framework/core/java/OhConnectivityState.java:48"
+      ],
+      "status": "staged"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "liboh_hwui_shim.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/webview-shim/libandroid_choreographer_api33_forwarder.c:42",
+        "framework/appspawn-x/src/child_main.cpp:1219",
+        "framework/appspawn-x/src/child_main.cpp:1221"
+      ],
+      "status": "staged"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "liboh_ime_helper.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/window/jni/input_method_bridge.cpp:121"
+      ],
+      "status": "missing"
+    },
+    {
+      "how": [
+        "System.loadLibrary"
+      ],
+      "name": "liboh_ime_helper_capi.so",
+      "on_failure": "throws",
+      "sites": [
+        "framework/window/java/OhImeBridge.java:59"
+      ],
+      "status": "staged"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "libohaudio.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/core/jni/oh_audiotrack_shim.cpp:73"
+      ],
+      "status": "board"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "libsoundpool.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/appspawn-x/src/source_framework_contracts.cpp:403"
+      ],
+      "status": "staged"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "libutils.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/hwui-shim/jni/wl_looper_trace.c:25"
+      ],
+      "status": "staged"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "libwebviewchromium.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/webview-shim/oh_webview_navigation_probe.cpp:49",
+        "framework/webview-shim/oh_webview_navigation_probe.cpp:73",
+        "framework/webview-shim/oh_webview_navigation_probe.cpp:555"
+      ],
+      "status": "staged"
+    },
+    {
+      "how": [
+        "dlopen"
+      ],
+      "name": "libwestlake_asset_bridge.so",
+      "on_failure": "caller decides",
+      "sites": [
+        "framework/webview-shim/libandroid_webview_shim.c:439"
+      ],
+      "status": "missing"
+    }
+  ],
+  "summary": {
+    "loads": 39,
+    "missing": [
+      "libjavacore.so",
+      "liboh_ime_helper.so",
+      "libwestlake_asset_bridge.so"
+    ],
+    "older_than_source": [
+      "liboh_adapter_bridge.so",
+      "liboh_android_runtime.so",
+      "liboh_ime_helper_capi.so",
+      "webview-t-lib/libwebview_bionic_shim.so"
+    ],
+    "staged_files": 304
+  }
+}

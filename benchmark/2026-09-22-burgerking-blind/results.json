@@ -1,0 +1,57 @@
+{
+ "scored_against": "seven launches on the OH board, 2026-09-22; launch 1 on westlake f6dc615, later launches with fixes 21fdcda, d689e67, 9b8b861",
+ "reached": "React Native started, OTA update applied, storage migrations ran; process died creating its first WebView (B5)",
+ "overall": "right effect, wrong cause",
+ "predictions": {
+  "P1": {
+   "outcome": "wrong",
+   "blocker": "B1"
+  },
+  "P2": {
+   "outcome": "wrong",
+   "blocker": "B1"
+  },
+  "P3": {
+   "outcome": "right"
+  },
+  "P4": {
+   "outcome": "right"
+  },
+  "P5": {
+   "outcome": "wrong",
+   "blocker": "B3"
+  },
+  "P6": {
+   "outcome": "right"
+  },
+  "P7": {
+   "outcome": "right"
+  },
+  "P8": {
+   "outcome": "right"
+  },
+  "P9": {
+   "outcome": "not reached"
+  },
+  "P10": {
+   "outcome": "right"
+  },
+  "P11": {
+   "outcome": "wrong",
+   "blocker": "B4, B5"
+  },
+  "P12": {
+   "outcome": "not reached"
+  }
+ },
+ "tally": {
+  "right": 6,
+  "wrong": 4,
+  "not reached": 2
+ },
+ "backtest": {
+  "blind map": "2/5 blockers had a row, neither judged a blocker",
+  "rescan with the new checks, westlake f6dc615": "5/5 (checks written after the failures)",
+  "westlake 9b8b861": "B2, B3 closed; B1 launcher configuration; B4 partly; B5 open"
+ }
+}
