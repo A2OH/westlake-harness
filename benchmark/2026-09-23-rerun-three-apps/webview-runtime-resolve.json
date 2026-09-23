@@ -1,0 +1,540 @@
+{
+ "schema": "westlake-runtime-resolve/v1",
+ "view": "app-namespace",
+ "note": "what the loader returns for this search path. A resolved symbol is not proof the app asks for it, and an unresolved one is only a gap if it does.",
+ "runtime": "/data/app/el2/100/base/org.westlake.imehost/files/a2hlab-source-2dc9186baa184f43b8b5242d96ec4966",
+ "search_path": "/data/local/tmp/asx:/system/lib64:/system/lib64/platformsdk:/system/lib64/chipset-sdk:/system/lib64/chipset-sdk-sp:/system/lib64/ndk:/vendor/lib64/chipsetsdk:/vendor/lib64/hw:/vendor/lib64:/data/local/tmp/asx/lib/arm64-v8a:/data/local/tmp/asx/webview-t-lib",
+ "candidates": 84,
+ "summary": {
+  "by_status": {
+   "resolved": 15,
+   "null": 27,
+   "library-unavailable": 42
+  },
+  "by_library": {
+   "libandroid.so": {
+    "resolved": 15,
+    "null": 27
+   },
+   "libmediandk.so": {
+    "library-unavailable": 24
+   },
+   "libaaudio.so": {
+    "library-unavailable": 12
+   },
+   "libnativewindow.so": {
+    "library-unavailable": 6
+   }
+  },
+  "resolved_from": {
+   "/data/local/tmp/asx/liboh_hwui_shim.so": 9,
+   "/data/local/tmp/asx/liboh_android_runtime.so": 6
+  }
+ },
+ "symbols": [
+  {
+   "library": "libandroid.so",
+   "symbol": "AChoreographerFrameCallbackData_getFrameTimeNanos",
+   "status": "resolved",
+   "provider": "/data/local/tmp/asx/liboh_hwui_shim.so"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "AChoreographerFrameCallbackData_getFrameTimelineDeadlineNanos",
+   "status": "resolved",
+   "provider": "/data/local/tmp/asx/liboh_hwui_shim.so"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "AChoreographerFrameCallbackData_getFrameTimelineVsyncId",
+   "status": "resolved",
+   "provider": "/data/local/tmp/asx/liboh_hwui_shim.so"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "AChoreographerFrameCallbackData_getFrameTimelinesLength",
+   "status": "resolved",
+   "provider": "/data/local/tmp/asx/liboh_hwui_shim.so"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "AChoreographerFrameCallbackData_getPreferredFrameTimelineIndex",
+   "status": "resolved",
+   "provider": "/data/local/tmp/asx/liboh_hwui_shim.so"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "AChoreographer_getInstance",
+   "status": "resolved",
+   "provider": "/data/local/tmp/asx/liboh_hwui_shim.so"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "AChoreographer_postFrameCallback64",
+   "status": "resolved",
+   "provider": "/data/local/tmp/asx/liboh_hwui_shim.so"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "AChoreographer_postVsyncCallback",
+   "status": "resolved",
+   "provider": "/data/local/tmp/asx/liboh_hwui_shim.so"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "AChoreographer_unregisterRefreshRateCallback",
+   "status": "resolved",
+   "provider": "/data/local/tmp/asx/liboh_hwui_shim.so"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ANativeWindow_toSurface",
+   "status": "null",
+   "provider": "-"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "APerformanceHint_closeSession",
+   "status": "null",
+   "provider": "-"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "APerformanceHint_createSession",
+   "status": "null",
+   "provider": "-"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "APerformanceHint_getManager",
+   "status": "null",
+   "provider": "-"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "APerformanceHint_updateTargetWorkDuration",
+   "status": "null",
+   "provider": "-"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ASharedMemory_create",
+   "status": "null",
+   "provider": "-"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ASharedMemory_getSize",
+   "status": "null",
+   "provider": "-"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ASharedMemory_setProt",
+   "status": "null",
+   "provider": "-"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ASurfaceControl_createFromWindow",
+   "status": "null",
+   "provider": "-"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ASurfaceControl_release",
+   "status": "resolved",
+   "provider": "/data/local/tmp/asx/liboh_android_runtime.so"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ASurfaceTransactionStats_getASurfaceControls",
+   "status": "null",
+   "provider": "-"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ASurfaceTransactionStats_getLatchTime",
+   "status": "null",
+   "provider": "-"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ASurfaceTransactionStats_getPresentFenceFd",
+   "status": "null",
+   "provider": "-"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ASurfaceTransaction_apply",
+   "status": "resolved",
+   "provider": "/data/local/tmp/asx/liboh_android_runtime.so"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ASurfaceTransaction_delete",
+   "status": "resolved",
+   "provider": "/data/local/tmp/asx/liboh_android_runtime.so"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ASurfaceTransaction_reparent",
+   "status": "resolved",
+   "provider": "/data/local/tmp/asx/liboh_android_runtime.so"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ASurfaceTransaction_setBuffer",
+   "status": "null",
+   "provider": "-"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ASurfaceTransaction_setBufferDataSpace",
+   "status": "null",
+   "provider": "-"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ASurfaceTransaction_setBufferTransparency",
+   "status": "null",
+   "provider": "-"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ASurfaceTransaction_setCrop",
+   "status": "null",
+   "provider": "-"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ASurfaceTransaction_setDamageRegion",
+   "status": "null",
+   "provider": "-"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ASurfaceTransaction_setFrameRate",
+   "status": "null",
+   "provider": "-"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ASurfaceTransaction_setFrameTimeline",
+   "status": "null",
+   "provider": "-"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ASurfaceTransaction_setHdrMetadata_smpte2086",
+   "status": "null",
+   "provider": "-"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ASurfaceTransaction_setOnCommit",
+   "status": "null",
+   "provider": "-"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ASurfaceTransaction_setOnComplete",
+   "status": "null",
+   "provider": "-"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ASurfaceTransaction_setPosition",
+   "status": "null",
+   "provider": "-"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ASurfaceTransaction_setScale",
+   "status": "null",
+   "provider": "-"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ASurfaceTransaction_setVisibility",
+   "status": "resolved",
+   "provider": "/data/local/tmp/asx/liboh_android_runtime.so"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ASurfaceTransaction_setZOrder",
+   "status": "resolved",
+   "provider": "/data/local/tmp/asx/liboh_android_runtime.so"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ATrace_beginSection",
+   "status": "null",
+   "provider": "-"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ATrace_endSection",
+   "status": "null",
+   "provider": "-"
+  },
+  {
+   "library": "libandroid.so",
+   "symbol": "ATrace_isEnabled",
+   "status": "null",
+   "provider": "-"
+  },
+  {
+   "library": "libmediandk.so",
+   "symbol": "AImageReader_acquireNextImageAsync",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libmediandk.so",
+   "symbol": "AImageReader_delete",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libmediandk.so",
+   "symbol": "AImageReader_getFormat",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libmediandk.so",
+   "symbol": "AImageReader_getWindow",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libmediandk.so",
+   "symbol": "AImageReader_newWithUsage",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libmediandk.so",
+   "symbol": "AImageReader_setImageListener",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libmediandk.so",
+   "symbol": "AImage_delete",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libmediandk.so",
+   "symbol": "AImage_deleteAsync",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libmediandk.so",
+   "symbol": "AImage_getCropRect",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libmediandk.so",
+   "symbol": "AImage_getHardwareBuffer",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libmediandk.so",
+   "symbol": "AMediaCodec_configure",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libmediandk.so",
+   "symbol": "AMediaCodec_createCodecByName",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libmediandk.so",
+   "symbol": "AMediaCodec_createEncoderByType",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libmediandk.so",
+   "symbol": "AMediaCodec_getInputBuffer",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libmediandk.so",
+   "symbol": "AMediaCodec_queueInputBuffer",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libmediandk.so",
+   "symbol": "AMediaCodec_releaseOutputBuffer",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libmediandk.so",
+   "symbol": "AMediaCodec_setAsyncNotifyCallback",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libmediandk.so",
+   "symbol": "AMediaCodec_setParameters",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libmediandk.so",
+   "symbol": "AMediaCodec_stop",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libmediandk.so",
+   "symbol": "AMediaFormat_getFloat",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libmediandk.so",
+   "symbol": "AMediaFormat_getInt32",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libmediandk.so",
+   "symbol": "AMediaFormat_new",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libmediandk.so",
+   "symbol": "AMediaFormat_setFloat",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libmediandk.so",
+   "symbol": "AMediaFormat_setInt32",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libaaudio.so",
+   "symbol": "AAudioStreamBuilder_openStream",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libaaudio.so",
+   "symbol": "AAudioStreamBuilder_setBufferCapacityInFrames",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libaaudio.so",
+   "symbol": "AAudioStreamBuilder_setChannelCount",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libaaudio.so",
+   "symbol": "AAudioStreamBuilder_setDataCallback",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libaaudio.so",
+   "symbol": "AAudioStreamBuilder_setDeviceId",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libaaudio.so",
+   "symbol": "AAudioStreamBuilder_setFormat",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libaaudio.so",
+   "symbol": "AAudioStreamBuilder_setFramesPerDataCallback",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libaaudio.so",
+   "symbol": "AAudioStream_close",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libaaudio.so",
+   "symbol": "AAudioStream_getFramesWritten",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libaaudio.so",
+   "symbol": "AAudioStream_requestStop",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libaaudio.so",
+   "symbol": "AAudioStream_setBufferSizeInFrames",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libaaudio.so",
+   "symbol": "AAudio_convertResultToText",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libnativewindow.so",
+   "symbol": "AHardwareBuffer_acquire",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libnativewindow.so",
+   "symbol": "AHardwareBuffer_allocate",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libnativewindow.so",
+   "symbol": "AHardwareBuffer_describe",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libnativewindow.so",
+   "symbol": "AHardwareBuffer_lock",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libnativewindow.so",
+   "symbol": "AHardwareBuffer_sendHandleToUnixSocket",
+   "status": "library-unavailable",
+   "provider": "-"
+  },
+  {
+   "library": "libnativewindow.so",
+   "symbol": "AHardwareBuffer_unlock",
+   "status": "library-unavailable",
+   "provider": "-"
+  }
+ ]
+}

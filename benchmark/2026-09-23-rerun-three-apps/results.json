@@ -1,0 +1,52 @@
+{
+ "provider": "Westlake 532633d, framework build 26, bionic shim with WebView library resolution and the font root derived from the staged runtime, SELinux enforcing",
+ "question": "where is each app actually blocked, measured rather than recalled",
+ "apps": {
+  "wikipedia": {
+   "reaches": "onboarding, feed, article with rendered and scrolling web content",
+   "blocked_at": null,
+   "confidence": "high",
+   "note": "not blocked on this path; five blockers were closed to get here"
+  },
+  "mcdonalds": {
+   "reaches": "sign-in sheet, welcome screen, home dashboard with five bottom tabs",
+   "blocked_at": "NavHostActivity.showSelector: setChecked on a null MenuItem, at 'Start an Order'",
+   "confidence": "high on the site, low on the cause",
+   "corrections": [
+    "M4 is not a blocker: the clipped OK button responds at x~1045 and the dialog dismisses",
+    "the menu is not empty: the dashboard shows all five tabs, so the configuration loaded"
+   ]
+  },
+  "toutiao": {
+   "reaches": "full feed chrome, nine category tabs, bottom navigation, empty content area",
+   "blocked_at": "null function pointer in libtttext_lite.so (SIGSEGV@0, frame #00 Not mapped)",
+   "confidence": "high",
+   "closed": "load:shadowed-by-board, by isolating the 67 libraries that reach libc++_shared.so through DT_NEEDED; isolating libc++_shared.so alone changes nothing",
+   "corrections": [
+    "the recorded device_register/empty-feed blocker describes the empty content area, which is downstream of this crash; the log never mentions device registration"
+   ]
+  }
+ },
+ "runtime_lookup_candidates": {
+  "note": "unresolved, decidable_by=probe: a string of the right shape may never be passed to dlsym",
+  "toutiao": {
+   "libraries": 138,
+   "candidates": 67,
+   "by_ndk_library": {
+    "libmediandk.so": 36,
+    "libandroid.so": 24,
+    "libnativewindow.so": 7
+   }
+  },
+  "mcdonalds": {
+   "libraries": 10,
+   "candidates": 50,
+   "by_ndk_library": {
+    "libneuralnetworks.so": 37,
+    "libandroid.so": 8,
+    "libnativewindow.so": 5
+   }
+  },
+  "for_scale": "the McDonald's map has 92 rows and 40 gaps, of which 2 are native-symbol gaps"
+ }
+}

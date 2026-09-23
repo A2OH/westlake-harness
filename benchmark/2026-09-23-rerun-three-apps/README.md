@@ -1,0 +1,107 @@
+# Three apps re-run against the current provider
+
+Wikipedia, McDonald's and Toutiao launched on the same build, after a day of fixes, to answer one
+question: where is each actually blocked? Every previous answer for two of the three turned out to
+describe a symptom rather than a cause.
+
+Provider: Westlake `532633d`, framework build 26 (`update_service_v2=false`), bionic shim with
+WebView library resolution and the font root derived from the staged runtime. SELinux enforcing.
+
+## Where each app stands
+
+| App | Reaches | Blocked at | Confidence |
+|---|---|---|---|
+| Wikipedia | launch → onboarding → feed → **article with rendered, scrolling web content** | not blocked on this path | high |
+| McDonald's | sign-in → welcome → **home dashboard**, five bottom tabs | "Start an Order": `setChecked` on a null `MenuItem` | high on site, low on cause |
+| Toutiao | **full feed chrome**, nine category tabs, bottom navigation, empty content area | null function pointer in `libtttext_lite.so` | high |
+
+## Toutiao: two blockers, one behind the other
+
+**The libc++ namespace collision is closed.** `libvision_core.so` failed to relocate
+`_ZNSt6__ndk19to_stringEi` — the NDK's libc++ namespace, which the board's `libc++_shared.so` does
+not have. The APK ships its own copy exporting exactly that symbol; the board's copy wins the
+search path.
+
+Isolating `libc++_shared.so` alone does **not** fix it. Both copies stay mapped and the failure is
+unchanged, because the library that needs it is still outside the isolated namespace. The fix is
+the transitive set: **67 of Toutiao's 138 arm64 libraries reach `libc++_shared.so` through
+`DT_NEEDED`**, and all of them have to move together. With the full set passed to
+`--android-native-target`, `symbol not found` goes to 0 and only the APK's libc++ is mapped. This
+is the `load:shadowed-by-board` row, and the row already computes this set as its `launch_args`,
+so the fix is a launch flag rather than code.
+
+**What that uncovered.** The app then renders its whole feed chrome — search bar, nine category
+tabs, bottom navigation — with an empty content area, and dies on a background thread:
+
+```
+SIGSEGV(SEGV_MAPERR)@0
+#00 pc 0x0  Not mapped
+#01 /data/local/tmp/asx/lib/arm64-v8a/libtttext_lite.so
+    at java.util.concurrent.ThreadPoolExecutor$Worker.run
+```
+
+Frame #00 is address zero: the text-layout engine resolved something to null and called it
+anyway. `libtttext_lite.so` is in the isolation set, so its own load now succeeds — it fails at a
+symbol it looks up rather than one it links, which is the `sym:runtime-resolved` class.
+
+The previously recorded blocker for Toutiao — an empty feed because `device_register` returns no
+`device_id` — describes the empty content area, which is downstream of this crash. Nothing in the
+log mentions device registration at all.
+
+## McDonald's: M3 confirmed, M4 corrected
+
+**M3 reproduces**, with a stack the earlier record did not have:
+
+```
+NullPointerException: 'MenuItem.setChecked(boolean)' on a null object reference
+  at McDBaseActivity.showSelector(SourceFile:9)
+  at orderv2.navigation.entry_points.NavHostActivity.showSelector
+  at NavHostActivity$onCreate$1$1$1$1.invokeSuspend
+```
+
+The ordering host asks the bottom-navigation menu for an item during `onCreate`, gets null, and
+calls `setChecked` on it. It is an uncaught exception on a coroutine thread, so the process
+survives and the ordering flow simply never renders.
+
+This narrows M3. The record said the menu was empty; **it is not** — the dashboard shows all five
+tabs, so the configuration loaded. What is null is the one item `NavHostActivity` expects. Which
+item, and why that one is absent, is still open.
+
+Tapping the **Order** tab does nothing at all and raises no exception; only "Start an Order"
+reaches the failure.
+
+**M4 is not a blocker.** The record states the upgrade dialog "cannot be dismissed" because it is
+laid out wider than the display and its OK button sits off the right edge with no working back
+key. The button survives the clip and responds at x≈1045: tapping it dismisses the dialog and the
+welcome screen proceeds normally. The layout defect is real; the blocker was not.
+
+## What the new runtime-lookup check adds
+
+`sym:runtime-resolved` reports platform entry points an app reaches by name rather than by
+declaring them. Against the two MVP apps:
+
+| | Toutiao | McDonald's |
+|---|---|---|
+| arm64 libraries | 138 | 10 |
+| candidates not supplied | 67 | 50 |
+| by NDK library | `libmediandk` 36, `libandroid` 24, `libnativewindow` 7 | `libneuralnetworks` 37, `libandroid` 8, `libnativewindow` 5 |
+
+McDonald's existing map has 92 rows and 40 gaps, of which **two** are native-symbol gaps. Its ML
+stack probes 37 NNAPI entry points and falls back to CPU when they are absent, with no crash and
+no log line.
+
+These are candidates, not gaps: they are `unresolved` with `decidable_by=probe`, because a string
+of the right shape may never be passed to `dlsym`. `probes/runtime-resolve` decides them.
+
+## Method notes
+
+- **Read the faultlog, not the app's stderr.** `/data/log/faultlog/temp/cppcrash-<pid>-*` carries
+  `Reason:` and a full frame list; the stderr prints `Backtrace:` followed by nothing. Both
+  native crashes here were diagnosed there and neither was diagnosable without it.
+- **Wait for the process to exit before counting anything.** Three separate conclusions this
+  session were artefacts of grepping a log while the run was still in flight, and
+  `ps | grep -c appspawn-x` counts spawners, not the child.
+- **The last-logged error is usually adjacent, not causal.** Two fixes on Wikipedia's article path
+  cleared their error and left the fault byte-identical. What found the real one was reading the
+  settled log's whole tail: four consecutive font-configuration failures, which explained a null
+  dereference while drawing text in a way one line never could.
