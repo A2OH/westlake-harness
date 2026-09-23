@@ -283,5 +283,59 @@
    "vibrator_manager": 1,
    "batterystats": 1
   }
+ },
+ "scoring_change": {
+  "from": "did the app render (binary)",
+  "to": "highest lifecycle rung reached, paired with the first blocker by position in the log",
+  "rungs": [
+   "spawned",
+   "runtime-init",
+   "bound",
+   "activity",
+   "view",
+   "drawing"
+  ],
+  "tool": "harness/westlake_gap/lifecycle.py",
+  "why": "a correct fix (round 3) cleared two SIGTRAPs and rendered nothing, so rendering scored it as a failure; two apps rendered throughout and carried no evidence either way",
+  "self_correction": "rung alone called anki 'unchanged' between rounds while its fatal signal went 1->0 and its log grew 200 lines; compare() now reports movement inside a rung"
+ },
+ "round4": {
+  "scope": "full ten at build 28 + bionic-shim-nw2 -- the corpus-scale validation the shim change was owed, since it alters library resolution for every WebView caller",
+  "harness_faults": 0,
+  "rung_regressions": 0,
+  "corpus_totals": {
+   "apps_with_fatal_signal": {
+    "before": 2,
+    "after": 0
+   },
+   "ASurface_load_failures": {
+    "before": 28,
+    "after": 0
+   },
+   "apps_drawing": 3
+  },
+  "movement": [
+   {
+    "app": "anki",
+    "rung": "3 activity (unchanged)",
+    "moved": "fatal 1->0, 533 -> 733 lines"
+   },
+   {
+    "app": "newpipe",
+    "rung": "2 bound (unchanged)",
+    "moved": "fatal 1->0, 461 -> 531 lines, blocker changed from ASurfaceControl_createFromWindow to a NullPointerException starting the activity (BatteryManager on a null service)"
+   }
+  ],
+  "unchanged": [
+   "aegis",
+   "antennapod",
+   "markor",
+   "mindustry",
+   "ooniprobe",
+   "opencamera",
+   "ppsspp",
+   "termux"
+  ],
+  "verdict": "the shim reordering is validated at corpus scale: no app regressed a rung, every ASurface load failure in the corpus is gone, and no app takes a fatal signal"
  }
 }

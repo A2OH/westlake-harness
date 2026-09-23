@@ -202,14 +202,30 @@ def compare(before: list[Score], after: list[Score]) -> str:
         if was is None:
             rows.append("%-12s %-22s %-22s new" % (s.app, "-", s.rung_name))
             continue
+        # Rung alone is too coarse to be the whole verdict, which this tool's own first run
+        # proved: the shim fix cleared AnkiDroid's fatal signal and carried it two hundred lines
+        # further, and a rung-only comparison called that "unchanged". Movement inside a rung is
+        # still movement, and clearing a fatal signal is the clearest kind.
+        notes = []
+        if was.fatal > s.fatal:
+            notes.append("fatal %d->%d" % (was.fatal, s.fatal))
+        elif s.fatal > was.fatal:
+            notes.append("NEW FATAL %d->%d" % (was.fatal, s.fatal))
+        if was.lines and abs(s.lines - was.lines) * 10 >= was.lines:
+            notes.append("%+d lines" % (s.lines - was.lines))
+        if was.blocker != s.blocker:
+            notes.append("blocker changed")
+
         if s.rung > was.rung:
             verdict = "ADVANCED +%d" % (s.rung - was.rung)
         elif s.rung < was.rung:
             verdict = "REGRESSED -%d" % (was.rung - s.rung)
-        elif was.blocker != s.blocker:
-            verdict = "same rung, blocker changed"
+        elif notes:
+            verdict = "same rung"
         else:
             verdict = "unchanged"
+        if notes:
+            verdict += " (" + ", ".join(notes) + ")"
         rows.append("%-12s %-22s %-22s %s" % (
             s.app, "%d %s" % (was.rung, was.rung_name), "%d %s" % (s.rung, s.rung_name), verdict))
     return "\n".join(rows)

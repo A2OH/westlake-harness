@@ -244,3 +244,86 @@ The ask-counts are tempting and misleading:
 is usually survivable; only the ones an app dereferences without checking are fatal. **Rank by the
 fatal subset, not by how many apps ask** — otherwise the map optimises for the loudest stub rather
 than the one blocking a launch.
+
+---
+
+# Round 4: new scoring, and the shim change validated at corpus scale
+
+Two things changed. The loop stopped being scored on whether an app rendered, and the shim fix
+from round 3 was finally run against all ten rather than the four it had been tested on.
+
+## Why the old criterion had to go
+
+Round 3's fix cleared two SIGTRAPs and took fourteen symbol-load failures to zero in both apps.
+**Neither rendered.** Scored on rendering, a fix that was traced to a specific commit-ordering
+regression reads as a failure and becomes a candidate for reverting. Meanwhile Aegis and
+AntennaPod rendered before any of this work and would have rendered without it, so on the same
+criterion they look like evidence while carrying none.
+
+`harness/westlake_gap/lifecycle.py` replaces it with how far the process got:
+
+```
+spawned → runtime-init → bound → activity → view → drawing
+```
+
+Each rung was kept only if it separated apps whose outcome was already known from a screenshot.
+`DecorView` turned out to be the cleanest marker for a built view hierarchy — present in every
+confirmed-rendering app, absent in every app that stopped earlier.
+
+## What the new scoring immediately caught
+
+It disagreed with this file. Round 2's entry for anki names the `ASurfaceTransaction` SIGTRAP as
+its blocker; the scorer, taking the **first** blocker by position rather than the loudest, found
+AnkiDroid's crash-report dialog failing two hundred lines earlier. The SIGTRAP was downstream.
+
+It also refuses to call AntennaPod's missing `nPurgePendingResources` a blocker, because AntennaPod
+is on the top rung with no fatal signal. Ranking that would repeat the mistake this file already
+records about ranking service stubs by how many apps ask for them.
+
+## And then it was wrong, in a way worth keeping
+
+The first comparison it produced called anki **unchanged** between rounds — same rung, same
+blocker string — while anki's fatal signal had gone 1 → 0 and its log had grown two hundred lines.
+Rung alone is too coarse. `compare()` now reports movement inside a rung, and clearing a fatal
+signal is called out explicitly.
+
+That is the same failure as the criterion it replaced, one level down: a coarse pass/fail hiding
+real movement. Worth recording rather than quietly patching, because the next coarse metric will
+fail the same way.
+
+## The round
+
+```
+build framework-signin-device28 · shim bionic-shim-nw2 · all ten · 0 harness faults
+```
+
+| rung | apps |
+|---|---|
+| 5 drawing | aegis, antennapod, markor |
+| 3 activity | anki |
+| 2 bound | mindustry, newpipe, opencamera, ppsspp, termux |
+| 1 runtime-init | ooniprobe |
+
+| | round 2 (nw1) | round 4 (nw2) |
+|---|---|---|
+| apps taking a fatal signal | 2 | **0** |
+| `ASurface` load failures, corpus-wide | 28 | **0** |
+| rung regressions | — | **0** |
+
+- **anki** — same rung, `fatal 1→0`, +200 lines
+- **newpipe** — same rung, `fatal 1→0`, +70 lines, blocker changed from
+  `ASurfaceControl_createFromWindow` to a `NullPointerException` starting the activity
+- everything else unchanged, which is the control: seven apps that had nothing to do with the
+  change came back identical
+
+**The shim reordering is validated at corpus scale.** It alters library resolution for every
+WebView caller, which is why four apps were not enough, and across ten no app lost a rung.
+
+## What the ranking now says
+
+Two apps stop on a null system-service manager — ooniprobe on `LocaleManager`, newpipe on
+`BatteryManager` (now its first blocker, previously hidden behind the SIGTRAP). Same mechanism,
+`LocalServiceBinders.get(name)` is the existing pattern. That is the next target, and it is the
+second time the loop has produced one by the same rule: fix what repeats, count only what blocks.
+
+Round 4 also ran with **zero harness faults**, against one in each of the two previous rounds.
