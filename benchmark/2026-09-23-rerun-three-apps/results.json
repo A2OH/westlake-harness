@@ -19,12 +19,14 @@
   },
   "toutiao": {
    "reaches": "full feed chrome, nine category tabs, bottom navigation, empty content area",
-   "blocked_at": "null function pointer in libtttext_lite.so (SIGSEGV@0, frame #00 Not mapped)",
-   "confidence": "high",
-   "closed": "load:shadowed-by-board, by isolating the 67 libraries that reach libc++_shared.so through DT_NEEDED; isolating libc++_shared.so alone changes nothing",
-   "corrections": [
-    "the recorded device_register/empty-feed blocker describes the empty content area, which is downstream of this crash; the log never mentions device registration"
-   ]
+   "blocked_at": "unknown: the feed content area is empty and nothing in the log explains it",
+   "confidence": "low on the cause; high that libvision_core.so now loads",
+   "closed": "load:shadowed-by-board, by isolating libvision_core.so together with libc++_shared.so. libvision_core.so maps and its load failure is gone.",
+   "retracted": [
+    "an earlier version of this record named a null function pointer in libtttext_lite.so as Toutiao's blocker at ~85% confidence. That crash was caused by isolating 67 libraries rather than 2: libtttext_lite.so has seven weak undefined pthread_* references, and a weak symbol that does not resolve binds to zero, so calling it gives SIGSEGV at address 0 with frame #00 'Not mapped'. Neither the non-isolated run nor the two-library run shows it.",
+    "the 67-library set was the wrong closure: it listed every library that REACHES libc++_shared.so through DT_NEEDED, when the fix needs the forward closure of the library that actually failed, which is libvision_core.so plus libc++_shared.so."
+   ],
+   "still_open": "why the feed content area is empty. The recorded device_register/device_id note remains unverified: nothing in this run's log mentions device registration."
   }
  },
  "runtime_lookup_candidates": {
@@ -48,5 +50,6 @@
    }
   },
   "for_scale": "the McDonald's map has 92 rows and 40 gaps, of which 2 are native-symbol gaps"
- }
+ },
+ "method_note_isolation": "--android-native-target moves a library into an isolated Android namespace so DT_NEEDED picks the APK's copy. Isolating more than necessary is not free: a library whose weak libc references resolve in the default namespace can find them unresolved in the isolated one, and a weak symbol binds to zero rather than failing the load. Use the forward dependency closure of the library that failed, not every library that reaches the shadowed one."
 }

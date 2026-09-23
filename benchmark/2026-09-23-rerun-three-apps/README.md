@@ -13,40 +13,56 @@ WebView library resolution and the font root derived from the staged runtime. SE
 |---|---|---|---|
 | Wikipedia | launch → onboarding → feed → **article with rendered, scrolling web content** | not blocked on this path | high |
 | McDonald's | sign-in → welcome → **home dashboard**, five bottom tabs | "Start an Order": `setChecked` on a null `MenuItem` | high on site, low on cause |
-| Toutiao | **full feed chrome**, nine category tabs, bottom navigation, empty content area | null function pointer in `libtttext_lite.so` | high |
+| Toutiao | **full feed chrome**, nine category tabs, bottom navigation, empty content area | unknown — the content area is empty and nothing in the log explains it | low |
 
-## Toutiao: two blockers, one behind the other
+## Toutiao: one blocker closed, one self-inflicted, one still open
 
 **The libc++ namespace collision is closed.** `libvision_core.so` failed to relocate
 `_ZNSt6__ndk19to_stringEi` — the NDK's libc++ namespace, which the board's `libc++_shared.so` does
 not have. The APK ships its own copy exporting exactly that symbol; the board's copy wins the
 search path.
 
-Isolating `libc++_shared.so` alone does **not** fix it. Both copies stay mapped and the failure is
-unchanged, because the library that needs it is still outside the isolated namespace. The fix is
-the transitive set: **67 of Toutiao's 138 arm64 libraries reach `libc++_shared.so` through
-`DT_NEEDED`**, and all of them have to move together. With the full set passed to
-`--android-native-target`, `symbol not found` goes to 0 and only the APK's libc++ is mapped. This
-is the `load:shadowed-by-board` row, and the row already computes this set as its `launch_args`,
-so the fix is a launch flag rather than code.
+Isolating `libc++_shared.so` alone does **not** fix it: both copies stay mapped and the failure is
+unchanged, because the library that needs the symbol is still outside the isolated namespace. It
+takes the failing library *and* the shadowed one together — `libvision_core.so` plus
+`libc++_shared.so` — after which `libvision_core.so` maps and its load failure is gone. This is
+the `load:shadowed-by-board` row, and the fix is a launch flag rather than code.
 
-**What that uncovered.** The app then renders its whole feed chrome — search bar, nine category
-tabs, bottom navigation — with an empty content area, and dies on a background thread:
+The set matters in both directions, which is the part this run got wrong the first time; see the
+retraction below.
+
+**What that uncovered — and a retraction.** With `libvision_core.so` loading, the app renders its
+whole feed chrome — search bar, nine category tabs, bottom navigation — with an empty content
+area. Nothing in the log explains the emptiness, and the recorded `device_register`/`device_id`
+note stays unverified: this run never mentions device registration.
+
+An earlier version of this record named a null function pointer in `libtttext_lite.so` as
+Toutiao's blocker, at ~85% confidence. **That was wrong, and self-inflicted.** The crash appears
+only when 67 libraries are isolated:
 
 ```
 SIGSEGV(SEGV_MAPERR)@0
 #00 pc 0x0  Not mapped
-#01 /data/local/tmp/asx/lib/arm64-v8a/libtttext_lite.so
-    at java.util.concurrent.ThreadPoolExecutor$Worker.run
+#01 libtttext_lite.so
 ```
 
-Frame #00 is address zero: the text-layout engine resolved something to null and called it
-anyway. `libtttext_lite.so` is in the isolation set, so its own load now succeeds — it fails at a
-symbol it looks up rather than one it links, which is the `sym:runtime-resolved` class.
+`libtttext_lite.so` has seven weak undefined `pthread_*` references. A weak symbol that does not
+resolve binds to **zero** rather than failing the load, so calling it lands at address 0. Those
+references resolve in the default namespace and not in the isolated one, so isolating the library
+created the crash. Neither the non-isolated run nor the two-library run shows it.
 
-The previously recorded blocker for Toutiao — an empty feed because `device_register` returns no
-`device_id` — describes the empty content area, which is downstream of this crash. Nothing in the
-log mentions device registration at all.
+**The set was the wrong closure.** 67 is every library that *reaches* `libc++_shared.so` through
+`DT_NEEDED` — a reverse closure. The fix needs the *forward* closure of the library that actually
+failed, which is `libvision_core.so` plus `libc++_shared.so`. Measured:
+
+| isolation set | `libvision_core.so` | `libtttext_lite.so` | fatal |
+|---|---|---|---|
+| none | load failed | fine | 0 |
+| **2 (forward closure)** | **loads, mapped** | **fine** | **0** |
+| 67 (reverse closure) | loads | SIGSEGV@0 | 1 |
+
+Isolating more than necessary is not free, which is the general lesson: `--android-native-target`
+changes which libraries a library can see, and that cuts both ways.
 
 ## McDonald's: M3 confirmed, M4 corrected
 
