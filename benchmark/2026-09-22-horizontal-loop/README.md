@@ -475,3 +475,47 @@ It then stops at two things that are **the OS, not the framework**:
 Both affect any app that ships and executes its own Android binaries, not just Termux. The installer
 run that got past (2) was made with SELinux briefly permissive to capture app logs; it was restored
 to enforcing immediately after.
+
+---
+
+# Round 7 (targeted): AnkiDroid reaches its welcome screen
+
+Two gaps, found by capturing the app's own log rather than trusting the first blocker the scorer
+names. The scorer's first blocker for anki — its crash-report dialog failing to open off the main
+thread — was downstream of both.
+
+1. **`appops` is not harmless.** Round 3's note said every app asks for it and none die. AnkiDroid
+   does: `DeckPicker.onCreate → Environment.isExternalStorageLegacy()` calls `AppOpsManager`
+   unconditionally. Answered in process, each op with its platform default, and
+   `OP_LEGACY_STORAGE` decided per target SDK as `StorageManagerService` would.
+   **Correction to the ranking note above:** the ask-count warning stands, but "asked by all, kills
+   none" was a claim about ten apps on one path, not a property of the service.
+2. **WebView held unsupported through `Application.onCreate`.** A deliberate pre-bind hold (written
+   for Toutiao) pins `WebViewFactory.sWebViewSupported = false`, and a native watcher re-pins it the
+   moment the Application exists — exactly when WebView becomes legal. AnkiDroid uses
+   `CookieManager` in `onCreate` and refused to run. The bridge that does this is deployed as
+   reused board bytes with no reproducible build, so the fix is in Java: release the hold from the
+   direct-launch activity manager's `publishContentProviders`, which runs on the main thread after
+   the Application is made and before its `onCreate`.
+
+## Regression
+
+The WebView change touches the app it was written for, so Toutiao was run too.
+
+| app | build 36 |
+|---|---|
+| anki | **welcome screen** — "Study less / Remember more", Get Started, Sync from AnkiWeb |
+| aegis, antennapod, markor, newpipe, ooniprobe, termux, wikipedia | still drawing, no fatal |
+| toutiao | start screen, category tabs and its consent dialog, as before |
+
+Toutiao takes one `SIGSEGV` (`SEGV_ACCERR`) on a worker thread during startup and survives it.
+It is **not** from this change: a baseline run on the previous build, confirmed by its log lacking
+the new code's markers, takes the same fault on another worker thread.
+
+Harness fault caught in the process: the launcher pulls stderr 12 s after spawn, and Toutiao was
+still in `Application.onCreate` then, so it scored "rung 1". Its full log scores "drawing". The
+regression script now re-pulls stderr after its wait.
+
+```
+drawing: aegis, anki, antennapod, markor, newpipe, ooniprobe, termux (UI; no shell), wikipedia
+```
