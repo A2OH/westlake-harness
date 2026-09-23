@@ -360,8 +360,8 @@
     "before": "3 activity",
     "after": "5 drawing",
     "delta": "+2",
-    "confirmed": "markers only -- DecorView=3, relayout=40, held_back=0, no fatal, ReliableSurface::reserveNext returning OK, 531 -> 1976 lines",
-    "not_confirmed": "no screenshot: the device dropped off USB before one could be taken, and an earlier capture attributed to NewPipe was actually OONI Probe still on top of the window stack"
+    "confirmed": "screenshot (2026-09-23, taken over wireless debugging after USB failed): live feed fetched from the network and rendered -- stream titles, channel names, viewer counts, tab bar -- under the app's own 'Keep Android Open' dialog",
+    "open_observation": "thumbnails never loaded: three captures 10s apart were the same size and all show placeholder play icons. Not diagnosed; could be image loading, or a slow network, and is recorded rather than explained"
    }
   ],
   "unchanged": [

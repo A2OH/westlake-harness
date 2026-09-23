@@ -398,3 +398,19 @@ Both ran clean after stopping the leftovers and keeping the newest two stages of
 both scored unchanged. Three rounds in a row have now produced at least one fault that would have
 been scored as an app blocker by a loop trusting its own exit codes — and this one was **caused by
 the loop itself**, which no single round would have revealed.
+
+## Addendum: NewPipe confirmed
+
+Taken on 2026-09-23 over **wireless debugging** — USB had failed at the physical layer — NewPipe
+renders its live feed: real stream titles, channel names and viewer counts fetched from the network,
+the tab bar, and its own *Keep Android Open* dialog on top. That is more than the round-5 markers
+claimed: it is network I/O and list rendering, not just a surface.
+
+One thing it does not do: thumbnails. Three captures ten seconds apart were the same size and all
+show placeholder play icons. That is recorded as an observation, not a diagnosis — it could be image
+loading or just a slow network.
+
+Two things lost the capture for a day and are worth knowing: the board dropped off USB entirely
+(nothing enumerated, cable/port level), and a WSL restart wiped `/tmp`, taking every staged app input
+with it. The inputs were rebuilt from the launch archives each run keeps, and every APK was checked
+against its pinned SHA-256 by `prepare_app.py`, so what ran is provably what ran before.
