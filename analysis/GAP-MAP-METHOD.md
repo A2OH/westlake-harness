@@ -209,6 +209,31 @@ westlake-apk-gap gap-map --scan scan.json --apk app.xapk --api-levels scan-api-a
 Output: `gap-map.json` (every row with evidence) and `GAP-MAP.md`. The provider's git commit and
 uncommitted files are recorded; a map built on a dirty tree says so.
 
+## An empty screen is not automatically a gap
+
+An app that shows no content may be blocked by the platform, or may be receiving exactly what its
+backend chose to send. Those need different evidence and only one of them is ours to fix, so the
+map should not count the second.
+
+Separating them needs the network, and the app will not tell us: Chromium's requests are visible
+because the WebView shim sits under them, but a cronet, OkHttp or statically linked client logs
+nothing we control. The board answers it instead — `/proc/<pid>/net/tcp6` gives per-connection
+state with the owning uid, and `probes/network-capture` gives DNS queries and TLS SNI, which name
+what was asked for and when.
+
+What that cannot give is the response body, since it is inside TLS. So the honest split is:
+
+| Observation | Reading |
+|---|---|
+| no connection, or connects failing | a platform gap, ours |
+| connects, handshakes, no request for the endpoint | the app never got far enough to ask — look upstream |
+| request made, connection idle afterwards | the backend answered; whether it refused is not visible here |
+
+Measured on Toutiao: an empty feed with three idle ESTABLISHED HTTPS connections, which moved to
+eight DNS queries and a handshake across a consent tap, and the category tabs grew from nine to
+eleven. Server data is fetched and rendered, so the platform reaches the backend; the article feed
+alone stays empty. That is the third row, and it is not a row a shim can close.
+
 ## Limits
 
 - **Native rows are not yet weighted by reach.** They are classified by how the NDK supplies them,
