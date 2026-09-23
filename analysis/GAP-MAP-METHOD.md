@@ -86,6 +86,57 @@ A row's `confidence` says how far its provider verdict has been established:
 The intended loop is: map → run the probes named by `verify` rows → launch the app as acceptance.
 The launch stops being how gaps are discovered.
 
+## Dependencies the ELF does not declare
+
+Every native row above rests on the same evidence: an undefined symbol in a library's dynamic
+symbol table. That is a declaration — the loader resolves it at load time, and a missing one fails
+the load loudly. It is also only half of how an app reaches the platform.
+
+The other half declares nothing:
+
+```c
+void* h = dlopen("libandroid.so", RTLD_NOW);
+fn = dlsym(h, "ASurfaceControl_createFromWindow");
+```
+
+The name exists only as a string. Nothing records the dependency, so no symbol table shows it, and
+a missing entry point returns null rather than failing. An engine looking up fourteen NDK
+SurfaceControl entry points still scanned as **288 of 289 resolved**, and losing them cost
+hardware compositing with nothing logged: the caller simply carried on without the capability.
+The Frida baseline had recorded 43 failing `dlsym` lookups on real Android since August; the map
+had no way to express them.
+
+`sym:runtime-resolved` closes the static half. The scanner extracts strings shaped like symbol
+names, and the row keeps only those in the public NDK surface — for one engine, 4018 candidates
+down to 84. On the two MVP apps it makes visible a surface the map previously described with two
+rows:
+
+| | Toutiao | McDonald's |
+|---|---|---|
+| arm64 libraries | 138 | 10 |
+| runtime-lookup candidates not supplied | 67 | 50 |
+| named subsystems | `libmediandk` 36, `libandroid` 24, `libnativewindow` 7 | `libneuralnetworks` 37, `libandroid` 8, `libnativewindow` 5 |
+
+McDonald's carries an on-device ML stack that probes NNAPI and falls back to CPU when it is
+absent — 37 symbols, no crash, no log line, and not a single row before this.
+
+### A row that says which layer can decide it
+
+These rows are `unresolved`, never `missing`, and carry `decidable_by="probe"`. The distinction is
+not politeness about confidence. A name of the right shape may never be passed to `dlsym`, may sit
+behind a version check that never fires, or may be built at runtime and not appear at all — and
+NNAPI in particular is *designed* to be probed and absent. Whether the lookup succeeds depends on
+the search path and on the winning file's dependency tree, neither of which is in any symbol
+table.
+
+So the evidence ladder gains a direction. `static` is the default level, but it is not always an
+available one: for these rows a static verdict would be wrong evidence presented authoritatively,
+which is what `288 of 289 resolved` was. `probes/runtime-resolve` performs the lookup the app
+would, inside the app's mount namespace and uid, and reports resolved or null **and which file
+answered**. For the WebView engine, none of the fifteen that resolve comes from `libandroid.so`
+itself; they arrive through its dependency tree, and two files of that name ship with only one
+carrying the SurfaceControl surface.
+
 ## Which gaps are on the path
 
 The map alone left one unknown: after the blockers already fixed, what comes next? The answer is
@@ -128,6 +179,13 @@ the sign-in activity and exposed a third: OpenHarmony stacks the app's windows b
 so a dialog shown before its activity's window is hidden under it (B11,
 `probes/dialog-before-window`). Holding the dialog's session back until the activity's window has
 one fixed it, and McDonald's shows its sign-in screen. See `benchmark/2026-09-22-mcdonalds-signin/`.
+
+Not every probe is an app. A contract an app exercises needs an app to exercise it, but a question
+about the loader needs only the loader: `probes/runtime-resolve` is a small binary run inside the
+app's mount namespace and uid, and `probes/avq.c` asks the SELinux policy directly. The rule is
+the same either way — one question, run on the board, answering in markers or a table rather than
+in inference. What changes is how little has to be standing up for the answer to be valid, and a
+probe that needs no app can be run before the app exists.
 
 ## What the source cannot tell: the deployed build
 
@@ -176,4 +234,11 @@ uncommitted files are recorded; a map built on a dirty tree says so.
   such where they decide a verdict.
 - **The policy matrix is a snapshot** of one OH build (`data/oh-app-data-policy.json`). Re-query
   it per build with `probes/avq.c`; it takes seconds.
+- **Runtime-looked-up symbols are candidates, not gaps.** `sym:runtime-resolved` reads strings, so
+  it cannot tell a lookup that happens from a name that is never used, and misses names built at
+  runtime entirely. It narrows where to look; `probes/runtime-resolve` decides. Counting these
+  rows as gaps would overstate an app's native surface by more than the rest of the map contains.
+- **Which library wins the search path is not a static fact.** Two files can share a soname, and
+  the loader takes the first the path names. No import list or symbol table can express that, and
+  it has already cost one outage.
 - **Semantic mismatches** remain invisible until a probe or the Android baseline compares them.
