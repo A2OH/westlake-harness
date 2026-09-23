@@ -36,18 +36,19 @@ RUNGS = (
 
 #: Markers, established by comparing apps with known outcomes rather than by reading the source.
 #:
-#: ``activity`` counts ``[B47-SLA]`` lines because the scheduler logs a fixed preamble whether or
-#: not the activity survives: five lines for a launch that is only requested, ten or more once it
-#: proceeds. It is a threshold on a log the adapter already emits, so it is fragile to that log
-#: changing -- ``markers`` is reported alongside the rung so a shifted threshold is visible rather
-#: than silently reclassifying every app.
+#: ``activity`` means an activity launch was *attempted*, evidenced either by a view existing or
+#: by an explicit activity-launch failure. An earlier version thresholded ``[B47-SLA]`` line counts
+#: (five for a request, ten once it proceeds); that held for one round and then failed, because
+#: NewPipe and OONI Probe drew forty and eleven frames respectively with only five. Counts of a
+#: progress log are not a lifecycle signal. No marker here separates "reached the activity" from
+#: "built a view" on its own, so this rung is inferred from the two outcomes that are visible.
 #:
 #: ``view`` uses DecorView because it was the single cleanest separator found: present only in the
 #: apps confirmed rendering by screenshot, absent in every app that stopped earlier.
 _MARKERS = {
     "runtime-init": (re.compile(r"kRegJNI loop done"), 1),
     "bound": (re.compile(r"sBindAppDone=true"), 1),
-    "activity": (re.compile(r"B47-SLA"), 10),
+    "activity": (re.compile(r"Unable to (?:start|instantiate) activity|DecorView"), 1),
     "view": (re.compile(r"DecorView"), 1),
 }
 
@@ -144,22 +145,23 @@ def score(app: str, text: str) -> Score:
     held = len(_HELD_BACK.findall(text))
     counts["drawing"] = relayouts if held == 0 else 0
 
-    reached = ["spawned"]
-    anomaly = None
+    # Every rung is evaluated, and the score is the HIGHEST that passed rather than the longest
+    # unbroken run. The markers are not equally reliable and a later one is stronger evidence than
+    # an earlier one: an app with a DecorView and forty relayouts reached its activity whatever the
+    # activity marker says. Stopping at the first miss meant a weak marker could veto strong
+    # evidence above it -- NewPipe drew forty frames and scored "bound" because a count threshold
+    # fitted to one round did not hold in the next. A skipped rung is reported, not used to cap.
+    passed = {"spawned": True}
     for name in RUNGS[1:]:
         if name == "drawing":
-            passed = relayouts > 0 and held == 0
+            passed[name] = relayouts > 0 and held == 0
         else:
             pattern, threshold = _MARKERS[name]
-            passed = counts[name] >= threshold
-        if passed:
-            if len(reached) != RUNGS.index(name):
-                anomaly = "reached %s without %s" % (name, RUNGS[len(reached)])
-            reached.append(name)
-        else:
-            break
+            passed[name] = counts[name] >= threshold
 
-    rung = len(reached) - 1
+    rung = max(i for i, name in enumerate(RUNGS) if passed[name])
+    skipped = [name for name in RUNGS[:rung] if not passed[name]]
+    anomaly = ("reached %s without %s" % (RUNGS[rung], ", ".join(skipped))) if skipped else None
     category, blocker = first_blocker(text)
     # An app on the top rung with no fatal signal got where it was going. Anything matched in its
     # log is a finding, not the reason it stopped -- AntennaPod draws fine while reporting a

@@ -327,3 +327,74 @@ Two apps stop on a null system-service manager — ooniprobe on `LocaleManager`,
 second time the loop has produced one by the same rule: fix what repeats, count only what blocks.
 
 Round 4 also ran with **zero harness faults**, against one in each of the two previous rounds.
+
+---
+
+# Round 5: two apps to drawing, and the scorer wrong twice more
+
+Target picked the same way as the last two: the blocker hit by more than one app. OONI Probe and
+NewPipe both stopped on a **null system-service manager** — `LocaleManager` and `BatteryManager`.
+One mechanism: `getSystemService` returns null when a fetcher cannot find its binder, and the NPE
+lands wherever the app first touched it.
+
+```
+apps drawing: 3 -> 5
+ooniprobe  1 runtime-init -> 5 drawing   (+4, screenshot confirmed)
+newpipe    3 activity     -> 5 drawing   (+2, markers only)
+```
+
+## Reading the fetcher beats reading the stub tally
+
+`BatteryManager`'s fetcher calls `getServiceOrThrow` **twice** — `batterystats` and
+`batteryproperties` — and throws if either is missing. Only `batterystats` ever appeared in a log.
+Registering the name the logs showed would have changed nothing, which is a concrete instance of
+the ranking error this file already warns about: the visible symptom is not the requirement.
+
+## What the new binders are allowed to claim
+
+A locale override is accepted, dropped, and read back as absent. That is truthful for a board with
+no per-app locale database rather than a placeholder — an app that sets one and reads it back sees
+exactly what a user who never chose one would see. Battery reports a full idle cell and a non-zero
+status for ids it does not know, which is what real hardware returns for unsupported properties.
+Those values are **invented, not read from OH**, and the code says so: the board does expose
+battery state, and wiring it through is worth doing later.
+
+## The scorer failed twice more, and both were found by using it
+
+1. **A weak marker vetoed strong evidence.** The ladder stopped at the first unmet rung, so NewPipe
+   — `DecorView`, forty relayouts, `ReliableSurface::reserveNext returning OK`, no fatal — scored
+   `bound`. Fixed: score the **highest rung that passes** and report skipped rungs rather than
+   letting them cap.
+2. **The activity rung was a fitted threshold.** It counted `[B47-SLA]` lines, ten meaning
+   "proceeded". That held for one round. NewPipe and OONI Probe drew with five — the same count as
+   apps that never reached an activity at all. Counts of a progress log are not a lifecycle signal.
+   Fixed: `activity` now means a launch was *attempted*, evidenced by a view existing or by an
+   explicit `Unable to start/instantiate activity` failure. termux correctly moves 2 → 3, because
+   it does reach activity start and fails on `bindService` inside it.
+
+No marker here separates "reached the activity" from "built a view" on its own. The rung is
+inferred from the two outcomes that are visible, and the docstring says so instead of implying
+more precision than the logs support.
+
+## NewPipe is not visually confirmed
+
+Its markers are unambiguous and it is recorded as drawing, but there is no screenshot. Two things
+got in the way and both are worth writing down:
+
+- An earlier capture filed as NewPipe was **OONI Probe**, still on top of the window stack because
+  NewPipe had not put up a window within the wait. Same misattribution as the aegis/antennapod
+  mix-up in round 1 — a screenshot proves what is *on top*, not what was launched last.
+- The retry found the screen asleep, then the OH **lock screen**, and the device then dropped off
+  USB entirely. `results.json` records NewPipe as `confirmed: markers only`.
+
+## Harness faults: a new kind, and the cause was cumulative
+
+markor and opencamera both failed to launch — `recv: Resource temporarily unavailable`, and OH
+refusing with *"too many abilities have been launched"*. `/data` was at **95%**: seventy app stages
+and seventy source runtimes had accumulated across five rounds, and no round had ever stopped its
+children.
+
+Both ran clean after stopping the leftovers and keeping the newest two stages of each kind, and
+both scored unchanged. Three rounds in a row have now produced at least one fault that would have
+been scored as an app blocker by a loop trusting its own exit codes — and this one was **caused by
+the loop itself**, which no single round would have revealed.

@@ -337,5 +337,63 @@
    "termux"
   ],
   "verdict": "the shim reordering is validated at corpus scale: no app regressed a rung, every ASurface load failure in the corpus is gone, and no app takes a fatal signal"
+ },
+ "round5": {
+  "build": "framework-signin-device29",
+  "change": "LocalServiceBinders answers locale, batterystats and batteryproperties in process; OHServiceManager routes those three names to it",
+  "note_on_scope": "BatteryManager's fetcher calls getServiceOrThrow twice, for batterystats AND batteryproperties, so registering only the name that appeared in the logs would have changed nothing -- a concrete case where ranking by ask-count would have produced a half-fix",
+  "apps_drawing": {
+   "before": 3,
+   "after": 5
+  },
+  "movement": [
+   {
+    "app": "ooniprobe",
+    "before": "1 runtime-init",
+    "after": "5 drawing",
+    "delta": "+4",
+    "confirmed": "screenshot",
+    "note": "was dying in its Application constructor"
+   },
+   {
+    "app": "newpipe",
+    "before": "3 activity",
+    "after": "5 drawing",
+    "delta": "+2",
+    "confirmed": "markers only -- DecorView=3, relayout=40, held_back=0, no fatal, ReliableSurface::reserveNext returning OK, 531 -> 1976 lines",
+    "not_confirmed": "no screenshot: the device dropped off USB before one could be taken, and an earlier capture attributed to NewPipe was actually OONI Probe still on top of the window stack"
+   }
+  ],
+  "unchanged": [
+   "aegis",
+   "antennapod",
+   "markor",
+   "anki",
+   "mindustry",
+   "opencamera",
+   "ppsspp",
+   "termux"
+  ],
+  "harness_faults": [
+   {
+    "apps": [
+     "markor",
+     "opencamera"
+    ],
+    "error": "hdc 'recv: Resource temporarily unavailable' and OH 'too many abilities have been launched'; /data was at 95%",
+    "cause": "70 app stages and 70 source runtimes accumulated across five rounds, and children were never stopped between rounds",
+    "action": "stopped the leftover children, kept the newest two stages of each kind, protected the in-use framework stage; both apps then ran clean and scored unchanged"
+   }
+  ],
+  "scorer_defects_found_by_use": [
+   {
+    "defect": "the ladder stopped at the first unmet rung, so a weak marker could veto stronger evidence above it. NewPipe drew 40 frames and scored 'bound'.",
+    "fix": "score the highest rung that passes; report skipped rungs instead of capping"
+   },
+   {
+    "defect": "the activity rung thresholded [B47-SLA] line counts, fitted to one round. NewPipe and OONI Probe drew with 5, the same count as apps that never reached an activity.",
+    "fix": "activity now means a launch was attempted -- a view exists, or an explicit 'Unable to start/instantiate activity' failure. termux correctly moves 2 -> 3."
+   }
+  ]
  }
 }
