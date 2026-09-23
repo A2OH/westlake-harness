@@ -33,8 +33,11 @@ retraction below.
 
 **What that uncovered — and a retraction.** With `libvision_core.so` loading, the app renders its
 whole feed chrome — search bar, nine category tabs, bottom navigation — with an empty content
-area. Nothing in the log explains the emptiness, and the recorded `device_register`/`device_id`
-note stays unverified: this run never mentions device registration.
+area. Nothing in this run's log mentions device registration — but the prior diagnosis of that
+blocker is not unverified, it is simply not visible from the log. It was established earlier by
+dumping the feed adapter (no article cells at all, only chrome), by logging every
+`IConnectivityManager` call, and by confirming DNS, routing and TCP all work, and it names the
+likely cause as the app's anti-abuse layer rejecting the environment.
 
 An earlier version of this record named a null function pointer in `libtttext_lite.so` as
 Toutiao's blocker, at ~85% confidence. **That was wrong, and self-inflicted.** The crash appears
@@ -72,9 +75,15 @@ samples, with 23 socket fds. The app reaches its servers, completes TLS and goes
 retrying and not failing to connect.
 
 One peer reverse-resolves to `ec2-…us-west-2.compute.amazonaws.com` — an overseas edge for an app
-whose content APIs are domestic. An empty feed may therefore be the backend's correct answer to an
-unregistered, out-of-region device, in which case it is not a platform gap and no shim can fix it.
-Deciding that needs the response body, which is inside TLS.
+whose content APIs are domestic. That does not replace the earlier diagnosis, it sharpens it: the
+environment being rejected may include where the device appears to be, not only what it reports
+itself to be. An empty feed may therefore be the backend's correct answer to an unregistered,
+out-of-region device, in which case it is not a platform gap and no shim can fix it. Deciding that
+needs the response body, which is inside TLS.
+
+Worth recording as process: this transport check re-derived a conclusion already written down,
+including an explicit note not to re-investigate connectivity. The cost of not reading the whole
+prior record was several launches.
 
 This is worth stating as a rule: **an app showing no content is only a platform gap if the platform
 caused it.** Counting this one before the response is read would inflate the map with something
