@@ -308,6 +308,8 @@ def read_elf(
             "exported_symbols": sorted(exports),
             "undefined_symbols": sorted(undefined),
             "undefined_weak_symbols": sorted(undefined_weak),
+            "runtime_symbol_candidates": runtime_symbol_candidates(
+                raw, set(exports or ()) | set(undefined) | set(undefined_weak)),
             "jni_exports": sorted(name for name in exports if name.startswith("Java_")),
             "has_jni_onload": "JNI_OnLoad" in exports,
             "jni_registration_entries": registration_entries,
@@ -322,6 +324,35 @@ def read_elf(
                 os.unlink(temp_name)
             except FileNotFoundError:
                 pass
+
+
+#: A platform entry point looked up by name at runtime: AFoo_bar, ASurfaceTransaction_setBuffer.
+#: Deliberately narrow. Every string in a binary is a candidate for dlsym and almost none of them
+#: are, so this matches the shape the NDK gives its C entry points and leaves the rest alone.
+#: Matched against whole NUL-terminated strings, not anywhere in the file: the name handed to
+#: dlsym is its own string literal, while the same letters inside a mangled C++ symbol or a longer
+#: identifier are not a lookup. Anchoring cuts an engine's candidates by roughly ten times, which
+#: matters because this list is what the on-device probe has to resolve one by one.
+_RUNTIME_SYMBOL_SHAPE = re.compile(rb"[\x00-\x1f\"' ]([A-Z][A-Za-z0-9]{2,}_[A-Za-z0-9_]{2,})\x00")
+
+
+def runtime_symbol_candidates(data: bytes, declared: set[str]) -> list[str]:
+    """Platform entry points this ELF can reach by name at runtime rather than by declaring them.
+
+    A dlopen/dlsym pair leaves nothing in the symbol table: the name exists only as a string, so
+    the library never says it needs the function and a missing one is not a load failure. That is
+    why an engine looking up fourteen NDK SurfaceControl entry points still scanned as 288 of 289
+    resolved, and why losing them cost hardware compositing with no error anywhere.
+
+    These are candidates and nothing more. A name of the right shape may never be passed to dlsym,
+    may sit behind a version check that never fires, or may be one of several the caller tries in
+    turn. Names built at runtime do not appear at all. Deciding any of them means performing the
+    lookup on the board; this only narrows where to look.
+    """
+    found = {match.decode("ascii", "ignore") for match in _RUNTIME_SYMBOL_SHAPE.findall(data)}
+    # A name it already imports is covered by the ordinary undefined-symbol check, which is
+    # stronger evidence: the loader refuses to load the library at all when one is missing.
+    return sorted(found - declared)
 
 
 def _dynamic_symbols(data: bytes) -> tuple[set[str] | None, set[str], set[str]]:

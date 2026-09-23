@@ -567,6 +567,33 @@ static jstring Runtime_nativeLoad(JNIEnv* env, jclass clazz, jstring filename,
         self.assertEqual(gapmap.silent_load_rows({"inventory": {"elfs": []}}, model, ["libhwui.so"]), [])
         self.assertEqual(gapmap.silent_load_rows({"inventory": {"elfs": []}}, model, None), [])
 
+    def test_symbols_looked_up_at_runtime_are_reported_as_candidates(self) -> None:
+        # Only names in the public NDK surface are reported: a string of the right shape is not
+        # evidence of a lookup, and an engine carries thousands of them.
+        coverage = {"symbols": [
+            {"symbol": "ASurfaceControl_createFromWindow", "library": "libandroid.so", "status": "missing"},
+            {"symbol": "AMediaCodec_createDecoderByType", "library": "libmediandk.so", "status": "missing"},
+            {"symbol": "ANativeWindow_lock", "library": "libnativewindow.so", "status": "oh"},
+        ]}
+        scan = {"inventory": {"elfs": [{
+            "name": "lib/arm64-v8a/libengine.so", "soname": "libengine.so",
+            "runtime_symbol_candidates": [
+                "ASurfaceControl_createFromWindow",   # NDK, not supplied -> reported
+                "AMediaCodec_createDecoderByType",    # NDK, not supplied -> reported
+                "ANativeWindow_lock",                 # NDK but supplied  -> not a gap
+                "SomeVendor_privateThing",            # not in the NDK    -> not a claim
+            ]}]}}
+        rows = {r["id"]: r for r in gapmap.runtime_resolved_rows(scan, coverage)}
+        self.assertEqual(sorted(rows), ["sym:runtime-resolved:libandroid.so",
+                                        "sym:runtime-resolved:libmediandk.so"])
+        row = rows["sym:runtime-resolved:libandroid.so"]
+        self.assertEqual((row["verdict"], row["decidable_by"]), ("unresolved", "probe"),
+                         "a string is not a lookup: the board settles it, not the scan")
+        self.assertEqual(row["symbols"], ["ASurfaceControl_createFromWindow"])
+        self.assertIn("libengine.so", row["provider"])
+        self.assertEqual(gapmap.runtime_resolved_rows(scan, None), [], "no NDK surface, no claim")
+        self.assertEqual(gapmap.runtime_resolved_rows(scan, {"symbols": []}), [])
+
     def test_shadowed_libraries_and_their_importers(self) -> None:
         scan = {"inventory": {"elfs": [
             {"name": "config.arm64_v8a.apk!lib/arm64-v8a/libc++_shared.so", "soname": "libc++_shared.so", "needed": ["libc.so"]},

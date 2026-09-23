@@ -554,6 +554,59 @@ def silent_load_rows(scan: dict[str, Any], model: dict[str, Any],
     return rows
 
 
+def runtime_resolved_rows(scan: dict[str, Any], ndk_cov: dict[str, Any] | None) -> list[dict[str, Any]]:
+    """Platform entry points an app reaches by name at runtime, which the provider does not supply.
+
+    A dlopen/dlsym pair declares nothing: the name is a string, so the library never records that
+    it needs the function and the ordinary undefined-symbol check cannot see it. An engine looking
+    up fourteen NDK SurfaceControl entry points still scanned as 288 of 289 resolved.
+
+    Two things make this worth a row of its own rather than a footnote on the symbol rows. The
+    failure is silent -- dlsym returns null and the caller carries on without the capability, so
+    nothing is logged unless the caller chooses to. And the verdict here is weaker than a missing
+    import: a name of the right shape may never be passed to dlsym at all. Only names in the
+    public NDK surface are reported, which takes an engine from four thousand candidate strings to
+    under a hundred real entry points, and even those stay `unresolved` until an on-device probe
+    performs the lookup.
+    """
+    if not ndk_cov:
+        return []
+    surface = {entry["symbol"]: entry for entry in ndk_cov.get("symbols", [])}
+    if not surface:
+        return []
+    by_library: dict[str, set[str]] = defaultdict(set)
+    importers: dict[str, set[str]] = defaultdict(set)
+    for elf in scan["inventory"].get("elfs", []):
+        name = elf.get("soname") or Path(elf["name"]).name
+        for candidate in elf.get("runtime_symbol_candidates", []):
+            entry = surface.get(candidate)
+            if entry is None or entry.get("status") == "oh":
+                continue
+            by_library[entry.get("library", "unknown")].add(candidate)
+            importers[entry.get("library", "unknown")].add(name)
+    rows = []
+    for library, symbols in sorted(by_library.items(), key=lambda kv: (-len(kv[1]), kv[0])):
+        names = sorted(symbols)
+        rows.append(_row(
+            "native-symbols", f"sym:runtime-resolved:{library}",
+            f"{library} entry points looked up by name at runtime, not supplied ({len(names)})",
+            oh_touchpoint=f"dlopen(\"{library}\") + dlsym, resolved against whatever the search path reaches first",
+            verdict="unresolved", shim_class="C1/C2", effort=_size_effort(len(names)), confidence=STATIC,
+            provider=f"the provider does not export these; {', '.join(sorted(importers[library]))} "
+                     "carries them as strings, so nothing declares the dependency and a missing one "
+                     "returns null rather than failing the load",
+            app_evidence=f"{len(names)} public NDK symbols of {library} appear as literals: "
+                         + ", ".join(names[:6]) + (" …" if len(names) > 6 else ""),
+            decidable_by="probe",
+            probe="probes/webview-boundaries measures the search path; resolving each name on the "
+                  "board is what settles whether the lookup would succeed",
+            shim=f"supply {library}'s entry points, or confirm the caller degrades without them: "
+                 "this row cannot tell a lookup that happens from a string that is never used",
+            symbols=names,
+        ))
+    return rows
+
+
 def webview_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
     called = scan["inventory"].get("platform_method_names", {}).get("Landroid/webkit/WebView;", [])
     if "<init>" not in called:
@@ -962,6 +1015,7 @@ def build_map(
             # is simply not claimed.
             + silent_load_rows(scan, native_load_short_circuit(westlake_root.parent / "art-build"),
                                runtime_libraries)
+            + runtime_resolved_rows(scan, ndk_cov)
             + sandbox_rows(scan, policy) + external_rows(facts, scan, refused_libraries(westlake_root)))
     gap_map = {
         "app": {"package": facts["package"], "version": facts["version_name"], "target_sdk": facts["target_sdk"],
