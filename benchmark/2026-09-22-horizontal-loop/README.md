@@ -151,3 +151,96 @@ not a gap. Re-run, it rendered as before. That is two harness faults in twenty l
 round 1, aegis in round 2), both of which would have been scored as app blockers by a loop that
 trusts its own exit codes. Breadth makes these more likely, not less, so the rule holds: **a
 failure is not a result until it has been shown not to be ours.**
+
+---
+
+# Round 3: the target turned out to be our own dead code
+
+Round 2 named `ASurfaceTransaction_*` as the next target because it had two victims. Investigating
+it before building anything changed what the fix was — and nearly produced a wrong answer first.
+
+## The wrong answer, and why it was wrong
+
+The first inventory said there was **one** `libandroid.so` on the search path and it exported all
+fourteen symbols Chromium wanted, which would have made this a resolution mystery with no obvious
+fix. That reading came from `hdc shell ls /data/local/tmp/asx/...`.
+
+That path is not the app's. Inside the child's mount namespace it is bind-mounted from
+`/data/app/el2/.../a2hlab-source-<hash>`; from a shell it is a stale shared directory with 20,875
+entries dated three weeks earlier. `probes/runtime-resolve/README.md` documents this exact trap,
+and the first pass walked into it anyway. **Any claim about what the app can load has to be made
+against the staged runtime or through the namespace helper, never through the global path.**
+
+Re-measured against the real runtime:
+
+| copy | position on search path | defined FUNC | `ASurface*` | of the 14 wanted |
+|---|---|---|---|---|
+| runtime `libandroid.so` | **first** | 117 | **0** | **0** |
+| `webview-t-lib/libandroid.so` | **last** | 115 | 27 | **14** |
+
+So `dlopen("libandroid.so")` succeeds against the runtime copy and every `dlsym` returns null.
+That is the shadowing `probes/webview-boundaries/` describes, and the shim already has a redirect
+written for it.
+
+## Why the redirect never ran
+
+It logged `library resolved` **zero** times. The `.z.so` naming fallback was added after it and
+placed above it, and opens the plain name first:
+
+```c
+void *plain = real_dlopen(filename, flags);
+if (plain != NULL) {
+    return plain;          // the runtime's copy — always succeeds
+}
+```
+
+Every name in the WebView directory also exists in the runtime directory — the redirect's own
+comment says so — so the plain open always succeeded and the function returned before reaching the
+redirect. It was dead code for exactly the libraries it was written to fix, and silent about it.
+
+Two correct changes, wrong order. Fixed by moving the redirect first and having the `.z.so` probe
+open `actual_filename`.
+
+**Redirecting per caller is still right.** The two copies share only 34 symbols; sending every
+caller to the WebView copy would lose 83, the `ACanvas`, `AHardwareBuffer` and `ALooper` families
+among them. The pre-existing design was correct — only unreachable.
+
+## Result
+
+| app | before | after |
+|---|---|---|
+| newpipe | SIGTRAP, 14 load failures | **no signal, 0 failures**, 462 → 525 lines |
+| anki | SIGTRAP, 14 load failures | **no signal, 0 failures**, VSYNC ticking, storage answering |
+| wikipedia | rendering | rendering, `fatal=0`, no regression |
+| aegis | rendering | rendering, 637 vs 631/633, no regression |
+
+Neither target renders yet. Both moved to new and *different* blockers, which is the expected shape.
+
+## Two things this round does not establish
+
+- **The shim change was not validated at corpus scale.** It alters library resolution for every
+  WebView caller and only four apps were run against it. A full ten-app round at this shim has not
+  been done.
+- **Wikipedia did not exercise the redirect.** It fired zero times there, because the launch starts
+  the app without opening an article. Wikipedia shows the reordering broke nothing; it does not
+  show the redirect helps it.
+
+## Next target, and a correction to how to rank
+
+Two apps now die on a **null system-service manager** — ooniprobe on `LocaleManager`, newpipe on
+`BatteryManager`. Different services, one mechanism: `OHServiceManager` has no binder for the name,
+`getSystemService` returns null, the app dereferences it unchecked. `LocalServiceBinders.get(name)`
+is the existing pattern, already carrying `account`, `power`, `alarm` and `clipboard`.
+
+The ask-counts are tempting and misleading:
+
+```
+12 apps ask  network_management, netstats, content_capture, appops  -> null
+10 apps ask  accessibility                                          -> null
+ 4 apps ask  locale                                                 -> null
+```
+
+`appops` is asked by all twelve, returns null in all twelve, and kills none of them. A null service
+is usually survivable; only the ones an app dereferences without checking are fatal. **Rank by the
+fatal subset, not by how many apps ask** — otherwise the map optimises for the loudest stub rather
+than the one blocking a launch.

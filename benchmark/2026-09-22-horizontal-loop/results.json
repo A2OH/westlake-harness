@@ -217,5 +217,71 @@
     "action": "re-run; the re-run produced the scored result"
    }
   ]
+ },
+ "round3": {
+  "scope": "targeted, not a full round: the two apps the round-2 target killed, plus two controls",
+  "shim": "bionic-shim-nw2",
+  "change": "WebView library redirect ordered ahead of the OH .z.so naming fallback in the bionic shim's dlopen; the fallback's early 'return plain' had made the redirect unreachable for every library that also exists in the runtime directory",
+  "root_cause": {
+   "kind": "dead code in our own shim, not a missing symbol",
+   "detail": "two libandroid.so ship. runtime copy: 117 defined FUNC, 0 ASurface*, 0 of the 14 Chromium looks up, and it is FIRST on the search path. webview-t-lib copy: 115 defined FUNC, 27 ASurface*, 14 of 14, and it is LAST. dlopen therefore succeeded against the runtime copy and every dlsym returned null.",
+   "regressed_by": "the .z.so fallback commit, added after the redirect commit and placed above it",
+   "why_per_caller_redirect_is_still_correct": "the two copies share only 34 symbols; redirecting every caller to the WebView copy would lose 83, including the ACanvas, AHardwareBuffer and ALooper families"
+  },
+  "results": [
+   {
+    "app": "newpipe",
+    "before": "SIGTRAP in CrBrowserMain",
+    "after": "no signal; new blocker",
+    "verdict": "CLOSED",
+    "evidence": "redirect fired; ASurface load failures 14 -> 0; Fatal signal 1 -> 0; 462 -> 525 lines",
+    "new_blocker": "NullPointerException: BatteryManager.getIntProperty(int) on a null reference"
+   },
+   {
+    "app": "anki",
+    "before": "SIGTRAP in CrBrowserMain",
+    "after": "no signal; reaches far more",
+    "verdict": "CLOSED",
+    "evidence": "redirect fired; ASurface load failures 14 -> 0; Fatal signal 1 -> 0; VSYNC ticking, provider resolving, storage answering",
+    "new_blocker": "AnkiDroidCrashReportDialog: Can't create handler inside thread that has not called Looper.prepare(); getService(\"locale\") -> null"
+   },
+   {
+    "app": "wikipedia",
+    "verdict": "NO REGRESSION",
+    "evidence": "740 lines, fatal=0, alive, relayout=18",
+    "caveat": "redirect fired 0 times -- this launch starts the app but does not open an article, so it tests that the reordering broke nothing, NOT that the redirect helps it"
+   },
+   {
+    "app": "aegis",
+    "verdict": "NO REGRESSION",
+    "evidence": "637 lines vs 631/633 baseline, fatal=0, alive, relayout=18"
+   }
+  ],
+  "not_yet_established": "the shim change applies to every WebView caller and only four apps were run against it. A full ten-app round has not been done at this shim.",
+  "next_top_roi": {
+   "category": "system-services",
+   "pattern": "getSystemService returns null because OHServiceManager has no binder for the name, and the app dereferences it without a null check",
+   "apps_killed": [
+    "ooniprobe (LocaleManager)",
+    "newpipe (BatteryManager)"
+   ],
+   "fix_pattern": "LocalServiceBinders.get(name), already used for account/power/alarm/clipboard",
+   "ranking_note": "rank by the FATAL subset, not by how many apps ask. appops is asked by all 12 and returns null in all 12 and kills none; locale and batterymanager kill."
+  },
+  "stub_service_ask_counts": {
+   "network_management": 12,
+   "netstats": 12,
+   "content_capture": 12,
+   "appops": 12,
+   "accessibility": 10,
+   "sensitive_content_protection_service": 4,
+   "locale": 4,
+   "voiceinteraction": 3,
+   "graphicsstats": 3,
+   "autofill": 3,
+   "game": 2,
+   "vibrator_manager": 1,
+   "batterystats": 1
+  }
  }
 }
