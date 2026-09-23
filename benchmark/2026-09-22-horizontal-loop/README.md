@@ -414,3 +414,35 @@ Two things lost the capture for a day and are worth knowing: the board dropped o
 (nothing enumerated, cable/port level), and a WSL restart wiped `/tmp`, taking every staged app input
 with it. The inputs were rebuilt from the launch archives each run keeps, and every APK was checked
 against its pinned SHA-256 by `prepare_app.py`, so what ran is provably what ran before.
+
+---
+
+# Round 6 (targeted): Termux reaches its UI
+
+Asked for one more app on screen. Termux was the cheapest: one step short, with a concrete blocker.
+It took two gaps, the second hidden behind the first.
+
+1. **`bindService` under direct launch.** Direct launch installs a proxy `IActivityManager` that
+   answers every method it does not special-case with the type default. `bindService` → `0` →
+   `ContextImpl` reads "bind failed" → Termux throws from `onCreate`. The adapter already binds
+   in-app services in process, but direct launch never reaches that adapter. Fixed by routing
+   own-package binds from the stub to the same `InProcessServiceBinder`.
+2. **`"audio"` answered by name.** Past `onCreate`, `onResume` builds a `SoundPool`. Every
+   `SoundPool`/`MediaPlayer`/`AudioTrack` is a `PlayerBase`, and `PlayerBase` fetches its own copy of
+   `IAudioService` from `ServiceManager`. The existing audio stub was stamped into `AudioManager`'s
+   cache only, so `PlayerBase` got null. Answering the name gives every cache the same binder.
+
+```
+build framework-signin-device31 · termux: 3 activity -> 5 drawing (screenshot)
+```
+
+**What it does not do yet:** the terminal area is empty. First-run Termux should show its bootstrap
+installer, then a prompt. That goes through its own native `libtermux.so` and bootstrap zip and is
+**not diagnosed**. A check from the global shell for its data directory was inconclusive for the
+namespace reason recorded elsewhere, so no cause is claimed.
+
+Second gap worth noting for the map: the audio one is not Termux-specific. Any app that plays a
+sound through the standard players hit it.
+
+Also fixed along the way: both deployers sent files with a flat 55 s timeout, which held over USB
+and failed over wireless debugging. Send timeouts are now sized from the file.
