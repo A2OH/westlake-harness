@@ -455,6 +455,56 @@
    "batch": "batch-9",
    "first": "blocked",
    "after": "draws"
+  },
+  "fcontacts": {
+   "batch": "batch-10",
+   "first": "draws",
+   "after": "draws"
+  },
+  "fphone": {
+   "batch": "batch-10",
+   "first": "draws",
+   "after": "draws"
+  },
+  "fcamera": {
+   "batch": "batch-10",
+   "first": "draws",
+   "after": "draws"
+  },
+  "icsx5": {
+   "batch": "batch-10",
+   "first": "draws",
+   "after": "draws"
+  },
+  "opentracks": {
+   "batch": "batch-10",
+   "first": "draws",
+   "after": "draws"
+  },
+  "xtra": {
+   "batch": "batch-10",
+   "first": "draws",
+   "after": "draws"
+  },
+  "translateyou": {
+   "batch": "batch-10",
+   "first": "draws",
+   "after": "draws"
+  },
+  "editor": {
+   "batch": "batch-10",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "fvoicerec": {
+   "batch": "batch-10",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "adaway": {
+   "batch": "batch-10",
+   "first": "blocked",
+   "after": "blocked"
   }
  }
 }

@@ -427,6 +427,27 @@
    "row": "policy:lnk_file",
    "symptom": "after the theme fix: its Python runtime cannot create a symlink in app data (EACCES)",
    "fixed_in": null
+  },
+  {
+   "app": "editor",
+   "corpus": "batch-10",
+   "row": null,
+   "symptom": "launch intent without ACTION_MAIN/CATEGORY_LAUNCHER: null action in onCreate",
+   "fixed_in": null
+  },
+  {
+   "app": "fvoicerec",
+   "corpus": "batch-10",
+   "row": null,
+   "symptom": "IUriGrantsManager null behind getPersistedUriPermissions",
+   "fixed_in": null
+  },
+  {
+   "app": "adaway",
+   "corpus": "batch-10",
+   "row": null,
+   "symptom": "window decor supplies the application theme's action bar over a NoActionBar activity theme",
+   "fixed_in": null
   }
  ]
 }
