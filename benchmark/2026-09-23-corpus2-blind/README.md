@@ -163,9 +163,8 @@ probably stays there, because `UpgradeDatabaseActivity` waits on a service start
 Thunderbird's null in `AndroidAlarmManager.<init>` was a null PendingIntent: the fix for Element
 unblocked it too.
 
-Regression on framework 40: aegis, anki, antennapod, markor, newpipe, ooniprobe, termux and
-wikipedia draw as before (screenshots checked). Toutiao, KeePassDX and Organic Maps were not
-re-run, because the host lost its connection to the board mid-run.
+Regression on framework 40: aegis, anki, antennapod, markor, newpipe, ooniprobe, termux,
+wikipedia, Toutiao, KeePassDX and Organic Maps draw as before (screenshots checked).
 
 The harness gained the check the two service misses called for (`throws_in_framework`). Run
 against the provider the predictions were made on, it flags Tusky's `getNotificationChannels`
