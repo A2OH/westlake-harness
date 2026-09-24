@@ -19,15 +19,15 @@ launch:
 ## Results
 
 One launch per app on framework 47. **5 of 10 drew on first launch**: Home Assistant, Trail
-Sense, Chrono, Noice and Kore. After fixes (framework 49), Retro Music and openHAB drew too:
-**7 of 10**.
+Sense, Chrono, Noice and Kore. After fixes (framework 49), Retro Music, openHAB and RadioDroid drew too:
+**8 of 10**.
 
 | App | Rule | Outcome | Blocker |
 |---|---|---|---|
 | Seal | blocked | **blocked** | AppCompat rejects its theme. Two faults: the activity's own theme was missing from direct launch's ActivityInfo (fixed), and the theme's attributes still do not resolve through its parent styles. VLC shows the same resource-system gap (open) |
 | Home Assistant | blocked | draws | the flagged native imports are not reached at startup |
 | Retro Music | draws | **blocked**, then draws | `WallpaperManager` had no service (fixed) |
-| RadioDroid | draws | **blocked** | `getWifiDisplayStatus()` null (fixed), then `IMediaRouterService` null (fixed on framework 49; see the regression run) |
+| RadioDroid | draws | **blocked**, then draws | `getWifiDisplayStatus()` null, then `IMediaRouterService` null (both fixed; it draws on framework 49) |
 | openHAB | draws | **blocked**, then draws | a Kotlin non-null cast of a null `WifiManager` (fixed) |
 | AndStatus | draws | **blocked** | it started its first activity from a worker thread, and direct launch built it off the main looper (fixed, as for Fennec); it now draws, then exits with no error (open) |
 
