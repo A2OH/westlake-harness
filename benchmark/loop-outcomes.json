@@ -355,6 +355,56 @@
    "batch": "batch-7",
    "first": "blocked",
    "after": "blocked"
+  },
+  "linuxcmd": {
+   "batch": "batch-8",
+   "first": "draws",
+   "after": "draws"
+  },
+  "pomodoro": {
+   "batch": "batch-8",
+   "first": "draws",
+   "after": "draws"
+  },
+  "redmoon": {
+   "batch": "batch-8",
+   "first": "draws",
+   "after": "draws"
+  },
+  "suntimes": {
+   "batch": "batch-8",
+   "first": "draws",
+   "after": "draws"
+  },
+  "ffupdater": {
+   "batch": "batch-8",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "jami": {
+   "batch": "batch-8",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "wifianalyzer": {
+   "batch": "batch-8",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "gpscockpit": {
+   "batch": "batch-8",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "rethink": {
+   "batch": "batch-8",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "scrambledexif": {
+   "batch": "batch-8",
+   "first": "blocked",
+   "after": "blocked"
   }
  }
 }

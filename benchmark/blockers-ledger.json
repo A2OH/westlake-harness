@@ -329,6 +329,48 @@
    "row": null,
    "symptom": "crash reporter's startActivity from the Gecko thread built the activity off the main looper",
    "fixed_in": "8eb6ba4"
+  },
+  {
+   "app": "ffupdater",
+   "corpus": "batch-8",
+   "row": null,
+   "symptom": "AppCompat: 'You need to use a Theme.AppCompat theme' with its declared Material3 DayNight theme",
+   "fixed_in": null
+  },
+  {
+   "app": "jami",
+   "corpus": "batch-8",
+   "row": null,
+   "symptom": "AppCompat rejects its declared theme",
+   "fixed_in": null
+  },
+  {
+   "app": "wifianalyzer",
+   "corpus": "batch-8",
+   "row": null,
+   "symptom": "InflateException: a theme attribute does not resolve (as VLC)",
+   "fixed_in": null
+  },
+  {
+   "app": "gpscockpit",
+   "corpus": "batch-8",
+   "row": null,
+   "symptom": "null in onResume: likely LocationManager.getBestProvider with no providers",
+   "fixed_in": null
+  },
+  {
+   "app": "rethink",
+   "corpus": "batch-8",
+   "row": null,
+   "symptom": "stops after bind, nothing logged",
+   "fixed_in": null
+  },
+  {
+   "app": "scrambledexif",
+   "corpus": "batch-8",
+   "row": null,
+   "symptom": "app name null: the launch path zeroes labelRes (also Catima's class-name title)",
+   "fixed_in": null
   }
  ]
 }
