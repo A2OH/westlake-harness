@@ -95,6 +95,17 @@ class NdkCoverage(unittest.TestCase):
         self.assertEqual(libc["covered_symbols"], ["__sF"], "a bionic-private name outside the NDK is still libc ABI")
         self.assertEqual(libc["open_symbols"], ["__FD_SET_chk"])
 
+    def test_symbols_from_an_unshipped_library_are_not_libc(self) -> None:
+        cov = self._coverage()
+        scan = {"inventory": {"elfs": [
+            {"soname": "libjsctooling.so", "name": "libjsctooling.so", "needed": ["libc.so", "libjsc.so"],
+             "undefined_symbols": ["JSValueMakeNull", "__FD_SET_chk"]}]}}
+        missing = [{"symbol": "JSValueMakeNull", "importing_libraries": ["libjsctooling.so"]},
+                   {"symbol": "__FD_SET_chk", "importing_libraries": ["libjsctooling.so"]}]
+        rows = {r["id"]: r for r in gapmap.ndk_symbol_rows(scan, missing, set(), cov)}
+        self.assertEqual(rows["ndk:unshipped-library:libjsc.so"]["open_symbols"], ["JSValueMakeNull"])
+        self.assertEqual(rows["ndk:libc-abi"]["open_symbols"], ["__FD_SET_chk"], "a known libc name stays libc")
+
 
 if __name__ == "__main__":
     unittest.main()

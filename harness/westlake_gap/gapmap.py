@@ -23,7 +23,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 
-from . import contracts, services
+from . import contracts, ohresolve, services
 
 CATEGORIES = [
     ("java-api", "Java framework API", "APK dex references − Westlake boot jars, filtered by API level"),
@@ -309,15 +309,31 @@ def ndk_symbol_rows(
     model = ndk_model.load_model()
     by_symbol = {item["symbol"]: item for item in ndk_cov["symbols"]}
     importers: dict[str, list[str]] = defaultdict(list)
-    for elf in scan["inventory"].get("elfs", []):
+    for elf in ohresolve.target_elfs(scan):
         for symbol in elf.get("undefined_symbols", []):
             importers[symbol].append(elf.get("soname") or elf["name"])
+
+    # Libraries an importer needs that are neither packaged nor NDK: a symbol whose every importer
+    # needs one (JavaScriptCore's JS* for React Native's libjsctooling.so needing libjsc.so) comes
+    # from that library, not from libc.
+    packaged = {elf.get("soname") or elf["name"] for elf in ohresolve.target_elfs(scan)}
+    ndk_libraries = set(model.get("libraries", []))
+    unshipped: dict[str, set[str]] = {}
+    for elf in ohresolve.target_elfs(scan):
+        absent = {n for n in elf.get("needed", []) if n not in packaged and n not in ndk_libraries}
+        if absent:
+            unshipped[elf.get("soname") or elf["name"]] = absent
 
     groups: dict[tuple[str, str | None], list[dict[str, Any]]] = defaultdict(list)
     for item in oh_missing:
         symbol = item["symbol"]
         known = by_symbol.get(symbol)
-        if known is None:
+        users = item.get("importing_libraries") or importers.get(symbol, [])
+        wanted = set.intersection(*(unshipped.get(u, set()) for u in users)) if users else set()
+        if known is None and wanted:
+            how = {"group": "unshipped-library", "weld": ", ".join(sorted(wanted)), "oh": None, "source": None,
+                   "in_ndk": False}
+        elif known is None:
             how = {"group": "libc-abi", "weld": None, "oh": None, "source": None, "in_ndk": False}
         elif known["status"] != "missing":
             how = {"group": "now-provided", "weld": None, "oh": None, "source": None, "in_ndk": True,
@@ -332,7 +348,16 @@ def ndk_symbol_rows(
         names = [i["symbol"] for i in items]
         libs = sorted({lib for n in names for lib in importers.get(n, [])})
         fields: dict[str, Any] = {"importing_libraries": libs[:12], "confidence": STATIC}
-        if group == "libc-abi":
+        if group == "unshipped-library":
+            fields.update(
+                item=f"Library the APK needs but does not ship ({weld}): {len(names)} symbols",
+                oh_touchpoint="none: neither Android's NDK nor OH provides it", verdict="missing",
+                shim_class="CU", effort="verify",
+                provider=f"{', '.join(libs)} list {weld} in DT_NEEDED; the APK does not package it",
+                open_symbols=names[:20],
+                shim="a blocker only if an importer is loaded: on Android too its load fails without the library; "
+                     "check which code path loads it")
+        elif group == "libc-abi":
             covered = [n for n in names if n in shim_exports]
             open_ = [n for n in names if n not in shim_exports]
             fields.update(
@@ -515,7 +540,7 @@ def silent_load_rows(scan: dict[str, Any], model: dict[str, Any],
             "cannot be told from one that worked, so nothing downstream can detect this.")
     rows = []
     app = _matches(names, [elf.get("soname") or Path(elf["name"]).name
-                           for elf in scan["inventory"].get("elfs", [])])
+                           for elf in ohresolve.target_elfs(scan)])
     if app:
         libraries = sorted({library for found in app.values() for library in found})
         rows.append(_row(
@@ -576,7 +601,7 @@ def runtime_resolved_rows(scan: dict[str, Any], ndk_cov: dict[str, Any] | None) 
         return []
     by_library: dict[str, set[str]] = defaultdict(set)
     importers: dict[str, set[str]] = defaultdict(set)
-    for elf in scan["inventory"].get("elfs", []):
+    for elf in ohresolve.target_elfs(scan):
         name = elf.get("soname") or Path(elf["name"]).name
         for candidate in elf.get("runtime_symbol_candidates", []):
             entry = surface.get(candidate)
@@ -659,7 +684,7 @@ def apply_probe_results(gap_map: dict[str, Any], results: dict[str, Any]) -> Non
 
 def native_symbol_rows(scan: dict[str, Any], oh_missing: list[dict[str, Any]], shim_exports: set[str]) -> list[dict[str, Any]]:
     importers: dict[str, list[str]] = defaultdict(list)
-    for elf in scan["inventory"].get("elfs", []):
+    for elf in ohresolve.target_elfs(scan):
         for symbol in elf.get("undefined_symbols", []):
             importers[symbol].append(elf.get("soname") or elf["name"])
     groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
@@ -689,7 +714,7 @@ def native_symbol_rows(scan: dict[str, Any], oh_missing: list[dict[str, Any]], s
 def libc_constant_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
     """Calls that resolve by name but carry a constant each libc numbers for itself."""
     importers: dict[str, list[str]] = defaultdict(list)
-    for elf in scan["inventory"].get("elfs", []):
+    for elf in ohresolve.target_elfs(scan):
         name = elf.get("soname") or elf["name"].rsplit("/", 1)[-1]
         for symbol in elf.get("undefined_symbols", []):
             if symbol in contracts.LIBC_CONSTANT_NAMESPACE_CALLS:
@@ -812,7 +837,7 @@ def shadowed_libraries(scan: dict[str, Any], board_paths: list[str]) -> tuple[di
         if path.startswith(_SEARCHED_BEFORE_APP):
             board.setdefault(path.rsplit("/", 1)[-1], path)
     needed: dict[str, set[str]] = {}
-    for elf in scan["inventory"].get("elfs", []):
+    for elf in ohresolve.target_elfs(scan):
         name = elf.get("soname") or elf["name"].rsplit("/", 1)[-1]
         needed.setdefault(name, set()).update(elf.get("needed", []))
     shadowed = {name: board[name] for name in needed if name in board}
@@ -839,7 +864,7 @@ def launcher_namespace_option(manifest_root: Path | None) -> dict[str, Any]:
 def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_extracts: dict[str, Any],
                         board_paths: list[str] | None = None, namespace_option: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     rows = []
-    elfs = scan["inventory"].get("elfs", [])
+    elfs = ohresolve.target_elfs(scan)
     shadowed, targets = shadowed_libraries(scan, board_paths or [])
     if shadowed:
         option = namespace_option or {"present": False, "source": None}
@@ -874,7 +899,7 @@ def sandbox_rows(scan: dict[str, Any], policy: dict[str, Any]) -> list[dict[str,
     oh = policy["oh"]["classes"]
     android = policy["android"]["classes"]
     hits: dict[str, list[tuple[str, str]]] = defaultdict(list)
-    for elf in scan["inventory"].get("elfs", []):
+    for elf in ohresolve.target_elfs(scan):
         for symbol in elf.get("undefined_symbols", []):
             obj = contracts.POLICY_SENSITIVE_IMPORTS.get(symbol)
             if obj:
@@ -937,7 +962,7 @@ def external_rows(facts: dict[str, Any], scan: dict[str, Any], refused: dict[str
             shim=("decide per feature: truthful 'unavailable' result, or an OH-backed replacement (push, maps, auth)"
                   if not firebase else "component discovery is local (see pm:component-metadata); GMS-backed components degrade"),
         ))
-    names = {c["name"] for c in facts["components"]} | {e.get("soname", "") for e in scan["inventory"].get("elfs", [])}
+    names = {c["name"] for c in facts["components"]} | {e.get("soname", "") for e in ohresolve.target_elfs(scan)}
     for marker, sdk, behaviour in _ENV_SDKS:
         found = sorted(n for n in names if n and marker in n)
         if found:

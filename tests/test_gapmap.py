@@ -222,11 +222,17 @@ class PackageManagerSemantics(unittest.TestCase):
                 @Override
                 public ParceledListSlice queryIntentServices(Intent i, String t, long f, int u) throws RemoteException {
                     logStub("queryIntentServices", ""); return null; }
+                @Override
+                public ProviderInfo resolveContentProvider(String a, long f, int u) throws RemoteException {
+                    if (a == null) { logStub("resolveContentProvider", ""); return null; }
+                    ProviderInfo info = find(a); return info; }
                 }""")
             _write(pm / "SourcePackageRegistry.java", "class SourcePackageRegistry { /* raw flags */ }")
             model = pm_adapter_model(root)
             self.assertEqual(model["methods"]["getServiceInfo"]["status"], "bridged")
             self.assertEqual(model["methods"]["queryIntentServices"]["status"], "stub")
+            self.assertEqual(model["methods"]["resolveContentProvider"]["status"], "bridged",
+                             "logStub on a guard is not a stub when the method answers otherwise")
             self.assertFalse(model["semantics"]["direct_boot_match_defaults"]["present"],
                              "raw caller flags reach PackageParser.isMatch and filter every component")
 
