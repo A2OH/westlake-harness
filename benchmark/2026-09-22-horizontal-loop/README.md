@@ -519,3 +519,40 @@ regression script now re-pulls stderr after its wait.
 ```
 drawing: aegis, anki, antennapod, markor, newpipe, ooniprobe, termux (UI; no shell), wikipedia
 ```
+
+## Round 8: the three native apps
+
+PPSSPP, Mindustry and Open Camera were stuck at rung 2. Each blocker was named from the app's own
+imports and its crash, then closed where it was a translation gap and rated where it is not.
+
+| gap | category | effort | status |
+|---|---|---|---|
+| `android_dlopen_ext` not exported (PPSSPP's `libppsspp_jni.so`) | bionic symbol | S | closed: exported from the shim |
+| `SL_IID_ANDROIDSIMPLEBUFFERQUEUE` not exported (PPSSPP, Mindustry) | NDK symbol | S | closed |
+| no GLES version or device config from the activity manager | framework service | S | closed: reports ES 3.2 (measured on the Mali-G57) |
+| Java OpenGL bindings (`android.opengl.*`, `EGL14`) never registered | framework natives | M | closed: AOSP bindings ported onto OH's EGL/GLES |
+| OH's OpenSL ES is a different ABI: `SLuint32` is 8 bytes on arm64 | NDK ABI | M | closed: translation layer (below) |
+| OH's OpenSL ES has no Android buffer queue, only a pull queue | NDK semantics | M | closed: Android queue built on OH's |
+| a `SurfaceView` shares the activity's OH window | window system | L | **open**: blocks PPSSPP and Mindustry |
+| `android.hardware.Camera` natives absent | framework natives | L | open: blocks Open Camera |
+
+The OpenSL ABI gap was the expensive one to see. OH's headers declare `sl_uint32_t` as
+`unsigned long`, so everything compiled against them — the probe included — reads an Android app's
+4-byte fields 8 bytes at a time. OH saw Mindustry's PCM format with channel count and sample rate
+fused, refused the player, and the app called through the null interface. The adapter now gives
+the app wrappers typed in Android's ABI and calls OH with OH's; on the board Mindustry logs
+`pcm: 2 ch, 44100000 mHz, 16/16 bit` and `CreateAudioPlayer -> 0`.
+
+Both game apps now stop at the same place: the game's `SurfaceView` gets the activity's own native
+window, so either the game's EGL surface fails (`EGL_BAD_ALLOC`, PPSSPP) or hwui loses its surface
+(`drawRenderNode called on a context with no surface!`, Mindustry). One fix — a separate OH surface
+per `SurfaceView` — covers both.
+
+Regression on the new shim: aegis, anki, antennapod, markor, newpipe, ooniprobe, termux, wikipedia
+all still draw, confirmed by screenshot.
+
+```
+drawing: aegis, anki, antennapod, markor, newpipe, ooniprobe, termux (UI; no shell), wikipedia
+         (+ toutiao outside the ten)
+open:    ppsspp, mindustry (shared SurfaceView window, L); opencamera (camera natives, L)
+```
