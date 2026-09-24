@@ -10,6 +10,9 @@ predicted blocked when its map has any of:
   lookup     an NDK library the app resolves entry points from at run time that the runtime does not
              supply: libandroid, libnativewindow, libmediandk, libaaudio (Flutter's raster thread,
              Gecko)
+  engine     a first screen drawn by an engine into its own SurfaceView (window:engine-surface):
+             libGDX, Arc, Flutter, SDL, Unity, Godot, a NativeActivity. Added after batch 4: on the
+             41 apps then known, it flagged 5, all blocked, and no app that drew.
 
 Otherwise it is predicted to draw. Each prediction lists the rows that decided it.
 
@@ -44,6 +47,8 @@ def reasons(rows: list[dict]) -> list[str]:
             found.append(f"framework:{rid}")
         if rid in LOOKUPS:
             found.append(f"lookup:{rid}")
+        if rid == "window:engine-surface":
+            found.append(f"engine:{rid}")
     return sorted(set(found))
 
 

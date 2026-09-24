@@ -17,6 +17,13 @@ launch:
   no signal for a libGDX/GLSurfaceView game, and Unciv is one: Shattered Pixel Dungeon, the same
   engine, did not draw.
 
+### A late prediction, still blind
+
+After this batch's predictions were committed, the harness gained `window:engine-surface`: a first
+screen drawn by an engine (libGDX, Arc, Flutter, SDL, Unity, Godot, a NativeActivity) into its own
+SurfaceView. It flags **Unciv (libGDX): predicted blocked.** This is committed before Unciv's
+launch result is known. The other nine are unchanged.
+
 ## Results
 
 Not yet run.

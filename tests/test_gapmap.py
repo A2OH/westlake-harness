@@ -281,6 +281,21 @@ class BlockersLedger(unittest.TestCase):
         self.assertNotIn("seen_blocking", rows[1])
 
 
+class EngineSurface(unittest.TestCase):
+    def test_engine_library_or_native_activity(self) -> None:
+        gdx = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {"elfs": [
+            {"soname": "libgdx.so", "abi": "arm64-v8a"}], "launch_activity_chains": {"a.L": ["Lp;", "Landroid/app/Activity;"]}}}
+        rows = gapmap.engine_surface_rows(gdx)
+        self.assertEqual([r["id"] for r in rows], ["window:engine-surface"])
+        self.assertIn("libGDX", rows[0]["app_evidence"])
+        native = {"inventory": {"elfs": [], "launch_activity_chains": {
+            "o.P": ["Lorg/ppsspp/ppsspp/NativeActivity;", "Landroid/app/Activity;"]}}}
+        self.assertEqual(len(gapmap.engine_surface_rows(native)), 1)
+        plain = {"inventory": {"elfs": [{"soname": "libsqlite.so"}],
+                               "launch_activity_chains": {"a.M": ["Landroidx/appcompat/app/AppCompatActivity;"]}}}
+        self.assertEqual(gapmap.engine_surface_rows(plain), [])
+
+
 class PackageManagerSemantics(unittest.TestCase):
     def test_stub_bridged_and_direct_boot_defaults(self) -> None:
         with tempfile.TemporaryDirectory(prefix="westlake-pm-") as temp:

@@ -33,6 +33,8 @@ CATEGORIES = [
     ("package-manager", "Package manager & manifest", "manifest features and PackageManager calls → Westlake PM semantics"),
     ("app-framework", "Activity, window & process contracts",
      "what system_server would answer, answered in-process by Westlake in direct launch → white-box probes"),
+    ("window", "Windows & surfaces",
+     "how the first screen renders → whether it needs a surface of its own → OH window/surface model"),
     ("framework-natives", "Framework natives",
      "platform classes the app uses → their native methods → libraries the runtime registers them from"),
     ("native-upcalls", "Java APIs called from native code", "JNIEnv FindClass/Get*ID names in packaged .so → Westlake boot jars"),
@@ -1015,6 +1017,42 @@ def launcher_extraction(manifest_root: Path | None) -> dict[str, Any]:
     return {"present": bool(match), "source": f"manifest/tools/prepare_app.py:{text.count(chr(10), 0, match.start()) + 1}" if match else None}
 
 
+ENGINE_LIBRARIES = {
+    "libgdx.so": "libGDX", "libarc.so": "Arc (a libGDX fork)", "libflutter.so": "Flutter", "libSDL2.so": "SDL", "libunity.so": "Unity",
+    "libgodot_android.so": "Godot", "libcocos2dcpp.so": "Cocos2d-x", "liblove.so": "LOVE",
+    "libUE4.so": "Unreal", "libmain.so": "a NativeActivity engine",
+}
+
+
+def engine_surface_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
+    """Apps whose first screen is drawn by an engine into a SurfaceView it creates.
+
+    On this platform a SurfaceView gets the activity's own OH window rather than a surface of its
+    own, so the engine and hwui fight over one window: PPSSPP's EGL surface failed
+    (EGL_BAD_ALLOC), Mindustry's hwui lost its surface, Shattered Pixel Dungeon (libGDX) never drew.
+    The engine is recognised by its packaged library, which obfuscation does not rename, or by a
+    NativeActivity in the launch activity's superclass chain.
+    """
+    libraries = {elf.get("soname") or elf.get("name") for elf in ohresolve.target_elfs(scan)}
+    engines = sorted({ENGINE_LIBRARIES[lib] for lib in libraries if lib in ENGINE_LIBRARIES})
+    chains = scan["inventory"].get("launch_activity_chains") or {}
+    native_activity = sorted(name for name, chain in chains.items() if any("NativeActivity" in c for c in chain))
+    if not engines and not native_activity:
+        return []
+    evidence = []
+    if engines:
+        evidence.append(f"packages {', '.join(engines)}")
+    if native_activity:
+        evidence.append(f"launch activity extends a NativeActivity ({', '.join(native_activity)})")
+    return [_row(
+        "window", "window:engine-surface", "First screen drawn by an engine into its own SurfaceView",
+        oh_touchpoint="window_manager / render_service: one OH window per activity",
+        verdict="missing", shim_class="C9", effort="L", confidence=STATIC,
+        app_evidence="; ".join(evidence),
+        shim="give each SurfaceView its own OH surface (a child RS node) instead of the activity's window",
+    )]
+
+
 _CLASS_INIT_NATIVE = re.compile(r"(?i)^_?native_?(class_?)?init$")
 
 
@@ -1152,6 +1190,7 @@ def build_map(
     rows = (java + svc + package_manager_rows(scan, facts, pm)
             + app_framework_rows(scan, contracts.direct_launch_am_model(westlake_root),
                                  contracts.window_adapter_model(westlake_root))
+            + engine_surface_rows(scan)
             + framework_native_rows(scan, runtime_index, runtime_class_paths)
             + native_upcall_rows(scan)
             + (ndk_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root), ndk_cov) if ndk_cov
