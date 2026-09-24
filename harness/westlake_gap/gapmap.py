@@ -200,6 +200,14 @@ def service_rows(scan: dict[str, Any], aosp: dict[str, Any], westlake: dict[str,
             owners = sorted({f"{c['owner'].strip('L;').replace('/', '.')}.{c['method']}" for c in throwing})
             evidence = (f"{entry['site_count']} call sites; Kotlin casts it non-null in {len(owners)} methods "
                         f"(e.g. {', '.join(owners[:3])}): a null answer throws there, it is not skipped")
+        # A hollow binder answers null, and a manager that unwraps the answer (getList() on a
+        # ParceledListSlice) throws inside the framework: no app code can catch it.
+        unwrapping = entry.get("unwrapping_calls", []) if verdict == services.HOLLOW else []
+        if unwrapping:
+            manager = entry.get("manager", "").split("/")[-1].rstrip(";")
+            evidence = (f"throws inside {manager}: the app calls {', '.join(unwrapping[:4])}, which unwrap "
+                        f"the binder's answer (getList()); a hollow binder's null throws there, not in app code")
+            effort = "S" if effort in {"none", "verify"} else effort
         rows.append(_row(
             "system-services", f"svc:{entry['service']}", entry["service"],
             oh_touchpoint=analog or "none",
@@ -210,7 +218,7 @@ def service_rows(scan: dict[str, Any], aosp: dict[str, Any], westlake: dict[str,
                 if entry.get("manager") else None,
             app_calls=methods[:12], call_sites=entry["site_count"],
             example_site=_site(entry["sites"][0]) if entry.get("sites") else None,
-            shim=shim, app_evidence=evidence, throws_if_null=len(throwing),
+            shim=shim, app_evidence=evidence, throws_if_null=len(throwing), throws_in_framework=unwrapping,
         ))
     dynamic = sum(1 for r in requests if r.get("dynamic"))
     return rows, dynamic

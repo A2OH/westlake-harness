@@ -210,6 +210,37 @@ class ServiceVerdicts(unittest.TestCase):
         self.assertEqual(rows["svc:location"]["throws_if_null"], 0, "supplied: the cast never sees null")
 
 
+class FrameworkSideThrows(unittest.TestCase):
+    MANAGER = """public class NotificationManager {
+    public List<NotificationChannel> getNotificationChannels() {
+        INotificationManager service = getService();
+        try {
+            return service.getNotificationChannels(mContext.getOpPackageName(), mContext.getPackageName(),
+                    mContext.getUserId()).getList();
+        } catch (RemoteException e) { throw e.rethrowFromSystemServer(); }
+    }
+    public NotificationChannel getNotificationChannel(String id) {
+        return getService().getNotificationChannel(mContext.getOpPackageName(), mContext.getUserId(), id);
+    }
+}
+"""
+
+    def test_unwrapping_methods(self) -> None:
+        self.assertEqual(services.unwrapping_methods(self.MANAGER), ["getNotificationChannels"],
+                         "only a method that calls getList() on the binder's answer throws on null")
+
+    def test_hollow_service_called_through_an_unwrapping_method(self) -> None:
+        aosp = {"notification": {"manager": "Landroid/app/NotificationManager;", "binders": [],
+                                 "source": "SystemServiceRegistry.java:1", "unwrapping_methods": ["getNotificationChannels"]}}
+        westlake = {"notification": [{"kind": "hollow-proxy", "detail": "d", "source": "s"}]}
+        scan = {"inventory": {"service_requests": [{"service": "notification", "owner": "Lapp/A;", "method": "m"}],
+                              "platform_method_names": {"Landroid/app/NotificationManager;": ["getNotificationChannels"]}}}
+        rows, _ = gapmap.service_rows(scan, aosp, westlake)
+        row = rows[0]
+        self.assertEqual(row["throws_in_framework"], ["getNotificationChannels"])
+        self.assertIn("throws inside NotificationManager", row["app_evidence"])
+
+
 class PackageManagerSemantics(unittest.TestCase):
     def test_stub_bridged_and_direct_boot_defaults(self) -> None:
         with tempfile.TemporaryDirectory(prefix="westlake-pm-") as temp:
