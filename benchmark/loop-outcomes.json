@@ -1,5 +1,5 @@
 {
- "note": "first = first launch on the build the batch was predicted against; after = once that batch's fixes landed. wikipedia is counted in loop-1. Organic Maps' first launch uses its corrected pin. Fossify Messages exits by design after its fix (no SMS role) and stays 'blocked'.",
+ "note": "first = first launch on the build the batch was predicted against; after = once that batch's fixes landed. wikipedia is counted in loop-1. Organic Maps' first launch uses its corrected pin. Fossify Messages exits by design after its fix (no SMS role) and stays 'blocked'. Seal's 'after' is its own error screen (symlink denied by OH policy), counted as UI like Termux.",
  "apps": {
   "aegis": {
    "batch": "loop-1",
@@ -334,7 +334,7 @@
   "seal": {
    "batch": "batch-7",
    "first": "blocked",
-   "after": "blocked"
+   "after": "draws"
   },
   "retromusic": {
    "batch": "batch-7",
@@ -379,12 +379,12 @@
   "ffupdater": {
    "batch": "batch-8",
    "first": "blocked",
-   "after": "blocked"
+   "after": "draws"
   },
   "jami": {
    "batch": "batch-8",
    "first": "blocked",
-   "after": "blocked"
+   "after": "draws"
   },
   "wifianalyzer": {
    "batch": "batch-8",
@@ -405,6 +405,56 @@
    "batch": "batch-8",
    "first": "blocked",
    "after": "blocked"
+  },
+  "pipepipe": {
+   "batch": "batch-9",
+   "first": "draws",
+   "after": "draws"
+  },
+  "redreader": {
+   "batch": "batch-9",
+   "first": "draws",
+   "after": "draws"
+  },
+  "openkeychain": {
+   "batch": "batch-9",
+   "first": "draws",
+   "after": "draws"
+  },
+  "elementx": {
+   "batch": "batch-9",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "supertuxkart": {
+   "batch": "batch-9",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "duckduckgo": {
+   "batch": "batch-9",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "streetcomplete": {
+   "batch": "batch-9",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "briar": {
+   "batch": "batch-9",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "nctalk": {
+   "batch": "batch-9",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "mpv": {
+   "batch": "batch-9",
+   "first": "blocked",
+   "after": "draws"
   }
  }
 }

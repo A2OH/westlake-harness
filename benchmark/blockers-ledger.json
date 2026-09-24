@@ -293,7 +293,7 @@
    "corpus": "batch-7",
    "row": null,
    "symptom": "launches with Theme.Seal.Splashscreen (a Theme.SplashScreen, not AppCompat by design); installSplashScreen() should switch to postSplashScreenTheme before super.onCreate and evidently does not",
-   "fixed_in": null
+   "fixed_in": "6c300b3"
   },
   {
    "app": "retromusic",
@@ -335,14 +335,14 @@
    "corpus": "batch-8",
    "row": null,
    "symptom": "AppCompat rejects main_activity__theme although its default-config chain reaches Theme.AppCompat.Light: the version-qualified variant chosen at run time, or attribute lookup, loses windowActionBar",
-   "fixed_in": null
+   "fixed_in": "6c300b3"
   },
   {
    "app": "jami",
    "corpus": "batch-8",
    "row": null,
    "symptom": "AppCompat rejects its declared theme",
-   "fixed_in": null
+   "fixed_in": "6c300b3"
   },
   {
    "app": "wifianalyzer",
@@ -370,6 +370,62 @@
    "corpus": "batch-8",
    "row": null,
    "symptom": "app name null: the launch path zeroes labelRes (also Catima's class-name title)",
+   "fixed_in": null
+  },
+  {
+   "app": "mpv",
+   "corpus": "batch-9",
+   "row": null,
+   "symptom": "AppCompat rejects the theme of an app with no application theme",
+   "fixed_in": "6c300b3"
+  },
+  {
+   "app": "nctalk",
+   "corpus": "batch-9",
+   "row": null,
+   "symptom": "KeyguardManager null (no trust service)",
+   "fixed_in": "6c300b3"
+  },
+  {
+   "app": "briar",
+   "corpus": "batch-9",
+   "row": null,
+   "symptom": "ProcessEnvironment.environ unbound; then 'already has an action bar supplied by the window decor'",
+   "fixed_in": null
+  },
+  {
+   "app": "supertuxkart",
+   "corpus": "batch-9",
+   "row": "window:engine-surface",
+   "symptom": "SDL needs libGLESv1_CM.so, which OH does not ship",
+   "fixed_in": null
+  },
+  {
+   "app": "duckduckgo",
+   "corpus": "batch-9",
+   "row": null,
+   "symptom": "java.time: no time-zone data files registered",
+   "fixed_in": null
+  },
+  {
+   "app": "elementx",
+   "corpus": "batch-9",
+   "row": null,
+   "symptom": "native SIGSEGV at a garbage address",
+   "fixed_in": null
+  },
+  {
+   "app": "streetcomplete",
+   "corpus": "batch-9",
+   "row": null,
+   "symptom": "native SIGABRT",
+   "fixed_in": null
+  },
+  {
+   "app": "seal",
+   "corpus": "batch-7",
+   "row": "policy:lnk_file",
+   "symptom": "after the theme fix: its Python runtime cannot create a symlink in app data (EACCES)",
    "fixed_in": null
   }
  ]
