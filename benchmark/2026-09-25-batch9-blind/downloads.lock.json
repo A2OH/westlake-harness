@@ -1,0 +1,82 @@
+{
+ "elementx": {
+  "package": "io.element.android.x",
+  "version_name": "26.09.1",
+  "version_code": 202609012,
+  "bytes": 117664325,
+  "sha256": "ceb076564298cd0aef4688ad79058b55638d196b9beb5ac47ab421d757335bf3",
+  "url": "https://f-droid.org/repo/io.element.android.x_202609012.apk"
+ },
+ "nctalk": {
+  "package": "com.nextcloud.talk2",
+  "version_name": "25.0.0",
+  "version_code": 250000090,
+  "bytes": 163700718,
+  "sha256": "bdbc5aad76fa512e3717cf54f3fe25cd958f5795c18da7caff5bcf5731587890",
+  "url": "https://f-droid.org/repo/com.nextcloud.talk2_250000090.apk"
+ },
+ "mpv": {
+  "package": "is.xyz.mpv",
+  "version_name": "2026-09-17-release",
+  "version_code": 48,
+  "bytes": 123244634,
+  "sha256": "5cba2237b20ba34b79eaccfbd39bdb5b09d2a9a774bdccee09ca450eac4edd34",
+  "url": "https://f-droid.org/repo/is.xyz.mpv_48.apk"
+ },
+ "supertuxkart": {
+  "package": "org.supertuxkart.stk",
+  "version_name": "1.4",
+  "version_code": 312,
+  "bytes": 165323629,
+  "sha256": "b6469d2888970b0c87df0c9eb472ea7d12f331f57f7623c6769986209e830a2f",
+  "url": "https://f-droid.org/repo/org.supertuxkart.stk_312.apk"
+ },
+ "duckduckgo": {
+  "package": "com.duckduckgo.mobile.android",
+  "version_name": "5.294.1",
+  "version_code": 52941000,
+  "bytes": 177279489,
+  "sha256": "7d9b7f53edf1c549025fd9da1e2d52fc9394bef7c87046fe44bead4aaa98e4d5",
+  "url": "https://f-droid.org/repo/com.duckduckgo.mobile.android_52941000.apk"
+ },
+ "pipepipe": {
+  "package": "InfinityLoop1309.NewPipeEnhanced",
+  "version_name": "5.3.1",
+  "version_code": 110804,
+  "bytes": 32331923,
+  "sha256": "589bb89b777bf0a33a13ab6456d2c876c3b8814f40fa8f74b2c4f0285aa56bf1",
+  "url": "https://f-droid.org/repo/InfinityLoop1309.NewPipeEnhanced_110804.apk"
+ },
+ "streetcomplete": {
+  "package": "de.westnordost.streetcomplete",
+  "version_name": "63.4",
+  "version_code": 6308,
+  "bytes": 96482236,
+  "sha256": "9845b2e86f6e92440d7a1ed4742b861ef46d866e3f141e666fc7e41dcdd443ec",
+  "url": "https://f-droid.org/repo/de.westnordost.streetcomplete_6308.apk"
+ },
+ "redreader": {
+  "package": "org.quantumbadger.redreader",
+  "version_name": "1.26",
+  "version_code": 118,
+  "bytes": 9523976,
+  "sha256": "641512cee55154cd0c811e435d5f60b9b9e6d65a2103e0a34389c9fe5b4484f2",
+  "url": "https://f-droid.org/repo/org.quantumbadger.redreader_118.apk"
+ },
+ "briar": {
+  "package": "org.briarproject.briar.android",
+  "version_name": "1.5.20",
+  "version_code": 10520,
+  "bytes": 50629011,
+  "sha256": "9025888a4a5f5268e1ccbcd840bd07e51e9eaf1d7bbf305ca262b8afc662e372",
+  "url": "https://f-droid.org/repo/org.briarproject.briar.android_10520.apk"
+ },
+ "openkeychain": {
+  "package": "org.sufficientlysecure.keychain",
+  "version_name": "6.0.4",
+  "version_code": 60400,
+  "bytes": 12043256,
+  "sha256": "f88374b9113aa9ddba865258bd989eb3ac2ca1577d92e59d6e84228e080674ce",
+  "url": "https://f-droid.org/repo/org.sufficientlysecure.keychain_60400.apk"
+ }
+}

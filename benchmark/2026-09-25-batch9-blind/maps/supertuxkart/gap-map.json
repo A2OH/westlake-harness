@@ -1,0 +1,638 @@
+{
+  "app": {
+    "apk_sha256": "b6469d2888970b0c87df0c9eb472ea7d12f331f57f7623c6769986209e830a2f",
+    "package": "org.supertuxkart.stk",
+    "target_sdk": "30",
+    "version": "1.4"
+  },
+  "notes": {
+    "java_excluded_by_api_level": {},
+    "native_upcalls_scanned": true,
+    "service_requests_with_computed_names": 0
+  },
+  "provider": {
+    "oh_board": "OpenHarmony 6.1.0.31, arm64, SELinux enforcing policy as loaded",
+    "westlake": {
+      "branch": "corpus2-fixes",
+      "commit": "1baca651810b008661a6af4ae077c8c41aa36abe",
+      "uncommitted": []
+    }
+  },
+  "rows": [
+    {
+      "category": "java-api",
+      "confidence": "static",
+      "counts": {
+        "hollow": 2,
+        "missing": 0,
+        "probe": 0
+      },
+      "effort": "verify",
+      "examples": [
+        "java.io.InputStream.close",
+        "java.net.InetAddress.getHostAddress"
+      ],
+      "id": "java:Java library",
+      "item": "Java library",
+      "members": [
+        {
+          "kind": "hollow_method",
+          "name": "close",
+          "owner": "Ljava/io/InputStream;",
+          "signature": "()V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "getHostAddress",
+          "owner": "Ljava/net/InetAddress;",
+          "signature": "()Ljava/lang/String;"
+        }
+      ],
+      "oh_touchpoint": "none (library code inside Westlake)",
+      "shim": "check each hollow body against AOSP",
+      "shim_class": "C9",
+      "verdict": "hollow-candidate"
+    },
+    {
+      "category": "java-api",
+      "confidence": "static",
+      "counts": {
+        "hollow": 1,
+        "missing": 0,
+        "probe": 0
+      },
+      "effort": "verify",
+      "examples": [
+        "android.app.Activity.onWindowFocusChanged"
+      ],
+      "id": "java:App framework",
+      "item": "App framework",
+      "members": [
+        {
+          "kind": "hollow_method",
+          "name": "onWindowFocusChanged",
+          "owner": "Landroid/app/Activity;",
+          "signature": "(Z)V"
+        }
+      ],
+      "oh_touchpoint": "ability_runtime",
+      "shim": "check each hollow body against AOSP",
+      "shim_class": "C9",
+      "verdict": "hollow-candidate"
+    },
+    {
+      "category": "java-api",
+      "confidence": "static",
+      "counts": {
+        "hollow": 1,
+        "missing": 0,
+        "probe": 0
+      },
+      "effort": "verify",
+      "examples": [
+        "android.view.View.onKeyPreIme"
+      ],
+      "id": "java:Views & windows",
+      "item": "Views & windows",
+      "members": [
+        {
+          "kind": "hollow_method",
+          "name": "onKeyPreIme",
+          "owner": "Landroid/view/View;",
+          "signature": "(ILandroid/view/KeyEvent;)Z"
+        }
+      ],
+      "oh_touchpoint": "window_manager / render_service",
+      "shim": "check each hollow body against AOSP",
+      "shim_class": "C9",
+      "verdict": "hollow-candidate"
+    },
+    {
+      "category": "java-api",
+      "confidence": "static",
+      "counts": {
+        "hollow": 0,
+        "missing": 0,
+        "probe": 2
+      },
+      "effort": "verify",
+      "examples": [
+        "com.getkeepsafe.relinker.ReLinker",
+        "com.getkeepsafe.relinker.ReLinker$LoadListener"
+      ],
+      "id": "java:Other",
+      "item": "Other",
+      "members": [
+        {
+          "kind": "existence_probe",
+          "name": null,
+          "owner": "Lcom/getkeepsafe/relinker/ReLinker$LoadListener;",
+          "signature": null
+        },
+        {
+          "kind": "existence_probe",
+          "name": null,
+          "owner": "Lcom/getkeepsafe/relinker/ReLinker;",
+          "signature": null
+        }
+      ],
+      "oh_touchpoint": "unmapped",
+      "shim": "confirm the probed class should (not) exist on this platform",
+      "shim_class": "C8",
+      "verdict": "probe-only"
+    },
+    {
+      "aosp_contract": "Landroid/bluetooth/BluetoothManager; needs binder(s) [] (BluetoothFrameworkInitializer.java:100)",
+      "app_calls": [
+        "getAdapter",
+        "getConnectedDevices",
+        "getConnectionState"
+      ],
+      "app_evidence": null,
+      "call_sites": 2,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "verify",
+      "example_site": "org.libsdl.app.HIDDeviceManager.initializeBluetooth",
+      "id": "svc:bluetooth",
+      "item": "bluetooth",
+      "oh_touchpoint": "communication/bluetooth",
+      "provider": "no binder found in fetcher or manager source; reached through a helper",
+      "provider_source": "BluetoothFrameworkInitializer.java:100",
+      "shim": "trace the helper's binder; then treat as null, inert or supplied",
+      "shim_class": "CU",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "unresolved"
+    },
+    {
+      "aosp_contract": "Landroid/content/ClipboardManager; needs binder(s) ['clipboard'] (SystemServiceRegistry.java:428)",
+      "app_calls": [
+        "addPrimaryClipChangedListener",
+        "getPrimaryClip",
+        "hasPrimaryClip",
+        "removePrimaryClipChangedListener",
+        "setPrimaryClip"
+      ],
+      "app_evidence": null,
+      "call_sites": 1,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "verify",
+      "example_site": "org.libsdl.app.SDLClipboardHandler.<init>",
+      "id": "svc:clipboard",
+      "item": "clipboard",
+      "oh_touchpoint": "miscservices/pasteboard",
+      "provider": "",
+      "provider_source": null,
+      "shim": "none",
+      "shim_class": "C0",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "supplied"
+    },
+    {
+      "aosp_contract": "Landroid/view/inputmethod/InputMethodManager; needs binder(s) [] (SystemServiceRegistry.java:571)",
+      "app_calls": [
+        "hideSoftInputFromWindow",
+        "isAcceptingText",
+        "restartInput",
+        "showSoftInput"
+      ],
+      "app_evidence": null,
+      "call_sites": 6,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "verify",
+      "example_site": "org.libsdl.app.SDLActivity$SDLCommandHandler.handleMessage",
+      "id": "svc:input_method",
+      "item": "input_method",
+      "oh_touchpoint": "inputmethod_framework",
+      "provider": "InputMethodManagerAdapter",
+      "provider_source": "framework/core/java/OHServiceManager.java:105",
+      "shim": "none",
+      "shim_class": "C0",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "supplied"
+    },
+    {
+      "aosp_contract": "Landroid/hardware/SensorManager; needs binder(s) ['sensorservice'] (SystemServiceRegistry.java:687)",
+      "app_calls": [
+        "getDefaultSensor",
+        "registerListener",
+        "unregisterListener"
+      ],
+      "app_evidence": null,
+      "call_sites": 1,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "S",
+      "example_site": "org.libsdl.app.SDLSurface.<init>",
+      "id": "svc:sensor",
+      "item": "sensor",
+      "oh_touchpoint": "sensors",
+      "provider": "optional binder 'sensorservice' has no Westlake provision (reached via native SensorManager (libsensor))",
+      "provider_source": null,
+      "shim": "Android SensorManager facade over sensors",
+      "shim_class": "C4",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "inert"
+    },
+    {
+      "aosp_contract": "Landroid/app/UiModeManager; needs binder(s) ['uimode'] (SystemServiceRegistry.java:764)",
+      "app_calls": [
+        "getCurrentModeType"
+      ],
+      "app_evidence": null,
+      "call_sites": 1,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "verify",
+      "example_site": "org.libsdl.app.SDLActivity.isAndroidTV",
+      "id": "svc:uimode",
+      "item": "uimode",
+      "oh_touchpoint": "display / theme",
+      "provider": "",
+      "provider_source": null,
+      "seen_blocking": [
+        "burgerking (blind-bk), fixed in d689e67"
+      ],
+      "shim": "none",
+      "shim_class": "C0",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "supplied"
+    },
+    {
+      "aosp_contract": "Landroid/hardware/usb/UsbManager; needs binder(s) ['usb'] (SystemServiceRegistry.java:771)",
+      "app_calls": [
+        "getDeviceList",
+        "hasPermission",
+        "openDevice",
+        "requestPermission"
+      ],
+      "app_evidence": null,
+      "call_sites": 1,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "M",
+      "example_site": "org.libsdl.app.HIDDeviceManager.initializeUSB",
+      "id": "svc:usb",
+      "item": "usb",
+      "oh_touchpoint": "usb_manager",
+      "provider": "no Westlake provision: getSystemService returns null",
+      "provider_source": null,
+      "shim": "Android UsbManager facade over usb_manager",
+      "shim_class": "C4",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "null"
+    },
+    {
+      "aosp_contract": "Landroid/os/Vibrator; needs binder(s) ['vibrator_manager'] (SystemServiceRegistry.java:803)",
+      "app_calls": [
+        "cancel",
+        "hasVibrator",
+        "vibrate"
+      ],
+      "app_evidence": null,
+      "call_sites": 1,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "S",
+      "example_site": "org.libsdl.app.SDLHapticHandler.pollHapticDevices",
+      "id": "svc:vibrator",
+      "item": "vibrator",
+      "oh_touchpoint": "sensors/miscdevice",
+      "provider": "optional binder 'vibrator_manager' has no Westlake provision (reached via SystemVibrator → VibratorManager)",
+      "provider_source": null,
+      "shim": "Android Vibrator facade over sensors/miscdevice",
+      "shim_class": "C4",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "inert"
+    },
+    {
+      "aosp_contract": "Landroid/view/WindowManager; needs binder(s) [] (SystemServiceRegistry.java:845)",
+      "app_calls": [
+        "getDefaultDisplay"
+      ],
+      "app_evidence": null,
+      "call_sites": 4,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "verify",
+      "example_site": "org.libsdl.app.SDLActivity.sendCommand",
+      "id": "svc:window",
+      "item": "window",
+      "oh_touchpoint": "window_manager",
+      "provider": "adapter.window.WindowManagerAdapter",
+      "provider_source": "framework/core/java/OHServiceManager.java:96",
+      "shim": "none",
+      "shim_class": "C0",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "supplied"
+    },
+    {
+      "app_evidence": "packages SDL, a NativeActivity engine",
+      "category": "window",
+      "confidence": "static",
+      "effort": "L",
+      "id": "window:engine-surface",
+      "item": "First screen drawn by an engine into its own SurfaceView",
+      "oh_touchpoint": "window_manager / render_service: one OH window per activity",
+      "seen_blocking": [
+        "ppsspp (loop-1), open",
+        "mindustry (loop-1), open",
+        "shatteredpd (batch-4), open",
+        "unciv (batch-5), open"
+      ],
+      "shim": "give each SurfaceView its own OH surface (a child RS node) instead of the activity's window",
+      "shim_class": "C9",
+      "verdict": "missing"
+    },
+    {
+      "app_calls": [
+        "equals",
+        "getDeviceName",
+        "getInterface",
+        "getInterfaceCount",
+        "getManufacturerName",
+        "getProductId",
+        "getProductName",
+        "getSerialNumber",
+        "getVendorId"
+      ],
+      "app_evidence": "none of its natives is registered; the app calls equals, getDeviceName, getInterface, getInterfaceCount",
+      "category": "framework-natives",
+      "confidence": "static",
+      "effort": "S",
+      "id": "jni:android.hardware.usb.UsbDevice",
+      "item": "android.hardware.usb.UsbDevice: 2 of 2 natives unregistered",
+      "oh_touchpoint": "the JNI half of the framework class (libandroid_runtime in AOSP)",
+      "open_symbols": [
+        "native_get_device_id(Ljava/lang/String;)I",
+        "native_get_device_name(I)Ljava/lang/String;"
+      ],
+      "shim": "port the AOSP JNI source for the class and register it at startup, before application bind",
+      "shim_class": "C3",
+      "verdict": "missing"
+    },
+    {
+      "app_calls": [
+        "bulkTransfer",
+        "claimInterface",
+        "close",
+        "controlTransfer",
+        "releaseInterface"
+      ],
+      "app_evidence": "none of its natives is registered; the app calls bulkTransfer, claimInterface, close, controlTransfer",
+      "category": "framework-natives",
+      "confidence": "static",
+      "effort": "M",
+      "id": "jni:android.hardware.usb.UsbDeviceConnection",
+      "item": "android.hardware.usb.UsbDeviceConnection: 13 of 13 natives unregistered",
+      "oh_touchpoint": "the JNI half of the framework class (libandroid_runtime in AOSP)",
+      "open_symbols": [
+        "native_bulk_request(I[BIII)I",
+        "native_claim_interface(IZ)Z",
+        "native_close()V",
+        "native_control_request(IIII[BIII)I",
+        "native_get_desc()[B",
+        "native_get_fd()I",
+        "native_get_serial()Ljava/lang/String;",
+        "native_open(Ljava/lang/String;Ljava/io/FileDescriptor;)Z",
+        "native_release_interface(I)Z",
+        "native_request_wait(J)Landroid/hardware/usb/UsbRequest;",
+        "native_reset_device()Z",
+        "native_set_configuration(I)Z"
+      ],
+      "shim": "port the AOSP JNI source for the class and register it at startup, before application bind",
+      "shim_class": "C3",
+      "verdict": "missing"
+    },
+    {
+      "app_calls": [
+        "<init>",
+        "getAudioFormat",
+        "getChannelCount",
+        "getMinBufferSize",
+        "getSampleRate",
+        "getState",
+        "read",
+        "release",
+        "startRecording",
+        "stop"
+      ],
+      "app_evidence": "none of its natives is registered; the app calls <init>, getAudioFormat, getChannelCount, getMinBufferSize",
+      "category": "framework-natives",
+      "confidence": "static",
+      "effort": "M",
+      "id": "jni:android.media.AudioRecord",
+      "item": "android.media.AudioRecord: 27 of 27 natives unregistered",
+      "oh_touchpoint": "the JNI half of the framework class (libandroid_runtime in AOSP)",
+      "open_symbols": [
+        "native_disableDeviceCallback()V",
+        "native_enableDeviceCallback()V",
+        "native_finalize()V",
+        "native_getMetrics()Landroid/os/PersistableBundle;",
+        "native_getPortId()I",
+        "native_getRoutedDeviceId()I",
+        "native_get_active_microphones(Ljava/util/ArrayList;)I",
+        "native_get_buffer_size_in_frames()I",
+        "native_get_marker_pos()I",
+        "native_get_min_buff_size(III)I",
+        "native_get_pos_update_period()I",
+        "native_get_timestamp(Landroid/media/AudioTimestamp;I)I"
+      ],
+      "shim": "port the AOSP JNI source for the class and register it at startup, before application bind",
+      "shim_class": "C3",
+      "verdict": "missing"
+    },
+    {
+      "app_evidence": "e.g. android/content/IntentFilter, android/os/Environment, java/lang/Class, java/lang/String",
+      "category": "native-upcalls",
+      "confidence": "static",
+      "effort": "none",
+      "id": "upcall:libSDL2.so",
+      "item": "libSDL2.so → 4 classes, 15 members",
+      "oh_touchpoint": "through the Java framework",
+      "provider": "every named class and member resolves in the runtime",
+      "shim": "none",
+      "shim_class": "C0",
+      "unknown_classes": [],
+      "verdict": "supplied"
+    },
+    {
+      "category": "native-symbols",
+      "confidence": "static",
+      "effort": "S",
+      "id": "ndk:package",
+      "importing_libraries": [
+        "libSDL2.so"
+      ],
+      "item": "NDK package: 5 symbols compiled from AOSP source",
+      "oh_touchpoint": "none beyond what Westlake already provides",
+      "open_symbols": [
+        "AConfiguration_delete",
+        "AConfiguration_fromAssetManager",
+        "AConfiguration_getCountry",
+        "AConfiguration_getLanguage",
+        "AConfiguration_new"
+      ],
+      "provider": "0 of 5 have a Westlake build manifest",
+      "shim": "compile the AOSP source (configuration.cpp) and deploy it",
+      "shim_class": "C1",
+      "verdict": "missing"
+    },
+    {
+      "category": "native-symbols",
+      "confidence": "static",
+      "effort": "XS",
+      "id": "ndk:truthful-absence",
+      "importing_libraries": [
+        "libSDL2.so"
+      ],
+      "item": "NDK truthful-absence: 19 symbols",
+      "oh_touchpoint": "",
+      "open_symbols": [
+        "glBindFramebufferOES",
+        "glBlendEquationOES",
+        "glBlendEquationSeparateOES",
+        "glBlendFuncSeparateOES",
+        "glCheckFramebufferStatusOES",
+        "glColor4f",
+        "glColorPointer",
+        "glDeleteFramebuffersOES",
+        "glDisableClientState",
+        "glDrawTexfOES",
+        "glEnableClientState",
+        "glFramebufferTexture2DOES",
+        "glGenFramebuffersOES",
+        "glLoadIdentity",
+        "glMatrixMode",
+        "glOrthof",
+        "glTexCoordPointer",
+        "glTexEnvf",
+        "glVertexPointer"
+      ],
+      "provider": "legacy, deprecated or rare: report 'not available' the way a device without it does",
+      "shim": "export entry points that report the feature unavailable",
+      "shim_class": "C5",
+      "verdict": "absent"
+    },
+    {
+      "category": "native-symbols",
+      "confidence": "static",
+      "effort": "M",
+      "id": "ndk:weld:audio",
+      "importing_libraries": [
+        "libmain.so"
+      ],
+      "item": "NDK weld · audio: 1 symbols",
+      "oh_touchpoint": "audio_framework (OHAudio)",
+      "open_symbols": [
+        "SL_IID_ANDROIDCONFIGURATION"
+      ],
+      "provider": "no Westlake provision on the measured board",
+      "shim": "AOSP NDK source above, audio_framework (OHAudio) below",
+      "shim_class": "C4",
+      "verdict": "missing"
+    },
+    {
+      "category": "native-symbols",
+      "confidence": "static",
+      "effort": "M",
+      "id": "ndk:weld:sensors",
+      "importing_libraries": [
+        "libSDL2.so"
+      ],
+      "item": "NDK weld · sensors: 11 symbols",
+      "oh_touchpoint": "sensors",
+      "open_symbols": [
+        "ASensorEventQueue_disableSensor",
+        "ASensorEventQueue_enableSensor",
+        "ASensorEventQueue_getEvents",
+        "ASensorEventQueue_setEventRate",
+        "ASensorManager_createEventQueue",
+        "ASensorManager_destroyEventQueue",
+        "ASensorManager_getInstance",
+        "ASensorManager_getSensorList",
+        "ASensor_getMinDelay",
+        "ASensor_getName",
+        "ASensor_getType"
+      ],
+      "provider": "no Westlake provision on the measured board",
+      "shim": "AOSP NDK source above, sensors below",
+      "shim_class": "C4",
+      "verdict": "missing"
+    },
+    {
+      "app_evidence": "sysconf: 2 libraries, e.g. libSDL2.so, libmain.so",
+      "category": "native-symbols",
+      "confidence": "static",
+      "effort": "verify",
+      "id": "libc:constant-namespace",
+      "item": "libc calls carrying a constant each libc numbers differently (sysconf)",
+      "oh_touchpoint": "OH musl: the same selector number means a different limit than in bionic",
+      "provider": "the bionic shim translates them by name for the app's packaged libraries",
+      "provider_source": "framework/webview-shim/webview_bionic_shim.c:1308",
+      "shim": "translate the selector by name at the libc boundary for every library built against bionic; the call resolves and returns a plausible number either way, so nothing fails at load time",
+      "shim_class": "C0",
+      "verdict": "supplied"
+    },
+    {
+      "app_evidence": "a property of the runtime, not of this app: it holds for every app it launches",
+      "category": "native-loading",
+      "confidence": "static",
+      "effort": "verify",
+      "id": "load:runtime-silent-success",
+      "item": "Runtime libraries its own loader will not open (libicu_jni.so)",
+      "oh_touchpoint": "Runtime.nativeLoad in the runtime's own OpenJDK stub",
+      "provider": "the runtime stages these and then answers 'already registered' for them; their natives are bound only where one of its built-in stubs registers them, which is per-method and not decidable from here; matched on icu_jni",
+      "provider_source": "art-build/stubs/openjdk_stub.c:1315",
+      "shim": "compare the staged library's methods against the tables the runtime's own stubs register (art-build/stubs, registerNativesOrSkip) and ship any remainder under a name the filter does not match. ship the library under a name none of those substrings match, or narrow the stub to the libraries the runtime really does link in. A load that reports success it did not perform cannot be told from one that worked, so nothing downstream can detect this.",
+      "shim_class": "C3",
+      "verdict": "unresolved"
+    },
+    {
+      "app_evidence": "19 public NDK symbols of libaaudio.so appear as literals: AAudioStreamBuilder_delete, AAudioStreamBuilder_openStream, AAudioStreamBuilder_setErrorCallback, AAudioStreamBuilder_setFormat, AAudioStreamBuilder_setSampleRate, AAudioStream_close …",
+      "category": "native-symbols",
+      "confidence": "static",
+      "decidable_by": "probe",
+      "effort": "L",
+      "id": "sym:runtime-resolved:libaaudio.so",
+      "item": "libaaudio.so entry points looked up by name at runtime, not supplied (19)",
+      "oh_touchpoint": "dlopen(\"libaaudio.so\") + dlsym, resolved against whatever the search path reaches first",
+      "probe": "probes/webview-boundaries measures the search path; resolving each name on the board is what settles whether the lookup would succeed",
+      "provider": "the provider does not export these; libSDL2.so carries them as strings, so nothing declares the dependency and a missing one returns null rather than failing the load",
+      "shim": "supply libaaudio.so's entry points, or confirm the caller degrades without them: this row cannot tell a lookup that happens from a string that is never used",
+      "shim_class": "C1/C2",
+      "symbols": [
+        "AAudioStreamBuilder_delete",
+        "AAudioStreamBuilder_openStream",
+        "AAudioStreamBuilder_setErrorCallback",
+        "AAudioStreamBuilder_setFormat",
+        "AAudioStreamBuilder_setSampleRate",
+        "AAudioStream_close",
+        "AAudioStream_getChannelCount",
+        "AAudioStream_getFormat",
+        "AAudioStream_getSampleRate",
+        "AAudioStream_getState",
+        "AAudioStream_getTimestamp",
+        "AAudioStream_getXRunCount",
+        "AAudioStream_read",
+        "AAudioStream_requestPause",
+        "AAudioStream_requestStart",
+        "AAudioStream_write",
+        "AAudio_convertResultToText",
+        "AAudio_convertStreamStateToText",
+        "AAudio_createStreamBuilder"
+      ],
+      "verdict": "unresolved"
+    }
+  ]
+}
