@@ -90,4 +90,42 @@ Known blind spots, stated in advance:
 
 ## Results
 
-Not yet run.
+One launch per app on framework 40, SELinux enforcing, 35 s wait, a screenshot each.
+
+**2 of 10 draw**: OsmAnd's welcome and map-download screen ([shot](shots/osmand.jpeg)) and
+FairEmail's welcome ([shot](shots/fairemail.jpeg)). That is against 8 row-based and 5 to 6
+calibrated. The scorer said "drawing" for six apps. Jellyfin's screenshot is black and
+Nextcloud's white, so neither is counted.
+
+| # | App | Outcome | What happened | Row in the map |
+|---|---|---|---|---|
+| C1 | Aurora Store | **wrong** | `AuroraApp.onCreate`: "installer cannot be null": `PackageManager.getPackageInstaller()` answers null | none |
+| C2 | Nextcloud | **wrong** | white screen: the launcher splash never moves on (cause not yet identified) | none |
+| C3 | DAVx5 | **wrong** | `IntroActivity`: `DeviceIdleManager` is null (no `deviceidle` service) behind `PowerManager.isIgnoringBatteryOptimizations` | none |
+| C4 | OsmAnd | **wrong** (it drew) | the first screen is a download wizard, not the map; the GL map view was not reached | — |
+| C5 | Fossify Music Player | **wrong** | `App.onCreate`: Media3 "Failed to resolve SessionToken": `queryIntentServices` does not find its `MediaSessionService` | `pm:call:queryIntentServices` stub, M: present, not called a blocker |
+| C6 | Feeder | **wrong** | `MainActivityViewModel`: `jdk.internal.misc.VM.getNanoTimeAdjustment` has no implementation (`Instant.now()`) | none: libcore natives are outside the new check |
+| C7 | Catima | **wrong** | `MainActivity.onResume` → `ListWidget.updateAll`: `AppWidgetManager` is null | none |
+| C8 | Jellyfin | **wrong** | black screen; a Koin singleton in its API module hits a null (likely `ANDROID_ID`, not confirmed) | none |
+| C9 | Obtainium | **right** | Flutter's `1.raster` thread calls address 0, the same crash as FluffyChat | `sym:runtime-resolved` |
+| C10 | FairEmail | right | welcome and licence screen | — |
+
+Two right. One more is wrong only because it was too pessimistic (OsmAnd). Seven are wrong in
+the optimistic direction. **The calibrated forecast was still optimistic.**
+
+### What this says about the harness
+
+- **Most blockers are one missing piece of Android behaviour** that an app touches during
+  startup: a null system service (`deviceidle`, `appwidget`), a PackageManager method, a libcore
+  native, a settings value. Each is small, but there are many of them, and a static map lists far
+  more than startup ever touches. Nothing in the map ranks them by how likely startup is to reach
+  them.
+- **The map had the row for one of seven** (C5). Four of the other six are null system services
+  or PackageManager answers of the same shape. The harness knows these services are null, but only
+  flags a null when a Kotlin non-null cast is visible. Here the dereference happens inside AOSP's
+  own manager (`PowerManager`, `AppWidgetManager.getInstance`), which is the same pattern as
+  `throws_in_framework`, one level further down.
+- **The framework-natives check does not cover libcore** (`jdk.internal.misc.VM`); its natives are
+  registered by the runtime itself.
+- **Flutter's raster-thread crash repeated** (FluffyChat, Obtainium). That makes it a platform
+  gap, not an app quirk.
