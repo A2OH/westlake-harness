@@ -279,6 +279,8 @@ def read_elf(
             ["readelf", "--wide", "-h", "-d", "-Ws", "-n", str(path)],
             capture_output=True,
             text=True,
+            # Symbol tables may carry bytes that are not UTF-8 (OsmAnd); one must not abort the scan.
+            errors="replace",
             timeout=45,
             check=False,
         )
