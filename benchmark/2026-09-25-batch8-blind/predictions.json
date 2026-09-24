@@ -1,0 +1,47 @@
+{
+ "rethink": {
+  "expected": "draws",
+  "because": []
+ },
+ "jami": {
+  "expected": "blocked",
+  "because": [
+   "lookup:sym:runtime-resolved:libaaudio.so",
+   "lookup:sym:runtime-resolved:libmediandk.so",
+   "native:ndk:libc-abi",
+   "native:ndk:weld:audio"
+  ]
+ },
+ "ffupdater": {
+  "expected": "draws",
+  "because": []
+ },
+ "suntimes": {
+  "expected": "draws",
+  "because": []
+ },
+ "linuxcmd": {
+  "expected": "draws",
+  "because": []
+ },
+ "scrambledexif": {
+  "expected": "draws",
+  "because": []
+ },
+ "pomodoro": {
+  "expected": "draws",
+  "because": []
+ },
+ "wifianalyzer": {
+  "expected": "draws",
+  "because": []
+ },
+ "gpscockpit": {
+  "expected": "draws",
+  "because": []
+ },
+ "redmoon": {
+  "expected": "draws",
+  "because": []
+ }
+}

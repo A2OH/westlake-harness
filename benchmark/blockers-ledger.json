@@ -287,6 +287,48 @@
    "row": "jni:android.media.audiofx.AudioEffect",
    "symptom": "libaudioeffect_jni.so: Permission denied (no such library in the runtime)",
    "fixed_in": "e2524b1"
+  },
+  {
+   "app": "seal",
+   "corpus": "batch-7",
+   "row": null,
+   "symptom": "activity theme missing from direct launch's ActivityInfo; then AppCompat rejects the resolved theme (attributes do not resolve through parent styles, as VLC)",
+   "fixed_in": null
+  },
+  {
+   "app": "retromusic",
+   "corpus": "batch-7",
+   "row": null,
+   "symptom": "WallpaperManager globals: null service",
+   "fixed_in": "framework 48"
+  },
+  {
+   "app": "radiodroid",
+   "corpus": "batch-7",
+   "row": null,
+   "symptom": "DisplayManager.getWifiDisplayStatus null, then IMediaRouterService null",
+   "fixed_in": "framework 49"
+  },
+  {
+   "app": "openhab",
+   "corpus": "batch-7",
+   "row": "svc:wifi",
+   "symptom": "null cannot be cast to non-null type WifiManager",
+   "fixed_in": "framework 48"
+  },
+  {
+   "app": "andstatus",
+   "corpus": "batch-7",
+   "row": null,
+   "symptom": "startActivity from a worker thread built the activity off the main looper",
+   "fixed_in": "framework 48"
+  },
+  {
+   "app": "fennec",
+   "corpus": "corpus-2",
+   "row": null,
+   "symptom": "crash reporter's startActivity from the Gecko thread built the activity off the main looper",
+   "fixed_in": "framework 48"
   }
  ]
 }
