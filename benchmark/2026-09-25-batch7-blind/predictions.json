@@ -1,0 +1,48 @@
+{
+ "seal": {
+  "expected": "blocked",
+  "because": [
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "native:ndk:libc-abi"
+  ]
+ },
+ "homeassistant": {
+  "expected": "blocked",
+  "because": [
+   "native:ndk:libc-abi",
+   "native:ndk:package"
+  ]
+ },
+ "trailsense": {
+  "expected": "draws",
+  "because": []
+ },
+ "chrono": {
+  "expected": "draws",
+  "because": []
+ },
+ "noice": {
+  "expected": "draws",
+  "because": []
+ },
+ "retromusic": {
+  "expected": "draws",
+  "because": []
+ },
+ "radiodroid": {
+  "expected": "draws",
+  "because": []
+ },
+ "kore": {
+  "expected": "draws",
+  "because": []
+ },
+ "openhab": {
+  "expected": "draws",
+  "because": []
+ },
+ "andstatus": {
+  "expected": "draws",
+  "because": []
+ }
+}
