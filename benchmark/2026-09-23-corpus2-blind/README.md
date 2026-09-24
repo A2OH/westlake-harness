@@ -95,4 +95,49 @@ Known blind spots, stated in advance:
 
 ## Results
 
-Not yet run.
+One launch per app, same build, SELinux enforcing, 30 s wait, a screenshot each. Organic Maps
+was launched twice. The first launch used my pin, which named the launcher
+`DownloadResourcesActivity`: that is an activity-alias of `SplashActivity`, and no such class
+exists. The harness reports alias names in `main_activities` as if they were classes, and I checked
+aliases for only three apps. The second launch, at `SplashActivity`, is the one scored.
+
+**2 of 10 draw**, against 7 predicted: KeePassDX ([shot](shots/keepassdx.jpeg)) and Organic Maps'
+download screen ([shot](shots/organicmaps.jpeg)).
+
+### The predictions, scored
+
+| # | App | Outcome | What happened | Row in the map |
+|---|---|---|---|---|
+| A1 | VLC | **wrong** | `OnboardingActivity` fails to inflate: `TypedArray.getDrawable` cannot resolve a theme attribute (`0x7f040072`) of `Theme.VLC.Transparent` | none |
+| A2 | Organic Maps | right (first half) | "Download the world overview map" screen draws; the map screen, where the SurfaceView gap is predicted, was not reached | — |
+| A3 | Thunderbird | **wrong** | application bind fails: an NPE in `AndroidAlarmManager.<init>` behind the Koin graph (the null is not yet identified) | none |
+| A4 | KeePassDX | right | database selection screen | — |
+| A5 | Fossify Gallery | **wrong** | `MainActivity.onCreate` → `JobScheduler.getAllPendingJobs()` → NPE on a null `ParceledListSlice` inside `JobSchedulerImpl` | `svc:jobscheduler` hollow, M: present, judged survivable |
+| A6 | Tusky | **wrong** | `TuskyApplication.onCreate` → `NotificationManager.getNotificationChannels()` → NPE on a null `ParceledListSlice` inside the manager | `svc:notification` hollow, M: present, judged survivable |
+| A7 | Element | **wrong** | bind fails in an androidx.startup initializer: `EGL14._nativeClassInit` has no implementation. The GL bindings are registered after bind, but providers run during bind | none: the map says the bindings are supplied, not when |
+| A8 | FluffyChat | right effect, cause probably wrong | Flutter's `1.raster` thread calls a null function (`pc=0`) right after taking the window: consistent with a runtime-resolved NDK name (`AChoreographer_*`, `ASurfaceControl_*`, `AHardwareBuffer_*`), not yet confirmed | `sym:runtime-resolved:libandroid.so` / `libnativewindow.so`, M: present, not called a blocker |
+| A9 | Breezy Weather | **wrong** | `MainActivity.onCreate` → an R8 null check fires right after `locale.getApplicationLocales` (the null is not yet identified) | none |
+| A10 | Fennec | right, with the cause | `GeckoLoader`: `Error loading shared library libmediandk.so (needed by libxul.so)` | `ndk:weld:media` |
+
+Three right (A2 first half, A4, A10), one right in effect only (A8), six wrong. As in the Burger
+King run, **every wrong prediction was a claim that something would be fine.**
+
+### What the harness got wrong
+
+1. **"Hollow" was read as survivable.** Two of the six misses (A5, A6) had a row. In both, the
+   hollow binder returns null where AOSP's own manager dereferences the result
+   (`ParceledListSlice.getList()`), so the throw happens inside the framework and no app code can
+   catch it. Whether a hollow binder is survivable depends on the manager method, not on the service.
+2. **"Supplied" does not say when.** A7: the Java OpenGL natives exist, but they are registered
+   after application bind, and Element's initializer calls them during bind. The map has no notion
+   of when a provider becomes available.
+3. **Runtime-resolved NDK names are treated as unlikely.** A8 had the row; the prediction relied
+   on the round-8 SurfaceView gap instead.
+4. **Activity-aliases.** `main_activities` should resolve aliases to their target activity; it
+   cost one of the ten launches.
+5. **Unrowed causes** (A1 theme attribute, A3, A9): not yet understood well enough to say which
+   check would have caught them.
+
+Also found: Fennec's crash reporter calls `startActivity` from the Gecko thread, and direct launch
+instantiated `StartupCrashActivity` on that thread (`addObserver must be called on the main
+thread`). A Westlake defect, but secondary: it only runs after Gecko has already failed.
