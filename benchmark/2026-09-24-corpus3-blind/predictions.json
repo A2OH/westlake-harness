@@ -1,0 +1,43 @@
+{
+  "corpus": "ten more popular F-Droid apps, chosen to repeat corpus 2's failure mechanisms (a second Flutter app, a native GL map, a WebView-first client) and to add sync/account apps",
+  "provider": "Westlake corpus2-fixes at 8fa7346 (framework-signin-device40, native-runtime-opengl3, bionic-shim-nw8), OpenHarmony 6.1.0.31 arm64",
+  "written_before_any_launch": true,
+  "target": "each app draws its first screen on the OH board, confirmed by screenshot 35 s after launch",
+  "launch_config_from_the_map": "launch activities are the scan's alias-resolved main_activities; OsmAnd's 5 load:shadowed-by-board libraries go to the Android namespace",
+  "overall": "Row-based: 8 of 10 draw. Calibrated: 5 to 6, because in corpus 2 three of ten apps died on a cause no row modelled, and every miss was optimistic.",
+  "predictions": [
+    {"id": "C1", "app": "com.aurora.store", "expected": "onboarding draws", "blocker": null, "confidence": "medium",
+     "basis": "7/7 native imports; jobscheduler hollow but answers empty lists; wv:renderer-process and pm:multiprocess are not on the first screen"},
+    {"id": "C2", "app": "com.nextcloud.client", "expected": "first-run screen draws", "blocker": null, "confidence": "medium",
+     "basis": "760/760 native imports; FirstRunActivity is native; the WebView login comes after a tap. svc:input unresolved with one non-null cast, judged off the startup path"},
+    {"id": "C3", "app": "at.bitfire.davdroid", "expected": "accounts screen draws, with no accounts", "blocker": null, "confidence": "medium-high",
+     "basis": "no L row; the account service answers in process"},
+    {"id": "C4", "app": "net.osmand.plus", "expected": "no usable map screen: its OpenGL map view shares the activity's OH window",
+     "blocker": "SurfaceView shares the activity window (round 8)", "confidence": "medium-low",
+     "basis": "not a map row. 1508/1508 native imports resolve with the shadowed-library config; svc:bluetooth has two non-null casts, judged off the startup path"},
+    {"id": "C5", "app": "org.fossify.musicplayer", "expected": "main screen draws, in its no-permission state", "blocker": null, "confidence": "medium-high",
+     "basis": "no L row; same family as Fossify Gallery, which draws on this build"},
+    {"id": "C6", "app": "com.nononsenseapps.feeder", "expected": "feed list draws, empty", "blocker": null, "confidence": "medium-high",
+     "basis": "63/63 native imports; no L row on the startup path"},
+    {"id": "C7", "app": "me.hackerchick.catima", "expected": "card list draws, empty", "blocker": null, "confidence": "high",
+     "basis": "7/7 native imports; no L row on the startup path"},
+    {"id": "C8", "app": "org.jellyfin.mobile", "expected": "native connect screen draws", "blocker": null, "confidence": "medium",
+     "basis": "the connect screen is Compose (ui/screens/connect); WebViewFragment and so wv:renderer-process only after connecting"},
+    {"id": "C9", "app": "dev.imranr.obtainium.fdroid", "expected": "no Flutter frame: the raster thread calls a null function, as FluffyChat's did",
+     "blocker": "an NDK entry point Flutter resolves by name and does not get", "confidence": "medium",
+     "basis": "sym:runtime-resolved:libandroid.so and libnativewindow.so, the rows present for FluffyChat"},
+    {"id": "C10", "app": "eu.faircode.email", "expected": "setup screen draws", "blocker": null, "confidence": "medium",
+     "basis": "152/152 native imports; no L row on the startup path; its sync service start is dropped silently, which does not stop the first screen"}
+  ],
+  "harness_changes_since_corpus_2": [
+    "throws_in_framework: hollow services whose null AOSP's manager unwraps",
+    "a provision that answers empty lists does not count as throwing; publishLocalService is read",
+    "main_activities resolves activity-aliases",
+    "tool output that is not UTF-8 no longer aborts a scan (OsmAnd)"
+  ],
+  "known_blind_spots": [
+    "the shared SurfaceView window still has no row (C4 is predicted from round 8)",
+    "a service started with startService is dropped without a row (Thunderbird's upgrade screen)",
+    "which NDK names Flutter resolves at run time, and which one was null for FluffyChat, is unconfirmed"
+  ]
+}
