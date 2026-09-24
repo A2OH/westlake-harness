@@ -27,7 +27,7 @@ and Translate You.
 | Fossify Voice Recorder | draws | **blocked** | `IUriGrantsManager` null behind `ContentResolver.getPersistedUriPermissions` (Voice logged the same in batch 6) |
 | AdAway | blocked | **blocked** | "already has an action bar supplied by the window decor", as Briar: an action-bar application theme wins over a NoActionBar activity theme |
 
-- **Rule: 7 of 10 right.** Calibrated forecast (5 to 6): one pessimistic.
+- **Rule: 8 of 10 right** (the seven that drew, and AdAway). Calibrated forecast (5 to 6): too pessimistic.
 - All three blockers are fixed in framework 57, which also changes every app's launch intent and
   the theme of every activity that declares one. The results after that build, with a broad
   regression, are in the loop summary.
