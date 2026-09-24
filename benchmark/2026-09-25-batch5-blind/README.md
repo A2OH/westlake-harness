@@ -1,0 +1,22 @@
+# Batch 5: mechanical predictions
+
+Fossify Notes, Clock, Messages and File Manager, Amaze File Manager, Droid-ify, the F-Droid client,
+Antimine, Unciv and Gadgetbridge ([downloads.lock.json](downloads.lock.json)).
+
+Provider: Westlake `corpus2-fixes` at `04e9bd5`, framework 45 (native runtime opengl5, bionic shim
+nw8). Maps use the build-45 runtime index and the blockers ledger.
+
+## Predictions
+
+[predictions.json](predictions.json), from `scripts/predict_first_screen.py`, committed before any
+launch:
+
+- **Rule: 10 of 10 draw.** No map has an unresolved native import, a framework-side throw, or a
+  missing NDK run-time lookup.
+- **Calibrated: about 7.** Batch 4's first-launch rate on the build before this one. The rule has
+  no signal for a libGDX/GLSurfaceView game, and Unciv is one: Shattered Pixel Dungeon, the same
+  engine, did not draw.
+
+## Results
+
+Not yet run.

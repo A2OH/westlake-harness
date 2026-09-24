@@ -244,7 +244,7 @@
    "corpus": "batch-4",
    "row": null,
    "symptom": "StorageManager.getUuidForPath: no storage device for the app's /data/data path",
-   "fixed_in": "westlake (framework 44)"
+   "fixed_in": "04e9bd5"
   },
   {
    "app": "libretube",
@@ -265,7 +265,7 @@
    "corpus": "batch-4",
    "row": null,
    "symptom": "VM.getNanoTimeAdjustment bound with the JNI instead of the critical-native signature",
-   "fixed_in": "westlake (framework 44)"
+   "fixed_in": "04e9bd5"
   }
  ]
 }
