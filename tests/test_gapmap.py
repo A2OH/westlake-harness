@@ -251,6 +251,26 @@ class FrameworkSideThrows(unittest.TestCase):
         self.assertEqual(rows[0]["throws_in_framework"], [], "an empty slice is unwrapped without throwing")
 
 
+class FrameworkNatives(unittest.TestCase):
+    RUNTIME = {"bridge_libraries": [{"jni_registration_entries": [{"name": "_nativeClassInit", "signature": "()V"}]}],
+               "classes": {
+                   "Landroid/opengl/EGL14;": {"native_methods": ["_nativeClassInit()V", "eglGetDisplay(I)Landroid/opengl/EGLDisplay;"]},
+                   "Landroid/opengl/GLES20;": {"native_methods": ["glClear(I)V"]},
+                   "Landroid/os/ParcelFileDescriptor;": {"native_methods": ["native_close$ravenwood(Ljava/io/FileDescriptor;)V"]}}}
+    SCAN = {"inventory": {"platform_method_names": {"Landroid/opengl/EGL14;": ["eglGetDisplay"],
+                                                    "Landroid/opengl/GLES20;": ["glClear"],
+                                                    "Landroid/os/ParcelFileDescriptor;": ["close"]}}}
+
+    def test_a_class_no_runtime_library_names_is_unbound(self) -> None:
+        rows = {r["id"]: r for r in gapmap.framework_native_rows(self.SCAN, self.RUNTIME, {"android/opengl/GLES20"})}
+        self.assertEqual(set(rows), {"jni:android.opengl.EGL14"},
+                         "GLES20 is named by a runtime library; ravenwood natives never run on a device")
+        egl = rows["jni:android.opengl.EGL14"]
+        self.assertEqual(egl["open_symbols"], ["_nativeClassInit()V"],
+                         "another class's _nativeClassInit()V registration does not bind EGL14's")
+        self.assertIn("class initializer", egl["app_evidence"])
+
+
 class PackageManagerSemantics(unittest.TestCase):
     def test_stub_bridged_and_direct_boot_defaults(self) -> None:
         with tempfile.TemporaryDirectory(prefix="westlake-pm-") as temp:

@@ -33,6 +33,8 @@ CATEGORIES = [
     ("package-manager", "Package manager & manifest", "manifest features and PackageManager calls → Westlake PM semantics"),
     ("app-framework", "Activity, window & process contracts",
      "what system_server would answer, answered in-process by Westlake in direct launch → white-box probes"),
+    ("framework-natives", "Framework natives",
+     "platform classes the app uses → their native methods → libraries the runtime registers them from"),
     ("native-upcalls", "Java APIs called from native code", "JNIEnv FindClass/Get*ID names in packaged .so → Westlake boot jars"),
     ("native-symbols", "Native platform symbols", "packaged .so imports → OpenHarmony plus the NDK Westlake packages (package / libc-abi / weld / absence)"),
     ("native-loading", "Native loading & packaging", "how the libraries are packaged → what the OH linker can map"),
@@ -1013,6 +1015,104 @@ def launcher_extraction(manifest_root: Path | None) -> dict[str, Any]:
     return {"present": bool(match), "source": f"manifest/tools/prepare_app.py:{text.count(chr(10), 0, match.start()) + 1}" if match else None}
 
 
+_CLASS_INIT_NATIVE = re.compile(r"(?i)^_?native_?(class_?)?init$")
+
+
+def _jni_mangle(text: str) -> str:
+    out = []
+    for ch in text:
+        if ch == "/": out.append("_")
+        elif ch == "_": out.append("_1")
+        elif ch == ";": out.append("_2")
+        elif ch == "[": out.append("_3")
+        elif ch.isalnum(): out.append(ch)
+        else: out.append("_0%04x" % ord(ch))
+    return "".join(out)
+
+
+def runtime_class_strings(directory: Path | None) -> set[str] | None:
+    """JNI class paths ("android/media/MediaCodec") named anywhere in the runtime's libraries.
+
+    Registration tables are not always parseable (their layout varies with the compiler), but a
+    library that registers a class names it for FindClass. A class named nowhere is registered
+    nowhere; a class named somewhere is given the benefit of the doubt.
+    """
+    if directory is None or not directory.is_dir():
+        return None
+    found: set[str] = set()
+    for lib in directory.glob("*.so"):
+        found.update(m.decode() for m in re.findall(rb"(?:android|com/android)/[A-Za-z0-9_/$]+", lib.read_bytes()))
+    return found
+
+
+def framework_native_rows(scan: dict[str, Any], runtime: dict[str, Any] | None,
+                          class_strings: set[str] | None = None) -> list[dict[str, Any]]:
+    """Platform classes the app uses whose native methods no deployed library registers.
+
+    ART binds a native method only when a loaded library registers it (RegisterNatives) or
+    exports its Java_ name. A boot class the runtime ships without its JNI half fails on first
+    touch: EGL14's static initializer (Element, during bind), android.hardware.Camera (OpenCamera).
+    A class is flagged when the app calls one of its unbound natives directly, when a class-init
+    native is unbound (it runs on first use of the class), or when none of its natives is bound.
+    A row says the gap exists, not that startup reaches it: Element reached EGL14 during bind,
+    while many apps that reference android.hardware.Camera never open it before their first screen.
+    """
+    if not runtime:
+        return []
+    registered: set[tuple[str, str]] = set()
+    exported: set[str] = set()
+    for lib in runtime.get("bridge_libraries", []) + runtime.get("system_libraries", []):
+        for entry in lib.get("jni_registration_entries") or []:
+            registered.add((entry.get("name"), entry.get("signature")))
+        for name in lib.get("jni_exports") or []:
+            exported.add(name if isinstance(name, str) else name.get("symbol", ""))
+    classes = runtime.get("classes", {})
+    rows = []
+    for owner, names in sorted(scan["inventory"].get("platform_method_names", {}).items()):
+        if not owner.startswith(("Landroid/", "Lcom/android/")):
+            continue
+        # $ravenwood natives are host-side test doubles, never called on a device.
+        natives = [m for m in (classes.get(owner) or {}).get("native_methods") or [] if "$ravenwood" not in m]
+        if not natives or (class_strings is not None and owner[1:-1] in class_strings):
+            continue
+        prefix = "Java_" + _jni_mangle(owner[1:-1]) + "_"
+        unbound = []
+        # Named in no runtime library: nothing registers it, whatever other class shares a native's
+        # name and signature (EGL10's _nativeClassInit()V made EGL14's look bound).
+        for method in natives if class_strings is None else []:
+            name, sig = method[:method.index("(")], method[method.index("("):]
+            if (name, sig) in registered:
+                continue
+            if any(e == prefix + _jni_mangle(name) or e.startswith(prefix + _jni_mangle(name) + "__") for e in exported):
+                continue
+            unbound.append(method)
+        if class_strings is not None:
+            unbound = list(natives)
+        if not unbound:
+            continue
+        called = set(names)
+        direct = [m for m in unbound if m[:m.index("(")] in called]
+        init = [m for m in unbound if _CLASS_INIT_NATIVE.match(m[:m.index("(")])]
+        entire = len(unbound) == len(natives)
+        if not (direct or init or entire):
+            continue
+        cls = owner[1:-1].replace("/", ".")
+        why = ("its class initializer is native and unbound" if init else
+               "the app calls an unbound native directly" if direct else
+               "none of its natives is registered")
+        rows.append(_row(
+            "framework-natives", f"jni:{cls}", f"{cls}: {len(unbound)} of {len(natives)} natives unregistered",
+            oh_touchpoint="the JNI half of the framework class (libandroid_runtime in AOSP)",
+            verdict="missing", shim_class="C3",
+            effort="S" if len(unbound) <= 5 else "M" if len(unbound) <= 40 else "L",
+            confidence=STATIC,
+            app_calls=sorted(called)[:12], open_symbols=(init or direct or unbound)[:12],
+            app_evidence=f"{why}; the app calls {', '.join(sorted(called)[:4])}",
+            shim="port the AOSP JNI source for the class and register it at startup, before application bind",
+        ))
+    return rows
+
+
 def build_map(
     scan: dict[str, Any],
     facts: dict[str, Any],
@@ -1028,6 +1128,8 @@ def build_map(
     board_paths: list[str] | None = None,
     aosp_root: Path | None = None,
     runtime_libraries: list[str] | None = None,
+    runtime_index: dict[str, Any] | None = None,
+    runtime_class_paths: set[str] | None = None,
 ) -> dict[str, Any]:
     westlake_services = services.westlake_service_model(westlake_root)
     pm = contracts.pm_adapter_model(westlake_root)
@@ -1036,6 +1138,7 @@ def build_map(
     rows = (java + svc + package_manager_rows(scan, facts, pm)
             + app_framework_rows(scan, contracts.direct_launch_am_model(westlake_root),
                                  contracts.window_adapter_model(westlake_root))
+            + framework_native_rows(scan, runtime_index, runtime_class_paths)
             + native_upcall_rows(scan)
             + (ndk_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root), ndk_cov) if ndk_cov
                else native_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root)))
