@@ -195,7 +195,7 @@
    "corpus": "corpus-3",
    "row": "jni:android.media.audiofx.AudioEffect",
    "symptom": "libaudioeffect_jni.so: Permission denied",
-   "fixed_in": null
+   "fixed_in": "e2524b1"
   },
   {
    "app": "feeder",
@@ -280,6 +280,13 @@
    "row": "window:engine-surface",
    "symptom": "libGDX first screen never drew (IME host on screen)",
    "fixed_in": null
+  },
+  {
+   "app": "justplayer",
+   "corpus": "batch-6",
+   "row": "jni:android.media.audiofx.AudioEffect",
+   "symptom": "libaudioeffect_jni.so: Permission denied (no such library in the runtime)",
+   "fixed_in": "e2524b1"
   }
  ]
 }
