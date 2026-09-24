@@ -26,4 +26,34 @@ accuracy 0.81, precision 0.83, recall 0.50; see the script's docstring).
 
 ## Results
 
-Not yet run.
+One launch per app on framework 43, SELinux enforcing, 35 s wait, a screenshot each.
+
+**7 of 10 drew on first launch**: Material Files, Mastodon, Etar, Fossify Calendar, App Manager
+(its keystore dialog over the splash), Conversations and KDE Connect. After two fixes (framework
+45), Tasks.org drew too: **8 of 10**.
+
+| # | App | Rule said | Outcome | Blocker |
+|---|---|---|---|---|
+| 1 | Material Files | draws | draws | — |
+| 2 | Mastodon | draws | draws | — |
+| 3 | LibreTube | draws | **blocked** | no storage device for its own data path (fixed), then a Coil disk cache of size 0 (open) |
+| 4 | Etar | draws | draws | — |
+| 5 | Fossify Calendar | draws | draws | — |
+| 6 | App Manager | **blocked** (libc import) | draws | the flagged import is not reached at startup |
+| 7 | Conversations | draws | draws | — |
+| 8 | KDE Connect | draws | draws | — |
+| 9 | Shattered Pixel Dungeon | draws | **blocked** | libGDX's GL surface: likely the shared SurfaceView window |
+| 10 | Tasks.org | draws | **blocked**, then draws | my `getNanoTimeAdjustment` binding used the wrong calling convention |
+
+The rule was right for 6 of 10. The calibrated forecast (2 to 4) was far too pessimistic: its base
+rate came from corpora 2 and 3, before the fixes those corpora produced. **The fixes carried over
+to new apps.** Fresh apps went from 2 of 10 drawing on first launch to 7 of 10, on a build that
+had been changed only for other apps.
+
+What the harness learns from this batch:
+
+- **The base rate moves with the provider.** A calibrated forecast needs the recent first-launch
+  rate, not the historical one.
+- **A misapplied fix is a gap of its own.** Tasks.org died on my own binding of a
+  `@CriticalNative` method. The framework-natives check should compare a binding's calling
+  convention with the method's annotation, not only whether a binding exists.
