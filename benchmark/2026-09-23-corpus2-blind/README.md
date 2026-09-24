@@ -141,3 +141,38 @@ King run, **every wrong prediction was a claim that something would be fine.**
 Also found: Fennec's crash reporter calls `startActivity` from the Gecko thread, and direct launch
 instantiated `StartupCrashActivity` on that thread (`addObserver must be called on the main
 thread`). A Westlake defect, but secondary: it only runs after Gecko has already failed.
+
+## After the fixes
+
+Fixed in Westlake (branch `corpus2-fixes`), built as framework 40:
+
+| Fix | Apps it unblocked |
+|---|---|
+| empty `ParceledListSlice` from the no-op JobScheduler | Fossify Gallery |
+| `notification` answered in process (no channels, posts dropped) instead of the plain Binder | Tusky |
+| `android.opengl.EGL14`/`EGL15`/`EGLExt` ported onto OH's EGL | Element (the first blocker) |
+| PendingIntents answered in process (`LocalIntentSenders`) | Element (the second blocker), Thunderbird |
+
+**6 of 10 now draw a first screen**: KeePassDX, Organic Maps, Fossify Gallery
+([shot](shots/gallery.jpeg), "No media files have been found"), Tusky ([shot](shots/tusky.jpeg),
+login), Element ([shot](shots/element.jpeg), onboarding) and Thunderbird
+([shot](shots/thunderbird.jpeg)). Thunderbird's first screen is "Upgrading databases…". It
+probably stays there, because `UpgradeDatabaseActivity` waits on a service started with
+`startService`, which direct launch's activity manager drops. That is the next gap.
+
+Thunderbird's null in `AndroidAlarmManager.<init>` was a null PendingIntent: the fix for Element
+unblocked it too.
+
+Regression on framework 40: aegis, anki, antennapod, markor, newpipe, ooniprobe, termux and
+wikipedia draw as before (screenshots checked). Toutiao, KeePassDX and Organic Maps were not
+re-run, because the host lost its connection to the board mid-run.
+
+The harness gained the check the two service misses called for (`throws_in_framework`). Run
+against the provider the predictions were made on, it flags Tusky's `getNotificationChannels`
+and Gallery's `getAllPendingJobs`, plus Tusky's `getAllPendingJobs`, which would have been its
+next crash. This is a backtest written after seeing the failures; the next corpus is its blind
+test.
+
+Still open: VLC's theme attribute, Breezy Weather's null after the locale call, FluffyChat's
+null function on the raster thread, Fennec's `libmediandk.so`, Thunderbird's `startService`,
+and `android.opengl.GLUtils`/`Matrix`/`ETC1`, which are not ported yet.
