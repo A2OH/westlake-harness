@@ -1113,6 +1113,19 @@ def framework_native_rows(scan: dict[str, Any], runtime: dict[str, Any] | None,
     return rows
 
 
+def apply_ledger(rows: list[dict[str, Any]], ledger: dict[str, Any]) -> None:
+    """Mark rows that have already blocked an app at startup on the board: the empirical ranking a
+    static map cannot make by itself."""
+    seen: dict[str, list[str]] = defaultdict(list)
+    for entry in ledger.get("blockers", []):
+        if entry.get("row"):
+            seen[entry["row"]].append(f"{entry['app']} ({entry['corpus']})"
+                                      + (f", fixed in {entry['fixed_in']}" if entry.get("fixed_in") else ", open"))
+    for row in rows:
+        if row["id"] in seen:
+            row["seen_blocking"] = seen[row["id"]]
+
+
 def build_map(
     scan: dict[str, Any],
     facts: dict[str, Any],
@@ -1130,6 +1143,7 @@ def build_map(
     runtime_libraries: list[str] | None = None,
     runtime_index: dict[str, Any] | None = None,
     runtime_class_paths: set[str] | None = None,
+    ledger: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     westlake_services = services.westlake_service_model(westlake_root)
     pm = contracts.pm_adapter_model(westlake_root)
@@ -1153,6 +1167,8 @@ def build_map(
                                runtime_libraries)
             + runtime_resolved_rows(scan, ndk_cov)
             + sandbox_rows(scan, policy) + external_rows(facts, scan, refused_libraries(westlake_root)))
+    if ledger:
+        apply_ledger(rows, ledger)
     gap_map = {
         "app": {"package": facts["package"], "version": facts["version_name"], "target_sdk": facts["target_sdk"],
                 "apk_sha256": scan["apk"]["sha256"]},
@@ -1311,6 +1327,13 @@ def markdown(gap_map: dict[str, Any], backtest_results: list[dict[str, Any]] | N
         prof = ", ".join(f"{profile[e]}×{e}" for e in _EFFORT_ORDER if profile.get(e))
         out.append(f"| {title} | {how} | {len(cat)} | {len(gaps)} | {prof or '—'} |")
     out += ["", "Effort: " + "; ".join(f"**{k}** {v}" for k, v in EFFORT.items() if k != "none"), ""]
+    seen_rows = [r for r in gap_map["rows"] if r.get("seen_blocking")]
+    if seen_rows:
+        out += ["## Rows that have blocked an app at startup before", "",
+                "From the blockers ledger: gaps this app has in common with an app that died on them.", "",
+                "| Row | Verdict | Blocked |", "|---|---|---|"]
+        out += [f"| `{r['id']}` | {r['verdict']} | {_escape('; '.join(r['seen_blocking']))} |" for r in seen_rows]
+        out.append("")
     observed = gap_map.get("observed")
     if observed:
         open_rows = [r for r in rows if r["verdict"] != "supplied" and r["effort"] != "none"]

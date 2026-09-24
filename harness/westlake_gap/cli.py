@@ -232,6 +232,8 @@ def parser() -> argparse.ArgumentParser:
                           "for the exact Westlake commit they were measured on")
     gap.add_argument("--board-libs", type=Path,
                      help="library paths present on the board, one per line: finds packaged libraries a board library shadows")
+    gap.add_argument("--ledger", type=Path,
+                     help="blockers ledger (benchmark/blockers-ledger.json): mark rows that have blocked an app at startup")
     gap.add_argument("--runtime", type=Path,
                      help="runtime index (snapshot-runtime) of the provider: finds platform classes whose natives "
                           "no deployed library registers")
@@ -426,6 +428,7 @@ def main(argv: list[str] | None = None) -> int:
                             runtime_index=read_json(args.runtime) if args.runtime else None,
                             runtime_class_paths=runtime_class_strings(args.runtime_libs)
                             if args.runtime_libs and args.runtime_libs.is_dir() else None,
+                            ledger=read_json(args.ledger) if args.ledger else None,
                             aosp_root=args.aosp)
         if args.westlake_label:
             gap_map["provider"]["westlake"] = {"branch": args.westlake_label, "commit": args.westlake_label, "uncommitted": []}

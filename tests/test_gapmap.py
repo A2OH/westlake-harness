@@ -271,6 +271,16 @@ class FrameworkNatives(unittest.TestCase):
         self.assertIn("class initializer", egl["app_evidence"])
 
 
+class BlockersLedger(unittest.TestCase):
+    def test_rows_that_blocked_an_app_are_marked(self) -> None:
+        rows = [{"id": "svc:notification", "verdict": "hollow"}, {"id": "svc:alarm", "verdict": "supplied"}]
+        ledger = {"blockers": [{"app": "tusky", "corpus": "corpus-2", "row": "svc:notification", "fixed_in": "886b89b"},
+                               {"app": "davx5", "corpus": "corpus-3", "row": None, "fixed_in": None}]}
+        gapmap.apply_ledger(rows, ledger)
+        self.assertEqual(rows[0]["seen_blocking"], ["tusky (corpus-2), fixed in 886b89b"])
+        self.assertNotIn("seen_blocking", rows[1])
+
+
 class PackageManagerSemantics(unittest.TestCase):
     def test_stub_bridged_and_direct_boot_defaults(self) -> None:
         with tempfile.TemporaryDirectory(prefix="westlake-pm-") as temp:
