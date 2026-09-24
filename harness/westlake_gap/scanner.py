@@ -858,6 +858,21 @@ class RuntimeResolver:
         return None
 
 
+def _launch_targets(apk: Any) -> list[str]:
+    ns = "{http://schemas.android.com/apk/res/android}"
+    targets: dict[str, str] = {}
+    try:
+        manifest = apk.get_android_manifest_xml()
+        package = apk.get_package() or ""
+        for alias in manifest.iter("activity-alias"):
+            name, target = alias.get(ns + "name"), alias.get(ns + "targetActivity")
+            if name and target:
+                full = lambda n: package + n if n.startswith(".") else n
+                targets[full(name)] = full(target)
+    except Exception:
+        pass
+    return sorted({targets.get(name, name) for name in (apk.get_main_activities() or [])})
+
 def apk_metadata(path: Path) -> dict[str, Any]:
     quiet_androguard()
     base = {
@@ -912,7 +927,9 @@ def apk_metadata(path: Path) -> dict[str, Any]:
             "version_name": apk.get_androidversion_name(),
             "min_sdk": apk.get_min_sdk_version(),
             "target_sdk": apk.get_target_sdk_version(),
-            "main_activities": sorted(apk.get_main_activities() or []),
+            # A launcher entry may be an <activity-alias>: no class has its name, and what
+            # starts is its targetActivity (Organic Maps, Element, Gallery, Fennec).
+            "main_activities": _launch_targets(apk),
             "activities": len(apk.get_activities() or []),
             "services": len(apk.get_services() or []),
             "receivers": len(apk.get_receivers() or []),
