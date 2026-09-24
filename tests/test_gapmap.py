@@ -240,6 +240,16 @@ class FrameworkSideThrows(unittest.TestCase):
         self.assertEqual(row["throws_in_framework"], ["getNotificationChannels"])
         self.assertIn("throws inside NotificationManager", row["app_evidence"])
 
+    def test_empty_list_answers_do_not_throw(self) -> None:
+        aosp = {"jobscheduler": {"manager": "Landroid/app/job/JobScheduler;", "binders": [],
+                                 "source": "s:1", "unwrapping_methods": ["getAllPendingJobs"]}}
+        westlake = {"jobscheduler": [{"kind": "hollow-proxy", "detail": "d", "source": "s", "empty_lists": True}]}
+        scan = {"inventory": {"service_requests": [{"service": "jobscheduler", "owner": "Lapp/A;", "method": "m"}],
+                              "platform_method_names": {"Landroid/app/job/JobScheduler;": ["getAllPendingJobs"]}}}
+        rows, _ = gapmap.service_rows(scan, aosp, westlake)
+        self.assertEqual(rows[0]["verdict"], "hollow", "jobs still never run")
+        self.assertEqual(rows[0]["throws_in_framework"], [], "an empty slice is unwrapped without throwing")
+
 
 class PackageManagerSemantics(unittest.TestCase):
     def test_stub_bridged_and_direct_boot_defaults(self) -> None:
