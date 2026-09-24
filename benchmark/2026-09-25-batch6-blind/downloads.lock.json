@@ -1,0 +1,82 @@
+{
+ "connectbot": {
+  "package": "org.connectbot",
+  "version_name": "1.10.9-oss",
+  "version_code": 11009000,
+  "bytes": 15348309,
+  "sha256": "191e6990a4db95b04b6d3d98906e06281872a5963133afb5b46e4d324736742f",
+  "url": "https://f-droid.org/repo/org.connectbot_11009000.apk"
+ },
+ "gh4a": {
+  "package": "com.gh4a",
+  "version_name": "4.6.15",
+  "version_code": 78,
+  "bytes": 8512216,
+  "sha256": "66711fd47c0c0e651bbe67c06f5c6f8864f1470cfa49fdc9a7f423e288e30e93",
+  "url": "https://f-droid.org/repo/com.gh4a_78.apk"
+ },
+ "fitotrack": {
+  "package": "de.tadris.fitness",
+  "version_name": "16.3",
+  "version_code": 1630,
+  "bytes": 6772550,
+  "sha256": "e1708c7c4256748a5825e3f898a6898dac8a0988f6499c78d63ea48bbf8f352b",
+  "url": "https://f-droid.org/repo/de.tadris.fitness_1630.apk"
+ },
+ "uhabits": {
+  "package": "org.isoron.uhabits",
+  "version_name": "2.3.1",
+  "version_code": 20301,
+  "bytes": 10753773,
+  "sha256": "3903d3be3db0f1622ad61cf5bb267515c95a4069e8dd46f73249721b1bb8173e",
+  "url": "https://f-droid.org/repo/org.isoron.uhabits_20301.apk"
+ },
+ "freeotp": {
+  "package": "org.liberty.android.freeotpplus",
+  "version_name": "3.4",
+  "version_code": 26,
+  "bytes": 14238112,
+  "sha256": "070f2dc01e319fe5a04afbf9067086f26dde36546d6df86f67872bc0486124f8",
+  "url": "https://f-droid.org/repo/org.liberty.android.freeotpplus_26.apk"
+ },
+ "justplayer": {
+  "package": "com.brouken.player",
+  "version_name": "0.217",
+  "version_code": 2174,
+  "bytes": 13050016,
+  "sha256": "89e459ee69f2350f5006fb514d7a7e7f2f9b4e590c3b03b1f4e66c0ffc16d1a2",
+  "url": "https://f-droid.org/repo/com.brouken.player_2174.apk"
+ },
+ "voice": {
+  "package": "de.ph1b.audiobook",
+  "version_name": "26.6.1",
+  "version_code": 5406001,
+  "bytes": 7010566,
+  "sha256": "21cff18073d15e350e5845f2043d1f07d944f0dee420d7cfa25fd9196f05e8b8",
+  "url": "https://f-droid.org/repo/de.ph1b.audiobook_5406001.apk"
+ },
+ "transistor": {
+  "package": "org.y20k.transistor",
+  "version_name": "4.3.9",
+  "version_code": 116,
+  "bytes": 3442721,
+  "sha256": "762f4fe86bca8a66e30a41d5ada92e5d76b2c6bddbbdc09ae505e595cf0a9da3",
+  "url": "https://f-droid.org/repo/org.y20k.transistor_116.apk"
+ },
+ "ncnotes": {
+  "package": "it.niedermann.owncloud.notes",
+  "version_name": "35.0.0",
+  "version_code": 350000090,
+  "bytes": 61493606,
+  "sha256": "8eddfbcb64c57616b09269f2369381ebf60324afb37af5429a62b23cd633573d",
+  "url": "https://f-droid.org/repo/it.niedermann.owncloud.notes_350000090.apk"
+ },
+ "libretorrent": {
+  "package": "org.proninyaroslav.libretorrent",
+  "version_name": "4.1.1",
+  "version_code": 9000352,
+  "bytes": 23239603,
+  "sha256": "072d2fde19bcc6e0d5b56bc07422f2c65b6712656f8be41050b2eccac56dd950",
+  "url": "https://f-droid.org/repo/org.proninyaroslav.libretorrent_9000352.apk"
+ }
+}
