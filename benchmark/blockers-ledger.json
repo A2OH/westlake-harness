@@ -292,7 +292,7 @@
    "app": "seal",
    "corpus": "batch-7",
    "row": null,
-   "symptom": "activity theme missing from direct launch's ActivityInfo; then AppCompat rejects the resolved theme (attributes do not resolve through parent styles, as VLC)",
+   "symptom": "launches with Theme.Seal.Splashscreen (a Theme.SplashScreen, not AppCompat by design); installSplashScreen() should switch to postSplashScreenTheme before super.onCreate and evidently does not",
    "fixed_in": null
   },
   {
@@ -334,7 +334,7 @@
    "app": "ffupdater",
    "corpus": "batch-8",
    "row": null,
-   "symptom": "AppCompat: 'You need to use a Theme.AppCompat theme' with its declared Material3 DayNight theme",
+   "symptom": "AppCompat rejects main_activity__theme although its default-config chain reaches Theme.AppCompat.Light: the version-qualified variant chosen at run time, or attribute lookup, loses windowActionBar",
    "fixed_in": null
   },
   {
