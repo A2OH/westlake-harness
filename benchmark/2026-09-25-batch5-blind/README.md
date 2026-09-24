@@ -33,7 +33,7 @@ F-Droid client, Antimine and Gadgetbridge.
 
 | App | Rule | Outcome | Why |
 |---|---|---|---|
-| Fossify Messages | draws | **blocked** |  null (no  service). Fixed in `2b21e12`: it now draws its main activity, then closes, because the board has no SMS role to hold. That is correct behaviour for a device without telephony |
+| Fossify Messages | draws | **blocked** | `RoleManager` null (no `role` service). Fixed in `2b21e12`: it now draws its main activity, then closes, because the board has no SMS role to hold. That is correct behaviour for a device without telephony |
 | Unciv | draws; **late row: blocked** | **blocked** | libGDX draws into its own SurfaceView (`window:engine-surface`); the IME host stays on screen |
 
 - **Rule: 8 of 10 right.** The calibrated forecast (about 7) was one pessimistic.
