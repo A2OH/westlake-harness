@@ -1,0 +1,188 @@
+[
+ {
+  "app": "aegis",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 644,
+  "fatal": 0,
+  "relayouts": 18,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 10,
+   "view": 2,
+   "drawing": 18
+  }
+ },
+ {
+  "app": "anki",
+  "rung": 3,
+  "rung_name": "activity",
+  "lines": 733,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "app-framework",
+  "blocker": "instantiate activity: RuntimeException: Can't create handler inside thread Thread[pool-3-thread-2,5,",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 20,
+   "view": 0,
+   "drawing": 0
+  }
+ },
+ {
+  "app": "antennapod",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 658,
+  "fatal": 0,
+  "relayouts": 18,
+  "held_back": 0,
+  "blocker_category": "native-upcalls",
+  "blocker": "android.app.ActivityThread.nPurgePendingResources",
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 10,
+   "view": 2,
+   "drawing": 18
+  }
+ },
+ {
+  "app": "markor",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 760,
+  "fatal": 0,
+  "relayouts": 18,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 10,
+   "view": 2,
+   "drawing": 18
+  }
+ },
+ {
+  "app": "mindustry",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 448,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "native-loading",
+  "blocker": "library 'arc'",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 5,
+   "view": 0,
+   "drawing": 0
+  }
+ },
+ {
+  "app": "newpipe",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 531,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "app-framework",
+  "blocker": "start activity: NullPointerException",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 5,
+   "view": 0,
+   "drawing": 0
+  }
+ },
+ {
+  "app": "ooniprobe",
+  "rung": 1,
+  "rung_name": "runtime-init",
+  "lines": 403,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "system-services",
+  "blocker": "LocaleManager.setOverrideLocaleConfig on null service",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 0,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  }
+ },
+ {
+  "app": "opencamera",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 418,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "native-upcalls",
+  "blocker": "android.hardware.Camera._getNumberOfCameras",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 5,
+   "view": 0,
+   "drawing": 0
+  }
+ },
+ {
+  "app": "ppsspp",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 374,
+  "fatal": 0,
+  "relayouts": 6,
+  "held_back": 3,
+  "blocker_category": "app-framework",
+  "blocker": "no surface until its activity's window has an OH session",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 5,
+   "view": 0,
+   "drawing": 0
+  }
+ },
+ {
+  "app": "termux",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 411,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "app-framework",
+  "blocker": "start activity: RuntimeException",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 5,
+   "view": 0,
+   "drawing": 0
+  }
+ }
+]

@@ -1,0 +1,399 @@
+{
+ "date": "2026-09-22",
+ "build": "framework-signin-device27",
+ "shim": "bionic-shim-nw1",
+ "method": "horizontal: one launch per app, no per-app iteration; score the first blocker only",
+ "apps_launched": 10,
+ "apps_rendering": 2,
+ "adapter_refusals_UnsupportedOperationException": 0,
+ "results": [
+  {
+   "app": "aegis",
+   "outcome": "launched",
+   "category": null,
+   "blocking_api": null,
+   "signal": "UI rendered; confirmed by screenshot",
+   "confidence": "observed-on-device",
+   "stderr_lines": 633
+  },
+  {
+   "app": "antennapod",
+   "outcome": "drawing",
+   "category": null,
+   "blocking_api": null,
+   "signal": "22 relayouts and traversals; no activity screenshot taken",
+   "confidence": "observed-on-device",
+   "stderr_lines": 681
+  },
+  {
+   "app": "markor",
+   "outcome": "bind-failed",
+   "category": "package-manager",
+   "blocking_api": "IPackageManager.resolveContentProvider(authority, flags, userId)",
+   "signal": "Couldn't find meta-data for provider with authority net.gsantner.markor.provider",
+   "confidence": "observed-on-device",
+   "stderr_lines": 390
+  },
+  {
+   "app": "anki",
+   "outcome": "bind-failed",
+   "category": "package-manager",
+   "blocking_api": "IPackageManager.resolveContentProvider(authority, flags, userId)",
+   "signal": "Couldn't find meta-data for provider with authority com.squareup.leakcanary.fileprovider.com.ichi2.anki",
+   "confidence": "observed-on-device",
+   "stderr_lines": 410
+  },
+  {
+   "app": "ooniprobe",
+   "outcome": "bind-failed",
+   "category": "system-services",
+   "blocking_api": "LocaleManager",
+   "signal": "NPE: setOverrideLocaleConfig on a null object reference",
+   "confidence": "observed-on-device",
+   "stderr_lines": 402
+  },
+  {
+   "app": "termux",
+   "outcome": "activity-failed",
+   "category": "system-services",
+   "blocking_api": "bindService",
+   "signal": "RuntimeException: bindService() failed",
+   "confidence": "observed-on-device",
+   "stderr_lines": 411
+  },
+  {
+   "app": "mindustry",
+   "outcome": "init-failed",
+   "category": "native-symbols",
+   "blocking_api": "libOpenSLES SL_IID_* data symbols",
+   "signal": "Error relocating libarc.so: SL_IID_ANDROIDSIMPLEBUFFERQUEUE: symbol not found",
+   "confidence": "observed-on-device",
+   "stderr_lines": 448
+  },
+  {
+   "app": "opencamera",
+   "outcome": "init-failed",
+   "category": "native-upcalls",
+   "blocking_api": "android.hardware.Camera._getNumberOfCameras",
+   "signal": "UnsatisfiedLinkError: No implementation found",
+   "confidence": "observed-on-device",
+   "stderr_lines": 418
+  },
+  {
+   "app": "newpipe",
+   "outcome": "crashed",
+   "category": "native-loading",
+   "blocking_api": "ASurfaceTransaction_* via libandroid.so",
+   "signal": "Unable to load function ASurfaceTransaction_*; Fatal signal 5 (SIGTRAP)",
+   "confidence": "observed-on-device",
+   "stderr_lines": 462
+  },
+  {
+   "app": "ppsspp",
+   "outcome": "no-surface",
+   "category": "app-framework",
+   "blocking_api": "OH window session for the activity",
+   "signal": "held back 1139x319: no surface until its activity's window has an OH session",
+   "confidence": "observed-on-device",
+   "stderr_lines": 374
+  }
+ ],
+ "repeated_blockers": [
+  {
+   "api": "IPackageManager.resolveContentProvider(authority, flags, userId)",
+   "category": "package-manager",
+   "apps_killed": [
+    "markor",
+    "anki"
+   ],
+   "apps_declaring_fileprovider_authority": [
+    "aegis",
+    "anki",
+    "antennapod",
+    "markor",
+    "ooniprobe",
+    "newpipe"
+   ],
+   "note": "only repeated blocker in the corpus; every other one was hit by exactly one app"
+  }
+ ],
+ "harness_errors_excluded_from_scoring": [
+  {
+   "app": "anki",
+   "error": "hdc connect failed status:-4039",
+   "action": "re-run; the re-run produced the scored result"
+  }
+ ],
+ "round2": {
+  "build": "framework-signin-device28",
+  "change": "IPackageManager.resolveContentProvider(authority, flags, userId) implemented (was logStub + return null); looks the authority up in the ProviderInfo list the component-keyed path already builds",
+  "apps_rendering": 3,
+  "results": [
+   {
+    "app": "markor",
+    "round1": "bind-failed",
+    "round2": "rendering",
+    "verdict": "CLOSED",
+    "evidence": "resolveContentProvider net.gsantner.markor.provider -> androidx.core.content.FileProvider metadata=1; 0 throws; 390 -> 759 stderr lines; relayout=18 fatal=0; UI confirmed by screenshot"
+   },
+   {
+    "app": "anki",
+    "round1": "bind-failed",
+    "round2": "crashed-later",
+    "verdict": "ADVANCED",
+    "evidence": "resolveContentProvider com.squareup.leakcanary.fileprovider.com.ichi2.anki -> leakcanary.internal.LeakCanaryFileProvider metadata=1; 0 throws; binding succeeded; 410 -> 533 lines; now SIGTRAP in CrBrowserMain on ASurfaceTransaction_*"
+   },
+   {
+    "app": "aegis",
+    "round1": "rendering",
+    "round2": "rendering",
+    "verdict": "UNCHANGED",
+    "evidence": "631 vs 633 lines, relayout=18, fatal=0"
+   },
+   {
+    "app": "antennapod",
+    "round1": "drawing",
+    "round2": "drawing",
+    "verdict": "UNCHANGED",
+    "evidence": "668 vs 681 lines, relayout=18, fatal=0"
+   },
+   {
+    "app": "ooniprobe",
+    "round1": "bind-failed",
+    "round2": "bind-failed",
+    "verdict": "UNCHANGED",
+    "evidence": "402 lines both rounds; dies in Application.onCreate on LocaleManager before any provider is instantiated; resolveContentProvider never called"
+   },
+   {
+    "app": "newpipe",
+    "round1": "crashed",
+    "round2": "crashed",
+    "verdict": "UNCHANGED",
+    "evidence": "461 vs 462 lines; 13 ASurfaceTransaction_* load failures then SIGTRAP"
+   },
+   {
+    "app": "termux",
+    "round1": "activity-failed",
+    "round2": "activity-failed",
+    "verdict": "UNCHANGED",
+    "evidence": "411 lines both rounds; declares 2 providers with 0 meta-data"
+   },
+   {
+    "app": "mindustry",
+    "round1": "init-failed",
+    "round2": "init-failed",
+    "verdict": "UNCHANGED",
+    "evidence": "448 lines both rounds; declares no providers"
+   },
+   {
+    "app": "opencamera",
+    "round1": "init-failed",
+    "round2": "init-failed",
+    "verdict": "UNCHANGED",
+    "evidence": "418 lines both rounds"
+   },
+   {
+    "app": "ppsspp",
+    "round1": "no-surface",
+    "round2": "no-surface",
+    "verdict": "UNCHANGED",
+    "evidence": "374 lines both rounds; declares no providers"
+   }
+  ],
+  "control": "ppsspp, mindustry and termux are byte-identical in line count across rounds and never call resolveContentProvider -- the change is inert for apps that do not use it",
+  "next_top_roi": {
+   "api": "ASurfaceTransaction_* resolved via dlopen(\"libandroid.so\")",
+   "category": "native-loading",
+   "apps_killed": [
+    "newpipe",
+    "anki"
+   ],
+   "note": "anki reached this only after the provider gap closed; it was hidden behind it"
+  },
+  "harness_errors_excluded_from_scoring": [
+   {
+    "app": "aegis",
+    "error": "staging: host_spawn no such file or directory",
+    "action": "re-run; the re-run produced the scored result"
+   }
+  ]
+ },
+ "round3": {
+  "scope": "targeted, not a full round: the two apps the round-2 target killed, plus two controls",
+  "shim": "bionic-shim-nw2",
+  "change": "WebView library redirect ordered ahead of the OH .z.so naming fallback in the bionic shim's dlopen; the fallback's early 'return plain' had made the redirect unreachable for every library that also exists in the runtime directory",
+  "root_cause": {
+   "kind": "dead code in our own shim, not a missing symbol",
+   "detail": "two libandroid.so ship. runtime copy: 117 defined FUNC, 0 ASurface*, 0 of the 14 Chromium looks up, and it is FIRST on the search path. webview-t-lib copy: 115 defined FUNC, 27 ASurface*, 14 of 14, and it is LAST. dlopen therefore succeeded against the runtime copy and every dlsym returned null.",
+   "regressed_by": "the .z.so fallback commit, added after the redirect commit and placed above it",
+   "why_per_caller_redirect_is_still_correct": "the two copies share only 34 symbols; redirecting every caller to the WebView copy would lose 83, including the ACanvas, AHardwareBuffer and ALooper families"
+  },
+  "results": [
+   {
+    "app": "newpipe",
+    "before": "SIGTRAP in CrBrowserMain",
+    "after": "no signal; new blocker",
+    "verdict": "CLOSED",
+    "evidence": "redirect fired; ASurface load failures 14 -> 0; Fatal signal 1 -> 0; 462 -> 525 lines",
+    "new_blocker": "NullPointerException: BatteryManager.getIntProperty(int) on a null reference"
+   },
+   {
+    "app": "anki",
+    "before": "SIGTRAP in CrBrowserMain",
+    "after": "no signal; reaches far more",
+    "verdict": "CLOSED",
+    "evidence": "redirect fired; ASurface load failures 14 -> 0; Fatal signal 1 -> 0; VSYNC ticking, provider resolving, storage answering",
+    "new_blocker": "AnkiDroidCrashReportDialog: Can't create handler inside thread that has not called Looper.prepare(); getService(\"locale\") -> null"
+   },
+   {
+    "app": "wikipedia",
+    "verdict": "NO REGRESSION",
+    "evidence": "740 lines, fatal=0, alive, relayout=18",
+    "caveat": "redirect fired 0 times -- this launch starts the app but does not open an article, so it tests that the reordering broke nothing, NOT that the redirect helps it"
+   },
+   {
+    "app": "aegis",
+    "verdict": "NO REGRESSION",
+    "evidence": "637 lines vs 631/633 baseline, fatal=0, alive, relayout=18"
+   }
+  ],
+  "not_yet_established": "the shim change applies to every WebView caller and only four apps were run against it. A full ten-app round has not been done at this shim.",
+  "next_top_roi": {
+   "category": "system-services",
+   "pattern": "getSystemService returns null because OHServiceManager has no binder for the name, and the app dereferences it without a null check",
+   "apps_killed": [
+    "ooniprobe (LocaleManager)",
+    "newpipe (BatteryManager)"
+   ],
+   "fix_pattern": "LocalServiceBinders.get(name), already used for account/power/alarm/clipboard",
+   "ranking_note": "rank by the FATAL subset, not by how many apps ask. appops is asked by all 12 and returns null in all 12 and kills none; locale and batterymanager kill."
+  },
+  "stub_service_ask_counts": {
+   "network_management": 12,
+   "netstats": 12,
+   "content_capture": 12,
+   "appops": 12,
+   "accessibility": 10,
+   "sensitive_content_protection_service": 4,
+   "locale": 4,
+   "voiceinteraction": 3,
+   "graphicsstats": 3,
+   "autofill": 3,
+   "game": 2,
+   "vibrator_manager": 1,
+   "batterystats": 1
+  }
+ },
+ "scoring_change": {
+  "from": "did the app render (binary)",
+  "to": "highest lifecycle rung reached, paired with the first blocker by position in the log",
+  "rungs": [
+   "spawned",
+   "runtime-init",
+   "bound",
+   "activity",
+   "view",
+   "drawing"
+  ],
+  "tool": "harness/westlake_gap/lifecycle.py",
+  "why": "a correct fix (round 3) cleared two SIGTRAPs and rendered nothing, so rendering scored it as a failure; two apps rendered throughout and carried no evidence either way",
+  "self_correction": "rung alone called anki 'unchanged' between rounds while its fatal signal went 1->0 and its log grew 200 lines; compare() now reports movement inside a rung"
+ },
+ "round4": {
+  "scope": "full ten at build 28 + bionic-shim-nw2 -- the corpus-scale validation the shim change was owed, since it alters library resolution for every WebView caller",
+  "harness_faults": 0,
+  "rung_regressions": 0,
+  "corpus_totals": {
+   "apps_with_fatal_signal": {
+    "before": 2,
+    "after": 0
+   },
+   "ASurface_load_failures": {
+    "before": 28,
+    "after": 0
+   },
+   "apps_drawing": 3
+  },
+  "movement": [
+   {
+    "app": "anki",
+    "rung": "3 activity (unchanged)",
+    "moved": "fatal 1->0, 533 -> 733 lines"
+   },
+   {
+    "app": "newpipe",
+    "rung": "2 bound (unchanged)",
+    "moved": "fatal 1->0, 461 -> 531 lines, blocker changed from ASurfaceControl_createFromWindow to a NullPointerException starting the activity (BatteryManager on a null service)"
+   }
+  ],
+  "unchanged": [
+   "aegis",
+   "antennapod",
+   "markor",
+   "mindustry",
+   "ooniprobe",
+   "opencamera",
+   "ppsspp",
+   "termux"
+  ],
+  "verdict": "the shim reordering is validated at corpus scale: no app regressed a rung, every ASurface load failure in the corpus is gone, and no app takes a fatal signal"
+ },
+ "round5": {
+  "build": "framework-signin-device29",
+  "change": "LocalServiceBinders answers locale, batterystats and batteryproperties in process; OHServiceManager routes those three names to it",
+  "note_on_scope": "BatteryManager's fetcher calls getServiceOrThrow twice, for batterystats AND batteryproperties, so registering only the name that appeared in the logs would have changed nothing -- a concrete case where ranking by ask-count would have produced a half-fix",
+  "apps_drawing": {
+   "before": 3,
+   "after": 5
+  },
+  "movement": [
+   {
+    "app": "ooniprobe",
+    "before": "1 runtime-init",
+    "after": "5 drawing",
+    "delta": "+4",
+    "confirmed": "screenshot",
+    "note": "was dying in its Application constructor"
+   },
+   {
+    "app": "newpipe",
+    "before": "3 activity",
+    "after": "5 drawing",
+    "delta": "+2",
+    "confirmed": "screenshot (2026-09-23, taken over wireless debugging after USB failed): live feed fetched from the network and rendered -- stream titles, channel names, viewer counts, tab bar -- under the app's own 'Keep Android Open' dialog",
+    "open_observation": "thumbnails never loaded: three captures 10s apart were the same size and all show placeholder play icons. Not diagnosed; could be image loading, or a slow network, and is recorded rather than explained"
+   }
+  ],
+  "unchanged": [
+   "aegis",
+   "antennapod",
+   "markor",
+   "anki",
+   "mindustry",
+   "opencamera",
+   "ppsspp",
+   "termux"
+  ],
+  "harness_faults": [
+   {
+    "apps": [
+     "markor",
+     "opencamera"
+    ],
+    "error": "hdc 'recv: Resource temporarily unavailable' and OH 'too many abilities have been launched'; /data was at 95%",
+    "cause": "70 app stages and 70 source runtimes accumulated across five rounds, and children were never stopped between rounds",
+    "action": "stopped the leftover children, kept the newest two stages of each kind, protected the in-use framework stage; both apps then ran clean and scored unchanged"
+   }
+  ],
+  "scorer_defects_found_by_use": [
+   {
+    "defect": "the ladder stopped at the first unmet rung, so a weak marker could veto stronger evidence above it. NewPipe drew 40 frames and scored 'bound'.",
+    "fix": "score the highest rung that passes; report skipped rungs instead of capping"
+   },
+   {
+    "defect": "the activity rung thresholded [B47-SLA] line counts, fitted to one round. NewPipe and OONI Probe drew with 5, the same count as apps that never reached an activity.",
+    "fix": "activity now means a launch was attempted -- a view exists, or an explicit 'Unable to start/instantiate activity' failure. termux correctly moves 2 -> 3."
+   }
+  ]
+ }
+}
