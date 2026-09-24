@@ -39,14 +39,14 @@
   {
    "app": "ppsspp",
    "corpus": "loop-1",
-   "row": null,
+   "row": "window:engine-surface",
    "symptom": "SurfaceView shares the activity's OH window: EGL_BAD_ALLOC",
    "fixed_in": null
   },
   {
    "app": "mindustry",
    "corpus": "loop-1",
-   "row": null,
+   "row": "window:engine-surface",
    "symptom": "SurfaceView shares the activity's OH window: hwui 'context with no surface'",
    "fixed_in": null
   },
@@ -256,7 +256,7 @@
   {
    "app": "shatteredpd",
    "corpus": "batch-4",
-   "row": null,
+   "row": "window:engine-surface",
    "symptom": "libGDX GLSurfaceView: log stops creating the GL surface; likely the shared SurfaceView window",
    "fixed_in": null
   },
@@ -266,6 +266,20 @@
    "row": null,
    "symptom": "VM.getNanoTimeAdjustment bound with the JNI instead of the critical-native signature",
    "fixed_in": "04e9bd5"
+  },
+  {
+   "app": "fmessages",
+   "corpus": "batch-5",
+   "row": null,
+   "symptom": "RoleManager null (no role service) before its first screen",
+   "fixed_in": "2b21e12"
+  },
+  {
+   "app": "unciv",
+   "corpus": "batch-5",
+   "row": "window:engine-surface",
+   "symptom": "libGDX first screen never drew (IME host on screen)",
+   "fixed_in": null
   }
  ]
 }

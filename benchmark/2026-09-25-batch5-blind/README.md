@@ -26,4 +26,19 @@ launch result is known. The other nine are unchanged.
 
 ## Results
 
-Not yet run.
+One launch per app on framework 45, SELinux enforcing, 35 s wait, a screenshot each.
+
+**8 of 10 drew on first launch**: Fossify Notes, Clock and File Manager, Amaze, Droid-ify, the
+F-Droid client, Antimine and Gadgetbridge.
+
+| App | Rule | Outcome | Why |
+|---|---|---|---|
+| Fossify Messages | draws | **blocked** |  null (no  service). Fixed in `2b21e12`: it now draws its main activity, then closes, because the board has no SMS role to hold. That is correct behaviour for a device without telephony |
+| Unciv | draws; **late row: blocked** | **blocked** | libGDX draws into its own SurfaceView (`window:engine-surface`); the IME host stays on screen |
+
+- **Rule: 8 of 10 right.** The calibrated forecast (about 7) was one pessimistic.
+- **The engine-surface row was right on its first blind case** (Unciv), predicted and committed
+  before Unciv launched.
+- The scorer called both failures "drawing". In both cases a window was created and something
+  drew, then the process died or finished. **The screenshot decides**, and scoring from the log
+  alone would have reported 10 of 10.
