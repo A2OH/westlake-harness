@@ -300,35 +300,35 @@
    "corpus": "batch-7",
    "row": null,
    "symptom": "WallpaperManager globals: null service",
-   "fixed_in": "framework 48"
+   "fixed_in": "8eb6ba4"
   },
   {
    "app": "radiodroid",
    "corpus": "batch-7",
    "row": null,
    "symptom": "DisplayManager.getWifiDisplayStatus null, then IMediaRouterService null",
-   "fixed_in": "framework 49"
+   "fixed_in": "8eb6ba4"
   },
   {
    "app": "openhab",
    "corpus": "batch-7",
    "row": "svc:wifi",
    "symptom": "null cannot be cast to non-null type WifiManager",
-   "fixed_in": "framework 48"
+   "fixed_in": "8eb6ba4"
   },
   {
    "app": "andstatus",
    "corpus": "batch-7",
    "row": null,
    "symptom": "startActivity from a worker thread built the activity off the main looper",
-   "fixed_in": "framework 48"
+   "fixed_in": "8eb6ba4"
   },
   {
    "app": "fennec",
    "corpus": "corpus-2",
    "row": null,
    "symptom": "crash reporter's startActivity from the Gecko thread built the activity off the main looper",
-   "fixed_in": "framework 48"
+   "fixed_in": "8eb6ba4"
   }
  ]
 }
