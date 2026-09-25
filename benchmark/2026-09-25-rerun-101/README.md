@@ -36,17 +36,22 @@ On all 101 apps (in sample): v1 had accuracy 0.75, precision 0.47, recall 0.38. 
 
 ## Launch repeatability
 
-20 apps were launched again on framework 57, 33 extra launches in all. A full board `/data`
-killed the second round after 13 apps. Nineteen of the 20 gave the same result on every launch.
-The one that changed is **Material Files**: when `inotify_add_watch` succeeds, its own
-WatchService poller thread crashes (SIGSEGV at address 0). When SELinux denies the watch, it
-draws. It crashed in 3 of 4 launches.
+20 apps were launched four times each on framework 57 (80 launches), with a disk guard in the
+launcher and the board's `/data` holding at 18–19 GB free throughout.
 
-So a single launch is reliable for about 95% of apps. An app that fails intermittently needs
-several launches before its result means anything.
+- **19 of 20 gave the same result every time.** 18 drew in all four launches; OsmAnd was blocked
+  in all four.
+- **One app varies: Material Files** drew in 2 of its 5 framework-57 launches. When
+  `inotify_add_watch` succeeds, its own WatchService poller thread crashes (SIGSEGV at address 0).
+  When SELinux denies the watch, it draws.
+
+So a single launch is reliable for about 95% of apps. An app that fails once needs a second launch
+before its result means anything.
 
 ## Operational finding
 
 Every framework deploy stages about 1.5 GB under `/data/local/tmp`, and nothing removed the old
 stages. 24 of them filled the board's `/data`, which killed the rerun and stopped the board
-writing crash reports. `build.sh` now keeps only the current and previous stages.
+writing crash reports. `build.sh` now keeps only the current and previous stages. `launch.sh` also checks free space
+before every launch, on the board (8 GB minimum; it prunes stale stages first) and on the host
+(30 GB), and stops the run with exit 3 instead of filling a disk.
