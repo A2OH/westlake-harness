@@ -640,6 +640,7 @@ def runtime_resolved_rows(scan: dict[str, Any], ndk_cov: dict[str, Any] | None) 
             shim=f"supply {library}'s entry points, or confirm the caller degrades without them: "
                  "this row cannot tell a lookup that happens from a string that is never used",
             symbols=names,
+            importing_libraries=sorted(importers[library]),
         ))
     return rows
 
@@ -1087,6 +1088,7 @@ def engine_surface_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
         oh_touchpoint="window_manager / render_service: one OH window per activity",
         verdict="missing", shim_class="C9", effort="L", confidence=STATIC,
         app_evidence="; ".join(evidence),
+        engine_libraries=sorted(lib for lib in libraries if lib in ENGINE_LIBRARIES),
         shim="give each SurfaceView its own OH surface (a child RS node) instead of the activity's window",
     )]
 
@@ -1331,6 +1333,18 @@ def apply_observed(gap_map: dict[str, Any], scan: dict[str, Any], observed: dict
                       if k.partition("->")[2].split("(")[0] in names}
             on_path = bool(states)
             evidence = ", ".join(f"{n} {st}" for n, st in sorted(states.items())) or "not called"
+        elif category == "window":
+            # The engine is on the startup path when it created its SurfaceView or loaded its library.
+            surface = sorted({touch[k] for k in by_owner.get("Landroid/view/SurfaceView;", [])})
+            engines = sorted(set(row.get("engine_libraries", [])) & loaded)
+            on_path = "executed" in surface or bool(engines)
+            evidence = "; ".join(filter(None, [f"SurfaceView {'/'.join(surface)}" if surface else "",
+                                               f"loaded: {', '.join(engines)}" if engines else ""])) or "no SurfaceView, engine not loaded"
+        elif category == "framework-natives":
+            # An unbound class-init native fails when the class is first used: any executed method counts.
+            descriptor = "L" + rid.partition(":")[2].replace(".", "/") + ";"
+            on_path = descriptor in platform_classes
+            evidence = "class code executed" if on_path else "no code of the class executed"
         elif category in {"native-symbols", "native-upcalls", "sandbox-policy", "native-loading"}:
             if rid.startswith("upcall:"):
                 libs = {rid[7:]}

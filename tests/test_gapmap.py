@@ -296,6 +296,27 @@ class EngineSurface(unittest.TestCase):
         self.assertEqual(gapmap.engine_surface_rows(plain), [])
 
 
+class ObservedPath(unittest.TestCase):
+    def test_engine_framework_natives_and_lookups(self) -> None:
+        rows = [
+            gapmap._row("window", "window:engine-surface", "e", engine_libraries=["libflutter.so"]),
+            gapmap._row("framework-natives", "jni:android.media.MediaPlayer", "m"),
+            gapmap._row("framework-natives", "jni:android.hardware.Camera", "c"),
+            gapmap._row("native-symbols", "sym:runtime-resolved:libandroid.so", "l", importing_libraries=["libflutter.so"]),
+            gapmap._row("native-symbols", "sym:runtime-resolved:libnativewindow.so", "n", importing_libraries=["libvlc.so"]),
+        ]
+        observed = {"platform_touch": {}, "executed_app_methods": [], "executed_methods": 1,
+                    "executed_platform_classes": ["Landroid/media/MediaPlayer;"],
+                    "loaded_app_libraries": ["libflutter.so"]}
+        gap_map = {"rows": rows}
+        gapmap.apply_observed(gap_map, {"inventory": {}}, observed, {})
+        on = {r["id"]: r["observed"]["on_path"] for r in gap_map["rows"]}
+        self.assertEqual(on, {"window:engine-surface": True, "jni:android.media.MediaPlayer": True,
+                              "jni:android.hardware.Camera": False,
+                              "sym:runtime-resolved:libandroid.so": True,
+                              "sym:runtime-resolved:libnativewindow.so": False})
+
+
 class NeededLibraries(unittest.TestCase):
     def test_a_library_nothing_provides(self) -> None:
         scan = {"inventory": {"elfs": [
