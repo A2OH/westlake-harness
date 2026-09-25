@@ -39,7 +39,9 @@ from pathlib import Path
 #   audio/media run-time lookups and welds       reached only when playing media: 2 blocked, 5 drew
 # Kept: the libandroid/libnativewindow lookups Flutter's and VLC's renderers make (4 blocked,
 # 2 drew), the non-media NDK packages and welds, and the engine surface (7 blocked, 1 drew).
-LOOKUPS = {f"sym:runtime-resolved:{lib}" for lib in ("libandroid.so", "libnativewindow.so")}
+# libnativehelper added after the Android-trace round: JNI_GetCreatedJavaVMs, looked up by name by
+# Rust's jni crate (Element X's libmatrix_sdk_ffi) and VLC, flags 2 blocked and no app that draws.
+LOOKUPS = {f"sym:runtime-resolved:{lib}" for lib in ("libandroid.so", "libnativewindow.so", "libnativehelper.so")}
 LAZY_NDK = ("ndk:libc-abi", "ndk:weld:audio", "ndk:weld:media")
 
 
