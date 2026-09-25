@@ -1,5 +1,5 @@
 {
- "note": "first = first launch on the build the batch was predicted against; after = once that batch's fixes landed. wikipedia is counted in loop-1. Organic Maps' first launch uses its corrected pin. Fossify Messages exits by design after its fix (no SMS role) and stays 'blocked'. Seal's 'after' is its own error screen (symlink denied by OH policy), counted as UI like Termux.",
+ "note": "first = first launch on the build the batch was predicted against; after = once that batch's fixes landed. wikipedia is counted in loop-1. Organic Maps' first launch uses its corrected pin. Fossify Messages exits by design after its fix (no SMS role) and stays 'blocked'. Seal's 'after' is its own error screen (symlink denied by OH policy), counted as UI like Termux. OsmAnd's 'after' is its current state: it drew on its first launch and now leaves after drawing on every build tried (environment-dependent).",
  "apps": {
   "aegis": {
    "batch": "loop-1",
@@ -109,7 +109,7 @@
   "osmand": {
    "batch": "corpus-3",
    "first": "draws",
-   "after": "draws"
+   "after": "blocked"
   },
   "fairemail": {
    "batch": "corpus-3",
@@ -444,7 +444,7 @@
   "briar": {
    "batch": "batch-9",
    "first": "blocked",
-   "after": "blocked"
+   "after": "draws"
   },
   "nctalk": {
    "batch": "batch-9",
@@ -494,7 +494,7 @@
   "editor": {
    "batch": "batch-10",
    "first": "blocked",
-   "after": "blocked"
+   "after": "draws"
   },
   "fvoicerec": {
    "batch": "batch-10",
@@ -504,7 +504,7 @@
   "adaway": {
    "batch": "batch-10",
    "first": "blocked",
-   "after": "blocked"
+   "after": "draws"
   }
  }
 }

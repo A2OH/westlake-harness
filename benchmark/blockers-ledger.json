@@ -391,7 +391,7 @@
    "corpus": "batch-9",
    "row": null,
    "symptom": "ProcessEnvironment.environ unbound; then 'already has an action bar supplied by the window decor'",
-   "fixed_in": null
+   "fixed_in": "cc5b6ae"
   },
   {
    "app": "supertuxkart",
@@ -433,20 +433,34 @@
    "corpus": "batch-10",
    "row": null,
    "symptom": "launch intent without ACTION_MAIN/CATEGORY_LAUNCHER: null action in onCreate",
-   "fixed_in": null
+   "fixed_in": "cc5b6ae"
   },
   {
    "app": "fvoicerec",
    "corpus": "batch-10",
    "row": null,
    "symptom": "IUriGrantsManager null behind getPersistedUriPermissions",
-   "fixed_in": null
+   "fixed_in": "cc5b6ae"
   },
   {
    "app": "adaway",
    "corpus": "batch-10",
    "row": null,
    "symptom": "window decor supplies the application theme's action bar over a NoActionBar activity theme",
+   "fixed_in": "cc5b6ae"
+  },
+  {
+   "app": "fvoicerec",
+   "corpus": "batch-10",
+   "row": null,
+   "symptom": "after uri_grants: held back, no surface until its activity's window has an OH session",
+   "fixed_in": null
+  },
+  {
+   "app": "osmand",
+   "corpus": "corpus-3",
+   "row": null,
+   "symptom": "unstable: drew on build 40 at first; later leaves after drawing on builds 40, 45, 56 and 57 alike (environment-dependent)",
    "fixed_in": null
   }
  ]
