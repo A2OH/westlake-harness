@@ -35,6 +35,8 @@ CATEGORIES = [
      "what system_server would answer, answered in-process by Westlake in direct launch → white-box probes"),
     ("window", "Windows & surfaces",
      "how the first screen renders → whether it needs a surface of its own → OH window/surface model"),
+    ("runtime-data", "Runtime data",
+     "platform calls that need data files → zone rules, ICU data → what the runtime loads"),
     ("framework-natives", "Framework natives",
      "platform classes the app uses → their native methods → libraries the runtime registers them from"),
     ("native-upcalls", "Java APIs called from native code", "JNIEnv FindClass/Get*ID names in packaged .so → Westlake boot jars"),
@@ -1093,6 +1095,53 @@ def engine_surface_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
     )]
 
 
+# Data the runtime loads rather than code it links: a name that resolves can still fail for want of
+# its data. What the provider lacks was seen on the board (framework 57: libicuuc exports no
+# u_setDataDirectory, so the ICU data directory is never set, and java.time registers no zone
+# rules provider); each entry names the launch that showed it.
+RUNTIME_DATA = {
+    "data:tzdata": dict(
+        item="java.time zone rules (tzdata)",
+        members={"Ljava/time/ZoneId;": None, "Ljava/time/ZonedDateTime;": None, "Ljava/time/OffsetDateTime;": None,
+                 "Ljava/time/zone/ZoneRulesProvider;": None, "Ljava/time/zone/ZoneRules;": None},
+        # LocalDate.now()/Clock.systemDefaultZone() are left out: three apps that call them at
+        # startup draw, the board's default zone evidently needing no rules.
+        provider="no zone rules provider is registered: ZoneRulesException 'No time-zone data files registered' "
+                 "(duckduckgo, framework 57)",
+        shim="register java.time's zone rules provider over the runtime's tzdata",
+    ),
+    "data:icu-locale-display": dict(
+        item="ICU locale display names",
+        members={"Ljava/util/Locale;": {"getDisplayName", "getDisplayLanguage", "getDisplayCountry",
+                                         "getDisplayVariant", "getDisplayScript"},
+                 "Landroid/icu/util/ULocale;": {"getDisplayName", "getDisplayLanguage", "getDisplayCountry"}},
+        provider="the ICU data directory is never set, so a display name comes back null and "
+                 "Locale.getDisplayName throws (wifianalyzer, framework 57)",
+        shim="set the ICU data directory before the first ICU call (libicuuc exports no u_setDataDirectory)",
+    ),
+}
+
+
+def runtime_data_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
+    """Platform calls that need data the runtime does not load: zone rules, ICU display names."""
+    names = scan["inventory"].get("platform_method_names", {})
+    rows = []
+    for rid, spec in RUNTIME_DATA.items():
+        members = sorted(f"{owner}->{name}" for owner, wanted in spec["members"].items()
+                         for name in names.get(owner, []) if wanted is None or name in wanted)
+        if not members:
+            continue
+        rows.append(_row(
+            "runtime-data", rid, spec["item"],
+            oh_touchpoint="data files the runtime loads at first use, not a symbol or a service",
+            verdict="missing", shim_class="C1", effort="S", confidence=OBSERVED,
+            provider=spec["provider"], shim=spec["shim"], data_members=members,
+            app_evidence=f"the app calls {', '.join(m.split('/')[-1].replace(';->', '.') for m in members[:4])}"
+                         + (" …" if len(members) > 4 else ""),
+        ))
+    return rows
+
+
 _CLASS_INIT_NATIVE = re.compile(r"(?i)^_?native_?(class_?)?init$")
 
 
@@ -1231,6 +1280,7 @@ def build_map(
             + app_framework_rows(scan, contracts.direct_launch_am_model(westlake_root),
                                  contracts.window_adapter_model(westlake_root))
             + engine_surface_rows(scan)
+            + runtime_data_rows(scan)
             + framework_native_rows(scan, runtime_index, runtime_class_paths)
             + native_upcall_rows(scan)
             + (ndk_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root), ndk_cov) if ndk_cov
@@ -1340,6 +1390,11 @@ def apply_observed(gap_map: dict[str, Any], scan: dict[str, Any], observed: dict
             on_path = "executed" in surface or bool(engines)
             evidence = "; ".join(filter(None, [f"SurfaceView {'/'.join(surface)}" if surface else "",
                                                f"loaded: {', '.join(engines)}" if engines else ""])) or "no SurfaceView, engine not loaded"
+        elif category == "runtime-data":
+            hit = sorted(k.split("(")[0] for k in touch if touch[k] == "executed"
+                         and k.split("(")[0] in set(row.get("data_members", [])))
+            on_path = bool(hit)
+            evidence = ("executed: " + ", ".join(h.split("/")[-1].replace(";->", ".") for h in hit[:4])) if hit else "not called"
         elif category == "framework-natives":
             # An unbound class-init native fails when the class is first used: any executed method counts.
             descriptor = "L" + rid.partition(":")[2].replace(".", "/") + ";"

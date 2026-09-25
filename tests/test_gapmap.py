@@ -317,6 +317,26 @@ class ObservedPath(unittest.TestCase):
                               "sym:runtime-resolved:libnativewindow.so": False})
 
 
+class RuntimeData(unittest.TestCase):
+    def test_rows_from_calls_and_path_from_trace(self) -> None:
+        scan = {"inventory": {"platform_method_names": {
+            "Ljava/util/Locale;": ["getDefault", "getDisplayName"],
+            "Ljava/time/LocalDate;": ["of"],
+            "Ljava/time/ZoneId;": ["of"]}}}
+        rows = gapmap.runtime_data_rows(scan)
+        self.assertEqual({r["id"]: r["data_members"] for r in rows}, {
+            "data:tzdata": ["Ljava/time/ZoneId;->of"],
+            "data:icu-locale-display": ["Ljava/util/Locale;->getDisplayName"]},
+            "LocalDate.of needs no zone rules; getDefault needs no display data")
+        observed = {"platform_touch": {"Ljava/util/Locale;->getDisplayName()Ljava/lang/String;": "executed",
+                                       "Ljava/time/ZoneId;->of(Ljava/lang/String;)Ljava/time/ZoneId;": "referenced"},
+                    "executed_app_methods": [], "executed_methods": 1}
+        gap_map = {"rows": rows}
+        gapmap.apply_observed(gap_map, {"inventory": {}}, observed, {})
+        self.assertEqual({r["id"]: r["observed"]["on_path"] for r in rows},
+                         {"data:tzdata": False, "data:icu-locale-display": True})
+
+
 class NeededLibraries(unittest.TestCase):
     def test_a_library_nothing_provides(self) -> None:
         scan = {"inventory": {"elfs": [

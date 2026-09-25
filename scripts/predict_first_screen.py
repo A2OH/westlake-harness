@@ -56,6 +56,10 @@ def reasons(rows: list[dict]) -> list[str]:
             found.append(f"lookup:{rid}")
         if rid == "window:engine-surface":
             found.append(f"engine:{rid}")
+        # Runtime data counts only on a recorded startup path: statically the ICU row flags two
+        # thirds of the apps, on the path it flagged 3 blocked and none that drew.
+        if rid.startswith("data:") and row.get("observed", {}).get("on_path"):
+            found.append(f"runtime-{rid}")
     return sorted(set(found))
 
 

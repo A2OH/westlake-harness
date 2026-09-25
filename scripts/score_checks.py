@@ -49,6 +49,8 @@ def families(rows: list[dict]) -> set[str]:
             out.add("framework natives: any unregistered")
             if any(CLASS_INIT.match(s) for s in r.get("open_symbols", [])):
                 out.add("framework natives: class initializer unregistered")
+        if rid.startswith("data:"):
+            out.add(f"runtime data: {rid[5:]}")
         if rid == "wv:renderer-process":
             out.add("webview: renderer process")
         if rid.startswith("java:") and verdict == "missing":

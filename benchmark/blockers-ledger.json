@@ -352,6 +352,13 @@
    "fixed_in": null
   },
   {
+   "app": "wifianalyzer",
+   "corpus": "batch-8",
+   "row": "data:icu-locale-display",
+   "symptom": "framework 57: Locale.getDisplayName NPE in LanguagePreference.<init> (ICU display data)",
+   "fixed_in": null
+  },
+  {
    "app": "gpscockpit",
    "corpus": "batch-8",
    "row": null,
@@ -403,7 +410,7 @@
   {
    "app": "duckduckgo",
    "corpus": "batch-9",
-   "row": null,
+   "row": "data:tzdata",
    "symptom": "java.time: no time-zone data files registered",
    "fixed_in": null
   },

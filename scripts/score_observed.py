@@ -48,7 +48,7 @@ def main() -> int:
         for view, subset in (("static", rows), ("observed", on_path(rows))):
             for family in families(subset):
                 hits[family][view][state] += 1
-        static_pred[app] = bool(reasons(rows))
+        static_pred[app] = bool(reasons([{k: v for k, v in r.items() if k != "observed"} for r in rows]))
         observed_pred[app] = bool(reasons(on_path(rows)))
 
     blocked = sum(truth.values())
