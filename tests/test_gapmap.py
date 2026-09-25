@@ -306,6 +306,26 @@ class NeededLibraries(unittest.TestCase):
         self.assertEqual(gapmap.needed_library_rows(scan, None, None), [], "no board listing, no claim")
 
 
+class OhEvents(unittest.TestCase):
+    LOG = """[OHServiceManager] getService("deviceidle") \u2192 null (stub)
+[OHServiceManager] getService("deviceidle") \u2192 null (stub)
+[WESTLAKE-LOCAL-SERVICE] power bound in process
+[B47-SLA] ENTRY bundle=a.b ability=a.b.Main recordId=1
+[B43-BIND] ensureBindApplication FAILED phase=handleBindApplication cause[0]=java.lang.reflect.InvocationTargetException: null
+[B43-BIND] ensureBindApplication FAILED phase=handleBindApplication cause[1]=java.lang.UnsatisfiedLinkError: No implementation found for byte[][] java.lang.ProcessEnvironment.environ() (tried x)
+"""
+
+    def test_events_and_root_cause(self) -> None:
+        from westlake_gap import ohevents
+        events = ohevents.parse(self.LOG)
+        summary = ohevents.summarize("a", events)
+        self.assertEqual(summary["services_null"], ["deviceidle"], "a repeated lookup is one event")
+        self.assertEqual(summary["services_local"], ["power"])
+        self.assertEqual(summary["natives_missing"], ["java.lang.ProcessEnvironment.environ"])
+        self.assertEqual(summary["root_cause"]["error"], "java.lang.UnsatisfiedLinkError",
+                         "the wrapper InvocationTargetException is not the cause")
+
+
 class PackageManagerSemantics(unittest.TestCase):
     def test_stub_bridged_and_direct_boot_defaults(self) -> None:
         with tempfile.TemporaryDirectory(prefix="westlake-pm-") as temp:
