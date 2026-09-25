@@ -907,6 +907,44 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
     return rows
 
 
+# Always present: the bionic names OH's musl loader answers for itself.
+_LOADER_PROVIDED = {"libc.so", "libm.so", "libdl.so", "ld-android.so"}
+
+
+def needed_library_rows(scan: dict[str, Any], board_paths: list[str] | None,
+                        runtime_libraries: list[str] | None) -> list[dict[str, Any]]:
+    """Libraries an APK library lists in DT_NEEDED that nothing on the device provides.
+
+    oh-resolve checks symbols, so a whole missing library looked like a few missing symbols,
+    or like nothing at all when every symbol also exists elsewhere. The loader refuses the load
+    before any symbol is looked at: Fennec's libxul.so needs libmediandk.so, which neither the
+    APK, the Westlake runtime nor the board ships.
+    """
+    if board_paths is None:
+        return []
+    elfs = ohresolve.target_elfs(scan)
+    provided = ({(e.get("soname") or e.get("name")) for e in elfs} | {e.get("name") for e in elfs}
+                | {p.rsplit("/", 1)[-1] for p in board_paths} | set(runtime_libraries or []) | _LOADER_PROVIDED)
+    missing: dict[str, list[str]] = defaultdict(list)
+    for elf in elfs:
+        for needed in elf.get("needed", []):
+            if needed not in provided:
+                missing[needed].append(elf.get("soname") or elf["name"])
+    if not missing:
+        return []
+    names = sorted(missing)
+    return [_row(
+        "native-loading", "load:needed-missing",
+        f"Libraries named in DT_NEEDED that nothing provides ({', '.join(names)})",
+        oh_touchpoint="OH dynamic linker: the load fails before symbols are resolved",
+        verdict="missing", shim_class="C1", effort="L" if any(n in {"libmediandk.so", "libGLESv1_CM.so", "libcamera2ndk.so", "libaaudio.so"} for n in names) else "M",
+        confidence=STATIC,
+        app_evidence="; ".join(f"{n} needed by {', '.join(sorted(set(missing[n]))[:3])}" for n in names),
+        open_symbols=names,
+        shim="ship the library (an NDK library: build it over OH's equivalent) or confirm its importer is never loaded",
+    )]
+
+
 def sandbox_rows(scan: dict[str, Any], policy: dict[str, Any]) -> list[dict[str, Any]]:
     oh = policy["oh"]["classes"]
     android = policy["android"]["classes"]
@@ -1197,6 +1235,7 @@ def build_map(
                else native_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root)))
             + native_loading_rows(facts, scan, launcher_extraction(manifest_root), board_paths,
                                   launcher_namespace_option(manifest_root))
+            + needed_library_rows(scan, board_paths, runtime_libraries)
             + libc_constant_rows(scan, contracts.libc_constant_model(westlake_root))
             + security_rows(scan, contracts.keystore_model(westlake_root))
             + webview_rows(scan, webview_process_model(aosp_root, westlake_root))

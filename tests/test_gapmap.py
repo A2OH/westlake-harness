@@ -296,6 +296,16 @@ class EngineSurface(unittest.TestCase):
         self.assertEqual(gapmap.engine_surface_rows(plain), [])
 
 
+class NeededLibraries(unittest.TestCase):
+    def test_a_library_nothing_provides(self) -> None:
+        scan = {"inventory": {"elfs": [
+            {"soname": "libxul.so", "name": "libxul.so", "needed": ["libc.so", "libmediandk.so", "libmozglue.so", "liblog.so"]},
+            {"soname": "libmozglue.so", "name": "libmozglue.so", "needed": ["libc.so"]}]}}
+        rows = gapmap.needed_library_rows(scan, ["/system/lib64/ndk/liblog.so"], ["libandroid.so"])
+        self.assertEqual([r["open_symbols"] for r in rows], [["libmediandk.so"]])
+        self.assertEqual(gapmap.needed_library_rows(scan, None, None), [], "no board listing, no claim")
+
+
 class PackageManagerSemantics(unittest.TestCase):
     def test_stub_bridged_and_direct_boot_defaults(self) -> None:
         with tempfile.TemporaryDirectory(prefix="westlake-pm-") as temp:

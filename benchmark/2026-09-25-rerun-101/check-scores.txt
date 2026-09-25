@@ -1,0 +1,40 @@
+24 apps blocked, 77 drawing on the provider the maps describe
+
+check                                                blocked  drew  prec recall
+service: any null/hollow/strict                           23    75  0.23   0.96
+framework natives: any unregistered                       22    70  0.24   0.92
+framework natives: class initializer unregistered         20    69  0.22   0.83
+java: platform API absent                                 14    38  0.27   0.58
+webview: renderer process                                  8    31  0.21   0.33
+window: engine draws into its own SurfaceView              7     1  0.88   0.29
+pm: secondary processes                                    6    17  0.26   0.25
+native: NDK name looked up at run time                     6     5  0.55   0.25
+service: null cast non-null by the app                     4    13  0.24   0.17
+native: unresolved NDK/libc import                         2     7  0.22   0.08
+native: DT_NEEDED library nobody provides                  2     4  0.33   0.08
+
+open ledger blockers: 24, named by a row in the app's current map: 10
+  ppsspp         row window:engine-surface                  SurfaceView shares the activity's OH window: EGL_BAD_ALLOC
+  mindustry      row window:engine-surface                  SurfaceView shares the activity's OH window: hwui 'context with no sur
+  opencamera     row jni:android.hardware.Camera            android.hardware.Camera._getNumberOfCameras has no implementation
+  vlc-fdroid     NO ROW                                     OnboardingActivity inflate: theme attribute 0x7f040072 unresolved
+  fluffychat     row sym:runtime-resolved:libandroid.so     Flutter 1.raster thread calls address 0
+  breezyweather  NO ROW                                     R8 null check after locale.getApplicationLocales in MainActivity.onCre
+  fennec         row ndk:weld:media                         libxul.so needs libmediandk.so
+  thunderbird    NO ROW                                     startService dropped: UpgradeDatabaseActivity waits forever
+  obtainium      row sym:runtime-resolved:libandroid.so     Flutter 1.raster thread calls address 0
+  nextcloud      NO ROW                                     launcher splash stays white (cause not identified)
+  libretube      NO ROW                                     Coil DiskCache maxSizeBytes: size must be > 0 (source not identified)
+  shatteredpd    row window:engine-surface                  libGDX GLSurfaceView: log stops creating the GL surface; likely the sh
+  unciv          row window:engine-surface                  libGDX first screen never drew (IME host on screen)
+  wifianalyzer   NO ROW                                     InflateException: a theme attribute does not resolve (as VLC)
+  gpscockpit     NO ROW                                     null in onResume: likely LocationManager.getBestProvider with no provi
+  rethink        NO ROW                                     stops after bind, nothing logged
+  scrambledexif  NO ROW                                     app name null: the launch path zeroes labelRes (also Catima's class-na
+  supertuxkart   row window:engine-surface                  SDL needs libGLESv1_CM.so, which OH does not ship
+  duckduckgo     NO ROW                                     java.time: no time-zone data files registered
+  elementx       NO ROW                                     native SIGSEGV at a garbage address
+  streetcomplete NO ROW                                     native SIGABRT
+  seal           row policy:lnk_file                        after the theme fix: its Python runtime cannot create a symlink in app
+  fvoicerec      NO ROW                                     after uri_grants: held back, no surface until its activity's window ha
+  osmand         NO ROW                                     unstable: drew on build 40 at first; later leaves after drawing on bui

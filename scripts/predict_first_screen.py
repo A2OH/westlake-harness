@@ -33,15 +33,22 @@ import json
 import sys
 from pathlib import Path
 
-LOOKUPS = {f"sym:runtime-resolved:{lib}" for lib in
-           ("libandroid.so", "libnativewindow.so", "libmediandk.so", "libaaudio.so")}
+# Rule v2, fitted on all 101 apps of the loop at framework 57 (so in sample; the next batch is
+# its test). Dropped from v1 because they fired mostly on apps that draw:
+#   bionic libc imports (ndk:libc-abi)          1 blocked, 7 drew
+#   audio/media run-time lookups and welds       reached only when playing media: 2 blocked, 5 drew
+# Kept: the libandroid/libnativewindow lookups Flutter's and VLC's renderers make (4 blocked,
+# 2 drew), the non-media NDK packages and welds, and the engine surface (7 blocked, 1 drew).
+LOOKUPS = {f"sym:runtime-resolved:{lib}" for lib in ("libandroid.so", "libnativewindow.so")}
+LAZY_NDK = ("ndk:libc-abi", "ndk:weld:audio", "ndk:weld:media")
 
 
 def reasons(rows: list[dict]) -> list[str]:
     found = []
     for row in rows:
         rid = row["id"]
-        if rid.startswith("ndk:") and row["verdict"] == "missing" and "unshipped-library" not in rid:
+        if (rid.startswith("ndk:") and row["verdict"] == "missing" and "unshipped-library" not in rid
+                and not rid.startswith(LAZY_NDK)):
             found.append(f"native:{rid}")
         if row.get("throws_in_framework"):
             found.append(f"framework:{rid}")
