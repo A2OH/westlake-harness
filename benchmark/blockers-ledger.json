@@ -462,6 +462,13 @@
    "row": null,
    "symptom": "unstable: drew on build 40 at first; later leaves after drawing on builds 40, 45, 56 and 57 alike (environment-dependent)",
    "fixed_in": null
+  },
+  {
+   "app": "files",
+   "corpus": "batch-4",
+   "row": null,
+   "symptom": "intermittent: when inotify_add_watch succeeds, its own WatchService poller thread SIGSEGVs at address 0 (3 of 4 launches on build 57); when the watch is denied it draws",
+   "fixed_in": null
   }
  ]
 }
