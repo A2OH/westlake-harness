@@ -99,7 +99,8 @@
   "breezyweather": {
    "batch": "corpus-2",
    "first": "blocked",
-   "after": "blocked"
+   "after": "draws",
+   "fixed_on": "framework 59"
   },
   "fennec": {
    "batch": "corpus-2",
@@ -389,7 +390,8 @@
   "wifianalyzer": {
    "batch": "batch-8",
    "first": "blocked",
-   "after": "blocked"
+   "after": "draws",
+   "fixed_on": "framework 59"
   },
   "gpscockpit": {
    "batch": "batch-8",
@@ -434,7 +436,8 @@
   "duckduckgo": {
    "batch": "batch-9",
    "first": "blocked",
-   "after": "blocked"
+   "after": "draws",
+   "fixed_on": "framework 59"
   },
   "streetcomplete": {
    "batch": "batch-9",
