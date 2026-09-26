@@ -1,0 +1,537 @@
+{
+ "chat": {
+  "expected": "draws",
+  "because": []
+ },
+ "bim": {
+  "expected": "draws",
+  "because": []
+ },
+ "stochapop": {
+  "expected": "draws",
+  "because": []
+ },
+ "soundaura": {
+  "expected": "draws",
+  "because": []
+ },
+ "obtainx": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ]
+ },
+ "flicky": {
+  "expected": "draws",
+  "because": []
+ },
+ "librelibrivoxlis": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ]
+ },
+ "batterytemperatu": {
+  "expected": "draws",
+  "because": []
+ },
+ "mobilev2": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so",
+   "native:ndk:package"
+  ]
+ },
+ "nori": {
+  "expected": "blocked",
+  "because": [
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "native:ndk:package"
+  ]
+ },
+ "solipsism": {
+  "expected": "draws",
+  "because": []
+ },
+ "graph89": {
+  "expected": "draws",
+  "because": []
+ },
+ "jtx": {
+  "expected": "draws",
+  "because": []
+ },
+ "geotagvideocamer": {
+  "expected": "draws",
+  "because": []
+ },
+ "cardswithcats": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ]
+ },
+ "castlab": {
+  "expected": "draws",
+  "because": []
+ },
+ "nounours": {
+  "expected": "draws",
+  "because": []
+ },
+ "hourly": {
+  "expected": "draws",
+  "because": []
+ },
+ "toolbox": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ]
+ },
+ "gitlab": {
+  "expected": "draws",
+  "because": []
+ },
+ "localsendapp": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ]
+ },
+ "librecontactsbac": {
+  "expected": "draws",
+  "because": []
+ },
+ "stable": {
+  "expected": "draws",
+  "because": []
+ },
+ "emacs": {
+  "expected": "blocked",
+  "because": [
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativehelper.so"
+  ]
+ },
+ "diesimu": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "native:ndk:package",
+   "native:ndk:weld:sensors"
+  ]
+ },
+ "fitbook": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ]
+ },
+ "ytdl": {
+  "expected": "draws",
+  "because": []
+ },
+ "photoediting": {
+  "expected": "draws",
+  "because": []
+ },
+ "viewer": {
+  "expected": "draws",
+  "because": []
+ },
+ "letterbox": {
+  "expected": "draws",
+  "because": []
+ },
+ "sterna": {
+  "expected": "draws",
+  "because": []
+ },
+ "fosswarn": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ]
+ },
+ "usp": {
+  "expected": "blocked",
+  "because": [
+   "lookup:sym:runtime-resolved:libandroid.so"
+  ]
+ },
+ "vaultexplorer": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ]
+ },
+ "fluffy": {
+  "expected": "draws",
+  "because": []
+ },
+ "wormhole": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ]
+ },
+ "waterflyiii": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so",
+   "native:ndk:package"
+  ]
+ },
+ "blockads": {
+  "expected": "draws",
+  "because": []
+ },
+ "opflashcontrol": {
+  "expected": "draws",
+  "because": []
+ },
+ "hacki": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ]
+ },
+ "cloudgallery": {
+  "expected": "draws",
+  "because": []
+ },
+ "fdroid2": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ]
+ },
+ "editor2": {
+  "expected": "draws",
+  "because": []
+ },
+ "quitter": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ]
+ },
+ "hypostats": {
+  "expected": "draws",
+  "because": []
+ },
+ "arcticons": {
+  "expected": "draws",
+  "because": []
+ },
+ "fluxnews": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so",
+   "native:ndk:package"
+  ]
+ },
+ "macat": {
+  "expected": "draws",
+  "because": []
+ },
+ "indic": {
+  "expected": "draws",
+  "because": []
+ },
+ "cclauncher": {
+  "expected": "draws",
+  "because": []
+ },
+ "mucke": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ]
+ },
+ "onloc": {
+  "expected": "draws",
+  "because": []
+ },
+ "airlyrics": {
+  "expected": "draws",
+  "because": []
+ },
+ "marketmonk": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ]
+ },
+ "pilltime": {
+  "expected": "draws",
+  "because": []
+ },
+ "meditationtimer": {
+  "expected": "draws",
+  "because": []
+ },
+ "tryst": {
+  "expected": "draws",
+  "because": []
+ },
+ "kryptos": {
+  "expected": "draws",
+  "because": []
+ },
+ "beatbridge": {
+  "expected": "draws",
+  "because": []
+ },
+ "rhythmengine": {
+  "expected": "blocked",
+  "because": [
+   "lookup:sym:runtime-resolved:libandroid.so"
+  ]
+ },
+ "rouelibre": {
+  "expected": "draws",
+  "because": []
+ },
+ "networkscanner": {
+  "expected": "draws",
+  "because": []
+ },
+ "droidrops": {
+  "expected": "draws",
+  "because": []
+ },
+ "todo": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ]
+ },
+ "notifilter": {
+  "expected": "draws",
+  "because": []
+ },
+ "translator": {
+  "expected": "draws",
+  "because": []
+ },
+ "fdroid3": {
+  "expected": "draws",
+  "because": []
+ },
+ "werewolvesgame": {
+  "expected": "draws",
+  "because": []
+ },
+ "cardabase": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ]
+ },
+ "agrahn": {
+  "expected": "draws",
+  "because": []
+ },
+ "deku": {
+  "expected": "draws",
+  "because": []
+ },
+ "duckrun": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "native:ndk:weld:buffers",
+   "native:ndk:weld:camera"
+  ]
+ },
+ "uturn": {
+  "expected": "draws",
+  "because": []
+ },
+ "rushhour": {
+  "expected": "blocked",
+  "because": [
+   "native:ndk:package"
+  ]
+ },
+ "gotify": {
+  "expected": "draws",
+  "because": []
+ },
+ "aaaaxy": {
+  "expected": "blocked",
+  "because": [
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "native:ndk:package",
+   "native:ndk:weld:input"
+  ]
+ },
+ "internetradio": {
+  "expected": "draws",
+  "because": []
+ },
+ "econverter": {
+  "expected": "draws",
+  "because": []
+ },
+ "siftrecipes": {
+  "expected": "draws",
+  "because": []
+ },
+ "jiyi": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ]
+ },
+ "myquran": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ]
+ },
+ "ssh": {
+  "expected": "draws",
+  "because": []
+ },
+ "droidpad": {
+  "expected": "draws",
+  "because": []
+ },
+ "infraarcana": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "native:ndk:package",
+   "native:ndk:weld:sensors"
+  ]
+ },
+ "eventfahrplan": {
+  "expected": "draws",
+  "because": []
+ },
+ "marlin": {
+  "expected": "blocked",
+  "because": [
+   "native:ndk:package"
+  ]
+ },
+ "otgmaster": {
+  "expected": "draws",
+  "because": []
+ },
+ "ball2box": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface"
+  ]
+ },
+ "balygroceriestra": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ]
+ },
+ "mobile": {
+  "expected": "draws",
+  "because": []
+ },
+ "polishedrecognit": {
+  "expected": "draws",
+  "because": []
+ },
+ "tinywheels": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface"
+  ]
+ },
+ "hematimer": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ]
+ },
+ "stopwatch": {
+  "expected": "draws",
+  "because": []
+ },
+ "burgerparty": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface"
+  ]
+ },
+ "rebooter": {
+  "expected": "draws",
+  "because": []
+ },
+ "ntodotxt": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ]
+ },
+ "texetescribe": {
+  "expected": "draws",
+  "because": []
+ },
+ "simpletextcrypt": {
+  "expected": "draws",
+  "because": []
+ },
+ "ttsutil": {
+  "expected": "draws",
+  "because": []
+ }
+}
