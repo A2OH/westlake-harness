@@ -1,0 +1,44 @@
+{
+ "fcontacts": {
+  "expected": "draws",
+  "because": []
+ },
+ "fphone": {
+  "expected": "draws",
+  "because": []
+ },
+ "fcamera": {
+  "expected": "draws",
+  "because": []
+ },
+ "icsx5": {
+  "expected": "draws",
+  "because": []
+ },
+ "editor": {
+  "expected": "draws",
+  "because": []
+ },
+ "opentracks": {
+  "expected": "draws",
+  "because": []
+ },
+ "fvoicerec": {
+  "expected": "draws",
+  "because": []
+ },
+ "xtra": {
+  "expected": "draws",
+  "because": []
+ },
+ "translateyou": {
+  "expected": "draws",
+  "because": []
+ },
+ "adaway": {
+  "expected": "blocked",
+  "because": [
+   "native:ndk:libc-abi"
+  ]
+ }
+}

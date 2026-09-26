@@ -23,7 +23,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 
-from . import contracts, services
+from . import contracts, ohresolve, services
 
 CATEGORIES = [
     ("java-api", "Java framework API", "APK dex references − Westlake boot jars, filtered by API level"),
@@ -33,6 +33,12 @@ CATEGORIES = [
     ("package-manager", "Package manager & manifest", "manifest features and PackageManager calls → Westlake PM semantics"),
     ("app-framework", "Activity, window & process contracts",
      "what system_server would answer, answered in-process by Westlake in direct launch → white-box probes"),
+    ("window", "Windows & surfaces",
+     "how the first screen renders → whether it needs a surface of its own → OH window/surface model"),
+    ("runtime-data", "Runtime data",
+     "platform calls whose answer depends on runtime data or build → zone rules, ICU → what the runtime loads"),
+    ("framework-natives", "Framework natives",
+     "platform classes the app uses → their native methods → libraries the runtime registers them from"),
     ("native-upcalls", "Java APIs called from native code", "JNIEnv FindClass/Get*ID names in packaged .so → Westlake boot jars"),
     ("native-symbols", "Native platform symbols", "packaged .so imports → OpenHarmony plus the NDK Westlake packages (package / libc-abi / weld / absence)"),
     ("native-loading", "Native loading & packaging", "how the libraries are packaged → what the OH linker can map"),
@@ -200,6 +206,14 @@ def service_rows(scan: dict[str, Any], aosp: dict[str, Any], westlake: dict[str,
             owners = sorted({f"{c['owner'].strip('L;').replace('/', '.')}.{c['method']}" for c in throwing})
             evidence = (f"{entry['site_count']} call sites; Kotlin casts it non-null in {len(owners)} methods "
                         f"(e.g. {', '.join(owners[:3])}): a null answer throws there, it is not skipped")
+        # A hollow binder answers null, and a manager that unwraps the answer (getList() on a
+        # ParceledListSlice) throws inside the framework: no app code can catch it.
+        unwrapping = entry.get("unwrapping_calls", []) if verdict == services.HOLLOW else []
+        if unwrapping:
+            manager = entry.get("manager", "").split("/")[-1].rstrip(";")
+            evidence = (f"throws inside {manager}: the app calls {', '.join(unwrapping[:4])}, which unwrap "
+                        f"the binder's answer (getList()); a hollow binder's null throws there, not in app code")
+            effort = "S" if effort in {"none", "verify"} else effort
         rows.append(_row(
             "system-services", f"svc:{entry['service']}", entry["service"],
             oh_touchpoint=analog or "none",
@@ -210,7 +224,7 @@ def service_rows(scan: dict[str, Any], aosp: dict[str, Any], westlake: dict[str,
                 if entry.get("manager") else None,
             app_calls=methods[:12], call_sites=entry["site_count"],
             example_site=_site(entry["sites"][0]) if entry.get("sites") else None,
-            shim=shim, app_evidence=evidence, throws_if_null=len(throwing),
+            shim=shim, app_evidence=evidence, throws_if_null=len(throwing), throws_in_framework=unwrapping,
         ))
     dynamic = sum(1 for r in requests if r.get("dynamic"))
     return rows, dynamic
@@ -309,15 +323,31 @@ def ndk_symbol_rows(
     model = ndk_model.load_model()
     by_symbol = {item["symbol"]: item for item in ndk_cov["symbols"]}
     importers: dict[str, list[str]] = defaultdict(list)
-    for elf in scan["inventory"].get("elfs", []):
+    for elf in ohresolve.target_elfs(scan):
         for symbol in elf.get("undefined_symbols", []):
             importers[symbol].append(elf.get("soname") or elf["name"])
+
+    # Libraries an importer needs that are neither packaged nor NDK: a symbol whose every importer
+    # needs one (JavaScriptCore's JS* for React Native's libjsctooling.so needing libjsc.so) comes
+    # from that library, not from libc.
+    packaged = {elf.get("soname") or elf["name"] for elf in ohresolve.target_elfs(scan)}
+    ndk_libraries = set(model.get("libraries", []))
+    unshipped: dict[str, set[str]] = {}
+    for elf in ohresolve.target_elfs(scan):
+        absent = {n for n in elf.get("needed", []) if n not in packaged and n not in ndk_libraries}
+        if absent:
+            unshipped[elf.get("soname") or elf["name"]] = absent
 
     groups: dict[tuple[str, str | None], list[dict[str, Any]]] = defaultdict(list)
     for item in oh_missing:
         symbol = item["symbol"]
         known = by_symbol.get(symbol)
-        if known is None:
+        users = item.get("importing_libraries") or importers.get(symbol, [])
+        wanted = set.intersection(*(unshipped.get(u, set()) for u in users)) if users else set()
+        if known is None and wanted:
+            how = {"group": "unshipped-library", "weld": ", ".join(sorted(wanted)), "oh": None, "source": None,
+                   "in_ndk": False}
+        elif known is None:
             how = {"group": "libc-abi", "weld": None, "oh": None, "source": None, "in_ndk": False}
         elif known["status"] != "missing":
             how = {"group": "now-provided", "weld": None, "oh": None, "source": None, "in_ndk": True,
@@ -332,7 +362,16 @@ def ndk_symbol_rows(
         names = [i["symbol"] for i in items]
         libs = sorted({lib for n in names for lib in importers.get(n, [])})
         fields: dict[str, Any] = {"importing_libraries": libs[:12], "confidence": STATIC}
-        if group == "libc-abi":
+        if group == "unshipped-library":
+            fields.update(
+                item=f"Library the APK needs but does not ship ({weld}): {len(names)} symbols",
+                oh_touchpoint="none: neither Android's NDK nor OH provides it", verdict="missing",
+                shim_class="CU", effort="verify",
+                provider=f"{', '.join(libs)} list {weld} in DT_NEEDED; the APK does not package it",
+                open_symbols=names[:20],
+                shim="a blocker only if an importer is loaded: on Android too its load fails without the library; "
+                     "check which code path loads it")
+        elif group == "libc-abi":
             covered = [n for n in names if n in shim_exports]
             open_ = [n for n in names if n not in shim_exports]
             fields.update(
@@ -515,7 +554,7 @@ def silent_load_rows(scan: dict[str, Any], model: dict[str, Any],
             "cannot be told from one that worked, so nothing downstream can detect this.")
     rows = []
     app = _matches(names, [elf.get("soname") or Path(elf["name"]).name
-                           for elf in scan["inventory"].get("elfs", [])])
+                           for elf in ohresolve.target_elfs(scan)])
     if app:
         libraries = sorted({library for found in app.values() for library in found})
         rows.append(_row(
@@ -576,7 +615,7 @@ def runtime_resolved_rows(scan: dict[str, Any], ndk_cov: dict[str, Any] | None) 
         return []
     by_library: dict[str, set[str]] = defaultdict(set)
     importers: dict[str, set[str]] = defaultdict(set)
-    for elf in scan["inventory"].get("elfs", []):
+    for elf in ohresolve.target_elfs(scan):
         name = elf.get("soname") or Path(elf["name"]).name
         for candidate in elf.get("runtime_symbol_candidates", []):
             entry = surface.get(candidate)
@@ -603,6 +642,7 @@ def runtime_resolved_rows(scan: dict[str, Any], ndk_cov: dict[str, Any] | None) 
             shim=f"supply {library}'s entry points, or confirm the caller degrades without them: "
                  "this row cannot tell a lookup that happens from a string that is never used",
             symbols=names,
+            importing_libraries=sorted(importers[library]),
         ))
     return rows
 
@@ -659,7 +699,7 @@ def apply_probe_results(gap_map: dict[str, Any], results: dict[str, Any]) -> Non
 
 def native_symbol_rows(scan: dict[str, Any], oh_missing: list[dict[str, Any]], shim_exports: set[str]) -> list[dict[str, Any]]:
     importers: dict[str, list[str]] = defaultdict(list)
-    for elf in scan["inventory"].get("elfs", []):
+    for elf in ohresolve.target_elfs(scan):
         for symbol in elf.get("undefined_symbols", []):
             importers[symbol].append(elf.get("soname") or elf["name"])
     groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
@@ -689,7 +729,7 @@ def native_symbol_rows(scan: dict[str, Any], oh_missing: list[dict[str, Any]], s
 def libc_constant_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
     """Calls that resolve by name but carry a constant each libc numbers for itself."""
     importers: dict[str, list[str]] = defaultdict(list)
-    for elf in scan["inventory"].get("elfs", []):
+    for elf in ohresolve.target_elfs(scan):
         name = elf.get("soname") or elf["name"].rsplit("/", 1)[-1]
         for symbol in elf.get("undefined_symbols", []):
             if symbol in contracts.LIBC_CONSTANT_NAMESPACE_CALLS:
@@ -812,7 +852,7 @@ def shadowed_libraries(scan: dict[str, Any], board_paths: list[str]) -> tuple[di
         if path.startswith(_SEARCHED_BEFORE_APP):
             board.setdefault(path.rsplit("/", 1)[-1], path)
     needed: dict[str, set[str]] = {}
-    for elf in scan["inventory"].get("elfs", []):
+    for elf in ohresolve.target_elfs(scan):
         name = elf.get("soname") or elf["name"].rsplit("/", 1)[-1]
         needed.setdefault(name, set()).update(elf.get("needed", []))
     shadowed = {name: board[name] for name in needed if name in board}
@@ -839,7 +879,7 @@ def launcher_namespace_option(manifest_root: Path | None) -> dict[str, Any]:
 def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_extracts: dict[str, Any],
                         board_paths: list[str] | None = None, namespace_option: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     rows = []
-    elfs = scan["inventory"].get("elfs", [])
+    elfs = ohresolve.target_elfs(scan)
     shadowed, targets = shadowed_libraries(scan, board_paths or [])
     if shadowed:
         option = namespace_option or {"present": False, "source": None}
@@ -870,11 +910,49 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
     return rows
 
 
+# Always present: the bionic names OH's musl loader answers for itself.
+_LOADER_PROVIDED = {"libc.so", "libm.so", "libdl.so", "ld-android.so"}
+
+
+def needed_library_rows(scan: dict[str, Any], board_paths: list[str] | None,
+                        runtime_libraries: list[str] | None) -> list[dict[str, Any]]:
+    """Libraries an APK library lists in DT_NEEDED that nothing on the device provides.
+
+    oh-resolve checks symbols, so a whole missing library looked like a few missing symbols,
+    or like nothing at all when every symbol also exists elsewhere. The loader refuses the load
+    before any symbol is looked at: Fennec's libxul.so needs libmediandk.so, which neither the
+    APK, the Westlake runtime nor the board ships.
+    """
+    if board_paths is None:
+        return []
+    elfs = ohresolve.target_elfs(scan)
+    provided = ({(e.get("soname") or e.get("name")) for e in elfs} | {e.get("name") for e in elfs}
+                | {p.rsplit("/", 1)[-1] for p in board_paths} | set(runtime_libraries or []) | _LOADER_PROVIDED)
+    missing: dict[str, list[str]] = defaultdict(list)
+    for elf in elfs:
+        for needed in elf.get("needed", []):
+            if needed not in provided:
+                missing[needed].append(elf.get("soname") or elf["name"])
+    if not missing:
+        return []
+    names = sorted(missing)
+    return [_row(
+        "native-loading", "load:needed-missing",
+        f"Libraries named in DT_NEEDED that nothing provides ({', '.join(names)})",
+        oh_touchpoint="OH dynamic linker: the load fails before symbols are resolved",
+        verdict="missing", shim_class="C1", effort="L" if any(n in {"libmediandk.so", "libGLESv1_CM.so", "libcamera2ndk.so", "libaaudio.so"} for n in names) else "M",
+        confidence=STATIC,
+        app_evidence="; ".join(f"{n} needed by {', '.join(sorted(set(missing[n]))[:3])}" for n in names),
+        open_symbols=names,
+        shim="ship the library (an NDK library: build it over OH's equivalent) or confirm its importer is never loaded",
+    )]
+
+
 def sandbox_rows(scan: dict[str, Any], policy: dict[str, Any]) -> list[dict[str, Any]]:
     oh = policy["oh"]["classes"]
     android = policy["android"]["classes"]
     hits: dict[str, list[tuple[str, str]]] = defaultdict(list)
-    for elf in scan["inventory"].get("elfs", []):
+    for elf in ohresolve.target_elfs(scan):
         for symbol in elf.get("undefined_symbols", []):
             obj = contracts.POLICY_SENSITIVE_IMPORTS.get(symbol)
             if obj:
@@ -937,7 +1015,7 @@ def external_rows(facts: dict[str, Any], scan: dict[str, Any], refused: dict[str
             shim=("decide per feature: truthful 'unavailable' result, or an OH-backed replacement (push, maps, auth)"
                   if not firebase else "component discovery is local (see pm:component-metadata); GMS-backed components degrade"),
         ))
-    names = {c["name"] for c in facts["components"]} | {e.get("soname", "") for e in scan["inventory"].get("elfs", [])}
+    names = {c["name"] for c in facts["components"]} | {e.get("soname", "") for e in ohresolve.target_elfs(scan)}
     for marker, sdk, behaviour in _ENV_SDKS:
         found = sorted(n for n in names if n and marker in n)
         if found:
@@ -980,6 +1058,201 @@ def launcher_extraction(manifest_root: Path | None) -> dict[str, Any]:
     return {"present": bool(match), "source": f"manifest/tools/prepare_app.py:{text.count(chr(10), 0, match.start()) + 1}" if match else None}
 
 
+ENGINE_LIBRARIES = {
+    "libgdx.so": "libGDX", "libarc.so": "Arc (a libGDX fork)", "libflutter.so": "Flutter", "libSDL2.so": "SDL", "libunity.so": "Unity",
+    "libgodot_android.so": "Godot", "libcocos2dcpp.so": "Cocos2d-x", "liblove.so": "LOVE",
+    "libUE4.so": "Unreal", "libmain.so": "a NativeActivity engine",
+}
+
+
+def engine_surface_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
+    """Apps whose first screen is drawn by an engine into a SurfaceView it creates.
+
+    On this platform a SurfaceView gets the activity's own OH window rather than a surface of its
+    own, so the engine and hwui fight over one window: PPSSPP's EGL surface failed
+    (EGL_BAD_ALLOC), Mindustry's hwui lost its surface, Shattered Pixel Dungeon (libGDX) never drew.
+    The engine is recognised by its packaged library, which obfuscation does not rename, or by a
+    NativeActivity in the launch activity's superclass chain.
+    """
+    libraries = {elf.get("soname") or elf.get("name") for elf in ohresolve.target_elfs(scan)}
+    engines = sorted({ENGINE_LIBRARIES[lib] for lib in libraries if lib in ENGINE_LIBRARIES})
+    chains = scan["inventory"].get("launch_activity_chains") or {}
+    native_activity = sorted(name for name, chain in chains.items() if any("NativeActivity" in c for c in chain))
+    if not engines and not native_activity:
+        return []
+    evidence = []
+    if engines:
+        evidence.append(f"packages {', '.join(engines)}")
+    if native_activity:
+        evidence.append(f"launch activity extends a NativeActivity ({', '.join(native_activity)})")
+    return [_row(
+        "window", "window:engine-surface", "First screen drawn by an engine into its own SurfaceView",
+        oh_touchpoint="window_manager / render_service: one OH window per activity",
+        verdict="missing", shim_class="C9", effort="L", confidence=STATIC,
+        app_evidence="; ".join(evidence),
+        engine_libraries=sorted(lib for lib in libraries if lib in ENGINE_LIBRARIES),
+        shim="give each SurfaceView its own OH surface (a child RS node) instead of the activity's window",
+    )]
+
+
+# Platform calls that resolve but whose answer depends on what the runtime loads or how it was built.
+# Measured on the board by probes/icu-data (framework 57); each entry names what it showed.
+RUNTIME_DATA = {
+    "data:tzdata": dict(
+        item="java.time zone rules (tzdata)",
+        members={"Ljava/time/ZoneId;": None, "Ljava/time/ZonedDateTime;": None, "Ljava/time/OffsetDateTime;": None,
+                 "Ljava/time/zone/ZoneRulesProvider;": None, "Ljava/time/zone/ZoneRules;": None},
+        # LocalDate.now()/Clock.systemDefaultZone() are left out: three apps that call them at
+        # startup draw, the board's default zone evidently needing no rules.
+        provider="the runtime's tzdata directory is staged empty: ICU4J lists 0 zones, java.util.TimeZone "
+                 "answers GMT for every zone, java.time throws 'No time-zone data files registered' "
+                 "(probes/icu-data; duckduckgo)",
+        shim="stage Android's tz data (tzdata, icu_tzdata.dat) under ANDROID_TZDATA_ROOT", shim_class="C1",
+    ),
+    "data:icu-locale-display": dict(
+        item="ICU locale display names",
+        members={"Ljava/util/Locale;": {"getDisplayName", "getDisplayLanguage", "getDisplayCountry",
+                                         "getDisplayVariant", "getDisplayScript"},
+                 "Landroid/icu/util/ULocale;": {"getDisplayName", "getDisplayLanguage", "getDisplayCountry"}},
+        provider="libicu_jni is built without AOSP's zero-initialized locals, so ScopedIcuLocale's "
+                 "uninitialized UErrorCode makes LocaleNative return null at random and "
+                 "Locale.getDisplayName throw (probes/icu-data; wifianalyzer). ICU data itself loads",
+        shim="build libicu_jni, like all AOSP native code, with -ftrivial-auto-var-init=zero", shim_class="C7",
+    ),
+}
+
+
+def runtime_data_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
+    """Platform calls that resolve but answer wrongly on this runtime: zone rules, locale display names."""
+    names = scan["inventory"].get("platform_method_names", {})
+    rows = []
+    for rid, spec in RUNTIME_DATA.items():
+        members = sorted(f"{owner}->{name}" for owner, wanted in spec["members"].items()
+                         for name in names.get(owner, []) if wanted is None or name in wanted)
+        if not members:
+            continue
+        rows.append(_row(
+            "runtime-data", rid, spec["item"],
+            oh_touchpoint="data files the runtime loads at first use, not a symbol or a service",
+            verdict="missing", shim_class=spec["shim_class"], effort="S", confidence=OBSERVED,
+            provider=spec["provider"], shim=spec["shim"], data_members=members,
+            app_evidence=f"the app calls {', '.join(m.split('/')[-1].replace(';->', '.') for m in members[:4])}"
+                         + (" …" if len(members) > 4 else ""),
+        ))
+    return rows
+
+
+_CLASS_INIT_NATIVE = re.compile(r"(?i)^_?native_?(class_?)?init$")
+
+
+def _jni_mangle(text: str) -> str:
+    out = []
+    for ch in text:
+        if ch == "/": out.append("_")
+        elif ch == "_": out.append("_1")
+        elif ch == ";": out.append("_2")
+        elif ch == "[": out.append("_3")
+        elif ch.isalnum(): out.append(ch)
+        else: out.append("_0%04x" % ord(ch))
+    return "".join(out)
+
+
+def runtime_class_strings(directory: Path | None) -> set[str] | None:
+    """JNI class paths ("android/media/MediaCodec") named anywhere in the runtime's libraries.
+
+    Registration tables are not always parseable (their layout varies with the compiler), but a
+    library that registers a class names it for FindClass. A class named nowhere is registered
+    nowhere; a class named somewhere is given the benefit of the doubt.
+    """
+    if directory is None or not directory.is_dir():
+        return None
+    found: set[str] = set()
+    for lib in directory.glob("*.so"):
+        found.update(m.decode() for m in re.findall(rb"(?:android|com/android)/[A-Za-z0-9_/$]+", lib.read_bytes()))
+    return found
+
+
+def framework_native_rows(scan: dict[str, Any], runtime: dict[str, Any] | None,
+                          class_strings: set[str] | None = None) -> list[dict[str, Any]]:
+    """Platform classes the app uses whose native methods no deployed library registers.
+
+    ART binds a native method only when a loaded library registers it (RegisterNatives) or
+    exports its Java_ name. A boot class the runtime ships without its JNI half fails on first
+    touch: EGL14's static initializer (Element, during bind), android.hardware.Camera (OpenCamera).
+    A class is flagged when the app calls one of its unbound natives directly, when a class-init
+    native is unbound (it runs on first use of the class), or when none of its natives is bound.
+    A row says the gap exists, not that startup reaches it: Element reached EGL14 during bind,
+    while many apps that reference android.hardware.Camera never open it before their first screen.
+    """
+    if not runtime:
+        return []
+    registered: set[tuple[str, str]] = set()
+    exported: set[str] = set()
+    for lib in runtime.get("bridge_libraries", []) + runtime.get("system_libraries", []):
+        for entry in lib.get("jni_registration_entries") or []:
+            registered.add((entry.get("name"), entry.get("signature")))
+        for name in lib.get("jni_exports") or []:
+            exported.add(name if isinstance(name, str) else name.get("symbol", ""))
+    classes = runtime.get("classes", {})
+    rows = []
+    for owner, names in sorted(scan["inventory"].get("platform_method_names", {}).items()):
+        if not owner.startswith(("Landroid/", "Lcom/android/")):
+            continue
+        # $ravenwood natives are host-side test doubles, never called on a device.
+        natives = [m for m in (classes.get(owner) or {}).get("native_methods") or [] if "$ravenwood" not in m]
+        if not natives or (class_strings is not None and owner[1:-1] in class_strings):
+            continue
+        prefix = "Java_" + _jni_mangle(owner[1:-1]) + "_"
+        unbound = []
+        # Named in no runtime library: nothing registers it, whatever other class shares a native's
+        # name and signature (EGL10's _nativeClassInit()V made EGL14's look bound).
+        for method in natives if class_strings is None else []:
+            name, sig = method[:method.index("(")], method[method.index("("):]
+            if (name, sig) in registered:
+                continue
+            if any(e == prefix + _jni_mangle(name) or e.startswith(prefix + _jni_mangle(name) + "__") for e in exported):
+                continue
+            unbound.append(method)
+        if class_strings is not None:
+            unbound = list(natives)
+        if not unbound:
+            continue
+        called = set(names)
+        direct = [m for m in unbound if m[:m.index("(")] in called]
+        init = [m for m in unbound if _CLASS_INIT_NATIVE.match(m[:m.index("(")])]
+        entire = len(unbound) == len(natives)
+        if not (direct or init or entire):
+            continue
+        cls = owner[1:-1].replace("/", ".")
+        why = ("its class initializer is native and unbound" if init else
+               "the app calls an unbound native directly" if direct else
+               "none of its natives is registered")
+        rows.append(_row(
+            "framework-natives", f"jni:{cls}", f"{cls}: {len(unbound)} of {len(natives)} natives unregistered",
+            oh_touchpoint="the JNI half of the framework class (libandroid_runtime in AOSP)",
+            verdict="missing", shim_class="C3",
+            effort="S" if len(unbound) <= 5 else "M" if len(unbound) <= 40 else "L",
+            confidence=STATIC,
+            app_calls=sorted(called)[:12], open_symbols=(init or direct or unbound)[:12],
+            app_evidence=f"{why}; the app calls {', '.join(sorted(called)[:4])}",
+            shim="port the AOSP JNI source for the class and register it at startup, before application bind",
+        ))
+    return rows
+
+
+def apply_ledger(rows: list[dict[str, Any]], ledger: dict[str, Any]) -> None:
+    """Mark rows that have already blocked an app at startup on the board: the empirical ranking a
+    static map cannot make by itself."""
+    seen: dict[str, list[str]] = defaultdict(list)
+    for entry in ledger.get("blockers", []):
+        if entry.get("row"):
+            seen[entry["row"]].append(f"{entry['app']} ({entry['corpus']})"
+                                      + (f", fixed in {entry['fixed_in']}" if entry.get("fixed_in") else ", open"))
+    for row in rows:
+        if row["id"] in seen:
+            row["seen_blocking"] = seen[row["id"]]
+
+
 def build_map(
     scan: dict[str, Any],
     facts: dict[str, Any],
@@ -995,6 +1268,9 @@ def build_map(
     board_paths: list[str] | None = None,
     aosp_root: Path | None = None,
     runtime_libraries: list[str] | None = None,
+    runtime_index: dict[str, Any] | None = None,
+    runtime_class_paths: set[str] | None = None,
+    ledger: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     westlake_services = services.westlake_service_model(westlake_root)
     pm = contracts.pm_adapter_model(westlake_root)
@@ -1003,11 +1279,15 @@ def build_map(
     rows = (java + svc + package_manager_rows(scan, facts, pm)
             + app_framework_rows(scan, contracts.direct_launch_am_model(westlake_root),
                                  contracts.window_adapter_model(westlake_root))
+            + engine_surface_rows(scan)
+            + runtime_data_rows(scan)
+            + framework_native_rows(scan, runtime_index, runtime_class_paths)
             + native_upcall_rows(scan)
             + (ndk_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root), ndk_cov) if ndk_cov
                else native_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root)))
             + native_loading_rows(facts, scan, launcher_extraction(manifest_root), board_paths,
                                   launcher_namespace_option(manifest_root))
+            + needed_library_rows(scan, board_paths, runtime_libraries)
             + libc_constant_rows(scan, contracts.libc_constant_model(westlake_root))
             + security_rows(scan, contracts.keystore_model(westlake_root))
             + webview_rows(scan, webview_process_model(aosp_root, westlake_root))
@@ -1017,6 +1297,8 @@ def build_map(
                                runtime_libraries)
             + runtime_resolved_rows(scan, ndk_cov)
             + sandbox_rows(scan, policy) + external_rows(facts, scan, refused_libraries(westlake_root)))
+    if ledger:
+        apply_ledger(rows, ledger)
     gap_map = {
         "app": {"package": facts["package"], "version": facts["version_name"], "target_sdk": facts["target_sdk"],
                 "apk_sha256": scan["apk"]["sha256"]},
@@ -1101,6 +1383,23 @@ def apply_observed(gap_map: dict[str, Any], scan: dict[str, Any], observed: dict
                       if k.partition("->")[2].split("(")[0] in names}
             on_path = bool(states)
             evidence = ", ".join(f"{n} {st}" for n, st in sorted(states.items())) or "not called"
+        elif category == "window":
+            # The engine is on the startup path when it created its SurfaceView or loaded its library.
+            surface = sorted({touch[k] for k in by_owner.get("Landroid/view/SurfaceView;", [])})
+            engines = sorted(set(row.get("engine_libraries", [])) & loaded)
+            on_path = "executed" in surface or bool(engines)
+            evidence = "; ".join(filter(None, [f"SurfaceView {'/'.join(surface)}" if surface else "",
+                                               f"loaded: {', '.join(engines)}" if engines else ""])) or "no SurfaceView, engine not loaded"
+        elif category == "runtime-data":
+            hit = sorted(k.split("(")[0] for k in touch if touch[k] == "executed"
+                         and k.split("(")[0] in set(row.get("data_members", [])))
+            on_path = bool(hit)
+            evidence = ("executed: " + ", ".join(h.split("/")[-1].replace(";->", ".") for h in hit[:4])) if hit else "not called"
+        elif category == "framework-natives":
+            # An unbound class-init native fails when the class is first used: any executed method counts.
+            descriptor = "L" + rid.partition(":")[2].replace(".", "/") + ";"
+            on_path = descriptor in platform_classes
+            evidence = "class code executed" if on_path else "no code of the class executed"
         elif category in {"native-symbols", "native-upcalls", "sandbox-policy", "native-loading"}:
             if rid.startswith("upcall:"):
                 libs = {rid[7:]}
@@ -1175,6 +1474,13 @@ def markdown(gap_map: dict[str, Any], backtest_results: list[dict[str, Any]] | N
         prof = ", ".join(f"{profile[e]}×{e}" for e in _EFFORT_ORDER if profile.get(e))
         out.append(f"| {title} | {how} | {len(cat)} | {len(gaps)} | {prof or '—'} |")
     out += ["", "Effort: " + "; ".join(f"**{k}** {v}" for k, v in EFFORT.items() if k != "none"), ""]
+    seen_rows = [r for r in gap_map["rows"] if r.get("seen_blocking")]
+    if seen_rows:
+        out += ["## Rows that have blocked an app at startup before", "",
+                "From the blockers ledger: gaps this app has in common with an app that died on them.", "",
+                "| Row | Verdict | Blocked |", "|---|---|---|"]
+        out += [f"| `{r['id']}` | {r['verdict']} | {_escape('; '.join(r['seen_blocking']))} |" for r in seen_rows]
+        out.append("")
     observed = gap_map.get("observed")
     if observed:
         open_rows = [r for r in rows if r["verdict"] != "supplied" and r["effort"] != "none"]

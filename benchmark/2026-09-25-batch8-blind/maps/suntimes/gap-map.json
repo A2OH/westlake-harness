@@ -1,0 +1,1510 @@
+{
+  "app": {
+    "apk_sha256": "bd0fbe51f684895d8e1778203875cd0850af5387ec036811c540b13ce3ec0a11",
+    "package": "com.forrestguice.suntimeswidget",
+    "target_sdk": "30",
+    "version": "0.17.5"
+  },
+  "notes": {
+    "java_excluded_by_api_level": {},
+    "native_upcalls_scanned": true,
+    "service_requests_with_computed_names": 2
+  },
+  "provider": {
+    "oh_board": "OpenHarmony 6.1.0.31, arm64, SELinux enforcing policy as loaded",
+    "westlake": {
+      "branch": "corpus2-fixes",
+      "commit": "e2524b1a869651c6a0d7769a94f04a7af2f00309",
+      "uncommitted": [
+        "framework/activity/java/ActivityTaskManagerAdapter.java",
+        "framework/activity/java/AppSchedulerBridge.java",
+        "framework/core/java/LocalServiceBinders.java",
+        "framework/core/java/OHServiceManager.java",
+        "framework/window/java/DisplayManagerAdapter.java"
+      ]
+    }
+  },
+  "rows": [
+    {
+      "category": "java-api",
+      "confidence": "static",
+      "counts": {
+        "hollow": 29,
+        "missing": 0,
+        "probe": 0
+      },
+      "effort": "verify",
+      "examples": [
+        "android.view.ActionProvider.hasSubMenu",
+        "android.view.ActionProvider.isVisible",
+        "android.view.ActionProvider.onPerformDefaultAction",
+        "android.view.ActionProvider.onPrepareSubMenu",
+        "android.view.ActionProvider.overridesItemVisibility",
+        "android.view.GestureDetector$SimpleOnGestureListener.onDoubleTap"
+      ],
+      "id": "java:Views & windows",
+      "item": "Views & windows",
+      "members": [
+        {
+          "kind": "hollow_method",
+          "name": "hasSubMenu",
+          "owner": "Landroid/view/ActionProvider;",
+          "signature": "()Z"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "isVisible",
+          "owner": "Landroid/view/ActionProvider;",
+          "signature": "()Z"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onPerformDefaultAction",
+          "owner": "Landroid/view/ActionProvider;",
+          "signature": "()Z"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onPrepareSubMenu",
+          "owner": "Landroid/view/ActionProvider;",
+          "signature": "(Landroid/view/SubMenu;)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "overridesItemVisibility",
+          "owner": "Landroid/view/ActionProvider;",
+          "signature": "()Z"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onDoubleTap",
+          "owner": "Landroid/view/GestureDetector$SimpleOnGestureListener;",
+          "signature": "(Landroid/view/MotionEvent;)Z"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "getAccessibilityNodeProvider",
+          "owner": "Landroid/view/View$AccessibilityDelegate;",
+          "signature": "(Landroid/view/View;)Landroid/view/accessibility/AccessibilityNodeProvider;"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "getBaseline",
+          "owner": "Landroid/view/View;",
+          "signature": "()I"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "hasOverlappingRendering",
+          "owner": "Landroid/view/View;",
+          "signature": "()Z"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "isInEditMode",
+          "owner": "Landroid/view/View;",
+          "signature": "()Z"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onCheckIsTextEditor",
+          "owner": "Landroid/view/View;",
+          "signature": "()Z"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onDraw",
+          "owner": "Landroid/view/View;",
+          "signature": "(Landroid/graphics/Canvas;)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onLayout",
+          "owner": "Landroid/view/View;",
+          "signature": "(ZIIII)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onSizeChanged",
+          "owner": "Landroid/view/View;",
+          "signature": "(IIII)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "getTapTimeout",
+          "owner": "Landroid/view/ViewConfiguration;",
+          "signature": "()I"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "getBaseline",
+          "owner": "Landroid/view/ViewGroup;",
+          "signature": "()I"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onConfigurationChanged",
+          "owner": "Landroid/view/ViewGroup;",
+          "signature": "(Landroid/content/res/Configuration;)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onDraw",
+          "owner": "Landroid/view/ViewGroup;",
+          "signature": "(Landroid/graphics/Canvas;)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onFinishInflate",
+          "owner": "Landroid/view/ViewGroup;",
+          "signature": "()V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onRtlPropertiesChanged",
+          "owner": "Landroid/view/ViewGroup;",
+          "signature": "(I)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onSizeChanged",
+          "owner": "Landroid/view/ViewGroup;",
+          "signature": "(IIII)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onViewAdded",
+          "owner": "Landroid/view/ViewGroup;",
+          "signature": "(Landroid/view/View;)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onViewRemoved",
+          "owner": "Landroid/view/ViewGroup;",
+          "signature": "(Landroid/view/View;)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onVisibilityChanged",
+          "owner": "Landroid/view/ViewGroup;",
+          "signature": "(Landroid/view/View;I)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onWindowSystemUiVisibilityChanged",
+          "owner": "Landroid/view/ViewGroup;",
+          "signature": "(I)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "requestChildRectangleOnScreen",
+          "owner": "Landroid/view/ViewGroup;",
+          "signature": "(Landroid/view/View;Landroid/graphics/Rect;Z)Z"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onPointerCaptureChanged",
+          "owner": "Landroid/view/Window$Callback;",
+          "signature": "(Z)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onProvideKeyboardShortcuts",
+          "owner": "Landroid/view/Window$Callback;",
+          "signature": "(Ljava/util/List;Landroid/view/Menu;I)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "recycle",
+          "owner": "Landroid/view/accessibility/AccessibilityNodeInfo;",
+          "signature": "()V"
+        }
+      ],
+      "oh_touchpoint": "window_manager / render_service",
+      "shim": "check each hollow body against AOSP",
+      "shim_class": "C9",
+      "verdict": "hollow-candidate"
+    },
+    {
+      "category": "java-api",
+      "confidence": "static",
+      "counts": {
+        "hollow": 22,
+        "missing": 0,
+        "probe": 0
+      },
+      "effort": "verify",
+      "examples": [
+        "android.graphics.drawable.Drawable$ConstantState.canApplyTheme",
+        "android.graphics.drawable.Drawable.applyTheme",
+        "android.graphics.drawable.Drawable.canApplyTheme",
+        "android.graphics.drawable.Drawable.getAlpha",
+        "android.graphics.drawable.Drawable.getColorFilter",
+        "android.graphics.drawable.Drawable.getConstantState"
+      ],
+      "id": "java:Graphics",
+      "item": "Graphics",
+      "members": [
+        {
+          "kind": "hollow_method",
+          "name": "canApplyTheme",
+          "owner": "Landroid/graphics/drawable/Drawable$ConstantState;",
+          "signature": "()Z"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "applyTheme",
+          "owner": "Landroid/graphics/drawable/Drawable;",
+          "signature": "(Landroid/content/res/Resources$Theme;)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "canApplyTheme",
+          "owner": "Landroid/graphics/drawable/Drawable;",
+          "signature": "()Z"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "getAlpha",
+          "owner": "Landroid/graphics/drawable/Drawable;",
+          "signature": "()I"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "getColorFilter",
+          "owner": "Landroid/graphics/drawable/Drawable;",
+          "signature": "()Landroid/graphics/ColorFilter;"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "getConstantState",
+          "owner": "Landroid/graphics/drawable/Drawable;",
+          "signature": "()Landroid/graphics/drawable/Drawable$ConstantState;"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "getIntrinsicHeight",
+          "owner": "Landroid/graphics/drawable/Drawable;",
+          "signature": "()I"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "getIntrinsicWidth",
+          "owner": "Landroid/graphics/drawable/Drawable;",
+          "signature": "()I"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "getTransparentRegion",
+          "owner": "Landroid/graphics/drawable/Drawable;",
+          "signature": "()Landroid/graphics/Region;"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "isAutoMirrored",
+          "owner": "Landroid/graphics/drawable/Drawable;",
+          "signature": "()Z"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "isStateful",
+          "owner": "Landroid/graphics/drawable/Drawable;",
+          "signature": "()Z"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "jumpToCurrentState",
+          "owner": "Landroid/graphics/drawable/Drawable;",
+          "signature": "()V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onBoundsChange",
+          "owner": "Landroid/graphics/drawable/Drawable;",
+          "signature": "(Landroid/graphics/Rect;)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onLayoutDirectionChanged",
+          "owner": "Landroid/graphics/drawable/Drawable;",
+          "signature": "(I)Z"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onLevelChange",
+          "owner": "Landroid/graphics/drawable/Drawable;",
+          "signature": "(I)Z"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onStateChange",
+          "owner": "Landroid/graphics/drawable/Drawable;",
+          "signature": "([I)Z"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "setAutoMirrored",
+          "owner": "Landroid/graphics/drawable/Drawable;",
+          "signature": "(Z)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "setDither",
+          "owner": "Landroid/graphics/drawable/Drawable;",
+          "signature": "(Z)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "setFilterBitmap",
+          "owner": "Landroid/graphics/drawable/Drawable;",
+          "signature": "(Z)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "setHotspot",
+          "owner": "Landroid/graphics/drawable/Drawable;",
+          "signature": "(FF)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "setHotspotBounds",
+          "owner": "Landroid/graphics/drawable/Drawable;",
+          "signature": "(IIII)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "setTintList",
+          "owner": "Landroid/graphics/drawable/Drawable;",
+          "signature": "(Landroid/content/res/ColorStateList;)V"
+        }
+      ],
+      "oh_touchpoint": "render_service / graphic_2d",
+      "shim": "check each hollow body against AOSP",
+      "shim_class": "C9",
+      "verdict": "hollow-candidate"
+    },
+    {
+      "category": "java-api",
+      "confidence": "static",
+      "counts": {
+        "hollow": 18,
+        "missing": 0,
+        "probe": 0
+      },
+      "effort": "verify",
+      "examples": [
+        "android.widget.AbsListView.layoutChildren",
+        "android.widget.AutoCompleteTextView.onFinishInflate",
+        "android.widget.Button.onSizeChanged",
+        "android.widget.Button.onTextChanged",
+        "android.widget.FrameLayout.onConfigurationChanged",
+        "android.widget.FrameLayout.onFinishInflate"
+      ],
+      "id": "java:Widgets",
+      "item": "Widgets",
+      "members": [
+        {
+          "kind": "hollow_method",
+          "name": "layoutChildren",
+          "owner": "Landroid/widget/AbsListView;",
+          "signature": "()V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onFinishInflate",
+          "owner": "Landroid/widget/AutoCompleteTextView;",
+          "signature": "()V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onSizeChanged",
+          "owner": "Landroid/widget/Button;",
+          "signature": "(IIII)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onTextChanged",
+          "owner": "Landroid/widget/Button;",
+          "signature": "(Ljava/lang/CharSequence;III)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onConfigurationChanged",
+          "owner": "Landroid/widget/FrameLayout;",
+          "signature": "(Landroid/content/res/Configuration;)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onFinishInflate",
+          "owner": "Landroid/widget/FrameLayout;",
+          "signature": "()V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onSizeChanged",
+          "owner": "Landroid/widget/FrameLayout;",
+          "signature": "(IIII)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onVisibilityChanged",
+          "owner": "Landroid/widget/FrameLayout;",
+          "signature": "(Landroid/view/View;I)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onDraw",
+          "owner": "Landroid/widget/GridView;",
+          "signature": "(Landroid/graphics/Canvas;)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onConfigurationChanged",
+          "owner": "Landroid/widget/HorizontalScrollView;",
+          "signature": "(Landroid/content/res/Configuration;)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onDraw",
+          "owner": "Landroid/widget/HorizontalScrollView;",
+          "signature": "(Landroid/graphics/Canvas;)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onSizeChanged",
+          "owner": "Landroid/widget/ImageView;",
+          "signature": "(IIII)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onVisibilityChanged",
+          "owner": "Landroid/widget/ImageView;",
+          "signature": "(Landroid/view/View;I)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onFinishInflate",
+          "owner": "Landroid/widget/LinearLayout;",
+          "signature": "()V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onSizeChanged",
+          "owner": "Landroid/widget/LinearLayout;",
+          "signature": "(IIII)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onViewRemoved",
+          "owner": "Landroid/widget/LinearLayout;",
+          "signature": "(Landroid/view/View;)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onVisibilityChanged",
+          "owner": "Landroid/widget/LinearLayout;",
+          "signature": "(Landroid/view/View;I)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onTextChanged",
+          "owner": "Landroid/widget/TextView;",
+          "signature": "(Ljava/lang/CharSequence;III)V"
+        }
+      ],
+      "oh_touchpoint": "none (library code inside Westlake)",
+      "shim": "check each hollow body against AOSP",
+      "shim_class": "C9",
+      "verdict": "hollow-candidate"
+    },
+    {
+      "category": "java-api",
+      "confidence": "static",
+      "counts": {
+        "hollow": 16,
+        "missing": 0,
+        "probe": 0
+      },
+      "effort": "verify",
+      "examples": [
+        "android.app.ActionBar.getThemedContext",
+        "android.app.ActionBar.setHomeActionContentDescription",
+        "android.app.ActionBar.setHomeAsUpIndicator",
+        "android.app.Activity.onActivityResult",
+        "android.app.Activity.onCreateContextMenu",
+        "android.app.Activity.onCreateView"
+      ],
+      "id": "java:App framework",
+      "item": "App framework",
+      "members": [
+        {
+          "kind": "hollow_method",
+          "name": "getThemedContext",
+          "owner": "Landroid/app/ActionBar;",
+          "signature": "()Landroid/content/Context;"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "setHomeActionContentDescription",
+          "owner": "Landroid/app/ActionBar;",
+          "signature": "(I)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "setHomeAsUpIndicator",
+          "owner": "Landroid/app/ActionBar;",
+          "signature": "(Landroid/graphics/drawable/Drawable;)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onActivityResult",
+          "owner": "Landroid/app/Activity;",
+          "signature": "(IILandroid/content/Intent;)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onCreateContextMenu",
+          "owner": "Landroid/app/Activity;",
+          "signature": "(Landroid/view/ContextMenu;Landroid/view/View;Landroid/view/ContextMenu$ContextMenuInfo;)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onCreateView",
+          "owner": "Landroid/app/Activity;",
+          "signature": "(Ljava/lang/String;Landroid/content/Context;Landroid/util/AttributeSet;)Landroid/view/View;"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onNewIntent",
+          "owner": "Landroid/app/Activity;",
+          "signature": "(Landroid/content/Intent;)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onRequestPermissionsResult",
+          "owner": "Landroid/app/Activity;",
+          "signature": "(I[Ljava/lang/String;[I)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onUserInteraction",
+          "owner": "Landroid/app/Activity;",
+          "signature": "()V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onCreate",
+          "owner": "Landroid/app/Application;",
+          "signature": "()V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onAttachedToWindow",
+          "owner": "Landroid/app/Dialog;",
+          "signature": "()V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onCreate",
+          "owner": "Landroid/app/Dialog;",
+          "signature": "(Landroid/os/Bundle;)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onAppWidgetOptionsChanged",
+          "owner": "Landroid/appwidget/AppWidgetProvider;",
+          "signature": "(Landroid/content/Context;Landroid/appwidget/AppWidgetManager;ILandroid/os/Bundle;)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onDisabled",
+          "owner": "Landroid/appwidget/AppWidgetProvider;",
+          "signature": "(Landroid/content/Context;)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onEnabled",
+          "owner": "Landroid/appwidget/AppWidgetProvider;",
+          "signature": "(Landroid/content/Context;)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onUpdate",
+          "owner": "Landroid/appwidget/AppWidgetProvider;",
+          "signature": "(Landroid/content/Context;Landroid/appwidget/AppWidgetManager;[I)V"
+        }
+      ],
+      "oh_touchpoint": "ability_runtime",
+      "shim": "check each hollow body against AOSP",
+      "shim_class": "C9",
+      "verdict": "hollow-candidate"
+    },
+    {
+      "category": "java-api",
+      "confidence": "static",
+      "counts": {
+        "hollow": 15,
+        "missing": 0,
+        "probe": 1
+      },
+      "effort": "verify",
+      "examples": [
+        "android.animation.Animator.cancel",
+        "android.animation.Animator.end",
+        "android.animation.Animator.setTarget",
+        "android.animation.Animator.start",
+        "android.animation.AnimatorListenerAdapter.onAnimationEnd",
+        "android.animation.AnimatorListenerAdapter.onAnimationStart"
+      ],
+      "id": "java:Other Android",
+      "item": "Other Android",
+      "members": [
+        {
+          "kind": "existence_probe",
+          "name": null,
+          "owner": "Landroid/miui/AppOpsUtils;",
+          "signature": null
+        },
+        {
+          "kind": "hollow_method",
+          "name": "cancel",
+          "owner": "Landroid/animation/Animator;",
+          "signature": "()V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "end",
+          "owner": "Landroid/animation/Animator;",
+          "signature": "()V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "setTarget",
+          "owner": "Landroid/animation/Animator;",
+          "signature": "(Ljava/lang/Object;)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "start",
+          "owner": "Landroid/animation/Animator;",
+          "signature": "()V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onAnimationEnd",
+          "owner": "Landroid/animation/AnimatorListenerAdapter;",
+          "signature": "(Landroid/animation/Animator;)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onAnimationStart",
+          "owner": "Landroid/animation/AnimatorListenerAdapter;",
+          "signature": "(Landroid/animation/Animator;)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onPrepareDialogBuilder",
+          "owner": "Landroid/preference/DialogPreference;",
+          "signature": "(Landroid/app/AlertDialog$Builder;)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onRequestPermissionsResult",
+          "owner": "Landroid/preference/PreferenceFragment;",
+          "signature": "(I[Ljava/lang/String;[I)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onDestroy",
+          "owner": "Landroid/service/notification/ConditionProviderService;",
+          "signature": "()V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onRequestConditions",
+          "owner": "Landroid/service/notification/ConditionProviderService;",
+          "signature": "(I)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onClick",
+          "owner": "Landroid/service/quicksettings/TileService;",
+          "signature": "()V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onStartListening",
+          "owner": "Landroid/service/quicksettings/TileService;",
+          "signature": "()V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onStopListening",
+          "owner": "Landroid/service/quicksettings/TileService;",
+          "signature": "()V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onTileAdded",
+          "owner": "Landroid/service/quicksettings/TileService;",
+          "signature": "()V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onTileRemoved",
+          "owner": "Landroid/service/quicksettings/TileService;",
+          "signature": "()V"
+        }
+      ],
+      "oh_touchpoint": "unmapped",
+      "shim": "check each hollow body against AOSP",
+      "shim_class": "C9",
+      "verdict": "hollow-candidate"
+    },
+    {
+      "category": "java-api",
+      "confidence": "static",
+      "counts": {
+        "hollow": 5,
+        "missing": 0,
+        "probe": 0
+      },
+      "effort": "verify",
+      "examples": [
+        "java.io.InputStream.close",
+        "java.io.OutputStream.close",
+        "java.io.OutputStream.flush",
+        "java.lang.Class.getProtectionDomain",
+        "java.security.ProtectionDomain.getCodeSource"
+      ],
+      "id": "java:Java library",
+      "item": "Java library",
+      "members": [
+        {
+          "kind": "hollow_method",
+          "name": "close",
+          "owner": "Ljava/io/InputStream;",
+          "signature": "()V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "close",
+          "owner": "Ljava/io/OutputStream;",
+          "signature": "()V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "flush",
+          "owner": "Ljava/io/OutputStream;",
+          "signature": "()V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "getProtectionDomain",
+          "owner": "Ljava/lang/Class;",
+          "signature": "()Ljava/security/ProtectionDomain;"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "getCodeSource",
+          "owner": "Ljava/security/ProtectionDomain;",
+          "signature": "()Ljava/security/CodeSource;"
+        }
+      ],
+      "oh_touchpoint": "none (library code inside Westlake)",
+      "shim": "check each hollow body against AOSP",
+      "shim_class": "C9",
+      "verdict": "hollow-candidate"
+    },
+    {
+      "category": "java-api",
+      "confidence": "static",
+      "counts": {
+        "hollow": 4,
+        "missing": 0,
+        "probe": 0
+      },
+      "effort": "verify",
+      "examples": [
+        "android.location.GnssStatus$Callback.onFirstFix",
+        "android.location.GnssStatus$Callback.onSatelliteStatusChanged",
+        "android.location.GnssStatus$Callback.onStarted",
+        "android.location.GnssStatus$Callback.onStopped"
+      ],
+      "id": "java:Location",
+      "item": "Location",
+      "members": [
+        {
+          "kind": "hollow_method",
+          "name": "onFirstFix",
+          "owner": "Landroid/location/GnssStatus$Callback;",
+          "signature": "(I)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onSatelliteStatusChanged",
+          "owner": "Landroid/location/GnssStatus$Callback;",
+          "signature": "(Landroid/location/GnssStatus;)V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onStarted",
+          "owner": "Landroid/location/GnssStatus$Callback;",
+          "signature": "()V"
+        },
+        {
+          "kind": "hollow_method",
+          "name": "onStopped",
+          "owner": "Landroid/location/GnssStatus$Callback;",
+          "signature": "()V"
+        }
+      ],
+      "oh_touchpoint": "location",
+      "shim": "check each hollow body against AOSP",
+      "shim_class": "C9",
+      "verdict": "hollow-candidate"
+    },
+    {
+      "category": "java-api",
+      "confidence": "static",
+      "counts": {
+        "hollow": 1,
+        "missing": 0,
+        "probe": 0
+      },
+      "effort": "verify",
+      "examples": [
+        "android.content.Context.isRestricted"
+      ],
+      "id": "java:Content & intents",
+      "item": "Content & intents",
+      "members": [
+        {
+          "kind": "hollow_method",
+          "name": "isRestricted",
+          "owner": "Landroid/content/Context;",
+          "signature": "()Z"
+        }
+      ],
+      "oh_touchpoint": "ability_runtime",
+      "shim": "check each hollow body against AOSP",
+      "shim_class": "C9",
+      "verdict": "hollow-candidate"
+    },
+    {
+      "category": "java-api",
+      "confidence": "static",
+      "counts": {
+        "hollow": 0,
+        "missing": 0,
+        "probe": 1
+      },
+      "effort": "verify",
+      "examples": [
+        "net.time4j.tz.spi.RepositoryTest"
+      ],
+      "id": "java:Other",
+      "item": "Other",
+      "members": [
+        {
+          "kind": "existence_probe",
+          "name": null,
+          "owner": "Lnet/time4j/tz/spi/RepositoryTest;",
+          "signature": null
+        }
+      ],
+      "oh_touchpoint": "unmapped",
+      "shim": "confirm the probed class should (not) exist on this platform",
+      "shim_class": "C8",
+      "verdict": "probe-only"
+    },
+    {
+      "aosp_contract": "Landroid/view/accessibility/AccessibilityManager; needs binder(s) ['accessibility'] (SystemServiceRegistry.java:330)",
+      "app_calls": [
+        "getEnabledAccessibilityServiceList",
+        "getRecommendedTimeoutMillis",
+        "isEnabled",
+        "isTouchExplorationEnabled",
+        "sendAccessibilityEvent"
+      ],
+      "app_evidence": null,
+      "call_sites": 9,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "none",
+      "example_site": "androidx.appcompat.widget.TooltipCompatHandler.onHover",
+      "id": "svc:accessibility",
+      "item": "accessibility",
+      "oh_touchpoint": "unmapped",
+      "provider": "optional binder 'accessibility' has no Westlake provision",
+      "provider_source": null,
+      "shim": "none: the manager is written to run without its service",
+      "shim_class": "C5",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "inert"
+    },
+    {
+      "aosp_contract": "Landroid/app/AlarmManager; needs binder(s) ['alarm'] (SystemServiceRegistry.java:375)",
+      "app_calls": [
+        "cancel",
+        "set",
+        "setAlarmClock",
+        "setExact",
+        "setExactAndAllowWhileIdle",
+        "setWindow"
+      ],
+      "app_evidence": null,
+      "call_sites": 11,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "verify",
+      "example_site": "com.forrestguice.suntimeswidget.alarmclock.AlarmNotifications.addAlarmTimeout",
+      "id": "svc:alarm",
+      "item": "alarm",
+      "oh_touchpoint": "time_service / reminder_agent",
+      "provider": "",
+      "provider_source": null,
+      "shim": "none",
+      "shim_class": "C0",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "supplied"
+    },
+    {
+      "aosp_contract": "Landroid/app/AppOpsManager; needs binder(s) ['appops'] (SystemServiceRegistry.java:861)",
+      "app_calls": [
+        "noteProxyOpNoThrow",
+        "permissionToOp"
+      ],
+      "app_evidence": null,
+      "call_sites": 1,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "verify",
+      "example_site": "androidx.core.app.NotificationManagerCompat.areNotificationsEnabled",
+      "id": "svc:appops",
+      "item": "appops",
+      "oh_touchpoint": "unmapped",
+      "provider": "",
+      "provider_source": null,
+      "shim": "none",
+      "shim_class": "C0",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "supplied"
+    },
+    {
+      "aosp_contract": "Landroid/media/AudioManager; needs binder(s) ['audio'] (SystemServiceRegistry.java:384)",
+      "app_calls": [
+        "abandonAudioFocus",
+        "playSoundEffect",
+        "requestAudioFocus"
+      ],
+      "app_evidence": null,
+      "call_sites": 2,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "S",
+      "example_site": "com.forrestguice.suntimeswidget.alarmclock.AlarmNotifications.initPlayer",
+      "id": "svc:audio",
+      "item": "audio",
+      "oh_touchpoint": "audio_framework",
+      "provider": "IAudioService dynamic proxy returning type defaults for every method",
+      "provider_source": "framework/appspawn-x/java/com/android/internal/os/AppSpawnXInit.java:1627",
+      "shim": "replace the hollow binder with an implementation over audio_framework",
+      "shim_class": "C9",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "hollow"
+    },
+    {
+      "aosp_contract": "Landroid/content/ClipboardManager; needs binder(s) ['clipboard'] (SystemServiceRegistry.java:428)",
+      "app_calls": [
+        "getPrimaryClip",
+        "setPrimaryClip"
+      ],
+      "app_evidence": null,
+      "call_sites": 6,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "verify",
+      "example_site": "androidx.appcompat.widget.AppCompatReceiveContentHelper.maybeHandleMenuActionViaPerformReceiveContent",
+      "id": "svc:clipboard",
+      "item": "clipboard",
+      "oh_touchpoint": "miscservices/pasteboard",
+      "provider": "",
+      "provider_source": null,
+      "shim": "none",
+      "shim_class": "C0",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "supplied"
+    },
+    {
+      "aosp_contract": "Landroid/view/inputmethod/InputMethodManager; needs binder(s) [] (SystemServiceRegistry.java:571)",
+      "app_calls": [
+        "hideSoftInputFromWindow",
+        "isActive",
+        "showSoftInput"
+      ],
+      "app_evidence": null,
+      "call_sites": 3,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "verify",
+      "example_site": "androidx.activity.ImmLeaksCleaner.onStateChanged",
+      "id": "svc:input_method",
+      "item": "input_method",
+      "oh_touchpoint": "inputmethod_framework",
+      "provider": "InputMethodManagerAdapter",
+      "provider_source": "framework/core/java/OHServiceManager.java:105",
+      "shim": "none",
+      "shim_class": "C0",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "supplied"
+    },
+    {
+      "aosp_contract": "Landroid/app/job/JobScheduler; needs binder(s) ['jobscheduler'] (JobSchedulerFrameworkInitializer.java:46)",
+      "app_calls": [
+        "schedule"
+      ],
+      "app_evidence": null,
+      "call_sites": 1,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "S",
+      "example_site": "com.forrestguice.suntimeswidget.alarmclock.AlarmJobService.scheduleJobAfterBootCompleted",
+      "id": "svc:jobscheduler",
+      "item": "jobscheduler",
+      "oh_touchpoint": "resourceschedule/work_scheduler",
+      "provider": "no-op IJobScheduler: schedule()/enqueue() return RESULT_SUCCESS, jobs never run",
+      "provider_source": "framework/appspawn-x/java/com/android/internal/os/AppSpawnXInit.java:2189",
+      "seen_blocking": [
+        "gallery (corpus-2), fixed in 886b89b"
+      ],
+      "shim": "replace the hollow binder with an implementation over resourceschedule/work_scheduler",
+      "shim_class": "C9",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "hollow"
+    },
+    {
+      "aosp_contract": "Landroid/app/KeyguardManager; needs binder(s) ['persistent_data_block', 'trust', 'notification'] (SystemServiceRegistry.java:586)",
+      "app_calls": [
+        "isDeviceSecure",
+        "isKeyguardSecure",
+        "requestDismissKeyguard"
+      ],
+      "app_evidence": null,
+      "call_sites": 2,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "S",
+      "example_site": "com.forrestguice.suntimeswidget.alarmclock.AlarmSettings.isDeviceSecure",
+      "id": "svc:keyguard",
+      "item": "keyguard",
+      "oh_touchpoint": "theme/screenlock",
+      "provider": "no Westlake provision: getSystemService returns null",
+      "provider_source": null,
+      "shim": "Android KeyguardManager facade over theme/screenlock",
+      "shim_class": "C4",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "null"
+    },
+    {
+      "aosp_contract": "Landroid/view/LayoutInflater; needs binder(s) [] (SystemServiceRegistry.java:593)",
+      "app_calls": [
+        "cloneInContext",
+        "from",
+        "getContext",
+        "getFactory",
+        "getFactory2",
+        "inflate",
+        "setFactory2"
+      ],
+      "app_evidence": null,
+      "call_sites": 107,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "verify",
+      "example_site": "androidx.appcompat.app.AlertController$AlertParams.<init>",
+      "id": "svc:layout_inflater",
+      "item": "layout_inflater",
+      "oh_touchpoint": "unmapped",
+      "provider": "fetcher needs no system binder",
+      "provider_source": "SystemServiceRegistry.java:593",
+      "shim": "none",
+      "shim_class": "C0",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "supplied"
+    },
+    {
+      "aosp_contract": "Landroid/location/LocationManager; needs binder(s) ['location'] (SystemServiceRegistry.java:600)",
+      "app_calls": [
+        "addGpsStatusListener",
+        "getAllProviders",
+        "getGnssHardwareModelName",
+        "getGnssYearOfHardware",
+        "getGpsStatus",
+        "getLastKnownLocation",
+        "getProvider",
+        "isProviderEnabled",
+        "registerGnssStatusCallback",
+        "removeGpsStatusListener",
+        "removeUpdates",
+        "requestLocationUpdates"
+      ],
+      "app_evidence": null,
+      "call_sites": 9,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "verify",
+      "example_site": "androidx.appcompat.app.TwilightManager.getInstance",
+      "id": "svc:location",
+      "item": "location",
+      "oh_touchpoint": "location",
+      "provider": "",
+      "provider_source": null,
+      "shim": "none",
+      "shim_class": "C0",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "supplied"
+    },
+    {
+      "aosp_contract": "Landroid/app/NotificationManager; needs binder(s) ['notification'] (SystemServiceRegistry.java:616)",
+      "app_calls": [
+        "addAutomaticZenRule",
+        "areNotificationsEnabled",
+        "cancel",
+        "cancelAll",
+        "createNotificationChannel",
+        "getAutomaticZenRules",
+        "getCurrentInterruptionFilter",
+        "getNotificationChannel",
+        "getNotificationPolicy",
+        "isNotificationPolicyAccessGranted",
+        "notify",
+        "removeAutomaticZenRule"
+      ],
+      "app_evidence": null,
+      "call_sites": 15,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "verify",
+      "example_site": "androidx.core.app.NotificationManagerCompat.<init>",
+      "id": "svc:notification",
+      "item": "notification",
+      "oh_touchpoint": "notification (ANS)",
+      "provider": "",
+      "provider_source": null,
+      "seen_blocking": [
+        "tusky (corpus-2), fixed in 886b89b"
+      ],
+      "shim": "none",
+      "shim_class": "C0",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "supplied"
+    },
+    {
+      "aosp_contract": "Landroid/os/PowerManager; needs binder(s) ['power', 'thermalservice'] (SystemServiceRegistry.java:639)",
+      "app_calls": [
+        "isIgnoringBatteryOptimizations",
+        "isInteractive",
+        "isPowerSaveMode"
+      ],
+      "app_evidence": null,
+      "call_sites": 3,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "verify",
+      "example_site": "com.forrestguice.suntimeswidget.alarmclock.AlarmSettings.isIgnoringBatteryOptimizations",
+      "id": "svc:power",
+      "item": "power",
+      "oh_touchpoint": "powermgr",
+      "provider": "",
+      "provider_source": null,
+      "shim": "none",
+      "shim_class": "C0",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "supplied"
+    },
+    {
+      "aosp_contract": "Landroid/app/UiModeManager; needs binder(s) ['uimode'] (SystemServiceRegistry.java:764)",
+      "app_calls": [
+        "getCurrentModeType",
+        "getNightMode"
+      ],
+      "app_evidence": null,
+      "call_sites": 3,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "verify",
+      "example_site": "com.forrestguice.suntimeswidget.settings.AppSettings.isTelevision",
+      "id": "svc:uimode",
+      "item": "uimode",
+      "oh_touchpoint": "display / theme",
+      "provider": "",
+      "provider_source": null,
+      "seen_blocking": [
+        "burgerking (blind-bk), fixed in d689e67"
+      ],
+      "shim": "none",
+      "shim_class": "C0",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "supplied"
+    },
+    {
+      "aosp_contract": "Landroid/app/usage/UsageStatsManager; needs binder(s) ['usagestats'] (SystemServiceRegistry.java:1058)",
+      "app_calls": [
+        "getAppStandbyBucket"
+      ],
+      "app_evidence": null,
+      "call_sites": 1,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "S",
+      "example_site": "com.forrestguice.suntimeswidget.alarmclock.AlarmSettings.isInRareOrRestrictedBucket",
+      "id": "svc:usagestats",
+      "item": "usagestats",
+      "oh_touchpoint": "resourceschedule/device_usage_statistics",
+      "provider": "no Westlake provision: getSystemService returns null",
+      "provider_source": null,
+      "shim": "Android UsageStatsManager facade over resourceschedule/device_usage_statistics",
+      "shim_class": "C4",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "null"
+    },
+    {
+      "aosp_contract": "Landroid/os/UserManager; needs binder(s) ['user'] (SystemServiceRegistry.java:852)",
+      "app_calls": [
+        "isUserUnlocked"
+      ],
+      "app_evidence": null,
+      "call_sites": 1,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "S",
+      "example_site": "com.forrestguice.suntimeswidget.alarmclock.AlarmSettings.isUserUnlocked",
+      "id": "svc:user",
+      "item": "user",
+      "oh_touchpoint": "account/os_account",
+      "provider": "local proxy answers getApplicationRestrictions, getApplicationRestrictionsForUser, getUserHandle, getUserRestrictionSources, getUserRestrictions, getUserSerialNumber, hasBaseUserRestriction, hasUserRestriction, hasUserRestrictionOnAnyUser, isCloneProfile, isDemoUser, isManagedProfile, isMediaSharedWithParent, isProfile, isQuietModeEnabled, isRestricted, isUserRunning, isUserUnlocked, isUserUnlockingOrUnlocked; every other call throws UnsupportedOperationException",
+      "provider_source": "framework/package-manager/java/OHUserManager.java:82",
+      "seen_blocking": [
+        "burgerking (blind-bk), fixed in 9b8b861"
+      ],
+      "shim": "answer the methods callers use with Android's value for this device; a throw is never Android's answer (inside a JNI callback, WebView aborts on it)",
+      "shim_class": "C9",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "strict"
+    },
+    {
+      "aosp_contract": "Landroid/os/Vibrator; needs binder(s) ['vibrator_manager'] (SystemServiceRegistry.java:803)",
+      "app_calls": [
+        "cancel",
+        "vibrate"
+      ],
+      "app_evidence": null,
+      "call_sites": 2,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "S",
+      "example_site": "com.forrestguice.suntimeswidget.alarmclock.AlarmNotifications.initPlayer",
+      "id": "svc:vibrator",
+      "item": "vibrator",
+      "oh_touchpoint": "sensors/miscdevice",
+      "provider": "optional binder 'vibrator_manager' has no Westlake provision (reached via SystemVibrator → VibratorManager)",
+      "provider_source": null,
+      "shim": "Android Vibrator facade over sensors/miscdevice",
+      "shim_class": "C4",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "inert"
+    },
+    {
+      "aosp_contract": "Landroid/view/WindowManager; needs binder(s) [] (SystemServiceRegistry.java:845)",
+      "app_calls": [
+        "getDefaultDisplay"
+      ],
+      "app_evidence": null,
+      "call_sites": 7,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "verify",
+      "example_site": "androidx.appcompat.view.menu.MenuPopupHelper.createPopup",
+      "id": "svc:window",
+      "item": "window",
+      "oh_touchpoint": "window_manager",
+      "provider": "adapter.window.WindowManagerAdapter",
+      "provider_source": "framework/core/java/OHServiceManager.java:96",
+      "shim": "none",
+      "shim_class": "C0",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "supplied"
+    },
+    {
+      "app_evidence": "23 components carry meta-data (1 directBootAware, e.g. BedtimeConditionService); app calls ['getActivityInfo', 'getPackageInfo']",
+      "category": "package-manager",
+      "confidence": "static",
+      "effort": "verify",
+      "id": "pm:component-metadata",
+      "item": "Component lookups return manifest <meta-data>",
+      "oh_touchpoint": "none (answered from the APK inside Westlake)",
+      "probe": "probes/service-metadata",
+      "provider": "PMS-side direct-boot match defaults applied before PackageParser.isMatch",
+      "provider_source": "framework/package-manager/java/SourcePackageRegistry.java:77",
+      "shim": "apply updateFlagsForComponent semantics in the source-app PM path",
+      "shim_class": "C0",
+      "verdict": "supplied"
+    },
+    {
+      "app_evidence": "CalculatorProvider, CalculatorProvider1, SuntimesThemeProvider, SuntimesThemeProvider0, SuntimesActionsProvider, SuntimesActionsProvider0, SuntimesAlarmsProvider, SuntimesAlarmsProvider0, AlarmEventProvider, AlarmEventProvider0, FileProvider",
+      "category": "package-manager",
+      "confidence": "static",
+      "effort": "verify",
+      "id": "pm:providers",
+      "item": "Content providers installed at bind (11, initOrder honoured)",
+      "oh_touchpoint": "none",
+      "probe": "probes/provider-manifest",
+      "shim": "install every main-process provider in initOrder before Application.onCreate",
+      "shim_class": "CU",
+      "verdict": "unverified"
+    },
+    {
+      "category": "package-manager",
+      "confidence": "static",
+      "effort": "L",
+      "id": "pm:multiprocess",
+      "item": "Components in secondary processes: :crashreport",
+      "oh_touchpoint": "appspawn (second process)",
+      "shim": "spawn and route secondary Android processes",
+      "shim_class": "C4",
+      "verdict": "missing"
+    },
+    {
+      "category": "package-manager",
+      "confidence": "static",
+      "effort": "M",
+      "id": "pm:call:queryIntentActivityOptions",
+      "item": "PackageManager.queryIntentActivityOptions",
+      "oh_touchpoint": "none",
+      "provider": "IPackageManager.queryIntentActivityOptions returns null",
+      "provider_source": "framework/package-manager/java/PackageManagerAdapter.java:1226",
+      "shim": "resolve against the APK's intent filters",
+      "shim_class": "C9",
+      "verdict": "stub"
+    },
+    {
+      "category": "package-manager",
+      "confidence": "static",
+      "effort": "S",
+      "id": "pm:call:setComponentEnabledSetting",
+      "item": "PackageManager.setComponentEnabledSetting",
+      "oh_touchpoint": "none",
+      "provider": "IPackageManager.setComponentEnabledSetting returns void",
+      "provider_source": "framework/package-manager/java/PackageManagerAdapter.java:1716",
+      "shim": "answer from the APK/package state",
+      "shim_class": "C9",
+      "verdict": "stub"
+    },
+    {
+      "app_evidence": "app shows dialogs (Dialog.show referenced); a dialog shown from onCreate/onResume is added before the activity's own window",
+      "category": "app-framework",
+      "confidence": "static",
+      "effort": "verify",
+      "id": "wm:dialog-stacking",
+      "item": "Dialogs stack above their activity's window, whatever the add order",
+      "oh_touchpoint": "window_manager (sub-window z-order: creation order)",
+      "probe": "probes/dialog-before-window",
+      "provider": "a dialog's OH session is held back until its activity's window has one, so creation order is Android's stacking order",
+      "provider_source": "framework/window/java/WindowSessionAdapter.java:370",
+      "shim": "stack a base application window below the dialogs already attached to its token",
+      "shim_class": "C0",
+      "verdict": "supplied"
+    },
+    {
+      "app_evidence": "app shows dialogs (Dialog.show referenced)",
+      "category": "app-framework",
+      "confidence": "static",
+      "effort": "verify",
+      "id": "wm:window-placement",
+      "item": "Windows placed by LayoutParams gravity and x/y (dialogs centred)",
+      "oh_touchpoint": "window_manager (session rect)",
+      "probe": "probes/dialog-before-window",
+      "provider": "applied in the window adapter",
+      "provider_source": "framework/window/java/WindowSessionAdapter.java:346",
+      "shim": "compute the frame from gravity/x/y against the display, as WindowLayout.computeFrames does",
+      "shim_class": "C0",
+      "verdict": "supplied"
+    },
+    {
+      "app_evidence": "app shows dialogs (Dialog.show referenced)",
+      "category": "app-framework",
+      "confidence": "static",
+      "effort": "verify",
+      "id": "wm:dim-behind",
+      "item": "FLAG_DIM_BEHIND dims what is under a dialog",
+      "oh_touchpoint": "render_service (a layer under the window)",
+      "probe": "probes/dialog-before-window",
+      "provider": "applied in the window adapter",
+      "provider_source": "framework/window/java/WindowSessionAdapter.java:84",
+      "shim": "draw a dim layer of dimAmount under the window (OH has no dim flag)",
+      "shim_class": "C0",
+      "verdict": "supplied"
+    },
+    {
+      "app_calls": [
+        "<init>",
+        "createVolumeShaper",
+        "isLooping",
+        "prepareAsync",
+        "release",
+        "setAudioStreamType",
+        "setDataSource",
+        "setLooping",
+        "setNextMediaPlayer",
+        "setOnErrorListener",
+        "setOnPreparedListener",
+        "setOnSeekCompleteListener"
+      ],
+      "app_evidence": "its class initializer is native and unbound; the app calls <init>, createVolumeShaper, isLooping, prepareAsync",
+      "category": "framework-natives",
+      "confidence": "static",
+      "effort": "L",
+      "id": "jni:android.media.MediaPlayer",
+      "item": "android.media.MediaPlayer: 49 of 49 natives unregistered",
+      "oh_touchpoint": "the JNI half of the framework class (libandroid_runtime in AOSP)",
+      "open_symbols": [
+        "native_init()V"
+      ],
+      "shim": "port the AOSP JNI source for the class and register it at startup, before application bind",
+      "shim_class": "C3",
+      "verdict": "missing"
+    },
+    {
+      "app_evidence": "a property of the runtime, not of this app: it holds for every app it launches",
+      "category": "native-loading",
+      "confidence": "static",
+      "effort": "verify",
+      "id": "load:runtime-silent-success",
+      "item": "Runtime libraries its own loader will not open (libicu_jni.so)",
+      "oh_touchpoint": "Runtime.nativeLoad in the runtime's own OpenJDK stub",
+      "provider": "the runtime stages these and then answers 'already registered' for them; their natives are bound only where one of its built-in stubs registers them, which is per-method and not decidable from here; matched on icu_jni",
+      "provider_source": "art-build/stubs/openjdk_stub.c:1315",
+      "shim": "compare the staged library's methods against the tables the runtime's own stubs register (art-build/stubs, registerNativesOrSkip) and ship any remainder under a name the filter does not match. ship the library under a name none of those substrings match, or narrow the stub to the libraries the runtime really does link in. A load that reports success it did not perform cannot be told from one that worked, so nothing downstream can detect this.",
+      "shim_class": "C3",
+      "verdict": "unresolved"
+    }
+  ]
+}

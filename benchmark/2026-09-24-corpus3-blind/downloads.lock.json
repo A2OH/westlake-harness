@@ -1,0 +1,128 @@
+{
+ "source": "F-Droid main repository (https://f-droid.org/repo), index-v2 retrieved 2026-09-23",
+ "verified": "sha256 of each download equals the index entry",
+ "apps": {
+  "com.aurora.store": {
+   "version_name": "4.8.4",
+   "version_code": 76,
+   "bytes": 9360088,
+   "sha256": "fd9c75d90d0f4a7c132b9b4a5a2cf1992a45e03b8d8ff988b7dcfbc0db2c4d11",
+   "abis": [
+    "arm64-v8a",
+    "armeabi-v7a",
+    "x86",
+    "x86_64"
+   ],
+   "url": "https://f-droid.org/repo/com.aurora.store_76.apk"
+  },
+  "com.nextcloud.client": {
+   "version_name": "35.0.0",
+   "version_code": 350000090,
+   "bytes": 96757432,
+   "sha256": "2d08059c9a0a94ef4316e5c8491e3c6aee99a87b58bb796163c44e08deb1615c",
+   "abis": [
+    "arm64-v8a",
+    "x86_64"
+   ],
+   "url": "https://f-droid.org/repo/com.nextcloud.client_350000090.apk"
+  },
+  "at.bitfire.davdroid": {
+   "version_name": "4.5.20-beta.1-ose",
+   "version_code": 405200002,
+   "bytes": 18737184,
+   "sha256": "bc37c876e0de8e0224222d094a53f2b51c148ac57c47041eac2ae47a69013643",
+   "abis": [
+    "arm64-v8a",
+    "armeabi-v7a",
+    "x86",
+    "x86_64"
+   ],
+   "url": "https://f-droid.org/repo/at.bitfire.davdroid_405200002.apk"
+  },
+  "net.osmand.plus": {
+   "version_name": "5.4.4",
+   "version_code": 540403,
+   "bytes": 157841461,
+   "sha256": "0239f0b09e1bf7e22a468b881a0a744c1a19ca72b8daf068ac3ac1b5b240e4b6",
+   "abis": [
+    "arm64-v8a"
+   ],
+   "url": "https://f-droid.org/repo/net.osmand.plus_540403.apk"
+  },
+  "org.fossify.musicplayer": {
+   "version_name": "1.8.1",
+   "version_code": 14,
+   "bytes": 11027320,
+   "sha256": "b5d0ce367544df1ac162adf71d642878c5b963a304ca0ddf8f8556f07bbba79b",
+   "abis": [
+    "arm64-v8a",
+    "armeabi-v7a",
+    "x86",
+    "x86_64"
+   ],
+   "url": "https://f-droid.org/repo/org.fossify.musicplayer_14.apk"
+  },
+  "com.nononsenseapps.feeder": {
+   "version_name": "2.23.2",
+   "version_code": 4113,
+   "bytes": 60984447,
+   "sha256": "0aa5eb094f94ca29ab7956d75b9e5d7c19785ebdac74b9ae512930084338bf3c",
+   "abis": [
+    "arm64-v8a",
+    "armeabi-v7a",
+    "x86",
+    "x86_64"
+   ],
+   "url": "https://f-droid.org/repo/com.nononsenseapps.feeder_4113.apk"
+  },
+  "me.hackerchick.catima": {
+   "version_name": "2.45.0",
+   "version_code": 1002,
+   "bytes": 5250454,
+   "sha256": "4f01f40d06d82fc5b8cfbbc5eccd083151a86564fbd4fa420eb54aaebf668b71",
+   "abis": [
+    "arm64-v8a",
+    "armeabi-v7a",
+    "x86",
+    "x86_64"
+   ],
+   "url": "https://f-droid.org/repo/me.hackerchick.catima_1002.apk"
+  },
+  "org.jellyfin.mobile": {
+   "version_name": "2.7.3",
+   "version_code": 2070399,
+   "bytes": 8964986,
+   "sha256": "f9f4b3ab46cc9434df811194c2d4351417f4db83a4c1a0facd0a662d69533f7f",
+   "abis": [
+    "arm64-v8a",
+    "armeabi-v7a",
+    "x86",
+    "x86_64"
+   ],
+   "url": "https://f-droid.org/repo/org.jellyfin.mobile_2070399.apk"
+  },
+  "dev.imranr.obtainium.fdroid": {
+   "version_name": "1.6.17",
+   "version_code": 23563,
+   "bytes": 26088490,
+   "sha256": "8d03b4f02f070d8e64f448ce77ad66daccce9a585e4015b984ee5a7ddee9c29c",
+   "abis": [
+    "arm64-v8a"
+   ],
+   "url": "https://f-droid.org/repo/dev.imranr.obtainium.fdroid_23563.apk"
+  },
+  "eu.faircode.email": {
+   "version_name": "1.2337",
+   "version_code": 2337,
+   "bytes": 29423212,
+   "sha256": "1e59bd1d82ccdf0af90e7a29e7cb219eaa189031675b376578e7da8ec649e539",
+   "abis": [
+    "arm64-v8a",
+    "armeabi-v7a",
+    "x86",
+    "x86_64"
+   ],
+   "url": "https://f-droid.org/repo/eu.faircode.email_2337.apk"
+  }
+ }
+}

@@ -1,0 +1,188 @@
+{
+  "app": {
+    "apk_sha256": "343d17e11d0914e1a7708df2781580a0413e52501c0a41d91f7ef725d9615fe9",
+    "package": "org.billthefarmer.editor",
+    "target_sdk": "35",
+    "version": "1.98"
+  },
+  "notes": {
+    "java_excluded_by_api_level": {},
+    "native_upcalls_scanned": true,
+    "service_requests_with_computed_names": 0
+  },
+  "provider": {
+    "oh_board": "OpenHarmony 6.1.0.31, arm64, SELinux enforcing policy as loaded",
+    "westlake": {
+      "branch": "corpus2-fixes",
+      "commit": "6c300b3bd0ffd2efb58f4b25fc2f33408f69078b",
+      "uncommitted": []
+    }
+  },
+  "rows": [
+    {
+      "category": "java-api",
+      "confidence": "static",
+      "counts": {
+        "hollow": 1,
+        "missing": 0,
+        "probe": 0
+      },
+      "effort": "verify",
+      "examples": [
+        "android.app.Activity.onActionModeStarted"
+      ],
+      "id": "java:App framework",
+      "item": "App framework",
+      "members": [
+        {
+          "kind": "hollow_method",
+          "name": "onActionModeStarted",
+          "owner": "Landroid/app/Activity;",
+          "signature": "(Landroid/view/ActionMode;)V"
+        }
+      ],
+      "oh_touchpoint": "ability_runtime",
+      "shim": "check each hollow body against AOSP",
+      "shim_class": "C9",
+      "verdict": "hollow-candidate"
+    },
+    {
+      "category": "java-api",
+      "confidence": "static",
+      "counts": {
+        "hollow": 1,
+        "missing": 0,
+        "probe": 0
+      },
+      "effort": "verify",
+      "examples": [
+        "java.io.OutputStream.close"
+      ],
+      "id": "java:Java library",
+      "item": "Java library",
+      "members": [
+        {
+          "kind": "hollow_method",
+          "name": "close",
+          "owner": "Ljava/io/OutputStream;",
+          "signature": "()V"
+        }
+      ],
+      "oh_touchpoint": "none (library code inside Westlake)",
+      "shim": "check each hollow body against AOSP",
+      "shim_class": "C9",
+      "verdict": "hollow-candidate"
+    },
+    {
+      "aosp_contract": "Landroid/view/inputmethod/InputMethodManager; needs binder(s) [] (SystemServiceRegistry.java:571)",
+      "app_calls": [
+        "hideSoftInputFromWindow"
+      ],
+      "app_evidence": null,
+      "call_sites": 1,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "verify",
+      "example_site": "org.billthefarmer.editor.Editor.lambda$setListeners$4$org-billthefarmer-editor-Editor",
+      "id": "svc:input_method",
+      "item": "input_method",
+      "oh_touchpoint": "inputmethod_framework",
+      "provider": "InputMethodManagerAdapter",
+      "provider_source": "framework/core/java/OHServiceManager.java:105",
+      "shim": "none",
+      "shim_class": "C0",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "supplied"
+    },
+    {
+      "aosp_contract": "Landroid/view/LayoutInflater; needs binder(s) [] (SystemServiceRegistry.java:593)",
+      "app_calls": [
+        "from",
+        "inflate"
+      ],
+      "app_evidence": null,
+      "call_sites": 3,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "verify",
+      "example_site": "org.billthefarmer.editor.Editor.gotoDialog",
+      "id": "svc:layout_inflater",
+      "item": "layout_inflater",
+      "oh_touchpoint": "unmapped",
+      "provider": "fetcher needs no system binder",
+      "provider_source": "SystemServiceRegistry.java:593",
+      "shim": "none",
+      "shim_class": "C0",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "supplied"
+    },
+    {
+      "aosp_contract": "Landroid/print/PrintManager; needs binder(s) [] (SystemServiceRegistry.java:893)",
+      "app_calls": [
+        "print"
+      ],
+      "app_evidence": null,
+      "call_sites": 1,
+      "category": "system-services",
+      "confidence": "static",
+      "effort": "verify",
+      "example_site": "org.billthefarmer.editor.Editor$3.onPageFinished",
+      "id": "svc:print",
+      "item": "print",
+      "oh_touchpoint": "print_service",
+      "provider": "no binder found in fetcher or manager source; reached through a helper",
+      "provider_source": "SystemServiceRegistry.java:893",
+      "shim": "trace the helper's binder; then treat as null, inert or supplied",
+      "shim_class": "CU",
+      "throws_if_null": 0,
+      "throws_in_framework": [],
+      "verdict": "unresolved"
+    },
+    {
+      "app_evidence": "FileProvider",
+      "category": "package-manager",
+      "confidence": "static",
+      "effort": "verify",
+      "id": "pm:providers",
+      "item": "Content providers installed at bind (1, initOrder honoured)",
+      "oh_touchpoint": "none",
+      "probe": "probes/provider-manifest",
+      "shim": "install every main-process provider in initOrder before Application.onCreate",
+      "shim_class": "CU",
+      "verdict": "unverified"
+    },
+    {
+      "app_evidence": "app constructs WebViews and calls 4 WebView methods",
+      "category": "app-framework",
+      "confidence": "static",
+      "effort": "L",
+      "id": "wv:renderer-process",
+      "item": "WebView's renderer runs in an isolated service process",
+      "oh_touchpoint": "process spawn (appspawn): an isolated Android service process with its own sandbox",
+      "provider": "direct launch starts no isolated service processes: binding the renderer fails and Chromium aborts; answering isMultiProcessEnabled()=false does not help, WebViewDelegate returns true while Flags.updateServiceV2() is on",
+      "provider_source": "frameworks-base/core/java/android/webkit/WebViewDelegate.java:215",
+      "seen_blocking": [
+        "burgerking (blind-bk), open"
+      ],
+      "shim": "host the renderer: spawn an isolated child and bind Chromium's SandboxedProcessService over a local channel; or build the framework with the update-service flag off so WebView runs single-process",
+      "shim_class": "C4",
+      "verdict": "missing"
+    },
+    {
+      "app_evidence": "a property of the runtime, not of this app: it holds for every app it launches",
+      "category": "native-loading",
+      "confidence": "static",
+      "effort": "verify",
+      "id": "load:runtime-silent-success",
+      "item": "Runtime libraries its own loader will not open (libicu_jni.so)",
+      "oh_touchpoint": "Runtime.nativeLoad in the runtime's own OpenJDK stub",
+      "provider": "the runtime stages these and then answers 'already registered' for them; their natives are bound only where one of its built-in stubs registers them, which is per-method and not decidable from here; matched on icu_jni",
+      "provider_source": "art-build/stubs/openjdk_stub.c:1315",
+      "shim": "compare the staged library's methods against the tables the runtime's own stubs register (art-build/stubs, registerNativesOrSkip) and ship any remainder under a name the filter does not match. ship the library under a name none of those substrings match, or narrow the stub to the libraries the runtime really does link in. A load that reports success it did not perform cannot be told from one that worked, so nothing downstream can detect this.",
+      "shim_class": "C3",
+      "verdict": "unresolved"
+    }
+  ]
+}

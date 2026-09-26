@@ -1,0 +1,43 @@
+{
+  "corpus": "ten popular F-Droid apps not in the first loop corpus, chosen for surfaces it did not cover: Flutter, a Gecko browser, video and map engines on native code, mail, Matrix, Mastodon, a password manager, a gallery, a Compose weather app",
+  "provider": "Westlake main at 0b5c9af (framework-signin-device38b, native-runtime-opengl2, bionic-shim-nw8), OpenHarmony 6.1.0.31 arm64",
+  "written_before_any_launch": true,
+  "target": "each app draws its first screen on the OH board, confirmed by screenshot",
+  "launch_config_from_the_map": "libraries a load:shadowed-by-board row lists are passed as --android-native-target (VLC 4, Element 9); activity-alias launchers are launched at their targetActivity (Element, Gallery, Fennec)",
+  "overall": "7 of 10 draw a first screen. Three do not: Organic Maps and FluffyChat render into a SurfaceView, which shares the activity's OH window (the round-8 gap; no map row models it), and Fennec cannot link libxul.so (ndk:weld:media).",
+  "predictions": [
+    {"id": "A1", "app": "org.videolan.vlc", "expected": "onboarding screen draws", "blocker": null,
+     "confidence": "medium", "basis": "every arm64 import resolves (889/889); load:shadowed-by-board applied (4 libraries); pm:multiprocess is only the :logger process"},
+    {"id": "A2", "app": "app.organicmaps", "expected": "DownloadResourcesActivity draws; the map screen then fails: EGL_BAD_ALLOC or hwui 'context with no surface'",
+     "blocker": "SurfaceView shares the activity's OH window", "confidence": "medium",
+     "basis": "not a map row: the round-8 gap (PPSSPP, Mindustry). Native imports all resolve (307/307)"},
+    {"id": "A3", "app": "net.thunderbird.android", "expected": "onboarding screen draws", "blocker": null,
+     "confidence": "medium-high", "basis": "no L row on the startup path; wv:renderer-process only when a message is opened"},
+    {"id": "A4", "app": "com.kunzisoft.keepass.libre", "expected": "database selection screen draws", "blocker": null,
+     "confidence": "high", "basis": "20/20 native imports; no L row"},
+    {"id": "A5", "app": "org.fossify.gallery", "expected": "main screen draws; the media permission request shows no dialog, so it stays on its no-permission state",
+     "blocker": null, "confidence": "medium", "basis": "not a row: permission dialogs (Burger King P9)"},
+    {"id": "A6", "app": "com.keylesspalace.tusky", "expected": "login screen draws", "blocker": null,
+     "confidence": "high", "basis": "no L row; login WebView/Custom Tab only after an instance is entered"},
+    {"id": "A7", "app": "im.vector.app", "expected": "first-run auth splash draws", "blocker": null,
+     "confidence": "medium-low", "basis": "load:shadowed-by-board applied (9 libraries); libjsc.so's 55 symbols are unshipped-library and libjsctooling is not loaded with Hermes; biggest app in the set"},
+    {"id": "A8", "app": "chat.fluffy.fluffychat", "expected": "no Flutter frame: the process lives but the window stays blank, or EGL fails creating the Flutter surface",
+     "blocker": "SurfaceView shares the activity's OH window (FlutterSurfaceView is Flutter's default)", "confidence": "medium",
+     "basis": "not a map row; libflutter.so resolves 541/541"},
+    {"id": "A9", "app": "org.breezyweather", "expected": "first-run screen draws", "blocker": null,
+     "confidence": "medium-high", "basis": "the three missing Java APIs are API 36 and sit behind SDK checks; no L row"},
+    {"id": "A10", "app": "org.mozilla.fennec_fdroid", "expected": "dies before its first screen: libxul.so fails to link",
+     "blocker": "48 libmediandk symbols (ndk:weld:media) plus buffers and window welds, imported strongly by libxul.so",
+     "confidence": "medium-high", "basis": "oh-resolve 1827/1884; libxul loads when Gecko initialises at startup. pm:multiprocess (content processes) is the next wall"}
+  ],
+  "harness_fixes_before_predicting": [
+    "oh-resolve and gap-map counted every ABI in a fat APK: arm64 apps were charged armv7 __aeabi_* imports",
+    "a PackageManager method with logStub only on a guard read as a stub (resolveContentProvider, getPackagesForUid, getNameForUid, getReceiverInfo)",
+    "symbols from a library the APK needs but does not ship (libjsc.so) were grouped as bionic libc ABI"
+  ],
+  "known_blind_spots": [
+    "no row models a SurfaceView sharing the activity window: A2 and A8 are predicted from round 8, not from the map",
+    "permission dialogs are not modelled",
+    "which libraries load at startup is judged from code, not traced"
+  ]
+}

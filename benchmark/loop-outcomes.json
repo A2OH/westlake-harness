@@ -1,0 +1,513 @@
+{
+ "note": "first = first launch on the build the batch was predicted against; after = once that batch's fixes landed. wikipedia is counted in loop-1. Organic Maps' first launch uses its corrected pin. Fossify Messages exits by design after its fix (no SMS role) and stays 'blocked'. Seal's 'after' is its own error screen (symlink denied by OH policy), counted as UI like Termux. OsmAnd's 'after' is its current state: it drew on its first launch and now leaves after drawing on every build tried (environment-dependent).",
+ "apps": {
+  "aegis": {
+   "batch": "loop-1",
+   "first": "draws",
+   "after": "draws"
+  },
+  "antennapod": {
+   "batch": "loop-1",
+   "first": "draws",
+   "after": "draws"
+  },
+  "markor": {
+   "batch": "loop-1",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "anki": {
+   "batch": "loop-1",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "ooniprobe": {
+   "batch": "loop-1",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "termux": {
+   "batch": "loop-1",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "mindustry": {
+   "batch": "loop-1",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "opencamera": {
+   "batch": "loop-1",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "newpipe": {
+   "batch": "loop-1",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "ppsspp": {
+   "batch": "loop-1",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "wikipedia": {
+   "batch": "loop-1",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "keepassdx": {
+   "batch": "corpus-2",
+   "first": "draws",
+   "after": "draws"
+  },
+  "organicmaps": {
+   "batch": "corpus-2",
+   "first": "draws",
+   "after": "draws"
+  },
+  "vlc-fdroid": {
+   "batch": "corpus-2",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "thunderbird": {
+   "batch": "corpus-2",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "gallery": {
+   "batch": "corpus-2",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "tusky": {
+   "batch": "corpus-2",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "element": {
+   "batch": "corpus-2",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "fluffychat": {
+   "batch": "corpus-2",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "breezyweather": {
+   "batch": "corpus-2",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 59"
+  },
+  "fennec": {
+   "batch": "corpus-2",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "osmand": {
+   "batch": "corpus-3",
+   "first": "draws",
+   "after": "blocked"
+  },
+  "fairemail": {
+   "batch": "corpus-3",
+   "first": "draws",
+   "after": "draws"
+  },
+  "aurorastore": {
+   "batch": "corpus-3",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "nextcloud": {
+   "batch": "corpus-3",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "davx5": {
+   "batch": "corpus-3",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "musicplayer": {
+   "batch": "corpus-3",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "feeder": {
+   "batch": "corpus-3",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "catima": {
+   "batch": "corpus-3",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "jellyfin": {
+   "batch": "corpus-3",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "obtainium": {
+   "batch": "corpus-3",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "files": {
+   "batch": "batch-4",
+   "first": "draws",
+   "after": "draws"
+  },
+  "mastodon": {
+   "batch": "batch-4",
+   "first": "draws",
+   "after": "draws"
+  },
+  "etar": {
+   "batch": "batch-4",
+   "first": "draws",
+   "after": "draws"
+  },
+  "fcalendar": {
+   "batch": "batch-4",
+   "first": "draws",
+   "after": "draws"
+  },
+  "appmanager": {
+   "batch": "batch-4",
+   "first": "draws",
+   "after": "draws"
+  },
+  "conversations": {
+   "batch": "batch-4",
+   "first": "draws",
+   "after": "draws"
+  },
+  "kdeconnect": {
+   "batch": "batch-4",
+   "first": "draws",
+   "after": "draws"
+  },
+  "libretube": {
+   "batch": "batch-4",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "shatteredpd": {
+   "batch": "batch-4",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "tasks": {
+   "batch": "batch-4",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "fnotes": {
+   "batch": "batch-5",
+   "first": "draws",
+   "after": "draws"
+  },
+  "fclock": {
+   "batch": "batch-5",
+   "first": "draws",
+   "after": "draws"
+  },
+  "ffiles": {
+   "batch": "batch-5",
+   "first": "draws",
+   "after": "draws"
+  },
+  "amaze": {
+   "batch": "batch-5",
+   "first": "draws",
+   "after": "draws"
+  },
+  "droidify": {
+   "batch": "batch-5",
+   "first": "draws",
+   "after": "draws"
+  },
+  "fdroid": {
+   "batch": "batch-5",
+   "first": "draws",
+   "after": "draws"
+  },
+  "antimine": {
+   "batch": "batch-5",
+   "first": "draws",
+   "after": "draws"
+  },
+  "gadgetbridge": {
+   "batch": "batch-5",
+   "first": "draws",
+   "after": "draws"
+  },
+  "fmessages": {
+   "batch": "batch-5",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "unciv": {
+   "batch": "batch-5",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "connectbot": {
+   "batch": "batch-6",
+   "first": "draws",
+   "after": "draws"
+  },
+  "gh4a": {
+   "batch": "batch-6",
+   "first": "draws",
+   "after": "draws"
+  },
+  "fitotrack": {
+   "batch": "batch-6",
+   "first": "draws",
+   "after": "draws"
+  },
+  "uhabits": {
+   "batch": "batch-6",
+   "first": "draws",
+   "after": "draws"
+  },
+  "freeotp": {
+   "batch": "batch-6",
+   "first": "draws",
+   "after": "draws"
+  },
+  "voice": {
+   "batch": "batch-6",
+   "first": "draws",
+   "after": "draws"
+  },
+  "transistor": {
+   "batch": "batch-6",
+   "first": "draws",
+   "after": "draws"
+  },
+  "ncnotes": {
+   "batch": "batch-6",
+   "first": "draws",
+   "after": "draws"
+  },
+  "libretorrent": {
+   "batch": "batch-6",
+   "first": "draws",
+   "after": "draws"
+  },
+  "justplayer": {
+   "batch": "batch-6",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "homeassistant": {
+   "batch": "batch-7",
+   "first": "draws",
+   "after": "draws"
+  },
+  "trailsense": {
+   "batch": "batch-7",
+   "first": "draws",
+   "after": "draws"
+  },
+  "chrono": {
+   "batch": "batch-7",
+   "first": "draws",
+   "after": "draws"
+  },
+  "noice": {
+   "batch": "batch-7",
+   "first": "draws",
+   "after": "draws"
+  },
+  "kore": {
+   "batch": "batch-7",
+   "first": "draws",
+   "after": "draws"
+  },
+  "seal": {
+   "batch": "batch-7",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "retromusic": {
+   "batch": "batch-7",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "radiodroid": {
+   "batch": "batch-7",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "openhab": {
+   "batch": "batch-7",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "andstatus": {
+   "batch": "batch-7",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "linuxcmd": {
+   "batch": "batch-8",
+   "first": "draws",
+   "after": "draws"
+  },
+  "pomodoro": {
+   "batch": "batch-8",
+   "first": "draws",
+   "after": "draws"
+  },
+  "redmoon": {
+   "batch": "batch-8",
+   "first": "draws",
+   "after": "draws"
+  },
+  "suntimes": {
+   "batch": "batch-8",
+   "first": "draws",
+   "after": "draws"
+  },
+  "ffupdater": {
+   "batch": "batch-8",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "jami": {
+   "batch": "batch-8",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "wifianalyzer": {
+   "batch": "batch-8",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 59"
+  },
+  "gpscockpit": {
+   "batch": "batch-8",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "rethink": {
+   "batch": "batch-8",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "scrambledexif": {
+   "batch": "batch-8",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "pipepipe": {
+   "batch": "batch-9",
+   "first": "draws",
+   "after": "draws"
+  },
+  "redreader": {
+   "batch": "batch-9",
+   "first": "draws",
+   "after": "draws"
+  },
+  "openkeychain": {
+   "batch": "batch-9",
+   "first": "draws",
+   "after": "draws"
+  },
+  "elementx": {
+   "batch": "batch-9",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "supertuxkart": {
+   "batch": "batch-9",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "duckduckgo": {
+   "batch": "batch-9",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 59"
+  },
+  "streetcomplete": {
+   "batch": "batch-9",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "briar": {
+   "batch": "batch-9",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "nctalk": {
+   "batch": "batch-9",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "mpv": {
+   "batch": "batch-9",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "fcontacts": {
+   "batch": "batch-10",
+   "first": "draws",
+   "after": "draws"
+  },
+  "fphone": {
+   "batch": "batch-10",
+   "first": "draws",
+   "after": "draws"
+  },
+  "fcamera": {
+   "batch": "batch-10",
+   "first": "draws",
+   "after": "draws"
+  },
+  "icsx5": {
+   "batch": "batch-10",
+   "first": "draws",
+   "after": "draws"
+  },
+  "opentracks": {
+   "batch": "batch-10",
+   "first": "draws",
+   "after": "draws"
+  },
+  "xtra": {
+   "batch": "batch-10",
+   "first": "draws",
+   "after": "draws"
+  },
+  "translateyou": {
+   "batch": "batch-10",
+   "first": "draws",
+   "after": "draws"
+  },
+  "editor": {
+   "batch": "batch-10",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "fvoicerec": {
+   "batch": "batch-10",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "adaway": {
+   "batch": "batch-10",
+   "first": "blocked",
+   "after": "draws"
+  }
+ }
+}

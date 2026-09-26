@@ -133,6 +133,33 @@ def context_constants(context_java: Path) -> dict[str, str]:
     return dict(_CONST.findall(context_java.read_text(errors="replace")))
 
 
+_PUBLIC_METHOD = re.compile(r"\n    public [^\n;=]*?\b(\w+)\(")
+
+
+def unwrapping_methods(manager_source: str) -> list[str]:
+    """Public manager methods that unwrap what the binder answered before returning it.
+
+    AIDL list results travel as a ParceledListSlice, and the manager calls getList() on it: a
+    hollow binder's null throws right there, inside the framework, where no app code can catch it
+    (NotificationManager.getNotificationChannels, JobScheduler.getAllPendingJobs).
+    """
+    found = set()
+    for match in _PUBLIC_METHOD.finditer(manager_source):
+        start = manager_source.find("{", match.end())
+        if start < 0 or ";" in manager_source[match.end():start]:
+            continue
+        depth, i = 0, start
+        while i < len(manager_source):
+            if manager_source[i] == "{": depth += 1
+            elif manager_source[i] == "}":
+                depth -= 1
+                if depth == 0: break
+            i += 1
+        if re.search(r"\)\s*\.getList\(\)", manager_source[start:i]):
+            found.add(match.group(1))
+    return sorted(found)
+
+
 def aosp_service_table(registry_java: Path, context_java: Path, source_roots: Iterable[Path] = ()) -> dict[str, dict[str, Any]]:
     """Service name → manager class and the binder names it needs, from AOSP source.
 
@@ -185,6 +212,15 @@ def aosp_service_table(registry_java: Path, context_java: Path, source_roots: It
                 }
 
     sources = _manager_sources(source_roots)
+    by_simple = {path.stem: path for path in sources.values()}
+    for entry in table.values():
+        manager = sources.get(entry["manager"])
+        if manager is None:
+            continue
+        # An abstract manager (JobScheduler) is implemented elsewhere (JobSchedulerImpl).
+        impl = by_simple.get(manager.stem + "Impl")
+        entry["unwrapping_methods"] = sorted(set(unwrapping_methods(manager.read_text(errors="replace")))
+                                             | set(unwrapping_methods(impl.read_text(errors="replace")) if impl else []))
     for name, entry in table.items():
         manager = sources.get(entry["manager"])
         if manager is None or entry["binders"]:
@@ -294,6 +330,17 @@ def westlake_service_model(westlake_root: Path) -> dict[str, list[dict[str, Any]
     job = java.find("newNoopJobSchedulerBinder")
     if job >= 0 and "RESULT_SUCCESS" in java[job:job + 4000]:
         add("jobscheduler", "hollow-proxy", "no-op IJobScheduler: schedule()/enqueue() return RESULT_SUCCESS, jobs never run", init, java, job)
+        # Hollow still (jobs never run), but a list query no longer answers null.
+        body = java[java.find("private static Object newNoopJobSchedulerBinder"):][:4000]
+        model["jobscheduler"][-1]["empty_lists"] = "ParceledListSlice.emptyList" in body
+    # AppSpawnXInit.publishLocalService(name) puts LocalServiceBinders' in-process binder into
+    # ServiceManager.sCache, over whatever the native runtime seeded.
+    local = westlake_root / "framework/core/java/LocalServiceBinders.java"
+    local_src = local.read_text(errors="replace") if local.exists() else ""
+    for match in re.finditer(r'publishLocalService\("([^"]+)"\)', java):
+        add(match.group(1), "cached-binder", "LocalServiceBinders answers it in process (published over the native seed)",
+            init, java, match.start())
+        model[match.group(1)][-1]["empty_lists"] = "ParceledListSlice.emptyList" in local_src
     return dict(model)
 
 
@@ -384,6 +431,9 @@ def service_map(
             "oh_analog": analog,
             "shim_class": _shim_class(verdict, analog),
             "manager_methods_called": calls,
+            # A provision that answers list queries with an empty slice does not throw there.
+            "unwrapping_calls": [] if (basis or {}).get("empty_lists") else
+                sorted(set(calls) & set(contract.get("unwrapping_methods", []))),
             "auxiliary_binders": auxiliary,
             "sites": sites[:5],
             "site_count": len(sites),

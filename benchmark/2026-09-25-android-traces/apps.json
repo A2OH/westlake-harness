@@ -1,0 +1,6111 @@
+{
+ "adaway": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 16588,
+   "app_methods": 5364,
+   "trace_mb": 55,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 49,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:notification",
+   "svc:uimode",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "platform_compat",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.app.ActivityThread.nPurgePendingResources"
+   ]
+  }
+ },
+ "aegis": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 13234,
+   "app_methods": 2337,
+   "trace_mb": 31,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 52,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Camera",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:textclassification",
+   "svc:uimode",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "amaze": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 22948,
+   "app_methods": 8203,
+   "trace_mb": 195,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 55,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "jni:android.os.storage.StorageManager",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:multiprocess",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:notification",
+   "svc:textclassification",
+   "svc:uimode",
+   "svc:usb",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "textservices",
+    "usb",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "andstatus": {
+  "board": "blocked",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 21225,
+   "app_methods": 4225,
+   "trace_mb": 113,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 56,
+  "rows_on_path": [
+   "am:process-table",
+   "data:icu-locale-display",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:queryIntentContentProviders",
+   "pm:component-metadata",
+   "pm:multiprocess",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:account",
+   "svc:activity",
+   "svc:alarm",
+   "svc:appops",
+   "svc:audio",
+   "svc:autofill",
+   "svc:clipboard",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:notification",
+   "svc:power",
+   "svc:uimode",
+   "svc:user",
+   "svc:window"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [
+   "runtime-data:icu-locale-display"
+  ],
+  "oh": {
+   "rung": "view",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "platform_compat",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.app.ActivityThread.nPurgePendingResources"
+   ]
+  }
+ },
+ "anki": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 17419,
+   "app_methods": 3089,
+   "trace_mb": 98,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "librsdroid.so"
+   ]
+  },
+  "rows": 69,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "java:Widgets",
+   "jni:android.os.storage.StorageManager",
+   "load:in-apk",
+   "load:runtime-silent-success",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:multiprocess",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:alarm",
+   "svc:appops",
+   "svc:audio",
+   "svc:autofill",
+   "svc:clipboard",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:notification",
+   "svc:permission_controller",
+   "svc:power",
+   "svc:storage",
+   "svc:uimode",
+   "svc:user",
+   "svc:window",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement",
+   "wv:renderer-process"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.app.ActivityThread.nPurgePendingResources"
+   ]
+  }
+ },
+ "antennapod": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 20208,
+   "app_methods": 7278,
+   "trace_mb": 110,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libconscrypt_jni.so"
+   ]
+  },
+  "rows": 61,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Job scheduling",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "load:in-apk",
+   "load:runtime-silent-success",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:notification",
+   "svc:uimode",
+   "svc:user",
+   "upcall:libconscrypt_jni.so"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.app.ActivityThread.nPurgePendingResources"
+   ]
+  }
+ },
+ "antimine": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 12456,
+   "app_methods": 2135,
+   "trace_mb": 53,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libgdx.so"
+   ]
+  },
+  "rows": 45,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "java:Widgets",
+   "load:runtime-silent-success",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:multiprocess",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:display",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:uimode",
+   "window:engine-surface"
+  ],
+  "predicted_static": [
+   "engine:window:engine-surface"
+  ],
+  "predicted_observed": [
+   "engine:window:engine-surface"
+  ],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "game",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "appmanager": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 12874,
+   "app_methods": 4138,
+   "trace_mb": 234,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 71,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "java:Widgets",
+   "jni:android.os.storage.StorageManager",
+   "pm:call:queryIntentContentProviders",
+   "pm:component-metadata",
+   "pm:multiprocess",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:notification",
+   "svc:storage",
+   "svc:uimode",
+   "svc:user"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "view",
+   "root_cause": {
+    "kind": "window-held",
+    "reason": "no surface until its activity's window has an OH session"
+   },
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "aurorastore": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 19675,
+   "app_methods": 9742,
+   "trace_mb": 209,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 62,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "jni:android.os.storage.StorageManager",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:multiprocess",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:notification",
+   "svc:storage",
+   "svc:uimode",
+   "svc:user",
+   "svc:window"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "breezyweather": {
+  "board": "blocked",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 16674,
+   "app_methods": 6195,
+   "trace_mb": 123,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libnrb.so",
+    "libsqlite3x.so"
+   ]
+  },
+  "rows": 52,
+  "rows_on_path": [
+   "am:process-table",
+   "data:icu-locale-display",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "load:in-apk",
+   "load:runtime-silent-success",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:notification",
+   "svc:power",
+   "svc:sensor",
+   "svc:uimode",
+   "svc:user",
+   "upcall:libsqlite3x.so",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [
+   "runtime-data:icu-locale-display"
+  ],
+  "oh": {
+   "rung": "activity",
+   "root_cause": {
+    "kind": "caused-by",
+    "error": "java.lang.NullPointerException",
+    "message": "Attempt to invoke InvokeType(2) method 'java.lang.Class java.lang.Object.getClass()' on a null object reference"
+   },
+   "services_null": [
+    "content_capture",
+    "netstats",
+    "network_management"
+   ],
+   "natives_missing": []
+  }
+ },
+ "briar": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 18468,
+   "app_methods": 6900,
+   "trace_mb": 60,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 48,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:queryIntentContentProviders",
+   "pm:component-metadata",
+   "pm:multiprocess",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:alarm",
+   "svc:appops",
+   "svc:connectivity",
+   "svc:fingerprint",
+   "svc:input_method",
+   "svc:keyguard",
+   "svc:layout_inflater",
+   "svc:notification",
+   "svc:power",
+   "svc:textclassification",
+   "svc:uimode",
+   "svc:wifi"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "bluetooth_manager",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "textservices",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.app.ActivityThread.nPurgePendingResources"
+   ]
+  }
+ },
+ "catima": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 12739,
+   "app_methods": 1462,
+   "trace_mb": 90,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 52,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:multiprocess",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:display",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:search",
+   "svc:shortcut",
+   "svc:textclassification",
+   "svc:uimode"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "chrono": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 10733,
+   "app_methods": 1391,
+   "trace_mb": 28,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 49,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:alarm",
+   "svc:appops",
+   "svc:audio",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:notification",
+   "svc:phone",
+   "svc:uimode",
+   "svc:user",
+   "svc:vibrator",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.app.ActivityThread.nPurgePendingResources"
+   ]
+  }
+ },
+ "connectbot": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 14698,
+   "app_methods": 4999,
+   "trace_mb": 87,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libconscrypt_jni.so"
+   ]
+  },
+  "rows": 52,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "jni:android.media.MediaPlayer",
+   "load:in-apk",
+   "load:runtime-silent-success",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:clipboard",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:uimode",
+   "svc:vibrator",
+   "svc:vibrator_manager",
+   "svc:wifi",
+   "upcall:libconscrypt_jni.so"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "vibrator_manager",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.media.MediaPlayer.native_init"
+   ]
+  }
+ },
+ "conversations": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 14801,
+   "app_methods": 2546,
+   "trace_mb": 66,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libconscrypt_jni.so"
+   ]
+  },
+  "rows": 67,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "java:Widgets",
+   "load:in-apk",
+   "load:runtime-silent-success",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryBroadcastReceivers",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:alarm",
+   "svc:appops",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:notification",
+   "svc:power",
+   "svc:shortcut",
+   "svc:uimode",
+   "svc:user",
+   "upcall:libconscrypt_jni.so",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.app.ActivityThread.nPurgePendingResources"
+   ]
+  }
+ },
+ "davx5": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 18082,
+   "app_methods": 6683,
+   "trace_mb": 176,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libconscrypt_jni.so"
+   ]
+  },
+  "rows": 57,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "jni:android.os.storage.StorageManager",
+   "load:in-apk",
+   "load:runtime-silent-success",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:account",
+   "svc:activity",
+   "svc:appops",
+   "svc:appwidget",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:notification",
+   "svc:power",
+   "svc:shortcut",
+   "svc:storage",
+   "svc:uimode",
+   "svc:user",
+   "upcall:libconscrypt_jni.so",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "droidify": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 19348,
+   "app_methods": 5176,
+   "trace_mb": 1044,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 53,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Camera",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Job scheduling",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:getSystemAvailableFeatures",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:notification",
+   "svc:power",
+   "svc:textclassification",
+   "svc:uimode",
+   "svc:user",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "duckduckgo": {
+  "board": "blocked",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 65240,
+   "app_methods": 49629,
+   "trace_mb": 1703,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libcrash-ndk.so",
+    "libsqlcipher.so",
+    "liburl_predictor.so"
+   ]
+  },
+  "rows": 77,
+  "rows_on_path": [
+   "data:tzdata",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Job scheduling",
+   "java:Views & windows",
+   "java:Widgets",
+   "load:in-apk",
+   "load:runtime-silent-success",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:multiprocess",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:biometric",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:location",
+   "svc:notification",
+   "svc:shortcut",
+   "svc:textclassification",
+   "svc:uimode",
+   "svc:user",
+   "upcall:libsqlcipher.so"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [
+   "runtime-data:tzdata"
+  ],
+  "oh": {
+   "rung": "runtime-init",
+   "root_cause": {
+    "kind": "bind-failed",
+    "error": "java.time.zone.ZoneRulesException",
+    "message": "No time-zone data files registered"
+   },
+   "services_null": [
+    "content_capture",
+    "netstats",
+    "network_management"
+   ],
+   "natives_missing": []
+  }
+ },
+ "editor": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 9032,
+   "app_methods": 46,
+   "trace_mb": 16,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 8,
+  "rows_on_path": [
+   "pm:providers",
+   "svc:input_method",
+   "svc:layout_inflater"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "element": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 20832,
+   "app_methods": 8015,
+   "trace_mb": 206,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libjnidispatch.so",
+    "libmaplibre.so",
+    "libmatrix_sdk_crypto_ffi.so",
+    "librealm-jni.so"
+   ]
+  },
+  "rows": 107,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "java:Widgets",
+   "load:needed-missing",
+   "load:runtime-silent-success",
+   "load:shadowed-by-board",
+   "pm:call:queryBroadcastReceivers",
+   "pm:component-metadata",
+   "pm:providers",
+   "policy:fifo_file",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:alarm",
+   "svc:appops",
+   "svc:audio",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:notification",
+   "svc:restrictions",
+   "svc:sensor",
+   "svc:uimode",
+   "svc:user",
+   "svc:window",
+   "upcall:libmaplibre.so",
+   "upcall:librealm-jni.so"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "restrictions",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.app.ActivityThread.nPurgePendingResources"
+   ]
+  }
+ },
+ "elementx": {
+  "board": "blocked",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 18579,
+   "app_methods": 8539,
+   "trace_mb": 211,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libjnidispatch.so",
+    "libmatrix_sdk_ffi.so",
+    "libsqlcipher.so"
+   ]
+  },
+  "rows": 82,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "jni:android.hardware.SyncFence",
+   "load:in-apk",
+   "load:runtime-silent-success",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:biometric",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:keyguard",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:power",
+   "svc:sensor",
+   "svc:uimode",
+   "svc:user",
+   "svc:window",
+   "sym:runtime-resolved:libnativehelper.so",
+   "upcall:libsqlcipher.so"
+  ],
+  "predicted_static": [
+   "lookup:sym:runtime-resolved:libnativehelper.so"
+  ],
+  "predicted_observed": [
+   "lookup:sym:runtime-resolved:libnativehelper.so"
+  ],
+  "oh": {
+   "rung": "runtime-init",
+   "root_cause": {
+    "kind": "fatal-signal",
+    "thread": "io.element.andr"
+   },
+   "services_null": [
+    "netstats",
+    "network_management"
+   ],
+   "natives_missing": []
+  }
+ },
+ "etar": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 14743,
+   "app_methods": 4547,
+   "trace_mb": 47,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 52,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:alarm",
+   "svc:appops",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:notification",
+   "svc:power",
+   "svc:search",
+   "svc:textclassification",
+   "svc:uimode",
+   "svc:user"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "fairemail": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 16938,
+   "app_methods": 5244,
+   "trace_mb": 185,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libfairemail.so"
+   ]
+  },
+  "rows": 69,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "java:Widgets",
+   "jni:android.os.storage.StorageManager",
+   "load:runtime-silent-success",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:notification",
+   "svc:storage",
+   "svc:textclassification",
+   "svc:uimode",
+   "svc:user",
+   "upcall:libfairemail.so"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "fcalendar": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 14280,
+   "app_methods": 3381,
+   "trace_mb": 118,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 58,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:alarm",
+   "svc:appops",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:shortcut",
+   "svc:textclassification",
+   "svc:uimode",
+   "svc:user"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "textservices",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.app.ActivityThread.nPurgePendingResources"
+   ]
+  }
+ },
+ "fcamera": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 8064,
+   "app_methods": 717,
+   "trace_mb": 65,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 56,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:uimode"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "media.camera",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.app.ActivityThread.nPurgePendingResources"
+   ]
+  }
+ },
+ "fclock": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 14857,
+   "app_methods": 2898,
+   "trace_mb": 105,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 51,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "jni:android.media.MediaPlayer",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:account",
+   "svc:activity",
+   "svc:appops",
+   "svc:audio",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:shortcut",
+   "svc:uimode",
+   "svc:vibrator"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": {
+    "kind": "uncaught",
+    "error": "java.lang.UnsatisfiedLinkError",
+    "message": "No implementation found for void android.media.MediaPlayer.native_init() (tried Java_android_media_MediaPlayer_native_1init and Java_android_media_MediaPlayer_native_1init__) - is the library loaded, e.g. System.loadLibrary?",
+    "thread": "Thread-4"
+   },
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.app.ActivityThread.nPurgePendingResources",
+    "android.media.MediaPlayer.native_init"
+   ]
+  }
+ },
+ "fcontacts": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 11904,
+   "app_methods": 2940,
+   "trace_mb": 176,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 53,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:shortcut",
+   "svc:textclassification",
+   "svc:uimode"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "textservices",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.app.ActivityThread.nPurgePendingResources"
+   ]
+  }
+ },
+ "fdroid": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 31332,
+   "app_methods": 20442,
+   "trace_mb": 157,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 59,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "jni:android.os.storage.StorageManager",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:getInstallSourceInfo",
+   "pm:call:getInstallerPackageName",
+   "pm:call:getSystemAvailableFeatures",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:multiprocess",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:notification",
+   "svc:storage",
+   "svc:uimode",
+   "svc:user",
+   "svc:window"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "feeder": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 20317,
+   "app_methods": 9783,
+   "trace_mb": 304,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 39,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appwidget",
+   "svc:autofill",
+   "svc:clipboard",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:textclassification",
+   "svc:vibrator",
+   "svc:window",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement",
+   "wv:renderer-process"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "vibrator_manager",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "fennec": {
+  "board": "blocked",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 26593,
+   "app_methods": 15196,
+   "trace_mb": 274,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libfreebl3.so",
+    "libgkcodecs.so",
+    "libjnidispatch.so",
+    "liblgpllibs.so",
+    "libmegazord.so",
+    "libmozglue.so",
+    "libnss3.so",
+    "libsoftokn3.so",
+    "libxul.so"
+   ]
+  },
+  "rows": 89,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "jni:android.os.storage.StorageManager",
+   "load:needed-missing",
+   "load:runtime-silent-success",
+   "ndk:package",
+   "ndk:weld:buffers",
+   "ndk:weld:media",
+   "ndk:weld:window",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:getInstallSourceInfo",
+   "pm:call:getInstallerPackageName",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:multiprocess",
+   "pm:providers",
+   "policy:fifo_file",
+   "policy:lnk_file",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:clipboard",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:location",
+   "svc:notification",
+   "svc:shortcut",
+   "svc:storage",
+   "svc:storagestats",
+   "svc:uimode",
+   "svc:user",
+   "svc:window",
+   "sym:runtime-resolved:libaaudio.so",
+   "upcall:libmozglue.so",
+   "upcall:libxul.so"
+  ],
+  "predicted_static": [
+   "native:ndk:package",
+   "native:ndk:weld:buffers",
+   "native:ndk:weld:window"
+  ],
+  "predicted_observed": [
+   "native:ndk:package",
+   "native:ndk:weld:buffers",
+   "native:ndk:weld:window"
+  ],
+  "oh": {
+   "rung": "runtime-init",
+   "root_cause": {
+    "kind": "uncaught",
+    "error": "java.lang.Exception",
+    "message": "Error loading Gecko libraries: Error loading shared library libmediandk.so: (needed by /data/local/tmp/asx/lib/arm64-v8a/libxul.so)",
+    "thread": "Gecko"
+   },
+   "services_null": [
+    "accessibility",
+    "netstats",
+    "network_management"
+   ],
+   "natives_missing": []
+  }
+ },
+ "ffiles": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 13219,
+   "app_methods": 2448,
+   "trace_mb": 97,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 57,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "jni:android.os.storage.StorageManager",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:fingerprint",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:storage",
+   "svc:storagestats",
+   "svc:textclassification",
+   "svc:uimode",
+   "svc:usb",
+   "svc:user",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement",
+   "wv:renderer-process"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": {
+    "kind": "uncaught",
+    "error": "java.lang.NullPointerException",
+    "message": "Attempt to invoke InvokeType(2) method 'java.lang.Class java.lang.Object.getClass()' on a null object reference",
+    "thread": "Thread-12"
+   },
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "fingerprint",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "storagestats",
+    "textservices",
+    "usb",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.app.ActivityThread.nPurgePendingResources"
+   ]
+  }
+ },
+ "ffupdater": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 18065,
+   "app_methods": 6672,
+   "trace_mb": 67,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 42,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Job scheduling",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:getInstallSourceInfo",
+   "pm:call:getInstallerPackageName",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:notification",
+   "svc:power",
+   "svc:uimode",
+   "svc:user",
+   "svc:window"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "platform_compat",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "files": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 15850,
+   "app_methods": 4172,
+   "trace_mb": 103,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libhiddenapi.so",
+    "libselinux-jni.so",
+    "libsyscall.so"
+   ]
+  },
+  "rows": 53,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "jni:android.os.storage.StorageManager",
+   "load:runtime-silent-success",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "policy:lnk_file",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:notification",
+   "svc:textclassification",
+   "svc:uimode",
+   "svc:user",
+   "upcall:libhiddenapi.so",
+   "upcall:libselinux-jni.so",
+   "upcall:libsyscall.so",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement",
+   "wv:renderer-process"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "bound",
+   "root_cause": {
+    "kind": "fatal-signal",
+    "thread": "ervice.Poller-0"
+   },
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "fitotrack": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 14546,
+   "app_methods": 5206,
+   "trace_mb": 99,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 51,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:shortcut",
+   "svc:uimode",
+   "svc:user",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "fluffychat": {
+  "board": "blocked",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 14275,
+   "app_methods": 3635,
+   "trace_mb": 51,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libapp.so",
+    "libdartjni.so",
+    "libflutter.so",
+    "libsqlcipher.so",
+    "libvodozemac_bindings_dart.so"
+   ]
+  },
+  "rows": 73,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Java library",
+   "java:Other Android",
+   "java:Views & windows",
+   "jni:android.hardware.SyncFence",
+   "load:in-apk",
+   "load:runtime-silent-success",
+   "pm:call:queryBroadcastReceivers",
+   "pm:call:queryIntentContentProviders",
+   "pm:component-metadata",
+   "pm:providers",
+   "policy:lnk_file",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:audio",
+   "svc:biometric",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:keyguard",
+   "svc:layout_inflater",
+   "svc:textservices",
+   "svc:window",
+   "sym:runtime-resolved:libandroid.so",
+   "sym:runtime-resolved:libnativewindow.so",
+   "upcall:libdartjni.so",
+   "upcall:libflutter.so",
+   "window:engine-surface"
+  ],
+  "predicted_static": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ],
+  "predicted_observed": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ],
+  "oh": {
+   "rung": "view",
+   "root_cause": {
+    "kind": "fatal-signal"
+   },
+   "services_null": [
+    "accessibility",
+    "auth",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "textservices",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "fmessages": {
+  "board": "blocked",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 11800,
+   "app_methods": 2025,
+   "trace_mb": 72,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 55,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:shortcut",
+   "svc:textclassification",
+   "svc:uimode",
+   "svc:user"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "view",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "textservices",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.app.ActivityThread.nPurgePendingResources"
+   ]
+  }
+ },
+ "fnotes": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 12742,
+   "app_methods": 1919,
+   "trace_mb": 87,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 52,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:shortcut",
+   "svc:textclassification",
+   "svc:uimode"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": {
+    "kind": "uncaught",
+    "error": "android.database.sqlite.SQLiteException",
+    "message": "no such collation sequence: UNICODE (code 257): , while compiling: SELECT * FROM notes ORDER BY title COLLATE UNICODE ASC",
+    "thread": "Thread-5"
+   },
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "textservices",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.app.ActivityThread.nPurgePendingResources"
+   ]
+  }
+ },
+ "fphone": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 12387,
+   "app_methods": 2367,
+   "trace_mb": 84,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 51,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:account",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:notification",
+   "svc:shortcut",
+   "svc:textclassification",
+   "svc:uimode"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "textservices",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.app.ActivityThread.nPurgePendingResources"
+   ]
+  }
+ },
+ "freeotp": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 14026,
+   "app_methods": 4396,
+   "trace_mb": 37,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 63,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:queryIntentContentProviders",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:clipboard",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:textclassification",
+   "svc:uimode",
+   "svc:user"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "fvoicerec": {
+  "board": "blocked",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 11679,
+   "app_methods": 1836,
+   "trace_mb": 99,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 52,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "jni:android.media.MediaPlayer",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:power",
+   "svc:textclassification",
+   "svc:uimode",
+   "svc:user"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "view",
+   "root_cause": {
+    "kind": "window-held",
+    "reason": "no surface until its activity's window has an OH session"
+   },
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "textservices",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.media.MediaPlayer.native_init"
+   ]
+  }
+ },
+ "gadgetbridge": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 20767,
+   "app_methods": 4848,
+   "trace_mb": 140,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 78,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:audio",
+   "svc:autofill",
+   "svc:bluetooth",
+   "svc:camera",
+   "svc:clipboard",
+   "svc:companiondevice",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:notification",
+   "svc:power",
+   "svc:textclassification",
+   "svc:uimode",
+   "svc:usb",
+   "svc:user",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement",
+   "wv:renderer-process"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "bluetooth_manager",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "usb",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "gallery": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 11821,
+   "app_methods": 2048,
+   "trace_mb": 77,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 65,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:display",
+   "svc:fingerprint",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:phone",
+   "svc:textclassification",
+   "svc:uimode",
+   "svc:user"
+  ],
+  "predicted_static": [
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "fingerprint",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "textservices",
+    "usb",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.app.ActivityThread.nPurgePendingResources"
+   ]
+  }
+ },
+ "gh4a": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 14776,
+   "app_methods": 4973,
+   "trace_mb": 28,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 53,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:uimode",
+   "svc:user",
+   "svc:window"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "gpscockpit": {
+  "board": "blocked",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 8877,
+   "app_methods": 831,
+   "trace_mb": 15,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 34,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:appops",
+   "svc:autofill",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:location",
+   "svc:uimode",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "homeassistant": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 27176,
+   "app_methods": 16403,
+   "trace_mb": 459,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 91,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Graphics",
+   "java:Java library",
+   "java:Job scheduling",
+   "java:Views & windows",
+   "jni:android.hardware.Camera",
+   "jni:android.os.storage.StorageManager",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:getInstallerPackageName",
+   "pm:call:getSystemAvailableFeatures",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:camera",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:notification",
+   "svc:power",
+   "svc:storage",
+   "svc:uimode",
+   "svc:user"
+  ],
+  "predicted_static": [
+   "native:ndk:package"
+  ],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "icsx5": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 25973,
+   "app_methods": 15814,
+   "trace_mb": 97,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 47,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Graphics",
+   "java:Job scheduling",
+   "java:Views & windows",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "svc:accessibility",
+   "svc:account",
+   "svc:activity",
+   "svc:appops",
+   "svc:clipboard",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:notification",
+   "svc:power",
+   "svc:uimode",
+   "svc:user",
+   "svc:vibrator",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "vibrator_manager",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "jami": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 15024,
+   "app_methods": 3053,
+   "trace_mb": 55,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libc++_shared.so",
+    "libjami-core-jni.so"
+   ]
+  },
+  "rows": 75,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Camera",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "load:in-apk",
+   "load:needed-missing",
+   "load:runtime-silent-success",
+   "load:shadowed-by-board",
+   "ndk:libc-abi",
+   "ndk:weld:audio",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryBroadcastReceivers",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "policy:fifo_file",
+   "policy:lnk_file",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:audio",
+   "svc:autofill",
+   "svc:camera",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:notification",
+   "svc:shortcut",
+   "svc:telecom",
+   "svc:textclassification",
+   "svc:uimode",
+   "svc:window",
+   "sym:runtime-resolved:libaaudio.so",
+   "sym:runtime-resolved:libmediandk.so",
+   "upcall:libjami-core-jni.so",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "telecom",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "net.jami.daemon.JamiServiceJNI.swig_module_init"
+   ]
+  }
+ },
+ "jellyfin": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 14741,
+   "app_methods": 5212,
+   "trace_mb": 99,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 55,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:clipboard",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:notification",
+   "svc:power",
+   "svc:sensor",
+   "svc:uimode",
+   "svc:user",
+   "svc:vibrator",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement",
+   "wv:renderer-process"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "vibrator_manager",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "justplayer": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 12804,
+   "app_methods": 3164,
+   "trace_mb": 107,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 66,
+  "rows_on_path": [
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "jni:android.hardware.SyncFence",
+   "jni:android.os.storage.StorageManager",
+   "pm:call:queryBroadcastReceivers",
+   "pm:call:queryIntentContentProviders",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:audio",
+   "svc:captioning",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:media_metrics",
+   "svc:power",
+   "svc:storage",
+   "svc:uimode",
+   "svc:user",
+   "svc:window"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "media_metrics",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "kdeconnect": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 19119,
+   "app_methods": 5635,
+   "trace_mb": 140,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 59,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "java:Widgets",
+   "jni:android.os.storage.StorageManager",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:notification",
+   "svc:servicediscovery",
+   "svc:storage",
+   "svc:uimode",
+   "svc:user",
+   "svc:wifi",
+   "svc:window"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "keepassdx": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 13085,
+   "app_methods": 4273,
+   "trace_mb": 61,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 55,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:display",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:notification",
+   "svc:uimode",
+   "svc:user",
+   "svc:window"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "kore": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 11101,
+   "app_methods": 1869,
+   "trace_mb": 14,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 38,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:queryIntentContentProviders",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:appops",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:uimode"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.app.ActivityThread.nPurgePendingResources"
+   ]
+  }
+ },
+ "libretorrent": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 17309,
+   "app_methods": 5127,
+   "trace_mb": 120,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libtorrent4j.so"
+   ]
+  },
+  "rows": 52,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "load:in-apk",
+   "load:runtime-silent-success",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:multiprocess",
+   "pm:providers",
+   "policy:lnk_file",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:notification",
+   "svc:power",
+   "svc:textclassification",
+   "svc:uimode",
+   "svc:user",
+   "svc:window",
+   "upcall:libtorrent4j.so"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "libretube": {
+  "board": "blocked",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 15474,
+   "app_methods": 4347,
+   "trace_mb": 146,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 55,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "jni:android.os.storage.StorageManager",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:notification",
+   "svc:phone",
+   "svc:shortcut",
+   "svc:storage",
+   "svc:textclassification",
+   "svc:uimode",
+   "svc:user"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "runtime-init",
+   "root_cause": {
+    "kind": "bind-failed",
+    "error": "java.lang.IllegalArgumentException",
+    "message": "size must be > 0."
+   },
+   "services_null": [
+    "content_capture",
+    "netstats",
+    "network_management"
+   ],
+   "natives_missing": []
+  }
+ },
+ "linuxcmd": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 13922,
+   "app_methods": 5572,
+   "trace_mb": 141,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 34,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:appops",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:uimode",
+   "svc:window"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "markor": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 14410,
+   "app_methods": 2668,
+   "trace_mb": 25,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 51,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:clipboard",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:power",
+   "svc:uimode",
+   "svc:user",
+   "svc:vibrator"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "vibrator_manager",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "mastodon": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 10360,
+   "app_methods": 514,
+   "trace_mb": 59,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 35,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Java library",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:clipboard",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:sensor",
+   "svc:shortcut",
+   "svc:uimode",
+   "svc:window"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "mindustry": {
+  "board": "blocked",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 11063,
+   "app_methods": 2543,
+   "trace_mb": 459,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libarc-freetype.so",
+    "libarc.so"
+   ]
+  },
+  "rows": 13,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Java library",
+   "load:runtime-silent-success",
+   "svc:clipboard",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:phone",
+   "svc:sensor",
+   "svc:vibrator",
+   "svc:window",
+   "window:engine-surface"
+  ],
+  "predicted_static": [
+   "engine:window:engine-surface"
+  ],
+  "predicted_observed": [
+   "engine:window:engine-surface"
+  ],
+  "oh": {
+   "rung": "view",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "game",
+    "graphicsstats",
+    "isub",
+    "netstats",
+    "network_management",
+    "phone",
+    "sensitive_content_protection_service",
+    "vibrator_manager",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "mpv": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 9354,
+   "app_methods": 945,
+   "trace_mb": 16,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 50,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "jni:android.os.storage.StorageManager",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:appops",
+   "svc:autofill",
+   "svc:display",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:storage",
+   "svc:uimode"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "musicplayer": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 13531,
+   "app_methods": 3199,
+   "trace_mb": 88,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 57,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryBroadcastReceivers",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:audio",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:media_metrics",
+   "svc:notification",
+   "svc:phone",
+   "svc:power",
+   "svc:textclassification",
+   "svc:uimode",
+   "svc:user"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "media_metrics",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "textservices",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.app.ActivityThread.nPurgePendingResources"
+   ]
+  }
+ },
+ "ncnotes": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 17874,
+   "app_methods": 7250,
+   "trace_mb": 396,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 59,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Job scheduling",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:keyguard",
+   "svc:layout_inflater",
+   "svc:textclassification",
+   "svc:uimode",
+   "svc:user",
+   "svc:window"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "nctalk": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 21801,
+   "app_methods": 8899,
+   "trace_mb": 607,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libconscrypt_jni.so",
+    "libjingle_peerconnection_so.so",
+    "libsqlcipher.so"
+   ]
+  },
+  "rows": 99,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Job scheduling",
+   "java:Networking",
+   "java:Views & windows",
+   "java:Widgets",
+   "jni:android.hardware.SyncFence",
+   "load:in-apk",
+   "load:runtime-silent-success",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:multiprocess",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:account",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:keyguard",
+   "svc:layout_inflater",
+   "svc:notification",
+   "svc:textclassification",
+   "svc:uimode",
+   "svc:usb",
+   "svc:user",
+   "upcall:libconscrypt_jni.so",
+   "upcall:libjingle_peerconnection_so.so",
+   "upcall:libsqlcipher.so"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "usb",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "newpipe": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 19388,
+   "app_methods": 4184,
+   "trace_mb": 150,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 64,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:multiprocess",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:batterymanager",
+   "svc:clipboard",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:notification",
+   "svc:power",
+   "svc:textclassification",
+   "svc:uimode",
+   "svc:user",
+   "svc:window"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "nextcloud": {
+  "board": "blocked",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 23066,
+   "app_methods": 9288,
+   "trace_mb": 515,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libconscrypt_jni.so"
+   ]
+  },
+  "rows": 86,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Job scheduling",
+   "java:Views & windows",
+   "java:Widgets",
+   "jni:android.hardware.SyncFence",
+   "load:in-apk",
+   "load:runtime-silent-success",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:multiprocess",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:account",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:notification",
+   "svc:power",
+   "svc:restrictions",
+   "svc:textclassification",
+   "svc:uimode",
+   "svc:user",
+   "upcall:libconscrypt_jni.so"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "restrictions",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.app.ActivityThread.nPurgePendingResources"
+   ]
+  }
+ },
+ "noice": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 17156,
+   "app_methods": 5684,
+   "trace_mb": 50,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 51,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Job scheduling",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryBroadcastReceivers",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:alarm",
+   "svc:appops",
+   "svc:audio",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:media_session",
+   "svc:notification",
+   "svc:uimode",
+   "svc:user",
+   "svc:vibrator"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "vibrator_manager",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "obtainium": {
+  "board": "blocked",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 11562,
+   "app_methods": 2040,
+   "trace_mb": 175,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libapp.so",
+    "libdartjni.so",
+    "libflutter.so"
+   ]
+  },
+  "rows": 76,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Java library",
+   "java:Package manager",
+   "java:Views & windows",
+   "jni:android.hardware.SyncFence",
+   "load:in-apk",
+   "load:runtime-silent-success",
+   "pm:call:canonicalToCurrentPackageNames",
+   "pm:call:checkSignatures",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:getInstalledApplications",
+   "pm:call:getPackageGids",
+   "pm:call:getSuspendedPackageAppExtras",
+   "pm:call:getSystemAvailableFeatures",
+   "pm:call:getSystemSharedLibraryNames",
+   "pm:call:isSafeMode",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setApplicationEnabledSetting",
+   "pm:call:setComponentEnabledSetting",
+   "pm:call:setInstallerPackageName",
+   "pm:component-metadata",
+   "pm:providers",
+   "policy:lnk_file",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:alarm",
+   "svc:appops",
+   "svc:autofill",
+   "svc:clipboard",
+   "svc:connectivity",
+   "svc:device_policy",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:notification",
+   "svc:power",
+   "svc:textservices",
+   "svc:uimode",
+   "svc:user",
+   "svc:window",
+   "sym:runtime-resolved:libandroid.so",
+   "sym:runtime-resolved:libnativewindow.so",
+   "upcall:libdartjni.so",
+   "upcall:libflutter.so",
+   "window:engine-surface",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement",
+   "wv:renderer-process"
+  ],
+  "predicted_static": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ],
+  "predicted_observed": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ],
+  "oh": {
+   "rung": "view",
+   "root_cause": {
+    "kind": "fatal-signal",
+    "thread": "1.raster"
+   },
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "device_policy",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "textservices",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "ooniprobe": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 18307,
+   "app_methods": 8262,
+   "trace_mb": 453,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libjnidispatch.so",
+    "libuniffi_ooniprobe.so"
+   ]
+  },
+  "rows": 43,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "load:in-apk",
+   "load:runtime-silent-success",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:locale",
+   "svc:notification",
+   "svc:power",
+   "svc:user",
+   "svc:window"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "opencamera": {
+  "board": "blocked",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 12152,
+   "app_methods": 1617,
+   "trace_mb": 22,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 59,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "java:Widgets",
+   "jni:android.hardware.Camera",
+   "pm:call:queryIntentContentProviders",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:camera",
+   "svc:display",
+   "svc:input_method",
+   "svc:keyguard",
+   "svc:layout_inflater",
+   "svc:location",
+   "svc:notification",
+   "svc:sensor",
+   "svc:uimode",
+   "svc:user"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "bound",
+   "root_cause": {
+    "kind": "launch-failed",
+    "error": "java.lang.UnsatisfiedLinkError",
+    "message": "No implementation found for int android.hardware.Camera._getNumberOfCameras(int, int) (tried Java_android_hardware_Camera__1getNumberOfCameras and Java_android_hardware_Camera__1getNumberOfCameras__II) - is the library loaded, e.g. System.l"
+   },
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "media.camera",
+    "netstats",
+    "network_management"
+   ],
+   "natives_missing": [
+    "android.hardware.Camera._getNumberOfCameras"
+   ]
+  }
+ },
+ "openhab": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 21738,
+   "app_methods": 8507,
+   "trace_mb": 166,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 64,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:multiprocess",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:location",
+   "svc:nfc",
+   "svc:notification",
+   "svc:power",
+   "svc:uimode",
+   "svc:user",
+   "svc:wifi",
+   "svc:window"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": {
+    "kind": "uncaught",
+    "error": "java.lang.NullPointerException",
+    "message": "Attempt to invoke InvokeType(4) method 'boolean java.util.Enumeration.hasMoreElements()' on a null object reference",
+    "thread": "Thread-2"
+   },
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "openkeychain": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 12874,
+   "app_methods": 3626,
+   "trace_mb": 93,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 50,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Job scheduling",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:multiprocess",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:uimode",
+   "svc:usb",
+   "svc:user"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "usb",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.app.ActivityThread.nPurgePendingResources"
+   ]
+  }
+ },
+ "opentracks": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 12670,
+   "app_methods": 3826,
+   "trace_mb": 51,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 62,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:multiprocess",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:uimode",
+   "svc:user"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "organicmaps": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 11215,
+   "app_methods": 2992,
+   "trace_mb": 38,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "liborganicmaps.so"
+   ]
+  },
+  "rows": 53,
+  "rows_on_path": [
+   "am:process-table",
+   "dep:google-play-services",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Java library",
+   "java:Views & windows",
+   "java:Widgets",
+   "jni:android.os.storage.StorageManager",
+   "load:runtime-silent-success",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "policy:lnk_file",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:location",
+   "svc:notification",
+   "svc:sensor",
+   "svc:storage",
+   "svc:uimode",
+   "svc:user",
+   "upcall:liborganicmaps.so"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.app.ActivityThread.nPurgePendingResources"
+   ]
+  }
+ },
+ "osmand": {
+  "board": "blocked",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 5782,
+   "app_methods": 1124,
+   "trace_mb": 241,
+   "alive_at_end": false,
+   "app_libraries_loaded": []
+  },
+  "rows": 65,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "pm:component-metadata",
+   "pm:multiprocess",
+   "pm:providers",
+   "svc:activity",
+   "svc:appops",
+   "svc:connectivity",
+   "svc:display",
+   "svc:locale",
+   "svc:window"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "view",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "pipepipe": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 21695,
+   "app_methods": 4996,
+   "trace_mb": 180,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 67,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Job scheduling",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:multiprocess",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:audio",
+   "svc:autofill",
+   "svc:batterymanager",
+   "svc:clipboard",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:notification",
+   "svc:permission_controller",
+   "svc:power",
+   "svc:textclassification",
+   "svc:uimode",
+   "svc:user",
+   "svc:window",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement",
+   "wv:renderer-process"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "bluetooth_manager",
+    "content_capture",
+    "graphicsstats",
+    "media.camera",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "usb",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "pomodoro": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 15873,
+   "app_methods": 6539,
+   "trace_mb": 142,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 36,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appwidget",
+   "svc:autofill",
+   "svc:clipboard",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:notification",
+   "svc:window",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "ppsspp": {
+  "board": "blocked",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 7320,
+   "app_methods": 135,
+   "trace_mb": 8,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libppsspp_jni.so"
+   ]
+  },
+  "rows": 40,
+  "rows_on_path": [
+   "java:App framework",
+   "jni:android.os.storage.StorageManager",
+   "load:runtime-silent-success",
+   "policy:lnk_file",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:audio",
+   "svc:consumer_ir",
+   "svc:display",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:location",
+   "svc:power",
+   "svc:sensor",
+   "svc:uimode",
+   "svc:vibrator",
+   "svc:window",
+   "sym:runtime-resolved:libandroid.so",
+   "upcall:libppsspp_jni.so",
+   "window:engine-surface"
+  ],
+  "predicted_static": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so"
+  ],
+  "predicted_observed": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so"
+  ],
+  "oh": {
+   "rung": "view",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "consumer_ir",
+    "content_capture",
+    "game",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "vibrator_manager",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "radiodroid": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 17154,
+   "app_methods": 5777,
+   "trace_mb": 31,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 55,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:OS services",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:queryBroadcastReceivers",
+   "pm:call:queryIntentContentProviders",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:audio",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:media_router",
+   "svc:notification",
+   "svc:phone",
+   "svc:power",
+   "svc:textclassification",
+   "svc:uimode",
+   "svc:user",
+   "svc:window"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "isub",
+    "netstats",
+    "network_management",
+    "phone",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "redmoon": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 12550,
+   "app_methods": 2927,
+   "trace_mb": 20,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 42,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:queryIntentContentProviders",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:display",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:uimode",
+   "svc:user",
+   "svc:vibrator",
+   "svc:window"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "vibrator_manager",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "redreader": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 11542,
+   "app_methods": 1747,
+   "trace_mb": 89,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 50,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:alarm",
+   "svc:appops",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:uimode",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement",
+   "wv:renderer-process"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "bound",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "netstats",
+    "network_management",
+    "platform_compat"
+   ],
+   "natives_missing": [
+    "android.app.ActivityThread.nPurgePendingResources"
+   ]
+  }
+ },
+ "rethink": {
+  "board": "blocked",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 14493,
+   "app_methods": 3842,
+   "trace_mb": 248,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libgojni.so"
+   ]
+  },
+  "rows": 57,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Job scheduling",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "load:in-apk",
+   "load:runtime-silent-success",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:notification",
+   "svc:uimode",
+   "svc:user",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "bound",
+   "root_cause": null,
+   "services_null": [
+    "content_capture",
+    "netstats",
+    "network_management"
+   ],
+   "natives_missing": []
+  }
+ },
+ "retromusic": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 15832,
+   "app_methods": 3829,
+   "trace_mb": 60,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 54,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:multiprocess",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:alarm",
+   "svc:appops",
+   "svc:audio",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:media_metrics",
+   "svc:notification",
+   "svc:phone",
+   "svc:power",
+   "svc:uimode"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "bluetooth_manager",
+    "content_capture",
+    "graphicsstats",
+    "media_metrics",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "usb",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "scrambledexif": {
+  "board": "blocked",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 9406,
+   "app_methods": 1062,
+   "trace_mb": 59,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 38,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:appops",
+   "svc:autofill",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:uimode"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "bound",
+   "root_cause": {
+    "kind": "caused-by",
+    "error": "java.lang.NullPointerException",
+    "message": "Attempt to invoke InvokeType(2) method 'java.lang.String java.lang.Object.toString()' on a null object reference"
+   },
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "netstats",
+    "network_management"
+   ],
+   "natives_missing": []
+  }
+ },
+ "seal": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 15854,
+   "app_methods": 5595,
+   "trace_mb": 250,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libmmkv.so"
+   ]
+  },
+  "rows": 48,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "load:needed-missing",
+   "load:runtime-silent-success",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:clipboard",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:notification",
+   "svc:uimode",
+   "sym:runtime-resolved:libandroid.so",
+   "upcall:libmmkv.so",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement",
+   "wv:renderer-process"
+  ],
+  "predicted_static": [
+   "lookup:sym:runtime-resolved:libandroid.so"
+  ],
+  "predicted_observed": [
+   "lookup:sym:runtime-resolved:libandroid.so"
+  ],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "shatteredpd": {
+  "board": "blocked",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 8583,
+   "app_methods": 925,
+   "trace_mb": 398,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libgdx-freetype.so",
+    "libgdx.so"
+   ]
+  },
+  "rows": 20,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Java library",
+   "java:Views & windows",
+   "jni:android.media.MediaPlayer",
+   "load:runtime-silent-success",
+   "pm:call:getInstallSourceInfo",
+   "pm:call:getInstallerPackageName",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:audio",
+   "svc:clipboard",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:sensor",
+   "svc:vibrator",
+   "svc:vibrator_manager",
+   "window:engine-surface"
+  ],
+  "predicted_static": [
+   "engine:window:engine-surface"
+  ],
+  "predicted_observed": [
+   "engine:window:engine-surface"
+  ],
+  "oh": {
+   "rung": "view",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "game",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "vibrator_manager",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "streetcomplete": {
+  "board": "blocked",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 36220,
+   "app_methods": 24036,
+   "trace_mb": 1227,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libmaplibre.so"
+   ]
+  },
+  "rows": 51,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Graphics",
+   "java:Java library",
+   "java:OS services",
+   "java:Views & windows",
+   "load:in-apk",
+   "load:runtime-silent-success",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:getInstallerPackageName",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "policy:lnk_file",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:location",
+   "svc:notification",
+   "svc:sensor",
+   "svc:uimode",
+   "svc:user",
+   "svc:window",
+   "upcall:libmaplibre.so"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "suntimes": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 15053,
+   "app_methods": 2994,
+   "trace_mb": 165,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 37,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:component-metadata",
+   "pm:multiprocess",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:appops",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:location",
+   "svc:notification",
+   "svc:power",
+   "svc:uimode",
+   "svc:user",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "supertuxkart": {
+  "board": "blocked",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 8108,
+   "app_methods": 123,
+   "trace_mb": 25,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libSDL2.so",
+    "libmain.so"
+   ]
+  },
+  "rows": 25,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Java library",
+   "load:needed-missing",
+   "load:runtime-silent-success",
+   "ndk:package",
+   "ndk:truthful-absence",
+   "ndk:weld:audio",
+   "ndk:weld:sensors",
+   "svc:clipboard",
+   "svc:input_method",
+   "svc:sensor",
+   "svc:uimode",
+   "svc:usb",
+   "svc:vibrator",
+   "svc:window",
+   "sym:runtime-resolved:libaaudio.so",
+   "upcall:libSDL2.so",
+   "window:engine-surface"
+  ],
+  "predicted_static": [
+   "engine:window:engine-surface",
+   "native:ndk:package",
+   "native:ndk:weld:sensors"
+  ],
+  "predicted_observed": [
+   "engine:window:engine-surface",
+   "native:ndk:package",
+   "native:ndk:weld:sensors"
+  ],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "tasks": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 23584,
+   "app_methods": 10986,
+   "trace_mb": 254,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 57,
+  "rows_on_path": [
+   "am:process-table",
+   "data:tzdata",
+   "java:App framework",
+   "java:Graphics",
+   "java:Java library",
+   "java:OS services",
+   "java:Views & windows",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:account",
+   "svc:activity",
+   "svc:alarm",
+   "svc:appops",
+   "svc:appwidget",
+   "svc:audio",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:location",
+   "svc:notification",
+   "svc:phone",
+   "svc:uimode",
+   "svc:user",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [
+   "runtime-data:tzdata"
+  ],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "backup",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "termux": {
+  "board": "draws",
+  "android": null,
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "device_policy",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "platform_compat",
+    "sensitive_content_protection_service",
+    "textservices",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.os.SELinux.getContext",
+    "android.os.SELinux.getFileContext"
+   ]
+  }
+ },
+ "thunderbird": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 16603,
+   "app_methods": 6096,
+   "trace_mb": 141,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 63,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:OS services",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:alarm",
+   "svc:appops",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:notification",
+   "svc:power",
+   "svc:uimode",
+   "svc:user",
+   "svc:vibrator",
+   "svc:window",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement",
+   "wv:renderer-process"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.app.ActivityThread.nPurgePendingResources"
+   ]
+  }
+ },
+ "trailsense": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 13418,
+   "app_methods": 3287,
+   "trace_mb": 72,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 64,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Camera",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Job scheduling",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:autofill",
+   "svc:batterymanager",
+   "svc:camera",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:notification",
+   "svc:phone",
+   "svc:sensor",
+   "svc:uimode",
+   "svc:user",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "isub",
+    "media.camera",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.app.ActivityThread.nPurgePendingResources"
+   ]
+  }
+ },
+ "transistor": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 13329,
+   "app_methods": 3503,
+   "trace_mb": 28,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 52,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryBroadcastReceivers",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:audio",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:media_metrics",
+   "svc:notification",
+   "svc:phone",
+   "svc:power",
+   "svc:shortcut",
+   "svc:uimode",
+   "svc:user",
+   "svc:window",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "media_metrics",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "translateyou": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 15600,
+   "app_methods": 5854,
+   "trace_mb": 100,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 34,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "pm:call:queryIntentContentProviders",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:clipboard",
+   "svc:input_method"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "tusky": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 14219,
+   "app_methods": 2654,
+   "trace_mb": 124,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libconscrypt_jni.so"
+   ]
+  },
+  "rows": 59,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "load:in-apk",
+   "load:runtime-silent-success",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:audio",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:notification",
+   "svc:phone",
+   "svc:textclassification",
+   "svc:uimode",
+   "svc:user",
+   "upcall:libconscrypt_jni.so"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "autofill",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "android.app.ActivityThread.nPurgePendingResources"
+   ]
+  }
+ },
+ "uhabits": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 15583,
+   "app_methods": 3959,
+   "trace_mb": 52,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 36,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:queryIntentContentProviders",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:alarm",
+   "svc:appops",
+   "svc:autofill",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:uimode"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "unciv": {
+  "board": "blocked",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 22892,
+   "app_methods": 11618,
+   "trace_mb": 419,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libgdx.so"
+   ]
+  },
+  "rows": 46,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Java library",
+   "java:Views & windows",
+   "load:runtime-silent-success",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:audio",
+   "svc:clipboard",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:notification",
+   "svc:sensor",
+   "svc:vibrator",
+   "svc:vibrator_manager",
+   "svc:window",
+   "window:engine-surface"
+  ],
+  "predicted_static": [
+   "engine:window:engine-surface"
+  ],
+  "predicted_observed": [
+   "engine:window:engine-surface"
+  ],
+  "oh": {
+   "rung": "view",
+   "root_cause": {
+    "kind": "uncaught",
+    "error": "java.lang.UnsatisfiedLinkError",
+    "message": "No implementation found for void libcore.io.Memory.pokeShortArray(long, short[], int, int, boolean) (tried Java_libcore_io_Memory_pokeShortArray and Java_libcore_io_Memory_pokeShortArray__J_3SIIZ) - is the library loaded, e.g. System.loadLi",
+    "thread": "GLThread 27"
+   },
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "game",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "vibrator_manager",
+    "voiceinteraction"
+   ],
+   "natives_missing": [
+    "libcore.io.Memory.pokeShortArray"
+   ]
+  }
+ },
+ "vlc-fdroid": {
+  "board": "blocked",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 12323,
+   "app_methods": 3418,
+   "trace_mb": 19,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libc++_shared.so",
+    "libvlc.so",
+    "libvlcjni.so"
+   ]
+  },
+  "rows": 72,
+  "rows_on_path": [
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "java:Widgets",
+   "load:runtime-silent-success",
+   "load:shadowed-by-board",
+   "pm:call:queryIntentContentProviders",
+   "pm:component-metadata",
+   "pm:multiprocess",
+   "pm:providers",
+   "policy:lnk_file",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:audio",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:notification",
+   "svc:phone",
+   "svc:uimode",
+   "svc:user",
+   "sym:runtime-resolved:libandroid.so",
+   "sym:runtime-resolved:libmediandk.so",
+   "sym:runtime-resolved:libnativehelper.so",
+   "sym:runtime-resolved:libnativewindow.so",
+   "upcall:libvlc.so",
+   "upcall:libvlcjni.so"
+  ],
+  "predicted_static": [
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativehelper.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ],
+  "predicted_observed": [
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativehelper.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "isub",
+    "netstats",
+    "network_management",
+    "phone",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "voice": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 16090,
+   "app_methods": 5930,
+   "trace_mb": 127,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 48,
+  "rows_on_path": [
+   "java:App framework",
+   "java:Graphics",
+   "java:Java library",
+   "java:Views & windows",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryBroadcastReceivers",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:audio",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:display",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:media_metrics",
+   "svc:notification",
+   "svc:phone",
+   "svc:power",
+   "svc:textclassification",
+   "svc:uimode",
+   "svc:window",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "media_metrics",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "wifianalyzer": {
+  "board": "blocked",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 12226,
+   "app_methods": 1879,
+   "trace_mb": 55,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 35,
+  "rows_on_path": [
+   "data:icu-locale-display",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:appops",
+   "svc:autofill",
+   "svc:input_method",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:location",
+   "svc:uimode",
+   "svc:wifi",
+   "svc:window",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [
+   "runtime-data:icu-locale-display"
+  ],
+  "oh": {
+   "rung": "activity",
+   "root_cause": {
+    "kind": "caused-by",
+    "error": "java.lang.NullPointerException",
+    "message": "Attempt to invoke InvokeType(2) method 'boolean java.lang.String.isEmpty()' on a null object reference"
+   },
+   "services_null": [
+    "content_capture",
+    "netstats",
+    "network_management"
+   ],
+   "natives_missing": []
+  }
+ },
+ "wikipedia": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 18908,
+   "app_methods": 7512,
+   "trace_mb": 141,
+   "alive_at_end": true,
+   "app_libraries_loaded": []
+  },
+  "rows": 61,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Networking",
+   "java:Views & windows",
+   "java:Widgets",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:account",
+   "svc:activity",
+   "svc:alarm",
+   "svc:appops",
+   "svc:appwidget",
+   "svc:connectivity",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:notification",
+   "svc:permission_controller",
+   "svc:shortcut",
+   "svc:uimode",
+   "svc:user",
+   "wm:dialog-stacking",
+   "wm:dim-behind",
+   "wm:window-placement",
+   "wv:renderer-process"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ },
+ "xtra": {
+  "board": "draws",
+  "android": {
+   "scenario": "cold start, first 25 s",
+   "executed_methods": 15512,
+   "app_methods": 3694,
+   "trace_mb": 77,
+   "alive_at_end": true,
+   "app_libraries_loaded": [
+    "libconscrypt_jni.so"
+   ]
+  },
+  "rows": 61,
+  "rows_on_path": [
+   "am:process-table",
+   "java:App framework",
+   "java:Content & intents",
+   "java:Graphics",
+   "java:Java library",
+   "java:Networking",
+   "java:Other Android",
+   "java:Views & windows",
+   "java:Widgets",
+   "load:in-apk",
+   "load:runtime-silent-success",
+   "pm:call:getComponentEnabledSetting",
+   "pm:call:queryIntentContentProviders",
+   "pm:call:setComponentEnabledSetting",
+   "pm:component-metadata",
+   "pm:providers",
+   "svc:accessibility",
+   "svc:activity",
+   "svc:appops",
+   "svc:audio",
+   "svc:autofill",
+   "svc:connectivity",
+   "svc:device_policy",
+   "svc:display",
+   "svc:input_method",
+   "svc:jobscheduler",
+   "svc:layout_inflater",
+   "svc:locale",
+   "svc:phone",
+   "svc:power",
+   "svc:uimode",
+   "svc:user",
+   "upcall:libconscrypt_jni.so"
+  ],
+  "predicted_static": [],
+  "predicted_observed": [],
+  "oh": {
+   "rung": "drawing",
+   "root_cause": null,
+   "services_null": [
+    "accessibility",
+    "content_capture",
+    "graphicsstats",
+    "netstats",
+    "network_management",
+    "sensitive_content_protection_service",
+    "voiceinteraction"
+   ],
+   "natives_missing": []
+  }
+ }
+}

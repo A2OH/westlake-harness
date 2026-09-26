@@ -113,6 +113,12 @@ _PM_METHOD = re.compile(
 )
 
 
+# What a stub returns: a constant or an empty value, never something computed from the request.
+_CONSTANT_RETURN = re.compile(
+    r"null|true|false|-?\d+L?|\"\"|new [\w.]+\[0\]|[\w.]*Collections\.empty\w*\(\)"
+    r"|[\w.]*ParceledListSlice\.emptyList\(\)|new [\w.]+(<[^>]*>)?\(\)|[\w.]+\.EMPTY\w*|[A-Z_]{2,}")
+
+
 def pm_adapter_model(westlake_root: Path) -> dict[str, Any]:
     """IPackageManager method → bridged / stub, from PackageManagerAdapter source."""
     path = westlake_root / "framework/package-manager/java/PackageManagerAdapter.java"
@@ -123,9 +129,13 @@ def pm_adapter_model(westlake_root: Path) -> dict[str, Any]:
         end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
         body = text[match.end():end]
         name = match.group(1)
-        if "logStub(" in body and "logBridged(" not in body:
-            ret = re.search(r"return\s+([^;]+);", body)
-            status, detail = "stub", f"returns {ret.group(1).strip() if ret else 'void'}"
+        returns = [r.strip() for r in re.findall(r"return\s+([^;]+);", body)]
+        answered = [r for r in returns if not _CONSTANT_RETURN.fullmatch(r)]
+        if "logStub(" in body and "logBridged(" not in body and not answered:
+            status, detail = "stub", f"returns {returns[0] if returns else 'void'}"
+        elif "logStub(" in body and "logBridged(" not in body:
+            # logStub on a guard (null argument, unknown caller) and a real answer otherwise.
+            status, detail = "bridged", f"answers {answered[0][:60]}; logStub only on its fallback path"
         elif "SourcePackageRegistry" in body:
             status, detail = "bridged", "source app answered from the original APK via AOSP PackageParser"
         else:

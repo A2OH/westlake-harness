@@ -1,0 +1,82 @@
+{
+ "fnotes": {
+  "package": "org.fossify.notes",
+  "version_name": "1.7.0",
+  "version_code": 13,
+  "bytes": 9528948,
+  "sha256": "5a56e0e39cc488e1f3b947d3801006d3b7450ec73c67f03195c64c5fd3b6bced",
+  "url": "https://f-droid.org/repo/org.fossify.notes_13.apk"
+ },
+ "fclock": {
+  "package": "org.fossify.clock",
+  "version_name": "1.6.0",
+  "version_code": 10,
+  "bytes": 9110265,
+  "sha256": "43cf9f0ec45f1f1ff2df47286622e5b8f3acedaeb07b7f7641b5243dbedca079",
+  "url": "https://f-droid.org/repo/org.fossify.clock_10.apk"
+ },
+ "fmessages": {
+  "package": "org.fossify.messages",
+  "version_name": "1.9.1",
+  "version_code": 23,
+  "bytes": 6572462,
+  "sha256": "95f226c7929adc2699cdb2bc6ead29a704bddb8f55bd92d9b4ecf74bb604f1c6",
+  "url": "https://f-droid.org/repo/org.fossify.messages_23.apk"
+ },
+ "ffiles": {
+  "package": "org.fossify.filemanager",
+  "version_name": "1.6.1",
+  "version_code": 13,
+  "bytes": 9982225,
+  "sha256": "9e97d2faf55fb2702386c3dc51e38a6b073781016b125701d3ab668419a70008",
+  "url": "https://f-droid.org/repo/org.fossify.filemanager_13.apk"
+ },
+ "amaze": {
+  "package": "com.amaze.filemanager",
+  "version_name": "3.11.3",
+  "version_code": 125,
+  "bytes": 12329238,
+  "sha256": "35e0338dac1bf026f22d91e1b096c1c6eff1424ad7d6be52a7f8d3fe50987530",
+  "url": "https://f-droid.org/repo/com.amaze.filemanager_125.apk"
+ },
+ "droidify": {
+  "package": "com.looker.droidify",
+  "version_name": "0.7.7",
+  "version_code": 770,
+  "bytes": 6132710,
+  "sha256": "da3070f3f18bdbed1eab666677afd39e4b19a60c70f0bfca68a5730147f81f10",
+  "url": "https://f-droid.org/repo/com.looker.droidify_770.apk"
+ },
+ "fdroid": {
+  "package": "org.fdroid.fdroid",
+  "version_name": "2.0.0",
+  "version_code": 2000050,
+  "bytes": 12496223,
+  "sha256": "94938d324b03755fb324f143229240c75640e809cdd3a90cc0a545b5d0a61931",
+  "url": "https://f-droid.org/repo/org.fdroid.fdroid_2000050.apk"
+ },
+ "antimine": {
+  "package": "dev.lucanlm.antimine",
+  "version_name": "17.6.3 F",
+  "version_code": 1706031,
+  "bytes": 9417318,
+  "sha256": "e7b635b6629bc5b0f59c2700a82079386a90f3a04b39e92e0cf0bb090979e974",
+  "url": "https://f-droid.org/repo/dev.lucanlm.antimine_1706031.apk"
+ },
+ "unciv": {
+  "package": "com.unciv.app",
+  "version_name": "4.22.1",
+  "version_code": 1262,
+  "bytes": 27297784,
+  "sha256": "0eb71e65786a7879eae99bab48bbc30a6fa76bd2771d562a807fb7e93fb04add",
+  "url": "https://f-droid.org/repo/com.unciv.app_1262.apk"
+ },
+ "gadgetbridge": {
+  "package": "nodomain.freeyourgadget.gadgetbridge",
+  "version_name": "0.94.0",
+  "version_code": 253,
+  "bytes": 20301941,
+  "sha256": "38b7666166f6fd0268b598ad0b40435744833f26b8cb7b13eb724ca61894a66b",
+  "url": "https://f-droid.org/repo/nodomain.freeyourgadget.gadgetbridge_253_01cce93.apk"
+ }
+}

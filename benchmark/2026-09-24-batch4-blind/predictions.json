@@ -1,0 +1,44 @@
+{
+ "files": {
+  "expected": "draws",
+  "because": []
+ },
+ "mastodon": {
+  "expected": "draws",
+  "because": []
+ },
+ "libretube": {
+  "expected": "draws",
+  "because": []
+ },
+ "etar": {
+  "expected": "draws",
+  "because": []
+ },
+ "fcalendar": {
+  "expected": "draws",
+  "because": []
+ },
+ "appmanager": {
+  "expected": "blocked",
+  "because": [
+   "native:ndk:libc-abi"
+  ]
+ },
+ "conversations": {
+  "expected": "draws",
+  "because": []
+ },
+ "kdeconnect": {
+  "expected": "draws",
+  "because": []
+ },
+ "shatteredpd": {
+  "expected": "draws",
+  "because": []
+ },
+ "tasks": {
+  "expected": "draws",
+  "because": []
+ }
+}

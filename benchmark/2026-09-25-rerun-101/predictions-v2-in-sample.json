@@ -1,0 +1,443 @@
+{
+ "adaway": {
+  "expected": "draws",
+  "because": []
+ },
+ "aegis": {
+  "expected": "draws",
+  "because": []
+ },
+ "amaze": {
+  "expected": "draws",
+  "because": []
+ },
+ "andstatus": {
+  "expected": "draws",
+  "because": []
+ },
+ "anki": {
+  "expected": "draws",
+  "because": []
+ },
+ "antennapod": {
+  "expected": "draws",
+  "because": []
+ },
+ "antimine": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface"
+  ]
+ },
+ "appmanager": {
+  "expected": "draws",
+  "because": []
+ },
+ "aurorastore": {
+  "expected": "draws",
+  "because": []
+ },
+ "breezyweather": {
+  "expected": "draws",
+  "because": []
+ },
+ "briar": {
+  "expected": "draws",
+  "because": []
+ },
+ "catima": {
+  "expected": "draws",
+  "because": []
+ },
+ "chrono": {
+  "expected": "draws",
+  "because": []
+ },
+ "connectbot": {
+  "expected": "draws",
+  "because": []
+ },
+ "conversations": {
+  "expected": "draws",
+  "because": []
+ },
+ "davx5": {
+  "expected": "draws",
+  "because": []
+ },
+ "droidify": {
+  "expected": "draws",
+  "because": []
+ },
+ "duckduckgo": {
+  "expected": "draws",
+  "because": []
+ },
+ "editor": {
+  "expected": "draws",
+  "because": []
+ },
+ "element": {
+  "expected": "draws",
+  "because": []
+ },
+ "elementx": {
+  "expected": "draws",
+  "because": []
+ },
+ "etar": {
+  "expected": "draws",
+  "because": []
+ },
+ "fairemail": {
+  "expected": "draws",
+  "because": []
+ },
+ "fcalendar": {
+  "expected": "draws",
+  "because": []
+ },
+ "fcamera": {
+  "expected": "draws",
+  "because": []
+ },
+ "fclock": {
+  "expected": "draws",
+  "because": []
+ },
+ "fcontacts": {
+  "expected": "draws",
+  "because": []
+ },
+ "fdroid": {
+  "expected": "draws",
+  "because": []
+ },
+ "feeder": {
+  "expected": "draws",
+  "because": []
+ },
+ "fennec": {
+  "expected": "blocked",
+  "because": [
+   "native:ndk:package",
+   "native:ndk:weld:buffers",
+   "native:ndk:weld:window"
+  ]
+ },
+ "ffiles": {
+  "expected": "draws",
+  "because": []
+ },
+ "ffupdater": {
+  "expected": "draws",
+  "because": []
+ },
+ "files": {
+  "expected": "draws",
+  "because": []
+ },
+ "fitotrack": {
+  "expected": "draws",
+  "because": []
+ },
+ "fluffychat": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ]
+ },
+ "fmessages": {
+  "expected": "draws",
+  "because": []
+ },
+ "fnotes": {
+  "expected": "draws",
+  "because": []
+ },
+ "fphone": {
+  "expected": "draws",
+  "because": []
+ },
+ "freeotp": {
+  "expected": "draws",
+  "because": []
+ },
+ "fvoicerec": {
+  "expected": "draws",
+  "because": []
+ },
+ "gadgetbridge": {
+  "expected": "draws",
+  "because": []
+ },
+ "gallery": {
+  "expected": "blocked",
+  "because": [
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ]
+ },
+ "gh4a": {
+  "expected": "draws",
+  "because": []
+ },
+ "gpscockpit": {
+  "expected": "draws",
+  "because": []
+ },
+ "homeassistant": {
+  "expected": "blocked",
+  "because": [
+   "native:ndk:package"
+  ]
+ },
+ "icsx5": {
+  "expected": "draws",
+  "because": []
+ },
+ "jami": {
+  "expected": "draws",
+  "because": []
+ },
+ "jellyfin": {
+  "expected": "draws",
+  "because": []
+ },
+ "justplayer": {
+  "expected": "draws",
+  "because": []
+ },
+ "kdeconnect": {
+  "expected": "draws",
+  "because": []
+ },
+ "keepassdx": {
+  "expected": "draws",
+  "because": []
+ },
+ "kore": {
+  "expected": "draws",
+  "because": []
+ },
+ "libretorrent": {
+  "expected": "draws",
+  "because": []
+ },
+ "libretube": {
+  "expected": "draws",
+  "because": []
+ },
+ "linuxcmd": {
+  "expected": "draws",
+  "because": []
+ },
+ "markor": {
+  "expected": "draws",
+  "because": []
+ },
+ "mastodon": {
+  "expected": "draws",
+  "because": []
+ },
+ "mindustry": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface"
+  ]
+ },
+ "mpv": {
+  "expected": "draws",
+  "because": []
+ },
+ "musicplayer": {
+  "expected": "draws",
+  "because": []
+ },
+ "ncnotes": {
+  "expected": "draws",
+  "because": []
+ },
+ "nctalk": {
+  "expected": "draws",
+  "because": []
+ },
+ "newpipe": {
+  "expected": "draws",
+  "because": []
+ },
+ "nextcloud": {
+  "expected": "draws",
+  "because": []
+ },
+ "noice": {
+  "expected": "draws",
+  "because": []
+ },
+ "obtainium": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ]
+ },
+ "ooniprobe": {
+  "expected": "draws",
+  "because": []
+ },
+ "opencamera": {
+  "expected": "draws",
+  "because": []
+ },
+ "openhab": {
+  "expected": "draws",
+  "because": []
+ },
+ "openkeychain": {
+  "expected": "draws",
+  "because": []
+ },
+ "opentracks": {
+  "expected": "draws",
+  "because": []
+ },
+ "organicmaps": {
+  "expected": "draws",
+  "because": []
+ },
+ "osmand": {
+  "expected": "draws",
+  "because": []
+ },
+ "pipepipe": {
+  "expected": "draws",
+  "because": []
+ },
+ "pomodoro": {
+  "expected": "draws",
+  "because": []
+ },
+ "ppsspp": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libandroid.so"
+  ]
+ },
+ "radiodroid": {
+  "expected": "draws",
+  "because": []
+ },
+ "redmoon": {
+  "expected": "draws",
+  "because": []
+ },
+ "redreader": {
+  "expected": "draws",
+  "because": []
+ },
+ "rethink": {
+  "expected": "draws",
+  "because": []
+ },
+ "retromusic": {
+  "expected": "draws",
+  "because": []
+ },
+ "scrambledexif": {
+  "expected": "draws",
+  "because": []
+ },
+ "seal": {
+  "expected": "blocked",
+  "because": [
+   "lookup:sym:runtime-resolved:libandroid.so"
+  ]
+ },
+ "shatteredpd": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface"
+  ]
+ },
+ "streetcomplete": {
+  "expected": "draws",
+  "because": []
+ },
+ "suntimes": {
+  "expected": "draws",
+  "because": []
+ },
+ "supertuxkart": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "native:ndk:package",
+   "native:ndk:weld:sensors"
+  ]
+ },
+ "tasks": {
+  "expected": "draws",
+  "because": []
+ },
+ "termux": {
+  "expected": "draws",
+  "because": []
+ },
+ "thunderbird": {
+  "expected": "draws",
+  "because": []
+ },
+ "trailsense": {
+  "expected": "draws",
+  "because": []
+ },
+ "transistor": {
+  "expected": "draws",
+  "because": []
+ },
+ "translateyou": {
+  "expected": "draws",
+  "because": []
+ },
+ "tusky": {
+  "expected": "draws",
+  "because": []
+ },
+ "uhabits": {
+  "expected": "draws",
+  "because": []
+ },
+ "unciv": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface"
+  ]
+ },
+ "vlc-fdroid": {
+  "expected": "blocked",
+  "because": [
+   "lookup:sym:runtime-resolved:libandroid.so",
+   "lookup:sym:runtime-resolved:libnativewindow.so"
+  ]
+ },
+ "voice": {
+  "expected": "draws",
+  "because": []
+ },
+ "wifianalyzer": {
+  "expected": "draws",
+  "because": []
+ },
+ "wikipedia": {
+  "expected": "draws",
+  "because": []
+ },
+ "xtra": {
+  "expected": "draws",
+  "because": []
+ }
+}

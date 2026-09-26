@@ -1,0 +1,529 @@
+{
+  "apps": {
+    "org.mozilla.fennec_fdroid": {
+      "missing": [
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libxul.so"
+          ],
+          "surface": "libandroid",
+          "symbol": "AHardwareBuffer_recvHandleFromUnixSocket"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libxul.so"
+          ],
+          "surface": "libandroid",
+          "symbol": "AHardwareBuffer_sendHandleToUnixSocket"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libxul.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AImageReader_acquireNextImageAsync"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libxul.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AImageReader_setImageListener"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libxul.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaCodecCryptoInfo_delete"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libxul.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaCodecCryptoInfo_new"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libxul.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaCodecCryptoInfo_setPattern"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaCodec_configure"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaCodec_createCodecByName"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaCodec_createDecoderByType"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaCodec_createEncoderByType"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaCodec_delete"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaCodec_dequeueInputBuffer"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaCodec_dequeueOutputBuffer"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaCodec_flush"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaCodec_getInputBuffer"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaCodec_getOutputBuffer"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaCodec_getOutputFormat"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaCodec_queueInputBuffer"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaCodec_queueSecureInputBuffer"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaCodec_releaseOutputBuffer"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaCodec_releaseOutputBufferAtTime"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaCodec_setParameters"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaCodec_start"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaCodec_stop"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libxul.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaCrypto_delete"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libxul.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaCrypto_isCryptoSchemeSupported"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libxul.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaCrypto_new"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libxul.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaDrm_closeSession"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libxul.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaDrm_createByUUID"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libxul.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaDrm_getKeyRequest"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libxul.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaDrm_getProvisionRequest"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libxul.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaDrm_openSession"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libxul.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaDrm_provideKeyResponse"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libxul.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaDrm_provideProvisionResponse"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libxul.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaDrm_release"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libxul.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaDrm_setOnEventListener"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libxul.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaDrm_setPropertyByteArray"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libxul.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaDrm_setPropertyString"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaFormat_delete"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaFormat_getBuffer"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaFormat_getFloat"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaFormat_getInt32"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaFormat_getInt64"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaFormat_getString"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaFormat_new"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaFormat_setBuffer"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaFormat_setFloat"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaFormat_setInt32"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaFormat_setInt64"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaFormat_setString"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libmozavcodec.so"
+          ],
+          "surface": "libmediandk",
+          "symbol": "AMediaFormat_toString"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libxul.so"
+          ],
+          "surface": "libandroid",
+          "symbol": "ANativeWindow_toSurface"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libxul.so"
+          ],
+          "surface": "libandroid",
+          "symbol": "ASharedMemory_create"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libxul.so"
+          ],
+          "surface": "libandroid",
+          "symbol": "ASharedMemory_getSize"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "libxul.so"
+          ],
+          "surface": "libandroid",
+          "symbol": "ASharedMemory_setProt"
+        },
+        {
+          "importers": 1,
+          "importing_libraries": [
+            "lib/arm64-v8a/libplugin-container.so"
+          ],
+          "surface": "libc",
+          "symbol": "__libc_init"
+        }
+      ],
+      "resolved": 1827,
+      "symbols": 1884
+    }
+  },
+  "board": {
+    "description": "OpenHarmony 6.1.0.31 arm64: musl libc, EGL, GLESv2/v3, OpenSLES, vulkan, z + Westlake native-runtime-opengl2 + bionic-shim-nw8",
+    "libraries_indexed": [
+      "bionic-shim-nw8/libwebview_bionic_shim.so",
+      "native-runtime-opengl2/libandroid.so",
+      "native-runtime-opengl2/libandroid_native_network_compat.so",
+      "native-runtime-opengl2/libandroidfw.so",
+      "native-runtime-opengl2/libbase.so",
+      "native-runtime-opengl2/libbinder_ndk.so",
+      "native-runtime-opengl2/libcutils.so",
+      "native-runtime-opengl2/libexpat.so",
+      "native-runtime-opengl2/libframework-connectivity-jni.so",
+      "native-runtime-opengl2/libframework-connectivity-tiramisu-jni.so",
+      "native-runtime-opengl2/libft2.so",
+      "native-runtime-opengl2/libgif.so",
+      "native-runtime-opengl2/libharfbuzz_ng.so",
+      "native-runtime-opengl2/libhwui.so",
+      "native-runtime-opengl2/libicu_jni.so",
+      "native-runtime-opengl2/libicui18n.so",
+      "native-runtime-opengl2/libicuuc.so",
+      "native-runtime-opengl2/libjavacrypto.so",
+      "native-runtime-opengl2/libjnigraphics.so",
+      "native-runtime-opengl2/libjpeg.so",
+      "native-runtime-opengl2/liblog.so",
+      "native-runtime-opengl2/libmedia_jni.so",
+      "native-runtime-opengl2/libminikin.so",
+      "native-runtime-opengl2/libnativehelper.so",
+      "native-runtime-opengl2/liboh_account_state.so",
+      "native-runtime-opengl2/liboh_adapter_bridge.so",
+      "native-runtime-opengl2/liboh_android_runtime.so",
+      "native-runtime-opengl2/liboh_connectivity_state.so",
+      "native-runtime-opengl2/liboh_hwui_shim.so",
+      "native-runtime-opengl2/liboh_ime_helper_capi.so",
+      "native-runtime-opengl2/liboh_permission_queries.so",
+      "native-runtime-opengl2/libpng.so",
+      "native-runtime-opengl2/libsoundpool.so",
+      "native-runtime-opengl2/libstats_jni.so",
+      "native-runtime-opengl2/libstatspull.so",
+      "native-runtime-opengl2/libstatssocket.so",
+      "native-runtime-opengl2/libstdc++.so",
+      "native-runtime-opengl2/libultrahdr.so",
+      "native-runtime-opengl2/libutils.so",
+      "native-runtime-opengl2/libwebp.so",
+      "native-runtime-opengl2/libwestlake_binder.so",
+      "native-runtime-opengl2/libwestlake_bionic.so",
+      "native-runtime-opengl2/libwestlake_libcore_linux.so",
+      "native-runtime-opengl2/libwestlake_runtime_boundary.so",
+      "native-runtime-opengl2/libwestlake_securec.so",
+      "native-runtime-opengl2/libwestlake_webp.so",
+      "native-runtime-opengl2/libwl_missing_natives.so",
+      "native-runtime-opengl2/libwl_opengl_jni.so",
+      "native-runtime-opengl2/libwuffs.so",
+      "native-runtime-opengl2/libz.so",
+      "native-runtime-opengl2/libziparchive.so",
+      "oh-libs/libEGL.so",
+      "oh-libs/libGLESv2.so",
+      "oh-libs/libGLESv3.so",
+      "oh-libs/libOpenSLES.so",
+      "oh-libs/libc.so",
+      "oh-libs/libvulkan.so",
+      "oh-libs/libz.so"
+    ]
+  }
+}

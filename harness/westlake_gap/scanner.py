@@ -279,6 +279,8 @@ def read_elf(
             ["readelf", "--wide", "-h", "-d", "-Ws", "-n", str(path)],
             capture_output=True,
             text=True,
+            # Symbol tables may carry bytes that are not UTF-8 (OsmAnd); one must not abort the scan.
+            errors="replace",
             timeout=45,
             check=False,
         )
@@ -506,6 +508,18 @@ class DexInventory:
     jca_requests: list[dict[str, Any]] = field(default_factory=list)
     nonnull_casts: list[dict[str, Any]] = field(default_factory=list)
     native_methods: list[dict[str, Any]] = field(default_factory=list)
+    superclasses: dict[str, str] = field(default_factory=dict)
+
+
+def _activity_chains(activities: list[str], superclasses: dict[str, str]) -> dict[str, list[str]]:
+    chains = {}
+    for name in activities:
+        chain, current = [], "L" + name.replace(".", "/") + ";"
+        while current in superclasses and len(chain) < 32:
+            current = superclasses[current]
+            chain.append(current)
+        chains[name] = chain
+    return chains
 
 
 def inventory_dex(path: Path) -> DexInventory:
@@ -515,7 +529,10 @@ def inventory_dex(path: Path) -> DexInventory:
         dex = DEX(blob)
         dex_sha256 = sha256_bytes(blob)
         result.dex_entries.append({"name": dex_name, "sha256": dex_sha256, "bytes": len(blob)})
-        result.defined_classes.update(str(c.get_name()) for c in dex.get_classes())
+        for c in dex.get_classes():
+            result.defined_classes.add(str(c.get_name()))
+            # Kept for the activity hierarchy: which engine base class a launch activity extends.
+            result.superclasses[str(c.get_name())] = str(c.get_superclassname() or "")
         for type_idx in range(dex.get_header_item().type_ids_size):
             type_name = component_type(str(dex.get_cm_type(type_idx)))
             if is_platform_type(type_name):
@@ -858,6 +875,21 @@ class RuntimeResolver:
         return None
 
 
+def _launch_targets(apk: Any) -> list[str]:
+    ns = "{http://schemas.android.com/apk/res/android}"
+    targets: dict[str, str] = {}
+    try:
+        manifest = apk.get_android_manifest_xml()
+        package = apk.get_package() or ""
+        for alias in manifest.iter("activity-alias"):
+            name, target = alias.get(ns + "name"), alias.get(ns + "targetActivity")
+            if name and target:
+                full = lambda n: package + n if n.startswith(".") else n
+                targets[full(name)] = full(target)
+    except Exception:
+        pass
+    return sorted({targets.get(name, name) for name in (apk.get_main_activities() or [])})
+
 def apk_metadata(path: Path) -> dict[str, Any]:
     quiet_androguard()
     base = {
@@ -912,7 +944,9 @@ def apk_metadata(path: Path) -> dict[str, Any]:
             "version_name": apk.get_androidversion_name(),
             "min_sdk": apk.get_min_sdk_version(),
             "target_sdk": apk.get_target_sdk_version(),
-            "main_activities": sorted(apk.get_main_activities() or []),
+            # A launcher entry may be an <activity-alias>: no class has its name, and what
+            # starts is its targetActivity (Organic Maps, Element, Gallery, Fennec).
+            "main_activities": _launch_targets(apk),
             "activities": len(apk.get_activities() or []),
             "services": len(apk.get_services() or []),
             "receivers": len(apk.get_receivers() or []),
@@ -1400,6 +1434,9 @@ def scan_apk(
         "inventory": {
             "dex_entries": inventory.dex_entries,
             "defined_classes": len(defined),
+            # Each launch activity's superclass chain, up to the first class the APK does not
+            # define: which engine base class (libGDX, SDL, Flutter, NativeActivity...) it runs on.
+            "launch_activity_chains": _activity_chains(identity.get("main_activities") or [], inventory.superclasses),
             "platform_type_references": len(inventory.type_refs),
             "platform_method_references": len(inventory.method_refs),
             "platform_field_references": len(inventory.field_refs),

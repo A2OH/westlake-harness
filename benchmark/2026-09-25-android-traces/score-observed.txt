@@ -1,0 +1,19 @@
+100 apps with a traced map: 24 blocked, 76 drawing
+
+check                                                 static b/d  prec  observed b/d  prec
+service: any null/hollow/strict                         23/74     0.24     19/59      0.24
+framework natives: any unregistered                     22/70     0.24     10/17      0.37
+framework natives: class initializer unregistered       20/69     0.22      2/2       0.50
+runtime data: icu-locale-display                        16/51     0.24      3/0       1.00
+java: platform API absent                               14/38     0.27     14/36      0.28
+webview: renderer process                                8/30     0.21      1/11      0.08
+window: engine draws into its own SurfaceView            7/1      0.88      7/1       0.88
+runtime data: tzdata                                     6/18     0.25      1/1       0.50
+pm: secondary processes                                  6/17     0.26      6/17      0.26
+native: NDK name looked up at run time                   6/5      0.55      6/2       0.75
+service: null cast non-null by the app                   4/13     0.24      0/1       0.00
+native: unresolved NDK/libc import                       2/7      0.22      2/1       0.67
+native: DT_NEEDED library nobody provides                2/4      0.33      2/3       0.40
+
+predictor v2, static:   accuracy 0.82, precision 0.71, recall 0.42 (tp 10, fp 4, fn 14)
+predictor v2, observed: accuracy 0.87, precision 0.82, recall 0.58 (tp 14, fp 3, fn 10)

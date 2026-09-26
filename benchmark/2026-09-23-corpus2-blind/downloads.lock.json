@@ -1,0 +1,127 @@
+{
+ "source": "F-Droid main repository (https://f-droid.org/repo), index-v2 retrieved 2026-09-23",
+ "verified": "sha256 of each download equals the index entry",
+ "apps": {
+  "org.videolan.vlc": {
+   "version_name": "3.7.1",
+   "version_code": 13070106,
+   "bytes": 47990842,
+   "sha256": "355ff246a0348c094a256926ea31cbec92701a2faca3d41d49170798c550ee3b",
+   "abis": [
+    "arm64-v8a"
+   ],
+   "url": "https://f-droid.org/repo/org.videolan.vlc_13070106.apk"
+  },
+  "app.organicmaps": {
+   "version_name": "2026.08.27-18-FDroid",
+   "version_code": 26082718,
+   "bytes": 64105378,
+   "sha256": "c1fc03a8bad4dac3c400c50764a929ec7a07b02ba572336bfdd9e722a4f96519",
+   "abis": [
+    "arm64-v8a",
+    "armeabi-v7a",
+    "x86",
+    "x86_64"
+   ],
+   "url": "https://f-droid.org/repo/app.organicmaps_26082718.apk"
+  },
+  "net.thunderbird.android": {
+   "version_name": "23.0",
+   "version_code": 31,
+   "bytes": 10822051,
+   "sha256": "1e4a2e23a4bff8c8d96eae7ed809f1ebd05a4ab24650ab792c226749dd51d936",
+   "abis": [
+    "arm64-v8a",
+    "armeabi-v7a",
+    "x86",
+    "x86_64"
+   ],
+   "url": "https://f-droid.org/repo/net.thunderbird.android_31.apk"
+  },
+  "com.kunzisoft.keepass.libre": {
+   "version_name": "4.5.4",
+   "version_code": 45400,
+   "bytes": 16737649,
+   "sha256": "862f87a30baef06181f049adf7c460611605b25a807eaf3c25841a9dd84bed9e",
+   "abis": [
+    "arm64-v8a",
+    "armeabi-v7a",
+    "x86",
+    "x86_64"
+   ],
+   "url": "https://f-droid.org/repo/com.kunzisoft.keepass.libre_45400.apk"
+  },
+  "org.fossify.gallery": {
+   "version_name": "1.13.1",
+   "version_code": 28,
+   "bytes": 38606538,
+   "sha256": "ae7e699599e81f70e2b82626bb1dfa883fe096cd938387133e123c116e5641d9",
+   "abis": [
+    "arm64-v8a",
+    "armeabi-v7a",
+    "x86",
+    "x86_64"
+   ],
+   "url": "https://f-droid.org/repo/org.fossify.gallery_28.apk"
+  },
+  "com.keylesspalace.tusky": {
+   "version_name": "32.2",
+   "version_code": 142,
+   "bytes": 22364055,
+   "sha256": "3e8fcc49a80d4c30ab6f6037e51402c77e2694d27ec19ae5b8a93cd08b6caffa",
+   "abis": [
+    "arm64-v8a",
+    "armeabi-v7a",
+    "x86",
+    "x86_64"
+   ],
+   "url": "https://f-droid.org/repo/com.keylesspalace.tusky_142.apk"
+  },
+  "im.vector.app": {
+   "version_name": "1.6.62",
+   "version_code": 40106622,
+   "bytes": 72422482,
+   "sha256": "ff73751599211c709c1e691d1a2b7412df0bab979ffbe8ff0d4b7f31c6a444c9",
+   "abis": [
+    "arm64-v8a"
+   ],
+   "url": "https://f-droid.org/repo/im.vector.app_40106622.apk"
+  },
+  "chat.fluffy.fluffychat": {
+   "version_name": "2.9.5",
+   "version_code": 3566,
+   "bytes": 185599421,
+   "sha256": "edcdf6171c09ab39ed76447c1ee11c66503d922dfe4f36f2dd429f2f9c652481",
+   "abis": [
+    "arm64-v8a",
+    "armeabi-v7a",
+    "x86",
+    "x86_64"
+   ],
+   "url": "https://f-droid.org/repo/chat.fluffy.fluffychat_3566.apk"
+  },
+  "org.breezyweather": {
+   "version_name": "6.2.2_freenet",
+   "version_code": 60202,
+   "bytes": 20779665,
+   "sha256": "1369d817d426498715f8ccb6750baff19dadd78e85f707088e9bca43977570c0",
+   "abis": [
+    "arm64-v8a",
+    "armeabi-v7a",
+    "x86",
+    "x86_64"
+   ],
+   "url": "https://f-droid.org/repo/org.breezyweather_60202.apk"
+  },
+  "org.mozilla.fennec_fdroid": {
+   "version_name": "156.0.0",
+   "version_code": 1560020,
+   "bytes": 127634542,
+   "sha256": "27f2951376ca1085e0933066c902fdfe4d260916d381e233475c5fd6964f5745",
+   "abis": [
+    "arm64-v8a"
+   ],
+   "url": "https://f-droid.org/repo/org.mozilla.fennec_fdroid_1560020.apk"
+  }
+ }
+}

@@ -210,6 +210,163 @@ class ServiceVerdicts(unittest.TestCase):
         self.assertEqual(rows["svc:location"]["throws_if_null"], 0, "supplied: the cast never sees null")
 
 
+class FrameworkSideThrows(unittest.TestCase):
+    MANAGER = """public class NotificationManager {
+    public List<NotificationChannel> getNotificationChannels() {
+        INotificationManager service = getService();
+        try {
+            return service.getNotificationChannels(mContext.getOpPackageName(), mContext.getPackageName(),
+                    mContext.getUserId()).getList();
+        } catch (RemoteException e) { throw e.rethrowFromSystemServer(); }
+    }
+    public NotificationChannel getNotificationChannel(String id) {
+        return getService().getNotificationChannel(mContext.getOpPackageName(), mContext.getUserId(), id);
+    }
+}
+"""
+
+    def test_unwrapping_methods(self) -> None:
+        self.assertEqual(services.unwrapping_methods(self.MANAGER), ["getNotificationChannels"],
+                         "only a method that calls getList() on the binder's answer throws on null")
+
+    def test_hollow_service_called_through_an_unwrapping_method(self) -> None:
+        aosp = {"notification": {"manager": "Landroid/app/NotificationManager;", "binders": [],
+                                 "source": "SystemServiceRegistry.java:1", "unwrapping_methods": ["getNotificationChannels"]}}
+        westlake = {"notification": [{"kind": "hollow-proxy", "detail": "d", "source": "s"}]}
+        scan = {"inventory": {"service_requests": [{"service": "notification", "owner": "Lapp/A;", "method": "m"}],
+                              "platform_method_names": {"Landroid/app/NotificationManager;": ["getNotificationChannels"]}}}
+        rows, _ = gapmap.service_rows(scan, aosp, westlake)
+        row = rows[0]
+        self.assertEqual(row["throws_in_framework"], ["getNotificationChannels"])
+        self.assertIn("throws inside NotificationManager", row["app_evidence"])
+
+    def test_empty_list_answers_do_not_throw(self) -> None:
+        aosp = {"jobscheduler": {"manager": "Landroid/app/job/JobScheduler;", "binders": [],
+                                 "source": "s:1", "unwrapping_methods": ["getAllPendingJobs"]}}
+        westlake = {"jobscheduler": [{"kind": "hollow-proxy", "detail": "d", "source": "s", "empty_lists": True}]}
+        scan = {"inventory": {"service_requests": [{"service": "jobscheduler", "owner": "Lapp/A;", "method": "m"}],
+                              "platform_method_names": {"Landroid/app/job/JobScheduler;": ["getAllPendingJobs"]}}}
+        rows, _ = gapmap.service_rows(scan, aosp, westlake)
+        self.assertEqual(rows[0]["verdict"], "hollow", "jobs still never run")
+        self.assertEqual(rows[0]["throws_in_framework"], [], "an empty slice is unwrapped without throwing")
+
+
+class FrameworkNatives(unittest.TestCase):
+    RUNTIME = {"bridge_libraries": [{"jni_registration_entries": [{"name": "_nativeClassInit", "signature": "()V"}]}],
+               "classes": {
+                   "Landroid/opengl/EGL14;": {"native_methods": ["_nativeClassInit()V", "eglGetDisplay(I)Landroid/opengl/EGLDisplay;"]},
+                   "Landroid/opengl/GLES20;": {"native_methods": ["glClear(I)V"]},
+                   "Landroid/os/ParcelFileDescriptor;": {"native_methods": ["native_close$ravenwood(Ljava/io/FileDescriptor;)V"]}}}
+    SCAN = {"inventory": {"platform_method_names": {"Landroid/opengl/EGL14;": ["eglGetDisplay"],
+                                                    "Landroid/opengl/GLES20;": ["glClear"],
+                                                    "Landroid/os/ParcelFileDescriptor;": ["close"]}}}
+
+    def test_a_class_no_runtime_library_names_is_unbound(self) -> None:
+        rows = {r["id"]: r for r in gapmap.framework_native_rows(self.SCAN, self.RUNTIME, {"android/opengl/GLES20"})}
+        self.assertEqual(set(rows), {"jni:android.opengl.EGL14"},
+                         "GLES20 is named by a runtime library; ravenwood natives never run on a device")
+        egl = rows["jni:android.opengl.EGL14"]
+        self.assertEqual(egl["open_symbols"], ["_nativeClassInit()V"],
+                         "another class's _nativeClassInit()V registration does not bind EGL14's")
+        self.assertIn("class initializer", egl["app_evidence"])
+
+
+class BlockersLedger(unittest.TestCase):
+    def test_rows_that_blocked_an_app_are_marked(self) -> None:
+        rows = [{"id": "svc:notification", "verdict": "hollow"}, {"id": "svc:alarm", "verdict": "supplied"}]
+        ledger = {"blockers": [{"app": "tusky", "corpus": "corpus-2", "row": "svc:notification", "fixed_in": "886b89b"},
+                               {"app": "davx5", "corpus": "corpus-3", "row": None, "fixed_in": None}]}
+        gapmap.apply_ledger(rows, ledger)
+        self.assertEqual(rows[0]["seen_blocking"], ["tusky (corpus-2), fixed in 886b89b"])
+        self.assertNotIn("seen_blocking", rows[1])
+
+
+class EngineSurface(unittest.TestCase):
+    def test_engine_library_or_native_activity(self) -> None:
+        gdx = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {"elfs": [
+            {"soname": "libgdx.so", "abi": "arm64-v8a"}], "launch_activity_chains": {"a.L": ["Lp;", "Landroid/app/Activity;"]}}}
+        rows = gapmap.engine_surface_rows(gdx)
+        self.assertEqual([r["id"] for r in rows], ["window:engine-surface"])
+        self.assertIn("libGDX", rows[0]["app_evidence"])
+        native = {"inventory": {"elfs": [], "launch_activity_chains": {
+            "o.P": ["Lorg/ppsspp/ppsspp/NativeActivity;", "Landroid/app/Activity;"]}}}
+        self.assertEqual(len(gapmap.engine_surface_rows(native)), 1)
+        plain = {"inventory": {"elfs": [{"soname": "libsqlite.so"}],
+                               "launch_activity_chains": {"a.M": ["Landroidx/appcompat/app/AppCompatActivity;"]}}}
+        self.assertEqual(gapmap.engine_surface_rows(plain), [])
+
+
+class ObservedPath(unittest.TestCase):
+    def test_engine_framework_natives_and_lookups(self) -> None:
+        rows = [
+            gapmap._row("window", "window:engine-surface", "e", engine_libraries=["libflutter.so"]),
+            gapmap._row("framework-natives", "jni:android.media.MediaPlayer", "m"),
+            gapmap._row("framework-natives", "jni:android.hardware.Camera", "c"),
+            gapmap._row("native-symbols", "sym:runtime-resolved:libandroid.so", "l", importing_libraries=["libflutter.so"]),
+            gapmap._row("native-symbols", "sym:runtime-resolved:libnativewindow.so", "n", importing_libraries=["libvlc.so"]),
+        ]
+        observed = {"platform_touch": {}, "executed_app_methods": [], "executed_methods": 1,
+                    "executed_platform_classes": ["Landroid/media/MediaPlayer;"],
+                    "loaded_app_libraries": ["libflutter.so"]}
+        gap_map = {"rows": rows}
+        gapmap.apply_observed(gap_map, {"inventory": {}}, observed, {})
+        on = {r["id"]: r["observed"]["on_path"] for r in gap_map["rows"]}
+        self.assertEqual(on, {"window:engine-surface": True, "jni:android.media.MediaPlayer": True,
+                              "jni:android.hardware.Camera": False,
+                              "sym:runtime-resolved:libandroid.so": True,
+                              "sym:runtime-resolved:libnativewindow.so": False})
+
+
+class RuntimeData(unittest.TestCase):
+    def test_rows_from_calls_and_path_from_trace(self) -> None:
+        scan = {"inventory": {"platform_method_names": {
+            "Ljava/util/Locale;": ["getDefault", "getDisplayName"],
+            "Ljava/time/LocalDate;": ["of"],
+            "Ljava/time/ZoneId;": ["of"]}}}
+        rows = gapmap.runtime_data_rows(scan)
+        self.assertEqual({r["id"]: r["data_members"] for r in rows}, {
+            "data:tzdata": ["Ljava/time/ZoneId;->of"],
+            "data:icu-locale-display": ["Ljava/util/Locale;->getDisplayName"]},
+            "LocalDate.of needs no zone rules; getDefault needs no display data")
+        observed = {"platform_touch": {"Ljava/util/Locale;->getDisplayName()Ljava/lang/String;": "executed",
+                                       "Ljava/time/ZoneId;->of(Ljava/lang/String;)Ljava/time/ZoneId;": "referenced"},
+                    "executed_app_methods": [], "executed_methods": 1}
+        gap_map = {"rows": rows}
+        gapmap.apply_observed(gap_map, {"inventory": {}}, observed, {})
+        self.assertEqual({r["id"]: r["observed"]["on_path"] for r in rows},
+                         {"data:tzdata": False, "data:icu-locale-display": True})
+
+
+class NeededLibraries(unittest.TestCase):
+    def test_a_library_nothing_provides(self) -> None:
+        scan = {"inventory": {"elfs": [
+            {"soname": "libxul.so", "name": "libxul.so", "needed": ["libc.so", "libmediandk.so", "libmozglue.so", "liblog.so"]},
+            {"soname": "libmozglue.so", "name": "libmozglue.so", "needed": ["libc.so"]}]}}
+        rows = gapmap.needed_library_rows(scan, ["/system/lib64/ndk/liblog.so"], ["libandroid.so"])
+        self.assertEqual([r["open_symbols"] for r in rows], [["libmediandk.so"]])
+        self.assertEqual(gapmap.needed_library_rows(scan, None, None), [], "no board listing, no claim")
+
+
+class OhEvents(unittest.TestCase):
+    LOG = """[OHServiceManager] getService("deviceidle") \u2192 null (stub)
+[OHServiceManager] getService("deviceidle") \u2192 null (stub)
+[WESTLAKE-LOCAL-SERVICE] power bound in process
+[B47-SLA] ENTRY bundle=a.b ability=a.b.Main recordId=1
+[B43-BIND] ensureBindApplication FAILED phase=handleBindApplication cause[0]=java.lang.reflect.InvocationTargetException: null
+[B43-BIND] ensureBindApplication FAILED phase=handleBindApplication cause[1]=java.lang.UnsatisfiedLinkError: No implementation found for byte[][] java.lang.ProcessEnvironment.environ() (tried x)
+"""
+
+    def test_events_and_root_cause(self) -> None:
+        from westlake_gap import ohevents
+        events = ohevents.parse(self.LOG)
+        summary = ohevents.summarize("a", events)
+        self.assertEqual(summary["services_null"], ["deviceidle"], "a repeated lookup is one event")
+        self.assertEqual(summary["services_local"], ["power"])
+        self.assertEqual(summary["natives_missing"], ["java.lang.ProcessEnvironment.environ"])
+        self.assertEqual(summary["root_cause"]["error"], "java.lang.UnsatisfiedLinkError",
+                         "the wrapper InvocationTargetException is not the cause")
+
+
 class PackageManagerSemantics(unittest.TestCase):
     def test_stub_bridged_and_direct_boot_defaults(self) -> None:
         with tempfile.TemporaryDirectory(prefix="westlake-pm-") as temp:
@@ -222,11 +379,17 @@ class PackageManagerSemantics(unittest.TestCase):
                 @Override
                 public ParceledListSlice queryIntentServices(Intent i, String t, long f, int u) throws RemoteException {
                     logStub("queryIntentServices", ""); return null; }
+                @Override
+                public ProviderInfo resolveContentProvider(String a, long f, int u) throws RemoteException {
+                    if (a == null) { logStub("resolveContentProvider", ""); return null; }
+                    ProviderInfo info = find(a); return info; }
                 }""")
             _write(pm / "SourcePackageRegistry.java", "class SourcePackageRegistry { /* raw flags */ }")
             model = pm_adapter_model(root)
             self.assertEqual(model["methods"]["getServiceInfo"]["status"], "bridged")
             self.assertEqual(model["methods"]["queryIntentServices"]["status"], "stub")
+            self.assertEqual(model["methods"]["resolveContentProvider"]["status"], "bridged",
+                             "logStub on a guard is not a stub when the method answers otherwise")
             self.assertFalse(model["semantics"]["direct_boot_match_defaults"]["present"],
                              "raw caller flags reach PackageParser.isMatch and filter every component")
 

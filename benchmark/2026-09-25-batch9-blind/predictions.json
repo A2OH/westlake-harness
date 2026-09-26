@@ -1,0 +1,58 @@
+{
+ "elementx": {
+  "expected": "draws",
+  "because": []
+ },
+ "nctalk": {
+  "expected": "draws",
+  "because": []
+ },
+ "mpv": {
+  "expected": "blocked",
+  "because": [
+   "lookup:sym:runtime-resolved:libaaudio.so",
+   "lookup:sym:runtime-resolved:libmediandk.so",
+   "native:ndk:libc-abi",
+   "native:ndk:weld:audio",
+   "native:ndk:weld:media"
+  ]
+ },
+ "supertuxkart": {
+  "expected": "blocked",
+  "because": [
+   "engine:window:engine-surface",
+   "lookup:sym:runtime-resolved:libaaudio.so",
+   "native:ndk:package",
+   "native:ndk:weld:audio",
+   "native:ndk:weld:sensors"
+  ]
+ },
+ "duckduckgo": {
+  "expected": "draws",
+  "because": []
+ },
+ "pipepipe": {
+  "expected": "blocked",
+  "because": [
+   "lookup:sym:runtime-resolved:libmediandk.so"
+  ]
+ },
+ "streetcomplete": {
+  "expected": "draws",
+  "because": []
+ },
+ "redreader": {
+  "expected": "draws",
+  "because": []
+ },
+ "briar": {
+  "expected": "blocked",
+  "because": [
+   "native:ndk:libc-abi"
+  ]
+ },
+ "openkeychain": {
+  "expected": "draws",
+  "because": []
+ }
+}

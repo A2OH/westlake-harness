@@ -105,6 +105,7 @@ class Score:
     blocking: bool = True
     markers: dict = field(default_factory=dict)
     anomaly: str | None = None
+    screen: str | None = None
 
     def as_dict(self) -> dict:
         return {k: v for k, v in self.__dict__.items()
@@ -174,8 +175,41 @@ def score(app: str, text: str) -> Score:
                  markers=counts, anomaly=anomaly)
 
 
+_HOST_SCREEN = Path(__file__).parent / "data" / "host-screen.png"
+
+
+def screen_state(image: Path) -> str | None:
+    """'host' when the screenshot is the board's launcher host screen, not the app; else 'app'.
+
+    The log can reach "drawing" and the app still not be on screen: it drew, then died or
+    finished (Unciv, Shattered Pixel Dungeon, Fossify Messages). Four apps were scored "drawing"
+    that way before the screenshot was read. The comparison crops the status bar, whose clock
+    changes; host screenshots match the reference exactly, app screens differ by 7 or more.
+    """
+    try:
+        from PIL import Image
+    except ImportError:
+        return None
+    if not image.exists() or not _HOST_SCREEN.exists():
+        return None
+    shot = Image.open(image).convert("L").resize((60, 96)).crop((0, 6, 60, 96))
+    ref = Image.open(_HOST_SCREEN).convert("L")
+    get = lambda im: list(getattr(im, "get_flattened_data", im.getdata)())
+    a, b = get(shot), get(ref)
+    return "host" if sum(abs(x - y) for x, y in zip(a, b)) / len(a) < 2.0 else "app"
+
+
 def score_paths(paths: list[Path]) -> list[Score]:
-    return [score(path.stem, path.read_text(errors="replace")) for path in sorted(paths)]
+    scores = []
+    for path in sorted(paths):
+        s = score(path.stem, path.read_text(errors="replace"))
+        s.screen = screen_state(path.with_suffix(".jpeg"))
+        if s.screen == "host" and s.rung_name == "drawing":
+            # The screenshot decides: it drew, and is no longer on screen.
+            s.rung, s.rung_name, s.blocking = RUNGS.index("view"), "view", True
+            s.anomaly = "drew, but the screenshot shows the host screen: the app left or died"
+        scores.append(s)
+    return scores
 
 
 def table(scores: list[Score]) -> str:

@@ -36,6 +36,16 @@ class Resolve(unittest.TestCase):
             self.assertEqual(result["missing"], [{"symbol": "nowhere", "importers": 2,
                                                   "importing_libraries": ["liba.so", "libb.so"], "surface": "libandroid"}])
 
+    def test_only_the_target_abi_is_resolved(self) -> None:
+        scan = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {"elfs": [
+            {"soname": "libx.so", "abi": "arm64-v8a", "exported_symbols": [],
+             "undefined_symbols": ["memcpy"], "undefined_weak_symbols": []},
+            {"soname": "libx.so", "abi": "armeabi-v7a", "exported_symbols": [],
+             "undefined_symbols": ["memcpy", "__aeabi_memcpy"], "undefined_weak_symbols": []}]}}
+        result = ohresolve.resolve(scan, {"memcpy"}, {})
+        self.assertEqual((result["symbols"], result["resolved"], result["missing"]), (1, 1, []),
+                         "a fat APK's other-ABI copies are never loaded")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,82 @@
+{
+ "fcontacts": {
+  "package": "org.fossify.contacts",
+  "version_name": "1.6.0",
+  "version_code": 13,
+  "bytes": 8602985,
+  "sha256": "6a89be96b5ec39f5e2b11bd61dc7031f4b88261b324ab13af5743fbc62f0cddb",
+  "url": "https://f-droid.org/repo/org.fossify.contacts_13.apk"
+ },
+ "fphone": {
+  "package": "org.fossify.phone",
+  "version_name": "1.11.1",
+  "version_code": 22,
+  "bytes": 9165050,
+  "sha256": "d1ad08467034e5138a6e68f03b6e150f0bb010dfcbf490ff3d2bd4822b755728",
+  "url": "https://f-droid.org/repo/org.fossify.phone_22.apk"
+ },
+ "fcamera": {
+  "package": "org.fossify.camera",
+  "version_name": "1.5.0",
+  "version_code": 11,
+  "bytes": 10268021,
+  "sha256": "116004fd8743f9e47bf25eb9c6049eb77d3f19d59506c3f47513f584c6138435",
+  "url": "https://f-droid.org/repo/org.fossify.camera_11.apk"
+ },
+ "icsx5": {
+  "package": "at.bitfire.icsdroid",
+  "version_name": "2.4.3",
+  "version_code": 92,
+  "bytes": 16032828,
+  "sha256": "64eca16131b45c5072d9303ba5d74db27eb9ff9d934621bc2001bba3af8389ac",
+  "url": "https://f-droid.org/repo/at.bitfire.icsdroid_92.apk"
+ },
+ "editor": {
+  "package": "org.billthefarmer.editor",
+  "version_name": "1.98",
+  "version_code": 198,
+  "bytes": 269122,
+  "sha256": "343d17e11d0914e1a7708df2781580a0413e52501c0a41d91f7ef725d9615fe9",
+  "url": "https://f-droid.org/repo/org.billthefarmer.editor_198.apk"
+ },
+ "opentracks": {
+  "package": "de.dennisguse.opentracks",
+  "version_name": "v4.28.3irreproducible",
+  "version_code": 6751,
+  "bytes": 10930429,
+  "sha256": "bccb5d20069e2a19fb65a9eb5e74534cfc449ea8ef52bcbfb08cef9c4b5c0cc7",
+  "url": "https://f-droid.org/repo/de.dennisguse.opentracks_6751.apk"
+ },
+ "fvoicerec": {
+  "package": "org.fossify.voicerecorder",
+  "version_name": "1.7.1",
+  "version_code": 18,
+  "bytes": 7273850,
+  "sha256": "bd4ebc4b85fefb43a68126d8704d38222e88ef3205b3666e7a2fa00b325a696b",
+  "url": "https://f-droid.org/repo/org.fossify.voicerecorder_18.apk"
+ },
+ "xtra": {
+  "package": "com.github.andreyasadchy.xtra",
+  "version_name": "2.60.3",
+  "version_code": 358,
+  "bytes": 17939429,
+  "sha256": "c1cc60d77da785fe88d695de010bec2e3e62d09462627cb70d9666abcb4c8690",
+  "url": "https://f-droid.org/repo/com.github.andreyasadchy.xtra_358.apk"
+ },
+ "translateyou": {
+  "package": "com.bnyro.translate",
+  "version_name": "19.0",
+  "version_code": 56,
+  "bytes": 35511128,
+  "sha256": "789b002940339eb61e785f5d0086a0c1b25e7ae6606919b7f338a596dac3cbd2",
+  "url": "https://f-droid.org/repo/com.bnyro.translate_56.apk"
+ },
+ "adaway": {
+  "package": "org.adaway",
+  "version_name": "6.1.4",
+  "version_code": 60104,
+  "bytes": 16061184,
+  "sha256": "0de00a58a0dbb4c4b6befc9fe1f5e53800993484baab955824798f46fbf3338e",
+  "url": "https://f-droid.org/repo/org.adaway_60104.apk"
+ }
+}

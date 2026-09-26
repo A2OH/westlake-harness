@@ -256,6 +256,8 @@ def _disassemble(path: Path, objdump: str, timeout: int = 900) -> str:
         [objdump, "-d", "--no-show-raw-insn", str(path)],
         capture_output=True,
         text=True,
+        # Symbol tables may carry bytes that are not UTF-8 (OsmAnd); one must not abort the scan.
+        errors="replace",
         timeout=timeout,
         check=False,
     )

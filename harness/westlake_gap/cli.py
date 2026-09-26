@@ -232,6 +232,11 @@ def parser() -> argparse.ArgumentParser:
                           "for the exact Westlake commit they were measured on")
     gap.add_argument("--board-libs", type=Path,
                      help="library paths present on the board, one per line: finds packaged libraries a board library shadows")
+    gap.add_argument("--ledger", type=Path,
+                     help="blockers ledger (benchmark/blockers-ledger.json): mark rows that have blocked an app at startup")
+    gap.add_argument("--runtime", type=Path,
+                     help="runtime index (snapshot-runtime) of the provider: finds platform classes whose natives "
+                          "no deployed library registers")
     gap.add_argument("--runtime-libs", type=Path,
                      help="the staged native runtime: a directory, its artifacts.json, or a listing one per line. "
                           "Finds libraries the runtime ships that its own loader answers without opening")
@@ -396,7 +401,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "gap-map":
         from .contracts import manifest_facts
-        from .gapmap import backtest, build_map, markdown
+        from .gapmap import backtest, build_map, markdown, runtime_class_strings
         from .services import aosp_service_table
 
         scan = read_json(args.scan)
@@ -420,6 +425,10 @@ def main(argv: list[str] | None = None) -> int:
                             probe_results=read_json(args.probe_results) if args.probe_results else None,
                             board_paths=args.board_libs.read_text().split() if args.board_libs else None,
                             runtime_libraries=_runtime_libraries(args.runtime_libs),
+                            runtime_index=read_json(args.runtime) if args.runtime else None,
+                            runtime_class_paths=runtime_class_strings(args.runtime_libs)
+                            if args.runtime_libs and args.runtime_libs.is_dir() else None,
+                            ledger=read_json(args.ledger) if args.ledger else None,
                             aosp_root=args.aosp)
         if args.westlake_label:
             gap_map["provider"]["westlake"] = {"branch": args.westlake_label, "commit": args.westlake_label, "uncommitted": []}

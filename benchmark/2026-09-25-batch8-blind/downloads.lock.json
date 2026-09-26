@@ -1,0 +1,82 @@
+{
+ "rethink": {
+  "package": "com.celzero.bravedns",
+  "version_name": "v0.5.7",
+  "version_code": 693,
+  "bytes": 30844329,
+  "sha256": "268c58bb3b9a6a0bdbf0006a8317483aff3cbf6e49d4f47b180395f1501348cd",
+  "url": "https://f-droid.org/repo/com.celzero.bravedns_693.apk"
+ },
+ "jami": {
+  "package": "cx.ring",
+  "version_name": "20260807-01",
+  "version_code": 503,
+  "bytes": 100428373,
+  "sha256": "459c8826b1f8dba48fbf8869ba11b6d1438e592f8ff6dd541a06577efa25cee2",
+  "url": "https://f-droid.org/repo/cx.ring_503.apk"
+ },
+ "ffupdater": {
+  "package": "de.marmaro.krt.ffupdater",
+  "version_name": "81.0.0",
+  "version_code": 179,
+  "bytes": 4957402,
+  "sha256": "b1a854c248ca3336afd112f8f620c5c8c44c02dd6aac5784199f9931c2377ce6",
+  "url": "https://f-droid.org/repo/de.marmaro.krt.ffupdater_179_f4e642b.apk"
+ },
+ "suntimes": {
+  "package": "com.forrestguice.suntimeswidget",
+  "version_name": "0.17.5",
+  "version_code": 135,
+  "bytes": 11757905,
+  "sha256": "bd0fbe51f684895d8e1778203875cd0850af5387ec036811c540b13ce3ec0a11",
+  "url": "https://f-droid.org/repo/com.forrestguice.suntimeswidget_135.apk"
+ },
+ "linuxcmd": {
+  "package": "com.inspiredandroid.linuxcommandbibliotheca",
+  "version_name": "4.8.0",
+  "version_code": 173,
+  "bytes": 14703438,
+  "sha256": "19554fb26bb988283c9c9e661128dd04cba06f1d90b84dde6699a2e76b3583a5",
+  "url": "https://f-droid.org/repo/com.inspiredandroid.linuxcommandbibliotheca_173.apk"
+ },
+ "scrambledexif": {
+  "package": "com.jarsilio.android.scrambledeggsif",
+  "version_name": "1.8.1",
+  "version_code": 86,
+  "bytes": 4742156,
+  "sha256": "9092ec44f71820db543c8c773b2c48aea64fb4dde56f3d369d2635b50346fea1",
+  "url": "https://f-droid.org/repo/com.jarsilio.android.scrambledeggsif_86.apk"
+ },
+ "pomodoro": {
+  "package": "org.nsh07.pomodoro",
+  "version_name": "1.8.5",
+  "version_code": 34,
+  "bytes": 5763085,
+  "sha256": "08079f1e0795bc85047a487df30f27d0feadd2bb2a024b374a124fa183109671",
+  "url": "https://f-droid.org/repo/org.nsh07.pomodoro_34.apk"
+ },
+ "wifianalyzer": {
+  "package": "com.vrem.wifianalyzer",
+  "version_name": "3.3.1",
+  "version_code": 72,
+  "bytes": 2119103,
+  "sha256": "282a06fcc5ce5d889799113a1c6edf5e408b0902acc542308ad21051a2a7cc2b",
+  "url": "https://f-droid.org/repo/com.vrem.wifianalyzer_72.apk"
+ },
+ "gpscockpit": {
+  "package": "org.woheller69.gpscockpit",
+  "version_name": "2.9",
+  "version_code": 290,
+  "bytes": 2270153,
+  "sha256": "e8fe61ebd1acc66c52998f9e020febf031f729708bd1e4a89daa3ae4c4243de9",
+  "url": "https://f-droid.org/repo/org.woheller69.gpscockpit_290.apk"
+ },
+ "redmoon": {
+  "package": "com.jmstudios.redmoon",
+  "version_name": "4.0.0",
+  "version_code": 39,
+  "bytes": 6680009,
+  "sha256": "c207ebf2533d50f13ba909c7a320be0e655154a91530efebc8f7dc5c27d5b52d",
+  "url": "https://f-droid.org/repo/com.jmstudios.redmoon_39.apk"
+ }
+}

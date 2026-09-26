@@ -1,0 +1,488 @@
+{
+ "description": "Every startup blocker observed on the OH board, one entry per app and blocker, across corpora. 'row' is the gap-map row id that names the gap when one exists; null means no row modelled it (a coverage gap). 'fixed_in' is the Westlake commit that closed it, if any. gap-map --ledger marks rows that have blocked an app before.",
+ "blockers": [
+  {
+   "app": "markor",
+   "corpus": "loop-1",
+   "row": "pm:call:resolveContentProvider",
+   "symptom": "FileProvider: couldn't find meta-data for provider with authority",
+   "fixed_in": "72fe843"
+  },
+  {
+   "app": "anki",
+   "corpus": "loop-1",
+   "row": "pm:call:resolveContentProvider",
+   "symptom": "LeakCanary FileProvider authority not resolved",
+   "fixed_in": "72fe843"
+  },
+  {
+   "app": "ooniprobe",
+   "corpus": "loop-1",
+   "row": "svc:locale",
+   "symptom": "LocaleManager.setOverrideLocaleConfig on a null service",
+   "fixed_in": "95dba94"
+  },
+  {
+   "app": "termux",
+   "corpus": "loop-1",
+   "row": null,
+   "symptom": "bindService() of its own service failed under direct launch",
+   "fixed_in": "8357a07"
+  },
+  {
+   "app": "mindustry",
+   "corpus": "loop-1",
+   "row": null,
+   "symptom": "OpenSL ES: OH's SLuint32 is 64-bit; CreateAudioPlayer refused, null interface called",
+   "fixed_in": "0b5c9af"
+  },
+  {
+   "app": "ppsspp",
+   "corpus": "loop-1",
+   "row": "window:engine-surface",
+   "symptom": "SurfaceView shares the activity's OH window: EGL_BAD_ALLOC",
+   "fixed_in": null
+  },
+  {
+   "app": "mindustry",
+   "corpus": "loop-1",
+   "row": "window:engine-surface",
+   "symptom": "SurfaceView shares the activity's OH window: hwui 'context with no surface'",
+   "fixed_in": null
+  },
+  {
+   "app": "opencamera",
+   "corpus": "loop-1",
+   "row": "jni:android.hardware.Camera",
+   "symptom": "android.hardware.Camera._getNumberOfCameras has no implementation",
+   "fixed_in": null
+  },
+  {
+   "app": "burgerking",
+   "corpus": "blind-bk",
+   "row": "load:shadowed-by-board",
+   "symptom": "libc++_shared.so bound to the board's copy",
+   "fixed_in": "launcher --android-native-target"
+  },
+  {
+   "app": "burgerking",
+   "corpus": "blind-bk",
+   "row": "jca:AndroidKeyStore",
+   "symptom": "AndroidKeyStore not found",
+   "fixed_in": "21fdcda"
+  },
+  {
+   "app": "burgerking",
+   "corpus": "blind-bk",
+   "row": "svc:uimode",
+   "symptom": "null cast to UiModeManager",
+   "fixed_in": "d689e67"
+  },
+  {
+   "app": "burgerking",
+   "corpus": "blind-bk",
+   "row": "svc:user",
+   "symptom": "IUserManager proxy throws for WebView policy reads",
+   "fixed_in": "9b8b861"
+  },
+  {
+   "app": "burgerking",
+   "corpus": "blind-bk",
+   "row": "wv:renderer-process",
+   "symptom": "WebView cannot start its sandboxed renderer process",
+   "fixed_in": null
+  },
+  {
+   "app": "vlc-fdroid",
+   "corpus": "corpus-2",
+   "row": null,
+   "symptom": "OnboardingActivity inflate: theme attribute 0x7f040072 unresolved",
+   "fixed_in": null
+  },
+  {
+   "app": "thunderbird",
+   "corpus": "corpus-2",
+   "row": null,
+   "symptom": "null PendingIntent in AndroidAlarmManager (getIntentSender answered null)",
+   "fixed_in": "886b89b"
+  },
+  {
+   "app": "element",
+   "corpus": "corpus-2",
+   "row": null,
+   "symptom": "null PendingIntent passed to AlarmManager.cancel",
+   "fixed_in": "886b89b"
+  },
+  {
+   "app": "gallery",
+   "corpus": "corpus-2",
+   "row": "svc:jobscheduler",
+   "symptom": "JobScheduler.getAllPendingJobs: null ParceledListSlice",
+   "fixed_in": "886b89b"
+  },
+  {
+   "app": "tusky",
+   "corpus": "corpus-2",
+   "row": "svc:notification",
+   "symptom": "NotificationManager.getNotificationChannels: null ParceledListSlice",
+   "fixed_in": "886b89b"
+  },
+  {
+   "app": "element",
+   "corpus": "corpus-2",
+   "row": "jni:android.opengl.EGL14",
+   "symptom": "EGL14._nativeClassInit has no implementation, during bind",
+   "fixed_in": "fe9c40a"
+  },
+  {
+   "app": "fluffychat",
+   "corpus": "corpus-2",
+   "row": "sym:runtime-resolved:libandroid.so",
+   "symptom": "Flutter 1.raster thread calls address 0",
+   "fixed_in": null
+  },
+  {
+   "app": "breezyweather",
+   "corpus": "corpus-2",
+   "row": null,
+   "symptom": "R8 null check after locale.getApplicationLocales in MainActivity.onCreate",
+   "fixed_in": "not reached on framework 59 (draws)"
+  },
+  {
+   "app": "breezyweather",
+   "corpus": "corpus-2",
+   "row": null,
+   "symptom": "framework 57: UserManager.getProfileType unsupported by the OH user service (hasUserBadge -> isProfile)",
+   "fixed_in": "c45f157"
+  },
+  {
+   "app": "fennec",
+   "corpus": "corpus-2",
+   "row": "ndk:weld:media",
+   "symptom": "libxul.so needs libmediandk.so",
+   "fixed_in": null
+  },
+  {
+   "app": "thunderbird",
+   "corpus": "corpus-2",
+   "row": null,
+   "symptom": "startService dropped: UpgradeDatabaseActivity waits forever",
+   "fixed_in": null
+  },
+  {
+   "app": "aurorastore",
+   "corpus": "corpus-3",
+   "row": null,
+   "symptom": "PackageManager.getPackageInstaller answered null",
+   "fixed_in": "1c883ad"
+  },
+  {
+   "app": "aurorastore",
+   "corpus": "corpus-3",
+   "row": null,
+   "symptom": "DomainVerificationManager null, then an empty host map",
+   "fixed_in": "1c883ad"
+  },
+  {
+   "app": "davx5",
+   "corpus": "corpus-3",
+   "row": null,
+   "symptom": "DeviceIdleManager null behind PowerManager.isIgnoringBatteryOptimizations",
+   "fixed_in": "1c883ad"
+  },
+  {
+   "app": "musicplayer",
+   "corpus": "corpus-3",
+   "row": "pm:call:queryIntentServices",
+   "symptom": "Media3: Failed to resolve SessionToken",
+   "fixed_in": "1c883ad"
+  },
+  {
+   "app": "musicplayer",
+   "corpus": "corpus-3",
+   "row": "jni:android.media.audiofx.AudioEffect",
+   "symptom": "libaudioeffect_jni.so: Permission denied",
+   "fixed_in": "e2524b1"
+  },
+  {
+   "app": "feeder",
+   "corpus": "corpus-3",
+   "row": null,
+   "symptom": "jdk.internal.misc.VM.getNanoTimeAdjustment has no implementation",
+   "fixed_in": "1c883ad"
+  },
+  {
+   "app": "catima",
+   "corpus": "corpus-3",
+   "row": null,
+   "symptom": "AppWidgetManager null in onResume",
+   "fixed_in": "1c883ad"
+  },
+  {
+   "app": "catima",
+   "corpus": "corpus-3",
+   "row": null,
+   "symptom": "SearchManager fetcher: no service published for search",
+   "fixed_in": "1c883ad"
+  },
+  {
+   "app": "jellyfin",
+   "corpus": "corpus-3",
+   "row": null,
+   "symptom": "Settings.Secure.ANDROID_ID null in its API client",
+   "fixed_in": "1c883ad"
+  },
+  {
+   "app": "obtainium",
+   "corpus": "corpus-3",
+   "row": "sym:runtime-resolved:libandroid.so",
+   "symptom": "Flutter 1.raster thread calls address 0",
+   "fixed_in": null
+  },
+  {
+   "app": "nextcloud",
+   "corpus": "corpus-3",
+   "row": null,
+   "symptom": "launcher splash stays white (cause not identified)",
+   "fixed_in": null
+  },
+  {
+   "app": "libretube",
+   "corpus": "batch-4",
+   "row": null,
+   "symptom": "StorageManager.getUuidForPath: no storage device for the app's /data/data path",
+   "fixed_in": "04e9bd5"
+  },
+  {
+   "app": "libretube",
+   "corpus": "batch-4",
+   "row": null,
+   "symptom": "Coil DiskCache maxSizeBytes: size must be > 0 (source not identified)",
+   "fixed_in": null
+  },
+  {
+   "app": "shatteredpd",
+   "corpus": "batch-4",
+   "row": "window:engine-surface",
+   "symptom": "libGDX GLSurfaceView: log stops creating the GL surface; likely the shared SurfaceView window",
+   "fixed_in": null
+  },
+  {
+   "app": "tasks",
+   "corpus": "batch-4",
+   "row": null,
+   "symptom": "VM.getNanoTimeAdjustment bound with the JNI instead of the critical-native signature",
+   "fixed_in": "04e9bd5"
+  },
+  {
+   "app": "fmessages",
+   "corpus": "batch-5",
+   "row": null,
+   "symptom": "RoleManager null (no role service) before its first screen",
+   "fixed_in": "2b21e12"
+  },
+  {
+   "app": "unciv",
+   "corpus": "batch-5",
+   "row": "window:engine-surface",
+   "symptom": "libGDX first screen never drew (IME host on screen)",
+   "fixed_in": null
+  },
+  {
+   "app": "justplayer",
+   "corpus": "batch-6",
+   "row": "jni:android.media.audiofx.AudioEffect",
+   "symptom": "libaudioeffect_jni.so: Permission denied (no such library in the runtime)",
+   "fixed_in": "e2524b1"
+  },
+  {
+   "app": "seal",
+   "corpus": "batch-7",
+   "row": null,
+   "symptom": "launches with Theme.Seal.Splashscreen (a Theme.SplashScreen, not AppCompat by design); installSplashScreen() should switch to postSplashScreenTheme before super.onCreate and evidently does not",
+   "fixed_in": "6c300b3"
+  },
+  {
+   "app": "retromusic",
+   "corpus": "batch-7",
+   "row": null,
+   "symptom": "WallpaperManager globals: null service",
+   "fixed_in": "8eb6ba4"
+  },
+  {
+   "app": "radiodroid",
+   "corpus": "batch-7",
+   "row": null,
+   "symptom": "DisplayManager.getWifiDisplayStatus null, then IMediaRouterService null",
+   "fixed_in": "8eb6ba4"
+  },
+  {
+   "app": "openhab",
+   "corpus": "batch-7",
+   "row": "svc:wifi",
+   "symptom": "null cannot be cast to non-null type WifiManager",
+   "fixed_in": "8eb6ba4"
+  },
+  {
+   "app": "andstatus",
+   "corpus": "batch-7",
+   "row": null,
+   "symptom": "startActivity from a worker thread built the activity off the main looper",
+   "fixed_in": "8eb6ba4"
+  },
+  {
+   "app": "fennec",
+   "corpus": "corpus-2",
+   "row": null,
+   "symptom": "crash reporter's startActivity from the Gecko thread built the activity off the main looper",
+   "fixed_in": "8eb6ba4"
+  },
+  {
+   "app": "ffupdater",
+   "corpus": "batch-8",
+   "row": null,
+   "symptom": "AppCompat rejects main_activity__theme although its default-config chain reaches Theme.AppCompat.Light: the version-qualified variant chosen at run time, or attribute lookup, loses windowActionBar",
+   "fixed_in": "6c300b3"
+  },
+  {
+   "app": "jami",
+   "corpus": "batch-8",
+   "row": null,
+   "symptom": "AppCompat rejects its declared theme",
+   "fixed_in": "6c300b3"
+  },
+  {
+   "app": "wifianalyzer",
+   "corpus": "batch-8",
+   "row": null,
+   "symptom": "InflateException: a theme attribute does not resolve (as VLC)",
+   "fixed_in": null
+  },
+  {
+   "app": "wifianalyzer",
+   "corpus": "batch-8",
+   "row": "data:icu-locale-display",
+   "symptom": "framework 57: Locale.getDisplayName NPE in LanguagePreference.<init>: libicu_jni built without zero-initialized locals (ScopedIcuLocale's UErrorCode); draws with it rebuilt",
+   "fixed_in": "03678da"
+  },
+  {
+   "app": "gpscockpit",
+   "corpus": "batch-8",
+   "row": null,
+   "symptom": "null in onResume: likely LocationManager.getBestProvider with no providers",
+   "fixed_in": null
+  },
+  {
+   "app": "rethink",
+   "corpus": "batch-8",
+   "row": null,
+   "symptom": "stops after bind, nothing logged",
+   "fixed_in": null
+  },
+  {
+   "app": "scrambledexif",
+   "corpus": "batch-8",
+   "row": null,
+   "symptom": "app name null: the launch path zeroes labelRes (also Catima's class-name title)",
+   "fixed_in": null
+  },
+  {
+   "app": "mpv",
+   "corpus": "batch-9",
+   "row": null,
+   "symptom": "AppCompat rejects the theme of an app with no application theme",
+   "fixed_in": "6c300b3"
+  },
+  {
+   "app": "nctalk",
+   "corpus": "batch-9",
+   "row": null,
+   "symptom": "KeyguardManager null (no trust service)",
+   "fixed_in": "6c300b3"
+  },
+  {
+   "app": "briar",
+   "corpus": "batch-9",
+   "row": null,
+   "symptom": "ProcessEnvironment.environ unbound; then 'already has an action bar supplied by the window decor'",
+   "fixed_in": "cc5b6ae"
+  },
+  {
+   "app": "supertuxkart",
+   "corpus": "batch-9",
+   "row": "window:engine-surface",
+   "symptom": "SDL needs libGLESv1_CM.so, which OH does not ship",
+   "fixed_in": null
+  },
+  {
+   "app": "duckduckgo",
+   "corpus": "batch-9",
+   "row": "data:tzdata",
+   "symptom": "java.time: no time-zone data files registered (the runtime's tzdata directory is staged empty)",
+   "fixed_in": "manifest ef348a1 (tz data packaged; framework 59)"
+  },
+  {
+   "app": "elementx",
+   "corpus": "batch-9",
+   "row": null,
+   "symptom": "native SIGSEGV at a garbage address",
+   "fixed_in": null
+  },
+  {
+   "app": "streetcomplete",
+   "corpus": "batch-9",
+   "row": null,
+   "symptom": "native SIGABRT",
+   "fixed_in": null
+  },
+  {
+   "app": "seal",
+   "corpus": "batch-7",
+   "row": "policy:lnk_file",
+   "symptom": "after the theme fix: its Python runtime cannot create a symlink in app data (EACCES)",
+   "fixed_in": null
+  },
+  {
+   "app": "editor",
+   "corpus": "batch-10",
+   "row": null,
+   "symptom": "launch intent without ACTION_MAIN/CATEGORY_LAUNCHER: null action in onCreate",
+   "fixed_in": "cc5b6ae"
+  },
+  {
+   "app": "fvoicerec",
+   "corpus": "batch-10",
+   "row": null,
+   "symptom": "IUriGrantsManager null behind getPersistedUriPermissions",
+   "fixed_in": "cc5b6ae"
+  },
+  {
+   "app": "adaway",
+   "corpus": "batch-10",
+   "row": null,
+   "symptom": "window decor supplies the application theme's action bar over a NoActionBar activity theme",
+   "fixed_in": "cc5b6ae"
+  },
+  {
+   "app": "fvoicerec",
+   "corpus": "batch-10",
+   "row": null,
+   "symptom": "after uri_grants: held back, no surface until its activity's window has an OH session",
+   "fixed_in": null
+  },
+  {
+   "app": "osmand",
+   "corpus": "corpus-3",
+   "row": null,
+   "symptom": "unstable: drew on build 40 at first; later leaves after drawing on builds 40, 45, 56 and 57 alike (environment-dependent)",
+   "fixed_in": null
+  },
+  {
+   "app": "files",
+   "corpus": "batch-4",
+   "row": null,
+   "symptom": "intermittent: when inotify_add_watch succeeds, its own WatchService poller thread SIGSEGVs at address 0 (3 of 4 launches on build 57); when the watch is denied it draws",
+   "fixed_in": null
+  }
+ ]
+}

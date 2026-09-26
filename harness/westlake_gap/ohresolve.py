@@ -39,8 +39,17 @@ def ndk_declarations(api_dir: Path | None) -> dict[str, str]:
     return declared
 
 
-def resolve(scan: dict[str, Any], provided: set[str], declared: dict[str, str]) -> dict[str, Any]:
+def target_elfs(scan: dict[str, Any]) -> list[dict[str, Any]]:
+    """The packaged libraries the process loads: a fat APK carries every ABI's copy of each library,
+    and only the target ABI's are loaded. The others import 32-bit ARM or x86 runtime symbols
+    (__aeabi_*) that no arm64 process has."""
     elfs = scan["inventory"].get("elfs", [])
+    target = scan.get("apk", {}).get("target_abi") or scan["inventory"].get("native_resolution", {}).get("target_abi")
+    return [elf for elf in elfs if elf.get("abi", target) == target] if target else list(elfs)
+
+
+def resolve(scan: dict[str, Any], provided: set[str], declared: dict[str, str]) -> dict[str, Any]:
+    elfs = target_elfs(scan)
     own: set[str] = set()
     for elf in elfs:
         own |= set(elf.get("exported_symbols", []))
