@@ -149,6 +149,13 @@
    "fixed_in": null
   },
   {
+   "app": "breezyweather",
+   "corpus": "corpus-2",
+   "row": null,
+   "symptom": "framework 57: UserManager.getProfileType unsupported by the OH user service (hasUserBadge -> isProfile)",
+   "fixed_in": null
+  },
+  {
    "app": "fennec",
    "corpus": "corpus-2",
    "row": "ndk:weld:media",
@@ -355,7 +362,7 @@
    "app": "wifianalyzer",
    "corpus": "batch-8",
    "row": "data:icu-locale-display",
-   "symptom": "framework 57: Locale.getDisplayName NPE in LanguagePreference.<init> (ICU display data)",
+   "symptom": "framework 57: Locale.getDisplayName NPE in LanguagePreference.<init>: libicu_jni built without zero-initialized locals (ScopedIcuLocale's UErrorCode); draws with it rebuilt (not yet deployed)",
    "fixed_in": null
   },
   {
@@ -411,7 +418,7 @@
    "app": "duckduckgo",
    "corpus": "batch-9",
    "row": "data:tzdata",
-   "symptom": "java.time: no time-zone data files registered",
+   "symptom": "java.time: no time-zone data files registered (the runtime's tzdata directory is staged empty)",
    "fixed_in": null
   },
   {

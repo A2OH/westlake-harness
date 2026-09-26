@@ -36,7 +36,7 @@ CATEGORIES = [
     ("window", "Windows & surfaces",
      "how the first screen renders → whether it needs a surface of its own → OH window/surface model"),
     ("runtime-data", "Runtime data",
-     "platform calls that need data files → zone rules, ICU data → what the runtime loads"),
+     "platform calls whose answer depends on runtime data or build → zone rules, ICU → what the runtime loads"),
     ("framework-natives", "Framework natives",
      "platform classes the app uses → their native methods → libraries the runtime registers them from"),
     ("native-upcalls", "Java APIs called from native code", "JNIEnv FindClass/Get*ID names in packaged .so → Westlake boot jars"),
@@ -1095,10 +1095,8 @@ def engine_surface_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
     )]
 
 
-# Data the runtime loads rather than code it links: a name that resolves can still fail for want of
-# its data. What the provider lacks was seen on the board (framework 57: libicuuc exports no
-# u_setDataDirectory, so the ICU data directory is never set, and java.time registers no zone
-# rules provider); each entry names the launch that showed it.
+# Platform calls that resolve but whose answer depends on what the runtime loads or how it was built.
+# Measured on the board by probes/icu-data (framework 57); each entry names what it showed.
 RUNTIME_DATA = {
     "data:tzdata": dict(
         item="java.time zone rules (tzdata)",
@@ -1106,24 +1104,26 @@ RUNTIME_DATA = {
                  "Ljava/time/zone/ZoneRulesProvider;": None, "Ljava/time/zone/ZoneRules;": None},
         # LocalDate.now()/Clock.systemDefaultZone() are left out: three apps that call them at
         # startup draw, the board's default zone evidently needing no rules.
-        provider="no zone rules provider is registered: ZoneRulesException 'No time-zone data files registered' "
-                 "(duckduckgo, framework 57)",
-        shim="register java.time's zone rules provider over the runtime's tzdata",
+        provider="the runtime's tzdata directory is staged empty: ICU4J lists 0 zones, java.util.TimeZone "
+                 "answers GMT for every zone, java.time throws 'No time-zone data files registered' "
+                 "(probes/icu-data; duckduckgo)",
+        shim="stage Android's tz data (tzdata, icu_tzdata.dat) under ANDROID_TZDATA_ROOT", shim_class="C1",
     ),
     "data:icu-locale-display": dict(
         item="ICU locale display names",
         members={"Ljava/util/Locale;": {"getDisplayName", "getDisplayLanguage", "getDisplayCountry",
                                          "getDisplayVariant", "getDisplayScript"},
                  "Landroid/icu/util/ULocale;": {"getDisplayName", "getDisplayLanguage", "getDisplayCountry"}},
-        provider="the ICU data directory is never set, so a display name comes back null and "
-                 "Locale.getDisplayName throws (wifianalyzer, framework 57)",
-        shim="set the ICU data directory before the first ICU call (libicuuc exports no u_setDataDirectory)",
+        provider="libicu_jni is built without AOSP's zero-initialized locals, so ScopedIcuLocale's "
+                 "uninitialized UErrorCode makes LocaleNative return null at random and "
+                 "Locale.getDisplayName throw (probes/icu-data; wifianalyzer). ICU data itself loads",
+        shim="build libicu_jni, like all AOSP native code, with -ftrivial-auto-var-init=zero", shim_class="C7",
     ),
 }
 
 
 def runtime_data_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
-    """Platform calls that need data the runtime does not load: zone rules, ICU display names."""
+    """Platform calls that resolve but answer wrongly on this runtime: zone rules, locale display names."""
     names = scan["inventory"].get("platform_method_names", {})
     rows = []
     for rid, spec in RUNTIME_DATA.items():
@@ -1134,7 +1134,7 @@ def runtime_data_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
         rows.append(_row(
             "runtime-data", rid, spec["item"],
             oh_touchpoint="data files the runtime loads at first use, not a symbol or a service",
-            verdict="missing", shim_class="C1", effort="S", confidence=OBSERVED,
+            verdict="missing", shim_class=spec["shim_class"], effort="S", confidence=OBSERVED,
             provider=spec["provider"], shim=spec["shim"], data_members=members,
             app_evidence=f"the app calls {', '.join(m.split('/')[-1].replace(';->', '.') for m in members[:4])}"
                          + (" …" if len(members) > 4 else ""),

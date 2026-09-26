@@ -54,9 +54,8 @@ Per check, blocked / drawing apps flagged:
 ## What the OH events added
 
 About a dozen blocked apps reached only generic rows, so no check named their blocker. Their
-launch logs show a class the map had no row for: **data the runtime does not load**. On
-framework 57, `libicuuc` exports no `u_setDataDirectory` (91 of 101 launches log it), so ICU
-display names come back null, and `java.time` has no zone rules provider.
+launch logs show a class the map had no row for: **platform calls that resolve but answer
+wrongly on this runtime**.
 
 - `data:tzdata`: DuckDuckGo, `ZoneRulesException: No time-zone data files registered`.
   `LocalDate.now()` and `Clock.systemDefaultZone()` are not triggers: three apps that call
@@ -65,6 +64,21 @@ display names come back null, and `java.time` has no zone rules provider.
   `LanguagePreference.<init>`. Breezy Weather and AndStatus also call it at startup and are
   blocked, but their logs do not show this failure, so for them it is correlation, not a
   confirmed cause.
+
+**Correction (after this was first published).** The first version of this README blamed both
+rows on ICU data never being loaded, because `libicuuc` exports no `u_setDataDirectory` and 91
+of 101 launches log that. `probes/icu-data` measured it on the board and that was wrong: ICU data
+loads (ICU4J has its data file, display names and French day names come out right). The two
+gaps are narrower:
+
+- **Time zones:** the runtime's `tzdata` directory is staged empty. ICU4J lists 0 zones,
+  `java.util.TimeZone` answers GMT for every zone, and `java.time` registers none.
+- **Locale display names:** AOSP compiles all native code with zero-initialized locals, and
+  `ScopedIcuLocale` in `libicu_jni` relies on it (its `UErrorCode` is uninitialized). The
+  runtime's copy was built without that, so `LocaleNative` returns null on about half of all
+  calls, depending on stack contents. Rebuilt with `-ftrivial-auto-var-init=zero`, every probe
+  call succeeds and WiFiAnalyzer draws. Breezy Weather then fails on
+  `UserManager.getProfileType` and AndStatus leaves after drawing: Locale was not their blocker.
 
 A runtime-data row counts in the predictor only when a trace puts it on the path.
 
