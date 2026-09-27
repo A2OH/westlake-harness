@@ -41,7 +41,10 @@ from pathlib import Path
 # 2 drew), the non-media NDK packages and welds, and the engine surface (7 blocked, 1 drew).
 # libnativehelper added after the Android-trace round: JNI_GetCreatedJavaVMs, looked up by name by
 # Rust's jni crate (Element X's libmatrix_sdk_ffi) and VLC, flags 2 blocked and no app that draws.
-LOOKUPS = {f"sym:runtime-resolved:{lib}" for lib in ("libandroid.so", "libnativewindow.so", "libnativehelper.so")}
+# Rule v3 (framework 66, 200 apps): libandroid and libnativewindow dropped. They were Flutter's
+# signal, and Flutter's real blockers were the Vulkan surface and the shared SurfaceView window;
+# with those supplied the two lookups flagged 14 blocked and 21 drawing, 8 and 20.
+LOOKUPS = {"sym:runtime-resolved:libnativehelper.so"}
 LAZY_NDK = ("ndk:libc-abi", "ndk:weld:audio", "ndk:weld:media")
 
 
@@ -56,7 +59,8 @@ def reasons(rows: list[dict]) -> list[str]:
             found.append(f"framework:{rid}")
         if rid in LOOKUPS:
             found.append(f"lookup:{rid}")
-        if rid == "window:engine-surface":
+        # A row the provider now supplies is not a blocker: the rule reads verdicts, not only ids.
+        if rid == "window:engine-surface" and row.get("verdict") != "supplied":
             found.append(f"engine:{rid}")
         # Runtime data counts only on a recorded startup path: statically the ICU row flags two
         # thirds of the apps, on the path it flagged 3 blocked and none that drew.

@@ -867,13 +867,24 @@ def shadowed_libraries(scan: dict[str, Any], board_paths: list[str]) -> tuple[di
     return shadowed, sorted(reach)
 
 
+# libc entry points whose argument or result structures differ between Bionic and OH musl.
+NETWORK_ABI_IMPORTS = {"getaddrinfo"}
+
+
 def launcher_namespace_option(manifest_root: Path | None) -> dict[str, Any]:
     path = manifest_root / "tools/probe_source_app.py" if manifest_root else None
     if path is None or not path.exists():
-        return {"present": False, "source": None}
+        return {"present": False, "source": None, "net": {"present": False, "source": None}}
     text = path.read_text(errors="replace")
-    match = re.search(r"--android-native-target", text)
-    return {"present": bool(match), "source": f"manifest/tools/probe_source_app.py:{text.count(chr(10), 0, match.start()) + 1}" if match else None}
+
+    def find(option: str) -> dict[str, Any]:
+        match = re.search(re.escape(option) + r"'", text)
+        return {"present": bool(match),
+                "source": f"manifest/tools/probe_source_app.py:{text.count(chr(10), 0, match.start()) + 1}" if match else None}
+
+    found = find("--android-native-target")
+    found["net"] = find("--android-native-net-target")
+    return found
 
 
 def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_extracts: dict[str, Any],
@@ -895,6 +906,26 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
             shim=f"load these {len(targets)} libraries in the isolated Android namespace so DT_NEEDED picks the APK's copy "
                  "(e.g. NDK libc++_shared is std::__ndk1; OH's is not): " + " ".join(targets),
             launch_args=[arg for name in targets for arg in ("--android-native-target", name)],
+        ))
+    resolvers = sorted({elf.get("soname") or Path(elf["name"]).name for elf in elfs
+                        if NETWORK_ABI_IMPORTS & {name.split("@")[0] for name in
+                                                  elf.get("undefined_symbols", []) + elf.get("undefined_weak_symbols", [])}})
+    if resolvers:
+        option = (namespace_option or {}).get("net") or {"present": False, "source": None}
+        rows.append(_row(
+            "native-loading", "abi:addrinfo",
+            f"Packaged libraries that resolve hosts through libc ({', '.join(resolvers[:4])}"
+            + (" ..." if len(resolvers) > 4 else "") + ")",
+            oh_touchpoint="OH musl getaddrinfo: struct addrinfo orders ai_addr and ai_canonname the other way from Bionic",
+            verdict="supplied" if option["present"] else "missing", shim_class="C2", effort="XS" if option["present"] else "M",
+            confidence=STATIC,
+            provider=("the launcher translates addrinfo for the libraries it is given (--android-native-net-target)"
+                      if option["present"] else "no translation: every host lookup these libraries make is misread"),
+            provider_source=option["source"],
+            app_evidence=f"{len(resolvers)} APK libraries import getaddrinfo",
+            seen_blocking=["hacki (batch-12), fixed by the launch args", "fdroid2 (batch-14), fixed by the launch args"],
+            shim="route these libraries through the network ABI translation: " + " ".join(resolvers),
+            launch_args=[arg for name in resolvers for arg in ("--android-native-net-target", name)],
         ))
     if not facts["extract_native_libs"] and elfs:
         rows.append(_row(
@@ -1065,7 +1096,30 @@ ENGINE_LIBRARIES = {
 }
 
 
-def engine_surface_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
+def surfaceview_model(westlake_root: Path | None, manifest_root: Path | None,
+                      runtime_libraries: list[str] | None) -> dict[str, Any]:
+    """Whether the provider gives a SurfaceView an OH surface of its own, and Vulkan an Android surface.
+
+    Three pieces, each read from where it lives: the window adapter's attachSurfaceView, the pinned
+    frameworks-base patch whose SurfaceView calls it, and the runtime's libvulkan.so shim (Flutter's
+    Impeller creates its surface with vkCreateAndroidSurfaceKHR, which OH's loader lacks).
+    """
+    def has(path: Path | None, needle: str) -> str | None:
+        if path is None or not path.exists():
+            return None
+        text = path.read_text(errors="replace")
+        return f"{path.name}:{text.count(chr(10), 0, text.index(needle)) + 1}" if needle in text else None
+
+    adapter = has(westlake_root / "framework/window/java/WindowSessionAdapter.java" if westlake_root else None,
+                  "public static int attachSurfaceView")
+    patches = sorted((manifest_root / "patches").glob("**/frameworks-base*.patch")) if manifest_root else []
+    patch = next((hit for hit in (has(p, "attachSurfaceView") for p in patches) if hit), None)
+    vulkan = "libvulkan.so" in (runtime_libraries or [])
+    return {"own_surface": bool(adapter and patch), "vulkan_android_surface": vulkan,
+            "evidence": ", ".join(filter(None, [adapter, patch, "runtime libvulkan.so" if vulkan else None]))}
+
+
+def engine_surface_rows(scan: dict[str, Any], model: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     """Apps whose first screen is drawn by an engine into a SurfaceView it creates.
 
     On this platform a SurfaceView gets the activity's own OH window rather than a surface of its
@@ -1085,10 +1139,19 @@ def engine_surface_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
         evidence.append(f"packages {', '.join(engines)}")
     if native_activity:
         evidence.append(f"launch activity extends a NativeActivity ({', '.join(native_activity)})")
+    model = model or {}
+    supplied = bool(model.get("own_surface"))
     return [_row(
         "window", "window:engine-surface", "First screen drawn by an engine into its own SurfaceView",
         oh_touchpoint="window_manager / render_service: one OH window per activity",
-        verdict="missing", shim_class="C9", effort="L", confidence=STATIC,
+        verdict="supplied" if supplied else "missing", shim_class="C9",
+        effort="verify" if supplied else "L", confidence=STATIC,
+        provider=("a SurfaceView that fills its window gets an OH sub-window session of its own, above the "
+                  "activity's (OH windows cannot be placed here: a smaller SurfaceView still shares its window)"
+                  + ("; Vulkan's Android surface maps onto VK_OHOS_surface" if model.get("vulkan_android_surface")
+                     else "; no VK_KHR_android_surface: a Vulkan engine (Flutter's Impeller) still fails")
+                  if supplied else "a SurfaceView shares its activity's one OH window"),
+        provider_source=model.get("evidence") or None,
         app_evidence="; ".join(evidence),
         engine_libraries=sorted(lib for lib in libraries if lib in ENGINE_LIBRARIES),
         shim="give each SurfaceView its own OH surface (a child RS node) instead of the activity's window",
@@ -1253,6 +1316,17 @@ def apply_ledger(rows: list[dict[str, Any]], ledger: dict[str, Any]) -> None:
             row["seen_blocking"] = seen[row["id"]]
 
 
+def launch_args(rows: list[dict[str, Any]]) -> list[str]:
+    """Every row's launch_args, flag and value pairs kept together, each pair once."""
+    pairs: list[tuple[str, str]] = []
+    for row in rows:
+        args = row.get("launch_args") or []
+        for flag, value in zip(args[0::2], args[1::2]):
+            if (flag, value) not in pairs:
+                pairs.append((flag, value))
+    return [item for pair in pairs for item in pair]
+
+
 def build_map(
     scan: dict[str, Any],
     facts: dict[str, Any],
@@ -1279,7 +1353,7 @@ def build_map(
     rows = (java + svc + package_manager_rows(scan, facts, pm)
             + app_framework_rows(scan, contracts.direct_launch_am_model(westlake_root),
                                  contracts.window_adapter_model(westlake_root))
-            + engine_surface_rows(scan)
+            + engine_surface_rows(scan, surfaceview_model(westlake_root, manifest_root, runtime_libraries))
             + runtime_data_rows(scan)
             + framework_native_rows(scan, runtime_index, runtime_class_paths)
             + native_upcall_rows(scan)
@@ -1306,6 +1380,9 @@ def build_map(
         "notes": {"java_excluded_by_api_level": java_excluded, "service_requests_with_computed_names": dynamic,
                   "native_upcalls_scanned": scan["inventory"].get("native_upcalls") is not None},
         "rows": rows,
+        # Launch remedies the rows name, in row order: a runner applies exactly these, so a gap the
+        # launcher can close is closed on the app's first launch.
+        "launch_args": launch_args(rows),
     }
     if probe_results:
         apply_probe_results(gap_map, probe_results)

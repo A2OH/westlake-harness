@@ -337,6 +337,30 @@ class RuntimeData(unittest.TestCase):
                          {"data:tzdata": False, "data:icu-locale-display": True})
 
 
+class LaunchRemedies(unittest.TestCase):
+    def test_network_abi_row_and_launch_args(self) -> None:
+        scan = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {"elfs": [
+            {"soname": "libflutter.so", "name": "lib/arm64-v8a/libflutter.so", "abi": "arm64-v8a",
+             "undefined_symbols": ["getaddrinfo@LIBC", "malloc"]},
+            {"soname": "libapp.so", "name": "lib/arm64-v8a/libapp.so", "abi": "arm64-v8a", "undefined_symbols": []}]}}
+        facts = {"extract_native_libs": True}
+        option = {"present": True, "source": "x:1", "net": {"present": True, "source": "x:2"}}
+        rows = gapmap.native_loading_rows(facts, scan, {"present": True}, [], option)
+        row = next(r for r in rows if r["id"] == "abi:addrinfo")
+        self.assertEqual(row["verdict"], "supplied")
+        self.assertEqual(row["launch_args"], ["--android-native-net-target", "libflutter.so"])
+        both = [row, {"launch_args": ["--android-native-target", "libc++_shared.so",
+                                      "--android-native-net-target", "libflutter.so"]}]
+        self.assertEqual(gapmap.launch_args(both), ["--android-native-net-target", "libflutter.so",
+                                                    "--android-native-target", "libc++_shared.so"])
+
+    def test_engine_surface_follows_the_provider(self) -> None:
+        scan = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {"elfs": [{"soname": "libflutter.so", "abi": "arm64-v8a"}]}}
+        self.assertEqual(gapmap.engine_surface_rows(scan)[0]["verdict"], "missing")
+        supplied = gapmap.engine_surface_rows(scan, {"own_surface": True, "vulkan_android_surface": True, "evidence": "e"})
+        self.assertEqual(supplied[0]["verdict"], "supplied")
+
+
 class NeededLibraries(unittest.TestCase):
     def test_a_library_nothing_provides(self) -> None:
         scan = {"inventory": {"elfs": [
