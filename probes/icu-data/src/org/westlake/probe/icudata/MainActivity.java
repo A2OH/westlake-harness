@@ -62,6 +62,14 @@ public class MainActivity extends Activity {
         check("java.time zone ids", () -> String.valueOf(java.time.zone.ZoneRulesProvider.getAvailableZoneIds().size()));
         check("java.time ZoneId.of", () -> java.time.ZoneId.of("Europe/Paris").getRules().toString());
         check("java.time systemDefault", () -> java.time.ZoneId.systemDefault().toString());
+        // Skia (Flutter) reads the system font list from these fixed paths.
+        for (String path : new String[] {"/system/etc/fonts.xml", "/system/android/etc/fonts.xml",
+                "/system/fonts/HarmonyOS_Sans.ttf", "/system/etc/security/cacerts"}) {
+            check("file " + path, () -> {
+                java.io.File file = new java.io.File(path);
+                return "exists=" + file.exists() + " readable=" + file.canRead() + " length=" + file.length();
+            });
+        }
         TextView view = new TextView(this);
         view.setText(shown);
         setContentView(view);
