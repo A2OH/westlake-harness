@@ -483,6 +483,132 @@
    "row": null,
    "symptom": "intermittent: when inotify_add_watch succeeds, its own WatchService poller thread SIGSEGVs at address 0 (3 of 4 launches on build 57); when the watch is denied it draws",
    "fixed_in": null
+  },
+  {
+   "app": "nori",
+   "corpus": "batch-11",
+   "row": "ns:assets",
+   "symptom": "React Native: 'Unable to load script' -- the Android namespace's libandroid (WebView shim) forwards AAsset* to libwestlake_asset_bridge.so, which no build ships",
+   "fixed_in": null
+  },
+  {
+   "app": "rushhour",
+   "corpus": "batch-13",
+   "row": "ns:assets",
+   "symptom": "React Native: 'Unable to load script' (Android-namespace AAsset bridge, as nori)",
+   "fixed_in": null
+  },
+  {
+   "app": "marlin",
+   "corpus": "batch-14",
+   "row": "ns:assets",
+   "symptom": "React Native: 'Unable to load script' (Android-namespace AAsset bridge, as nori)",
+   "fixed_in": null
+  },
+  {
+   "app": "mobile",
+   "corpus": "batch-14",
+   "row": "ns:assets",
+   "symptom": "React Native: 'Unable to load script' (Android-namespace AAsset bridge, as nori)",
+   "fixed_in": null
+  },
+  {
+   "app": "siftrecipes",
+   "corpus": "batch-15",
+   "row": "ns:assets",
+   "symptom": "React Native: 'Unable to load script' (Android-namespace AAsset bridge, as nori); window stays empty",
+   "fixed_in": null
+  },
+  {
+   "app": "mindustry",
+   "corpus": "loop-1",
+   "row": "nio:channels",
+   "symptom": "framework 63: sun.nio.ch.Net.pollinValue unregistered (NIO Selector); libwestlake_runtime_boundary has no sun.nio.ch natives",
+   "fixed_in": null
+  },
+  {
+   "app": "unciv",
+   "corpus": "batch-5",
+   "row": "nio:channels",
+   "symptom": "framework 63: sun.nio.ch.Net.pollinValue unregistered (Ktor Selector)",
+   "fixed_in": null
+  },
+  {
+   "app": "infraarcana",
+   "corpus": "batch-13",
+   "row": "load:needed-missing",
+   "symptom": "SDL2 needs libGLESv1_CM.so, which OH does not ship",
+   "fixed_in": null
+  },
+  {
+   "app": "fluxnews",
+   "corpus": "batch-12",
+   "row": null,
+   "symptom": "Flutter: a dialog renders as an empty card over a scrim",
+   "fixed_in": null
+  },
+  {
+   "app": "hacki",
+   "corpus": "batch-12",
+   "row": "abi:addrinfo",
+   "symptom": "Dart socket_base.h unreachable: getaddrinfo results in musl field order",
+   "fixed_in": "run2 launch_args (abi:addrinfo)"
+  },
+  {
+   "app": "fdroid2",
+   "corpus": "batch-14",
+   "row": "abi:addrinfo",
+   "symptom": "Dart abort on the addrinfo field order (as hacki)",
+   "fixed_in": "run2 launch_args (abi:addrinfo)"
+  },
+  {
+   "app": "jiyi",
+   "corpus": "batch-13",
+   "row": "jca:AndroidKeyStoreBCWorkaround",
+   "symptom": "flutter_secure_storage: NoSuchProviderException AndroidKeyStoreBCWorkaround",
+   "fixed_in": "bb1bebf"
+  },
+  {
+   "app": "toolbox",
+   "corpus": "batch-11",
+   "row": "jca:AndroidKeyStoreBCWorkaround",
+   "symptom": "flutter_secure_storage: NoSuchProviderException AndroidKeyStoreBCWorkaround",
+   "fixed_in": "bb1bebf"
+  },
+  {
+   "app": "fosswarn",
+   "corpus": "batch-12",
+   "row": "pm:call:getInstallSourceInfo",
+   "symptom": "package_info_plus: PlatformException(Name not found) from a null getInstallSourceInfo",
+   "fixed_in": "f8a40b3"
+  },
+  {
+   "app": "cardabase",
+   "corpus": "batch-12",
+   "row": "pm:call:getInstallSourceInfo",
+   "symptom": "package_info_plus: PlatformException(Name not found) from a null getInstallSourceInfo",
+   "fixed_in": "f8a40b3"
+  },
+  {
+   "app": "mucke",
+   "corpus": "batch-14",
+   "row": "pm:call:getInstallSourceInfo",
+   "symptom": "package_info_plus Name not found; then MediaSession.setQueue NPE (null ISession binder)",
+   "fixed_in": "f8a40b3 + a715e48"
+  },
+  {
+   "app": "librelibrivoxlis",
+   "corpus": "batch-11",
+   "row": null,
+   "symptom": "audio_service: MediaSession.setQueue NPE (inert ISession returned a null binder)",
+   "fixed_in": "a715e48"
+  },
+  {
+   "app": "fluffychat",
+   "corpus": "corpus-2",
+   "row": "path:/system/etc/security/cacerts",
+   "symptom": "Dart TLS: Failed to find root cert cache (/system/etc/security/cacerts)",
+   "fixed_in": "576fa43"
   }
  ]
 }

@@ -543,6 +543,35 @@ def android_path_rows(apk: Path | None, scan: dict[str, Any], runtime_data: dict
     return rows
 
 
+# java.nio.channels classes whose use reaches sun.nio.ch's natives (Net, IOUtil, the poll selector).
+NIO_CHANNELS = ("Ljava/nio/channels/Selector;", "Ljava/nio/channels/SocketChannel;",
+                "Ljava/nio/channels/ServerSocketChannel;", "Ljava/nio/channels/DatagramChannel;",
+                "Ljava/nio/channels/spi/SelectorProvider;")
+
+
+def nio_rows(scan: dict[str, Any], runtime_class_paths: set[str] | None) -> list[dict[str, Any]]:
+    """Non-blocking sockets: the app opens a Selector or a socket channel, which runs sun.nio.ch's
+    natives (Net.pollinValue in Net.<clinit> first). A runtime that registers none of them fails the
+    first Selector.open with UnsatisfiedLinkError (Mindustry, Unciv: Ktor and Arc's networking)."""
+    names = scan["inventory"].get("platform_method_names", {})
+    used = sorted(owner.split("/")[-1].rstrip(";") for owner in NIO_CHANNELS if owner in names)
+    if not used or runtime_class_paths is None:
+        return []
+    registered = "sun/nio/ch/Net" in runtime_class_paths
+    return [_row(
+        "framework-natives", "nio:channels", f"NIO socket channels and selectors ({', '.join(used)})",
+        oh_touchpoint="sockets and poll: OH has them; the runtime must register sun.nio.ch's natives",
+        verdict="supplied" if registered else "missing", shim_class="C1", effort="verify" if registered else "M",
+        confidence=STATIC,
+        provider=("a runtime library names sun/nio/ch/Net" if registered else
+                  "no runtime library registers sun.nio.ch.Net: Net.<clinit> throws UnsatisfiedLinkError on the "
+                  "first Selector.open or channel"),
+        app_evidence="calls " + ", ".join(used),
+        seen_blocking=["mindustry (loop-1)", "unciv (batch-5)"],
+        shim="register OpenJDK's sun.nio.ch natives (Net, IOUtil, PollArrayWrapper, SocketChannelImpl) over OH sockets",
+    )]
+
+
 def pm_null_consequences(aosp_root: Path | None) -> dict[str, str]:
     """IPackageManager method -> what AOSP's ApplicationPackageManager makes of a null answer.
 
@@ -1000,7 +1029,8 @@ def launcher_namespace_option(manifest_root: Path | None) -> dict[str, Any]:
 
 
 def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_extracts: dict[str, Any],
-                        board_paths: list[str] | None = None, namespace_option: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+                        board_paths: list[str] | None = None, namespace_option: dict[str, Any] | None = None,
+                        runtime_libraries: list[str] | None = None) -> list[dict[str, Any]]:
     rows = []
     elfs = ohresolve.target_elfs(scan)
     shadowed, targets = shadowed_libraries(scan, board_paths or [])
@@ -1019,6 +1049,27 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
                  "(e.g. NDK libc++_shared is std::__ndk1; OH's is not): " + " ".join(targets),
             launch_args=[arg for name in targets for arg in ("--android-native-target", name)],
         ))
+        # In that namespace libandroid.so is the WebView shim's, whose AAsset* go through a companion
+        # (libwestlake_asset_bridge.so) to the framework's asset manager. React Native loads its
+        # bundle that way and reported "Unable to load script" when the companion was not shipped.
+        asset_users = sorted({elf.get("soname") or Path(elf["name"]).name for elf in elfs
+                              if (elf.get("soname") or Path(elf["name"]).name) in targets
+                              and {"AAssetManager_fromJava", "AAssetManager_open"}
+                              & {n.split("@")[0] for n in elf.get("undefined_symbols", [])}})
+        if asset_users:
+            bridge = "libwestlake_asset_bridge.so" in (runtime_libraries or [])
+            rows.append(_row(
+                "native-loading", "ns:assets", f"NDK assets opened from the isolated Android namespace ({', '.join(asset_users[:3])})",
+                oh_touchpoint="the Android namespace's libandroid.so (WebView shim) -> the framework's AssetManager2",
+                verdict="supplied" if bridge else "missing", shim_class="C1", effort="verify" if bridge else "S",
+                confidence=STATIC,
+                provider=("the runtime ships the asset companion the shim loads" if bridge else
+                          "the shim's AAsset* need libwestlake_asset_bridge.so, which the runtime does not ship: "
+                          "AAssetManager_fromJava returns null there"),
+                app_evidence=f"{len(asset_users)} namespace-routed libraries import AAssetManager_*",
+                seen_blocking=["nori, rushhour, marlin, mobile, siftrecipes (React Native: Unable to load script)"],
+                shim="ship the companion in the parent namespace and let the Android namespace inherit it",
+            ))
     resolvers = sorted({elf.get("soname") or Path(elf["name"]).name for elf in elfs
                         if NETWORK_ABI_IMPORTS & {name.split("@")[0] for name in
                                                   elf.get("undefined_symbols", []) + elf.get("undefined_weak_symbols", [])}})
@@ -1343,7 +1394,8 @@ def runtime_class_strings(directory: Path | None) -> set[str] | None:
         return None
     found: set[str] = set()
     for lib in directory.glob("*.so"):
-        found.update(m.decode() for m in re.findall(rb"(?:android|com/android)/[A-Za-z0-9_/$]+", lib.read_bytes()))
+        found.update(m.decode() for m in re.findall(rb"(?:android|com/android|sun/nio|java/nio|libcore)/[A-Za-z0-9_/$]+",
+                                                    lib.read_bytes()))
     return found
 
 
@@ -1475,7 +1527,8 @@ def build_map(
             + (ndk_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root), ndk_cov) if ndk_cov
                else native_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root)))
             + native_loading_rows(facts, scan, launcher_extraction(manifest_root), board_paths,
-                                  launcher_namespace_option(manifest_root))
+                                  launcher_namespace_option(manifest_root), runtime_libraries)
+            + nio_rows(scan, runtime_class_paths)
             + needed_library_rows(scan, board_paths, runtime_libraries)
             + libc_constant_rows(scan, contracts.libc_constant_model(westlake_root))
             + security_rows(scan, contracts.keystore_model(westlake_root))

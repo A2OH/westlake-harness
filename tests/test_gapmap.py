@@ -435,6 +435,14 @@ class AndroidPaths(unittest.TestCase):
             shutil.rmtree(root)
 
 
+class NioChannels(unittest.TestCase):
+    def test_selector_use_against_registered_natives(self) -> None:
+        scan = {"inventory": {"platform_method_names": {"Ljava/nio/channels/Selector;": ["open"]}}}
+        self.assertEqual(gapmap.nio_rows(scan, {"android/os/Foo"})[0]["verdict"], "missing")
+        self.assertEqual(gapmap.nio_rows(scan, {"sun/nio/ch/Net"})[0]["verdict"], "supplied")
+        self.assertEqual(gapmap.nio_rows({"inventory": {"platform_method_names": {}}}, set()), [])
+
+
 class NeededLibraries(unittest.TestCase):
     def test_a_library_nothing_provides(self) -> None:
         scan = {"inventory": {"elfs": [
