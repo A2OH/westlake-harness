@@ -489,35 +489,35 @@
    "corpus": "batch-11",
    "row": "ns:assets",
    "symptom": "React Native: 'Unable to load script' -- the Android namespace's libandroid (WebView shim) forwards AAsset* to libwestlake_asset_bridge.so, which no build ships",
-   "fixed_in": null
+   "fixed_in": "westlake b24a118 + 432c000 (framework 68, shim nw9)"
   },
   {
    "app": "rushhour",
    "corpus": "batch-13",
    "row": "ns:assets",
    "symptom": "React Native: 'Unable to load script' (Android-namespace AAsset bridge, as nori)",
-   "fixed_in": null
+   "fixed_in": "westlake b24a118 + 432c000 (framework 68, shim nw9)"
   },
   {
    "app": "marlin",
    "corpus": "batch-14",
    "row": "ns:assets",
    "symptom": "React Native: 'Unable to load script' (Android-namespace AAsset bridge, as nori)",
-   "fixed_in": null
+   "fixed_in": "westlake b24a118 + 432c000 (framework 68, shim nw9)"
   },
   {
    "app": "mobile",
    "corpus": "batch-14",
    "row": "ns:assets",
    "symptom": "React Native: 'Unable to load script' (Android-namespace AAsset bridge, as nori)",
-   "fixed_in": null
+   "fixed_in": "westlake b24a118 + 432c000 (framework 68, shim nw9)"
   },
   {
    "app": "siftrecipes",
    "corpus": "batch-15",
    "row": "ns:assets",
    "symptom": "React Native: 'Unable to load script' (Android-namespace AAsset bridge, as nori); window stays empty",
-   "fixed_in": null
+   "fixed_in": "westlake b24a118 + 432c000 (framework 68, shim nw9)"
   },
   {
    "app": "mindustry",

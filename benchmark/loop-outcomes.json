@@ -564,7 +564,8 @@
   "castlab": {
    "batch": "batch-11",
    "first": "blocked",
-   "after": "blocked"
+   "after": "draws",
+   "fixed_on": "framework 68"
   },
   "geotagvideocamer": {
    "batch": "batch-11",
@@ -585,7 +586,8 @@
   "nori": {
    "batch": "batch-11",
    "first": "blocked",
-   "after": "blocked"
+   "after": "draws",
+   "fixed_on": "framework 68"
   },
   "obtainx": {
    "batch": "batch-11",
@@ -596,7 +598,8 @@
   "toolbox": {
    "batch": "batch-11",
    "first": "blocked",
-   "after": "blocked"
+   "after": "draws",
+   "fixed_on": "framework 67"
   },
   "bim": {
    "batch": "batch-11",
@@ -865,7 +868,8 @@
   "siftrecipes": {
    "batch": "batch-14",
    "first": "blocked",
-   "after": "blocked"
+   "after": "draws",
+   "fixed_on": "framework 68"
   },
   "uturn": {
    "batch": "batch-14",
@@ -881,12 +885,14 @@
   "jiyi": {
    "batch": "batch-14",
    "first": "blocked",
-   "after": "blocked"
+   "after": "draws",
+   "fixed_on": "framework 67"
   },
   "rushhour": {
    "batch": "batch-14",
    "first": "blocked",
-   "after": "blocked"
+   "after": "draws",
+   "fixed_on": "framework 68"
   },
   "todo": {
    "batch": "batch-14",
@@ -990,12 +996,14 @@
   "marlin": {
    "batch": "batch-15",
    "first": "blocked",
-   "after": "blocked"
+   "after": "draws",
+   "fixed_on": "framework 68"
   },
   "mobile": {
    "batch": "batch-15",
    "first": "blocked",
-   "after": "blocked"
+   "after": "draws",
+   "fixed_on": "framework 68"
   },
   "myquran": {
    "batch": "batch-15",
