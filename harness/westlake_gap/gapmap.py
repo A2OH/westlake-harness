@@ -234,7 +234,8 @@ def _site(site: dict[str, Any]) -> str:
     return f"{site['owner'].strip('L;').replace('/', '.')}.{site['method']}"
 
 
-def package_manager_rows(scan: dict[str, Any], facts: dict[str, Any], pm: dict[str, Any]) -> list[dict[str, Any]]:
+def package_manager_rows(scan: dict[str, Any], facts: dict[str, Any], pm: dict[str, Any],
+                         null_consequences: dict[str, str] | None = None) -> list[dict[str, Any]]:
     rows = []
     calls = scan["inventory"].get("platform_method_names", {}).get("Landroid/content/pm/PackageManager;", [])
     methods = pm["methods"]
@@ -298,8 +299,11 @@ def package_manager_rows(scan: dict[str, Any], facts: dict[str, Any], pm: dict[s
             stubbed.append((name, binder, status))
     for name, binder, status in stubbed:
         deep = binder.startswith(("query", "resolve"))
+        consequence = (null_consequences or {}).get(binder)
         rows.append(_row(
             "package-manager", f"pm:call:{name}", f"PackageManager.{name}",
+            throws_in_framework=bool(consequence and status["detail"].startswith("returns null")),
+            framework_consequence=consequence,
             oh_touchpoint="bundle_framework (for other packages)" if name in {"getInstallerPackageName", "getPackagesForUid", "getInstalledPackages"} else "none",
             verdict="stub", shim_class="C9", effort="M" if deep else "S", confidence=STATIC,
             provider=f"IPackageManager.{binder} {status['detail']}", provider_source=status["source"],
@@ -470,6 +474,35 @@ def app_framework_rows(scan: dict[str, Any], am: dict[str, Any], wm: dict[str, A
                 provider_source=check.get("source"),
                 app_evidence="app shows dialogs (Dialog.show referenced)", shim=shim))
     return rows
+
+
+def pm_null_consequences(aosp_root: Path | None) -> dict[str, str]:
+    """IPackageManager method -> what AOSP's ApplicationPackageManager makes of a null answer.
+
+    A stub that returns null is harmless only if the client wrapper passes the null on. Several
+    turn it into an exception the app never expected from its own package: getInstallSourceInfo
+    throws NameNotFoundException (package_info_plus then failed FOSS Warn, mucke and Cardabase),
+    and a wrapper that unwraps a ParceledListSlice dereferences it.
+    """
+    path = aosp_root / "frameworks-base/core/java/android/app/ApplicationPackageManager.java" if aosp_root else None
+    if path is None or not path.exists():
+        return {}
+    text = path.read_text(errors="replace")
+    heads = list(re.finditer(r"\n    (?:public|protected|private)[^\n;=]*?\b\w+\s*\([^)]*\)[^{;]*\{", text))
+    out: dict[str, str] = {}
+    for index, head in enumerate(heads):
+        body = text[head.end():heads[index + 1].start() if index + 1 < len(heads) else len(text)]
+        for call in re.finditer(r"(\w+)\s*=\s*(?:\([\w.<>\[\] ]+\)\s*)?mPM\s*\.\s*(\w+)\(", body):
+            variable, binder = call.group(1), call.group(2)
+            after = body[call.end():]
+            null_throw = re.search(rf"if\s*\(\s*{variable}\s*==\s*null\s*\)\s*\{{?\s*throw\s+new\s+NameNotFoundException", after)
+            # "if (x != null) { ... return ...; } ... throw new NameNotFoundException" -- the throw is the null path
+            guarded = re.search(rf"if\s*\(\s*{variable}\s*!=\s*null\b", after) and "throw new NameNotFoundException" in after
+            if null_throw or guarded:
+                out.setdefault(binder, "throws NameNotFoundException when the answer is null")
+            elif re.search(rf"\b{variable}\.getList\(\)", after) and not re.search(rf"{variable}\s*[!=]=\s*null", after):
+                out.setdefault(binder, "dereferences the null (ParceledListSlice.getList)")
+    return out
 
 
 def webview_process_model(aosp_root: Path | None, westlake_root: Path) -> dict[str, Any]:
@@ -1362,7 +1395,7 @@ def build_map(
     pm = contracts.pm_adapter_model(westlake_root)
     java, java_excluded = java_api_rows(scan, api_levels)
     svc, dynamic = service_rows(scan, aosp_services, westlake_services)
-    rows = (java + svc + package_manager_rows(scan, facts, pm)
+    rows = (java + svc + package_manager_rows(scan, facts, pm, pm_null_consequences(aosp_root))
             + app_framework_rows(scan, contracts.direct_launch_am_model(westlake_root),
                                  contracts.window_adapter_model(westlake_root))
             + engine_surface_rows(scan, surfaceview_model(westlake_root, manifest_root, runtime_libraries))

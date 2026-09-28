@@ -375,6 +375,42 @@ class KeystoreProviderNames(unittest.TestCase):
         self.assertEqual(rows["jca:AndroidKeyStoreBCWorkaround"], "supplied")
 
 
+class PackageManagerNullConsequences(unittest.TestCase):
+    def test_aosp_wrapper_that_throws_on_null(self) -> None:
+        root = Path(tempfile.mkdtemp())
+        try:
+            source = root / "frameworks-base/core/java/android/app/ApplicationPackageManager.java"
+            source.parent.mkdir(parents=True)
+            source.write_text("""
+    public InstallSourceInfo getInstallSourceInfo(String packageName) throws NameNotFoundException {
+        final InstallSourceInfo installSourceInfo;
+        try {
+            installSourceInfo = mPM.getInstallSourceInfo(packageName, getUserId());
+        } catch (RemoteException e) { throw e.rethrowFromSystemServer(); }
+        if (installSourceInfo == null) {
+            throw new NameNotFoundException(packageName);
+        }
+        return installSourceInfo;
+    }
+    public ServiceInfo getServiceInfo(ComponentName className, int flags) throws NameNotFoundException {
+        ServiceInfo si = mPM.getServiceInfo(className, flags, getUserId());
+        if (si != null) {
+            return si;
+        }
+        throw new NameNotFoundException(className.toString());
+    }
+    public String getInstallerPackageName(String packageName) {
+        String name = mPM.getInstallerPackageName(packageName);
+        return name;
+    }
+""")
+            found = gapmap.pm_null_consequences(root)
+            self.assertEqual(set(found), {"getInstallSourceInfo", "getServiceInfo"},
+                             "a wrapper that passes null on is not a consequence")
+        finally:
+            shutil.rmtree(root)
+
+
 class NeededLibraries(unittest.TestCase):
     def test_a_library_nothing_provides(self) -> None:
         scan = {"inventory": {"elfs": [
