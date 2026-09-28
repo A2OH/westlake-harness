@@ -41,3 +41,34 @@ earlier batches, with these exclusions:
 - **Reported separately:** "past splash", counting apps whose screenshot shows more than a logo or
   loading splash. It is the stricter number.
 - **Hdc drops:** a launch the hdc connection dropped is relaunched and does not count as a result.
+
+## Result (launched 2026-09-28, judged by the rules above)
+
+**79 of 100 draw; 78 past splash** (K-9's "Upgrading databases" is the one splash-only screen).
+All 100 launched first time; no hdc drops. `outcomes.json` holds the judgement for each app and the
+five screenshots the screen check passed but the rules exclude: two blank or black windows, an
+app-drawn SDL error, an empty camera-preview region and an empty browser page.
+
+For comparison on the same framework: batches 11–15, whose blockers were fixed as they were found,
+draw 70 of 99. The fixes carried over to apps nobody looked at. One caution: this is the second pick
+in each category, which may be simpler apps than the first.
+
+**The predictor did not generalize.** It predicted 5 blocked. Result: precision 0.60 (3 true, 2 false
+-- ndk:package on Nora and Time Tracking, both of which draw), recall 0.14 (18 of 21 blocked apps
+missed). As a first-screen predictor the static map is weak. Its value is the gap list and the fix
+queue, not the yes/no call.
+
+The 21 blocked apps, by cause:
+
+| cause | apps |
+|---|---|
+| media natives unregistered at startup (MediaPlayer.native_init, AudioSystem, AudioTrack) | doorsofdoom, game, ntfy, mousepounce, musekit |
+| OpenSL ES Android configuration interface (SL_IID_ANDROIDCONFIGURATION) | jigsaw, v3 |
+| activity start: InflateException | clauncher, facebooknotifica |
+| activity start: ArithmeticException | aat |
+| stops after bind, nothing logged | drawanywhere, shortcut, insigno, playmaker |
+| libGLESv1_CM.so absent (SDL) | anarchre |
+| bionic getprogname unresolved | linphone |
+| blank or black window | accelerace, spacebeam |
+| a region empty (camera preview, web page) | fairscan, standard |
+| leaves after drawing, nothing logged | wormhole2 |
