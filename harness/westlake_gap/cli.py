@@ -240,6 +240,9 @@ def parser() -> argparse.ArgumentParser:
     gap.add_argument("--runtime-libs", type=Path,
                      help="the staged native runtime: a directory, its artifacts.json, or a listing one per line. "
                           "Finds libraries the runtime ships that its own loader answers without opening")
+    gap.add_argument("--runtime-data", type=Path,
+                     help="the runtime data build (its directory or artifacts.json): which Android files the runtime "
+                          "ships, for the Android paths the app reads directly")
     gap.add_argument("--policy", type=Path, default=Path(__file__).parent / "data" / "oh-app-data-policy.json")
     gap.add_argument("--blockers", type=Path, help="known-blockers JSON: backtest the map against observed failures")
     gap.add_argument("--blockers-status", action="store_true",
@@ -429,7 +432,9 @@ def main(argv: list[str] | None = None) -> int:
                             runtime_class_paths=runtime_class_strings(args.runtime_libs)
                             if args.runtime_libs and args.runtime_libs.is_dir() else None,
                             ledger=read_json(args.ledger) if args.ledger else None,
-                            aosp_root=args.aosp)
+                            aosp_root=args.aosp, apk_path=args.apk,
+                            runtime_data=read_json(args.runtime_data / "artifacts.json" if args.runtime_data.is_dir()
+                                                   else args.runtime_data) if args.runtime_data else None)
         if args.westlake_label:
             gap_map["provider"]["westlake"] = {"branch": args.westlake_label, "commit": args.westlake_label, "uncommitted": []}
         results = None

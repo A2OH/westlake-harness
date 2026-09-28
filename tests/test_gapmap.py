@@ -411,6 +411,30 @@ class PackageManagerNullConsequences(unittest.TestCase):
             shutil.rmtree(root)
 
 
+class AndroidPaths(unittest.TestCase):
+    def test_path_in_code_against_runtime_data_and_namespace(self) -> None:
+        import zipfile
+        root = Path(tempfile.mkdtemp())
+        try:
+            apk = root / "app.apk"
+            with zipfile.ZipFile(apk, "w") as archive:
+                archive.writestr("lib/arm64-v8a/libflutter.so", b"..\x00/system/etc/security/cacerts\x00..")
+            westlake = root / "westlake"
+            (westlake / "native").mkdir(parents=True)
+            helper = westlake / "native/source_app_namespace.c"
+            scan = {"apk": {"target_abi": "arm64-v8a"}}
+            data = {"artifacts": {"etc/security/cacerts/01419da9.0": {}}}
+            helper.write_text("int etc = overlay(root, \"etc\", \"/system/etc\", \"x\");")
+            rows = gapmap.android_path_rows(apk, scan, data, westlake)
+            self.assertEqual([(r["id"], r["verdict"]) for r in rows], [("path:/system/etc/security/cacerts", "supplied")])
+            helper.write_text("int main(void) { return 0; }")
+            self.assertEqual(gapmap.android_path_rows(apk, scan, data, westlake)[0]["verdict"], "missing",
+                             "shipped but not shown at the path")
+            self.assertEqual(gapmap.android_path_rows(apk, scan, {"artifacts": {}}, westlake)[0]["verdict"], "missing")
+        finally:
+            shutil.rmtree(root)
+
+
 class NeededLibraries(unittest.TestCase):
     def test_a_library_nothing_provides(self) -> None:
         scan = {"inventory": {"elfs": [

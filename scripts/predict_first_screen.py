@@ -55,7 +55,10 @@ def reasons(rows: list[dict]) -> list[str]:
         if (rid.startswith("ndk:") and row["verdict"] == "missing" and "unshipped-library" not in rid
                 and not rid.startswith(LAZY_NDK)):
             found.append(f"native:{rid}")
-        if row.get("throws_in_framework"):
+        # Services only: a package-manager stub AOSP turns into an exception (pm:call rows) is a
+        # triage row -- whether the app makes that call at startup is a trace question, and on the
+        # framework-66 maps its two static hits (getPackageGids) were apps that draw.
+        if row.get("throws_in_framework") and not rid.startswith("pm:"):
             found.append(f"framework:{rid}")
         if rid in LOOKUPS:
             found.append(f"lookup:{rid}")

@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import re
+import zipfile
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
@@ -473,6 +474,72 @@ def app_framework_rows(scan: dict[str, Any], am: dict[str, Any], wm: dict[str, A
                 else "no dim layer is drawn",
                 provider_source=check.get("source"),
                 app_evidence="app shows dialogs (Dialog.show referenced)", shim=shim))
+    return rows
+
+
+# Fixed Android paths code reads without asking the framework, with where a runtime that supplies
+# them keeps the file (under its data build) and which of its directories the app namespace merges
+# over the Android one. Each entry is a gap this port hit by path.
+ANDROID_PATHS = {
+    "/system/etc/security/cacerts": ("etc/security/cacerts/", "etc",
+                                     "Android's system trust store: Dart's TLS refuses every connection without it"),
+    "/system/etc/fonts.xml": ("etc/fonts.xml", "etc", "the system font list: Skia (Flutter) draws no text without it"),
+    "/system/fonts/": ("fonts/", "fonts", "the system font files the font list names"),
+    "/system/usr/share/zoneinfo/": (None, None, "the legacy tz database path"),
+    "/apex/com.android.tzdata/": (None, None, "the tz module's data: ANDROID_TZDATA_ROOT readers use the variable"),
+    "/system/etc/hosts": (None, None, "the hosts file some native resolvers read directly"),
+}
+
+
+def android_path_rows(apk: Path | None, scan: dict[str, Any], runtime_data: dict[str, Any] | None,
+                      westlake_root: Path | None) -> list[dict[str, Any]]:
+    """Android file paths the APK's code names literally, against what the app namespace shows there.
+
+    The CA store, the font list and the tz data were each found by an app failing: Dart's TLS, Skia
+    and java.time read Android paths that OH lays out differently or not at all. The paths are plain
+    strings in dex and native code, so the scan can name them; the provider answers from its data
+    build and from the namespace helper that merges it over OH's directories.
+    """
+    if apk is None or not apk.exists():
+        return []
+    blobs = []
+    try:
+        with zipfile.ZipFile(apk) as archive:
+            abi = scan["apk"].get("target_abi") or "arm64-v8a"
+            for name in archive.namelist():
+                if (name.startswith("classes") and name.endswith(".dex")) or \
+                        (name.startswith(f"lib/{abi}/") and name.endswith(".so")):
+                    blobs.append((name, archive.read(name)))
+    except (zipfile.BadZipFile, OSError):
+        return []
+    helper = (westlake_root / "native/source_app_namespace.c") if westlake_root else None
+    helper_text = helper.read_text(errors="replace") if helper and helper.exists() else ""
+    shipped = set((runtime_data or {}).get("artifacts", {}))
+    rows = []
+    for path, (runtime_path, merged, what) in ANDROID_PATHS.items():
+        needle = path.encode()
+        users = sorted({Path(name).name for name, blob in blobs if needle in blob})
+        if not users:
+            continue
+        in_data = runtime_path is not None and any(a == runtime_path or a.startswith(runtime_path) for a in shipped)
+        is_merged = merged is not None and f'"{merged}", "/system/{merged}"' in helper_text
+        if runtime_path is None:
+            verdict, provider = "unverified", "not modelled: whether the app namespace shows it is a board question"
+        elif in_data and is_merged:
+            verdict, provider = "supplied", f"the runtime data's {runtime_path} is merged over /system/{merged}"
+        elif in_data:
+            verdict, provider = "missing", f"the runtime ships {runtime_path}, but nothing shows it at {path}"
+        else:
+            verdict, provider = "missing", f"the runtime ships nothing for {path}"
+        rows.append(_row(
+            "runtime-data", f"path:{path}", f"Android path read directly: {path}",
+            oh_touchpoint="the app's mount namespace (OH's /system differs from Android's)",
+            verdict=verdict, shim_class="C1" if verdict != "unverified" else "CU",
+            effort="verify" if verdict == "supplied" else "S", confidence=STATIC,
+            provider=provider, provider_source="native/source_app_namespace.c" if is_merged else None,
+            app_evidence=f"named in {', '.join(users[:4])}" + (" ..." if len(users) > 4 else "") + f": {what}",
+            shim=f"ship Android's {path} in the runtime data and show it at that path in the app namespace",
+        ))
     return rows
 
 
@@ -1390,6 +1457,8 @@ def build_map(
     runtime_index: dict[str, Any] | None = None,
     runtime_class_paths: set[str] | None = None,
     ledger: dict[str, Any] | None = None,
+    apk_path: Path | None = None,
+    runtime_data: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     westlake_services = services.westlake_service_model(westlake_root)
     pm = contracts.pm_adapter_model(westlake_root)
@@ -1400,6 +1469,7 @@ def build_map(
                                  contracts.window_adapter_model(westlake_root))
             + engine_surface_rows(scan, surfaceview_model(westlake_root, manifest_root, runtime_libraries))
             + runtime_data_rows(scan)
+            + android_path_rows(apk_path, scan, runtime_data, westlake_root)
             + framework_native_rows(scan, runtime_index, runtime_class_paths)
             + native_upcall_rows(scan)
             + (ndk_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root), ndk_cov) if ndk_cov
