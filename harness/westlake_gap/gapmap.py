@@ -836,7 +836,19 @@ def security_rows(scan: dict[str, Any], keystore: dict[str, Any]) -> list[dict[s
         shim='install an "AndroidKeyStore" provider whose keys come from KeyGenParameterSpec and stay per app: '
              "software keys in app data (days), or OH HUKS for hardware-backed keys (weeks). A blocker wherever the app "
              "opens it at startup (secure storage, encrypted preferences, biometric crypto, attestation)",
-    )]
+    )] + [_row(
+        "security", f"jca:{name}", f'Android keystore operations provider ("{name}")',
+        oh_touchpoint="JCA provider list (Android installs it beside AndroidKeyStore)",
+        verdict="supplied" if name in keystore.get("registered", {}) else "missing",
+        shim_class="C0" if name in keystore.get("registered", {}) else "C4",
+        effort="verify" if name in keystore.get("registered", {}) else "S", confidence=STATIC,
+        provider=("registered: operations on keystore keys" if name in keystore.get("registered", {})
+                  else f'not registered: {name} lookups throw NoSuchProviderException'),
+        provider_source=keystore.get("registered", {}).get(name),
+        app_evidence=", ".join(sorted({r["owner"] for r in named if r.get("provider") == name})[:4]),
+        seen_blocking=["jiyi (batch-13)", "toolbox (batch-11)"] if name == "AndroidKeyStoreBCWorkaround" else [],
+        shim=f'register a "{name}" provider serving Cipher/Signature/Mac for the keystore\'s keys',
+    ) for name in sorted({r.get("provider") for r in named} - {"AndroidKeyStore", None, "(Provider object)"})]
 
 
 # Directories the Westlake child's default namespace searches before the app's own library

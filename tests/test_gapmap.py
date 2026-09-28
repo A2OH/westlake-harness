@@ -361,6 +361,20 @@ class LaunchRemedies(unittest.TestCase):
         self.assertEqual(supplied[0]["verdict"], "supplied")
 
 
+class KeystoreProviderNames(unittest.TestCase):
+    def test_each_requested_provider_name_is_its_own_row(self) -> None:
+        scan = {"inventory": {"jca_requests": [
+            {"api": "KeyStore.getInstance", "type": "AndroidKeyStore", "owner": "La;"},
+            {"api": "provider name", "provider": "AndroidKeyStoreBCWorkaround", "owner": "Lb;"}]}}
+        keystore = {"installed": {"present": False, "source": None}, "backend": {"present": False, "source": None},
+                    "replacement": {"present": True, "source": "s:1"}, "registered": {"AndroidKeyStore": "s:1"}}
+        rows = {r["id"]: r["verdict"] for r in gapmap.security_rows(scan, keystore)}
+        self.assertEqual(rows, {"jca:AndroidKeyStore": "supplied", "jca:AndroidKeyStoreBCWorkaround": "missing"})
+        keystore["registered"]["AndroidKeyStoreBCWorkaround"] = "s:2"
+        rows = {r["id"]: r["verdict"] for r in gapmap.security_rows(scan, keystore)}
+        self.assertEqual(rows["jca:AndroidKeyStoreBCWorkaround"], "supplied")
+
+
 class NeededLibraries(unittest.TestCase):
     def test_a_library_nothing_provides(self) -> None:
         scan = {"inventory": {"elfs": [
