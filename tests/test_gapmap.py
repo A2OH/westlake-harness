@@ -396,6 +396,23 @@ class RuntimeData(unittest.TestCase):
                          {"data:tzdata": False, "data:icu-locale-display": True})
 
 
+class AppStorageExec(unittest.TestCase):
+    def rows(self, inventory: dict) -> dict:
+        scan = {"apk": {"target_abi": "arm64-v8a"}, "inventory": dict({"elfs": []}, **inventory)}
+        return {r["id"]: r for r in gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True}, [])}
+
+    def test_soloader_and_path_loads_are_flagged(self) -> None:
+        rows = self.rows({"declared_native_methods": [{"owner": "Lcom/facebook/soloader/MergedSoMapping$Invoke_JNI_OnLoad;"}]})
+        self.assertEqual(rows["load:app-storage-exec"]["verdict"], "missing")
+        self.assertIn("SoLoader", rows["load:app-storage-exec"]["app_evidence"])
+        rows = self.rows({"load_library_calls": [{"api": "load", "owner": "Lx/Y;"}]})
+        self.assertIn("load:app-storage-exec", rows)
+
+    def test_load_library_by_name_is_not(self) -> None:
+        rows = self.rows({"load_library_calls": [{"api": "loadLibrary", "owner": "Lx/Y;", "value": "foo"}]})
+        self.assertNotIn("load:app-storage-exec", rows)
+
+
 class LaunchRemedies(unittest.TestCase):
     def test_network_abi_row_and_launch_args(self) -> None:
         scan = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {"elfs": [
@@ -566,6 +583,34 @@ class PackageManagerSemantics(unittest.TestCase):
             rows = {r["id"]: r for r in gapmap.package_manager_rows(scan, facts, model)}
             self.assertEqual(rows["pm:component-metadata"]["verdict"], "missing")
             self.assertEqual(rows["pm:component-metadata"]["probe"], "probes/service-metadata")
+
+
+class ProviderInitOrder(unittest.TestCase):
+    FACTS = {"components": [
+        {"kind": "provider", "name": "androidx.startup.InitializationProvider", "process": None,
+         "direct_boot_aware": False, "meta_data": {}, "init_order": None},
+        {"kind": "provider", "name": "com.google.firebase.provider.FirebaseInitProvider", "process": None,
+         "direct_boot_aware": False, "meta_data": {}, "init_order": "100"}],
+        "splits": [], "processes": []}
+    SCAN = {"inventory": {"platform_method_names": {}}}
+
+    def model(self, sorted_: bool) -> dict:
+        return {"methods": {}, "semantics": {
+            "direct_boot_match_defaults": {"present": True, "source": "s"},
+            "split_paths_populated": {"present": True, "source": "s"},
+            "providers_sorted_by_init_order": {"present": sorted_, "source": "b:1" if sorted_ else None}}}
+
+    def test_an_ordered_provider_needs_the_bind_to_sort(self) -> None:
+        rows = {r["id"]: r for r in gapmap.package_manager_rows(self.SCAN, self.FACTS, self.model(False))}
+        self.assertEqual(rows["pm:provider-init-order"]["verdict"], "missing")
+        self.assertIn("FirebaseInitProvider@100", rows["pm:provider-init-order"]["app_evidence"])
+        rows = {r["id"]: r for r in gapmap.package_manager_rows(self.SCAN, self.FACTS, self.model(True))}
+        self.assertEqual(rows["pm:provider-init-order"]["verdict"], "supplied")
+
+    def test_no_row_when_no_provider_declares_an_order(self) -> None:
+        facts = dict(self.FACTS, components=self.FACTS["components"][:1])
+        rows = {r["id"] for r in gapmap.package_manager_rows(self.SCAN, facts, self.model(False))}
+        self.assertNotIn("pm:provider-init-order", rows)
 
 
 class AppFrameworkContracts(unittest.TestCase):

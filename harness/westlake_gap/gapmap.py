@@ -283,6 +283,21 @@ def package_manager_rows(scan: dict[str, Any], facts: dict[str, Any], pm: dict[s
             app_evidence=", ".join(f"{c['name'].split('.')[-1]}{'@' + c['init_order'] if c['init_order'] else ''}" for c in providers),
             shim="install every main-process provider in initOrder before Application.onCreate",
         ))
+    ordered = [c for c in providers if c["init_order"] and str(c["init_order"]) not in ("0", "0x0")]
+    if ordered:
+        check = semantics.get("providers_sorted_by_init_order", {"present": False, "source": None})
+        rows.append(_row(
+            "package-manager", "pm:provider-init-order",
+            f"Providers that must start before others ({len(ordered)} with initOrder)",
+            oh_touchpoint="none (Westlake's bind path)",
+            verdict="supplied" if check["present"] else "missing", shim_class="C0" if check["present"] else "C6",
+            effort="verify" if check["present"] else "XS", confidence=STATIC,
+            provider="providers sorted by descending initOrder before install" if check["present"]
+            else "providers installed in manifest order", provider_source=check["source"],
+            app_evidence=", ".join(f"{c['name'].split('.')[-1]}@{c['init_order']}" for c in ordered[:4]),
+            shim="sort the bind's providers by descending initOrder, as PackageManager does: Citymapper's "
+                 "androidx.startup ran before FirebaseInitProvider (initOrder 100) and died",
+        ))
     if facts["processes"]:
         rows.append(_row(
             "package-manager", "pm:multiprocess", f"Components in secondary processes: {', '.join(facts['processes'])}",
@@ -1101,6 +1116,26 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
             provider="launcher extracts split libraries to a real directory" if launcher_extracts["present"] else "none",
             provider_source=launcher_extracts.get("source"),
             shim="extract at install/launch, or teach the loader zip-member mapping (WebView needs the latter too)",
+        ))
+    # Libraries an app copies into its own storage and loads from there. Android maps them
+    # executable; OH's policy refuses (probes/runtime-answers: System.load of a library copied to
+    # app storage fails with errno 13). Meta's SoLoader unpacks every library this way (Facebook,
+    # Messenger); CapCut's libmetasec_ov.so failed the same way.
+    inventory = scan.get("inventory", {})
+    loaders = sorted({m.get("owner", "").split("/")[2] for m in inventory.get("declared_native_methods", [])
+                      if m.get("owner", "").startswith("Lcom/facebook/soloader/")})
+    path_loads = [c for c in inventory.get("load_library_calls", []) if c.get("api") == "load"]
+    if loaders or path_loads:
+        rows.append(_row(
+            "native-loading", "load:app-storage-exec",
+            "Native libraries loaded from the app's own storage",
+            oh_touchpoint="OH SELinux: app data files may not be mapped executable",
+            verdict="missing", shim_class="C6", effort="M", confidence=STATIC,
+            probe="probes/runtime-answers",
+            app_evidence=(("SoLoader unpacks and loads libraries from app storage; " if loaders else "")
+                          + (f"System.load with a path from {len(path_loads)} call sites" if path_loads else "")).strip("; "),
+            shim="load such libraries from a location OH lets the app map executable (copy there first), "
+                 "or allow app_data_file execute mapping for Westlake apps",
         ))
     return rows
 

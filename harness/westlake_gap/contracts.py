@@ -147,12 +147,18 @@ def pm_adapter_model(westlake_root: Path) -> dict[str, Any]:
     registry = westlake_root / "framework/package-manager/java/SourcePackageRegistry.java"
     reg = registry.read_text(errors="replace") if registry.exists() else ""
     splits = westlake_root / "framework/package-manager/java/SplitApkResolver.java"
+    bridge = westlake_root / "framework/activity/java/AppSchedulerBridge.java"
     return {
         "methods": methods,
         # Semantics the source-app path must reproduce from PackageManagerService, checked in source.
         "semantics": {
             "direct_boot_match_defaults": _evidence(reg, r"MATCH_DIRECT_BOOT_AWARE\s*\|\s*PackageManager\.MATCH_DIRECT_BOOT_UNAWARE|MATCH_DIRECT_BOOT_UNAWARE", registry, westlake_root),
             "split_paths_populated": _evidence(splits.read_text(errors="replace") if splits.exists() else "", r"splitSourceDirs\s*=", splits, westlake_root),
+            # PackageManager hands providers to ActivityThread sorted by descending initOrder
+            # (ComputerEngine.sProviderInitOrderSorter); the bind path must sort them the same way.
+            "providers_sorted_by_init_order": _evidence(
+                bridge.read_text(errors="replace") if bridge.exists() else "",
+                r"[Pp]roviders\.sort\([^;]*initOrder", bridge, westlake_root),
         },
         "provenance": git_state(westlake_root),
     }
