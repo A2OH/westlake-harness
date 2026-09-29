@@ -15,6 +15,14 @@ These differ from the F-Droid corpus in what they carry: Google Play Services de
 analytics, crash-reporting and push SDKs, anti-tamper and integrity checks, split APKs, React
 Native and custom engines. None has been launched on Westlake before this file was committed.
 
+## Excluded before launch: no arm64 build obtainable
+
+For 13 apps APKPure serves only armeabi-v7a (32-bit) native libraries, even when arm64-v8a is
+requested and on retry; Westlake runs arm64 only, so these cannot launch as downloaded: Discord,
+Reddit, BBC News, CNN, NYTimes, Flipboard, Citymapper, Transit, Uber, Waze, Zoom, Shazam, Amazon
+Shopping. Their predictions and open rows stay in the files; they are not launched or scored
+unless an arm64 build is obtained (e.g. from Google Play). 17 apps are launched.
+
 ## Frozen provider
 
 framework-signin-device70 (framework 68's Java build signin67; native runtime native-runtime-opengl13
