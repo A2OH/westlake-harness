@@ -310,6 +310,26 @@ class FrameworkNatives(unittest.TestCase):
         self.assertIn("AudioManager.getParameters", rows["jni:android.media.AudioSystem"]["app_evidence"])
 
 
+class LifecycleNatives(unittest.TestCase):
+    RUNTIME = {"classes": {
+        "Landroid/app/ActivityThread;": {"native_methods": ["nPurgePendingResources()V"], "native_calls": {
+            "handleTrimMemory(I)V": ["Landroid/app/ActivityThread;->nPurgePendingResources()V"],
+            "handleLowMemory()V": ["Landroid/database/sqlite/SQLiteGlobal;->nativeReleaseMemory()I"],
+            "getApplication()Landroid/app/Application;": ["Landroid/os/Binder;->getCallingUid()I"]}},
+        "Landroid/database/sqlite/SQLiteGlobal;": {"native_methods": ["nativeReleaseMemory()I"]}}}
+
+    def test_natives_the_framework_reaches_are_flagged_for_every_app(self) -> None:
+        strings = {"android/database/sqlite/SQLiteGlobal", "#nativeReleaseMemory", "android/app/ActivityThread"}
+        rows = {r["id"]: r for r in gapmap.lifecycle_native_rows(self.RUNTIME, strings)}
+        self.assertEqual(set(rows), {"jni-lifecycle:android.app.ActivityThread.nPurgePendingResources"},
+                         "a bound native is not flagged; a non-entry method is not followed")
+        self.assertIn("ActivityThread.handleTrimMemory", rows[
+            "jni-lifecycle:android.app.ActivityThread.nPurgePendingResources"]["app_evidence"])
+
+    def test_nothing_without_the_runtime_libraries(self) -> None:
+        self.assertEqual(gapmap.lifecycle_native_rows(self.RUNTIME, None), [])
+
+
 class BlockersLedger(unittest.TestCase):
     def test_rows_that_blocked_an_app_are_marked(self) -> None:
         rows = [{"id": "svc:notification", "verdict": "hollow"}, {"id": "svc:alarm", "verdict": "supplied"}]

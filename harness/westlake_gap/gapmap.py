@@ -1519,6 +1519,60 @@ def framework_native_rows(scan: dict[str, Any], runtime: dict[str, Any] | None,
     return rows
 
 
+# Framework entry points every app runs through, whatever its own code calls: the activity
+# lifecycle and the memory callbacks ActivityThread delivers, the view root's traversal, input and
+# teardown, and the frame callback. Prefixes of method names, per class.
+LIFECYCLE_ENTRY_POINTS: dict[str, tuple[str, ...]] = {
+    "Landroid/app/ActivityThread;": ("handle", "perform", "purge", "schedule", "main", "attach"),
+    "Landroid/view/ViewRootImpl;": ("perform", "draw", "doTraversal", "setView", "dispatch", "deliverInput",
+                                    "handle", "doConsume"),
+    "Landroid/view/Choreographer;": ("doFrame", "doCallbacks"),
+    "Landroid/view/InputEventReceiver;": ("dispatch", "consume", "finish"),
+    "Landroid/app/Activity;": ("perform",),
+    "Landroid/app/Instrumentation;": ("call",),
+}
+
+
+def lifecycle_native_rows(runtime: dict[str, Any] | None,
+                          class_strings: set[str] | None) -> list[dict[str, Any]]:
+    """Unbound natives the framework itself reaches from the entry points every app runs through.
+
+    framework_native_rows follows the app's own calls. These natives are reached by the framework
+    whatever the app calls, often only under a condition: RedReader died on
+    ActivityThread.nPurgePendingResources, which handleTrimMemory calls once the system is short of
+    memory -- no app code names it, so no app-call row could. The rows are the same for every app
+    on a runtime; they say which framework paths are unsafe, and under what trigger.
+    """
+    if not runtime or class_strings is None:
+        return []
+    classes = runtime.get("classes", {})
+    reached: dict[str, set[str]] = defaultdict(set)
+    for cls, prefixes in LIFECYCLE_ENTRY_POINTS.items():
+        for method, targets in ((classes.get(cls) or {}).get("native_calls") or {}).items():
+            if not method.startswith(prefixes):
+                continue
+            for target in targets:
+                owner, native = target.split("->", 1)
+                name = native[:native.index("(")]
+                if owner[1:-1] in class_strings and _names_string(class_strings, name):
+                    continue
+                reached[target].add(f"{cls[1:-1].rsplit('/', 1)[-1]}.{method[:method.index('(')]}")
+    rows = []
+    for target, entries in sorted(reached.items()):
+        owner, native = target.split("->", 1)
+        cls = owner[1:-1].replace("/", ".")
+        rows.append(_row(
+            "framework-natives", f"jni-lifecycle:{cls}.{native[:native.index('(')]}",
+            f"{cls}.{native} unregistered, reached by the framework itself",
+            oh_touchpoint="the JNI half of the framework class (libandroid_runtime in AOSP)",
+            verdict="missing", shim_class="C3", effort="S", confidence=STATIC,
+            app_calls=[], open_symbols=[native],
+            app_evidence=f"reached from {', '.join(sorted(entries)[:3])} on every app, whatever the app calls",
+            shim="register the native with AOSP's answer; most of these are hints or cleanup",
+        ))
+    return rows
+
+
 def apply_ledger(rows: list[dict[str, Any]], ledger: dict[str, Any]) -> None:
     """Mark rows that have already blocked an app at startup on the board: the empirical ranking a
     static map cannot make by itself."""
@@ -1575,6 +1629,7 @@ def build_map(
             + runtime_data_rows(scan)
             + android_path_rows(apk_path, scan, runtime_data, westlake_root)
             + framework_native_rows(scan, runtime_index, runtime_class_paths)
+            + lifecycle_native_rows(runtime_index, runtime_class_paths)
             + native_upcall_rows(scan)
             + (ndk_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root), ndk_cov) if ndk_cov
                else native_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root)))
