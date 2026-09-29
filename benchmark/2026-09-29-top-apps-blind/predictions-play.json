@@ -1,0 +1,52 @@
+{
+ "reddit": {
+  "expected": "draws",
+  "because": []
+ },
+ "bbcnews": {
+  "expected": "draws",
+  "because": []
+ },
+ "cnn": {
+  "expected": "draws",
+  "because": []
+ },
+ "nytimes": {
+  "expected": "draws",
+  "because": []
+ },
+ "flipboard": {
+  "expected": "draws",
+  "because": []
+ },
+ "citymapper": {
+  "expected": "draws",
+  "because": []
+ },
+ "transit": {
+  "expected": "blocked",
+  "because": [
+   "lookup:sym:runtime-resolved:libnativehelper.so"
+  ]
+ },
+ "uber": {
+  "expected": "draws",
+  "because": []
+ },
+ "waze": {
+  "expected": "draws",
+  "because": []
+ },
+ "zoom": {
+  "expected": "draws",
+  "because": []
+ },
+ "shazam": {
+  "expected": "draws",
+  "because": []
+ },
+ "discord": {
+  "expected": "draws",
+  "because": []
+ }
+}

@@ -23,6 +23,14 @@ Reddit, BBC News, CNN, NYTimes, Flipboard, Citymapper, Transit, Uber, Waze, Zoom
 Shopping. Their predictions and open rows stay in the files; they are not launched or scored
 unless an arm64 build is obtained (e.g. from Google Play). 17 apps are launched.
 
+Update, still before any of them launched: 12 of the 13 were then obtained from Google Play with an
+anonymous session from Aurora Store's token dispenser (`playfetch.py`: details, purchase, delivery,
+as Aurora does), arm64 device profile. Every base and split verifies, and each carries the same
+developer certificate as the APKPure copy. Play's versions differ slightly from APKPure's, so these
+12 were re-mapped and re-predicted (`predictions-play.json`, `open-rows-play.json`) and committed
+before launch; `apps.json` records the Play versions. Amazon Shopping: Play returned no version for
+the device profile, so it stays excluded. 29 apps in all.
+
 ## Frozen provider
 
 framework-signin-device70 (framework 68's Java build signin67; native runtime native-runtime-opengl13

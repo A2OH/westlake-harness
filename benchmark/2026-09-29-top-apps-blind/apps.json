@@ -4,11 +4,12 @@
   "package": "bbc.mobile.news.ww",
   "version_name": "2026.8.0",
   "version_code": 10007107,
-  "download": "bbc.mobile.news.ww@arm64-v8a.xapk",
-  "download_sha256": "d50d8c3556973ece4ceb93648b48e726c8f5af02e3be541064769be926ce6224",
-  "base_sha256": "8d5ab97bda481b111751a8c017d554da2937ac671467af82d1247329851b275c",
-  "splits": 19,
-  "certificate_sha256": "fd76b3b8df5fe8fd590957eb0f78a996967dd3c8bd87aff41f47e7799d065dc7"
+  "download": "gp-bbcnews.xapk",
+  "download_sha256": "2d61e67dda96097d345718a383c4a882b9199839a353595f3487c32996fa4860",
+  "base_sha256": "2d61e67dda96097d345718a383c4a882b9199839a353595f3487c32996fa4860",
+  "splits": 3,
+  "certificate_sha256": "fd76b3b8df5fe8fd590957eb0f78a996967dd3c8bd87aff41f47e7799d065dc7",
+  "source": "google-play"
  },
  "amazon": {
   "group": "transit-utility",
@@ -24,35 +25,38 @@
  "citymapper": {
   "group": "transit-utility",
   "package": "com.citymapper.app.release",
-  "version_name": "11.57.2",
-  "version_code": 1157110,
-  "download": "com.citymapper.app.release@arm64-v8a.xapk",
-  "download_sha256": "e0ecc07c114b8e3b71f34a1ae8595982f824c4ccfa76c7dc462995f98b6e5a9b",
-  "base_sha256": "075ac7c75846e05df1e5d318b8b3058c185f6b7b02c17f5d5aeef3975e9e97e4",
-  "splits": 14,
-  "certificate_sha256": "be8a2801cae3f44b491a8ecca28c3ac223b3bd57109a71a5f20b45a696d17e5d"
+  "version_name": "11.59.2",
+  "version_code": 1159060,
+  "download": "gp-citymapper.xapk",
+  "download_sha256": "36803b7914cbdf427f65b2f7e90732df19b25864eae7b74617e6b1b9a7878e7f",
+  "base_sha256": "36803b7914cbdf427f65b2f7e90732df19b25864eae7b74617e6b1b9a7878e7f",
+  "splits": 3,
+  "certificate_sha256": "be8a2801cae3f44b491a8ecca28c3ac223b3bd57109a71a5f20b45a696d17e5d",
+  "source": "google-play"
  },
  "cnn": {
   "group": "news",
   "package": "com.cnn.mobile.android.phone",
   "version_name": "26.19.0",
   "version_code": 19974224,
-  "download": "com.cnn.mobile.android.phone@arm64-v8a.xapk",
-  "download_sha256": "69d6fd3fc136303d91df40d8f6aa19420c06bc007cf070e8e952c1586e186a38",
+  "download": "gp-cnn.xapk",
+  "download_sha256": "18396fa3059d5ead493fd4108052873fc2dd5cecb6d62288f1f577c2106d4347",
   "base_sha256": "18396fa3059d5ead493fd4108052873fc2dd5cecb6d62288f1f577c2106d4347",
   "splits": 2,
-  "certificate_sha256": "c547eacb70460f12374e5a56b8e76598199105161a8d756bb5a8acb0fd13e6c0"
+  "certificate_sha256": "c547eacb70460f12374e5a56b8e76598199105161a8d756bb5a8acb0fd13e6c0",
+  "source": "google-play"
  },
  "discord": {
   "group": "social",
   "package": "com.discord",
-  "version_name": "347.12 - Stable",
-  "version_code": 347012,
-  "download": "com.discord@arm64-v8a.xapk",
-  "download_sha256": "112832e5a133d2720fd916f3b77ff91bab92577e796ddbd9a4afde5f12737933",
-  "base_sha256": "82190e4feda4e6544b0b4bfd6a239a8d09a404e5426f6a28f0f34326ebbfc93b",
-  "splits": 19,
-  "certificate_sha256": "3c39d23cf9367849a5c699395647fe0e5bfea5a1f1f40d8c717ddc70f8bfa113"
+  "version_name": "346.13 - Stable",
+  "version_code": 346013,
+  "download": "gp-discord.xapk",
+  "download_sha256": "235ea72d817a153dc1e009729d053db66d2f003bc7733a64e15ec739e3164c7e",
+  "base_sha256": "235ea72d817a153dc1e009729d053db66d2f003bc7733a64e15ec739e3164c7e",
+  "splits": 3,
+  "certificate_sha256": "3c39d23cf9367849a5c699395647fe0e5bfea5a1f1f40d8c717ddc70f8bfa113",
+  "source": "google-play"
  },
  "duolingo": {
   "group": "transit-utility",
@@ -156,35 +160,38 @@
  "nytimes": {
   "group": "news",
   "package": "com.nytimes.android",
-  "version_name": "11.93.0",
-  "version_code": 11472694,
-  "download": "com.nytimes.android@arm64-v8a.xapk",
-  "download_sha256": "1252d951c027704fd7c623932467a557b8bea65b78b687381feef4c4c5df3488",
-  "base_sha256": "9b562b08943136e8a7e091677946a763913e83c3f51d284121b0dd8a32648f4c",
+  "version_name": "11.94.0",
+  "version_code": 11473000,
+  "download": "gp-nytimes.xapk",
+  "download_sha256": "1ddb363e52dbfe01d5005cedf203063a1f2f8b43de35811807eb178386007807",
+  "base_sha256": "1ddb363e52dbfe01d5005cedf203063a1f2f8b43de35811807eb178386007807",
   "splits": 2,
-  "certificate_sha256": "4ddc7c55449e05f2518961fcd5f219763a0160c4c04c6e443f9b864c10e2fb26"
+  "certificate_sha256": "4ddc7c55449e05f2518961fcd5f219763a0160c4c04c6e443f9b864c10e2fb26",
+  "source": "google-play"
  },
  "reddit": {
   "group": "social",
   "package": "com.reddit.frontpage",
   "version_name": "2026.39.0",
   "version_code": 2639040,
-  "download": "com.reddit.frontpage@arm64-v8a.xapk",
-  "download_sha256": "e082d06c0e400d5cdab26ef6da175bd82e3efca0ecdccc603865d3b61ca7d207",
+  "download": "gp-reddit.xapk",
+  "download_sha256": "6afa5bca5b175444728297717093c1bc6d907d1d634d3e484731777d6ac7190a",
   "base_sha256": "6afa5bca5b175444728297717093c1bc6d907d1d634d3e484731777d6ac7190a",
-  "splits": 18,
-  "certificate_sha256": "970b91143813b4c9d5f3634f672c9fcaa5621b4efaaedafd6c235cbbb869736f"
+  "splits": 3,
+  "certificate_sha256": "970b91143813b4c9d5f3634f672c9fcaa5621b4efaaedafd6c235cbbb869736f",
+  "source": "google-play"
  },
  "shazam": {
   "group": "transit-utility",
   "package": "com.shazam.android",
-  "version_name": "16.45.0-260604",
-  "version_code": 1604500,
-  "download": "com.shazam.android@arm64-v8a.xapk",
-  "download_sha256": "c5dcafc9063f1625db5abe8e8fc11778f1184bd9392a7b8777d63e37f4b8125a",
-  "base_sha256": "4a4e4ba91c7744674ab4fb6041b8ee83b230f11e8aa819a4fbc809a02d8a15df",
-  "splits": 14,
-  "certificate_sha256": "bffeb14903fbc92fffe6404a3654098a3f85c81a3513afd5dceac121cd678d1c"
+  "version_name": "16.61.0-260924",
+  "version_code": 1606100,
+  "download": "gp-shazam.xapk",
+  "download_sha256": "3b0a8d6d343525215a6280b89faa7f4ad1005b0652fd044b8cbd30d15475b788",
+  "base_sha256": "3b0a8d6d343525215a6280b89faa7f4ad1005b0652fd044b8cbd30d15475b788",
+  "splits": 3,
+  "certificate_sha256": "bffeb14903fbc92fffe6404a3654098a3f85c81a3513afd5dceac121cd678d1c",
+  "source": "google-play"
  },
  "snapchat": {
   "group": "social",
@@ -213,11 +220,12 @@
   "package": "com.thetransitapp.droid",
   "version_name": "6.3.3",
   "version_code": 5127260,
-  "download": "com.thetransitapp.droid@arm64-v8a.xapk",
-  "download_sha256": "3ac6935969613677b33ffc0a17f12b082673181b1638716a3730ca356f59ae56",
+  "download": "gp-transit.xapk",
+  "download_sha256": "3c3eb7075c5dbadf05d6ec37759481528c86155e0f5c736801bbd20b5680082c",
   "base_sha256": "3c3eb7075c5dbadf05d6ec37759481528c86155e0f5c736801bbd20b5680082c",
-  "splits": 8,
-  "certificate_sha256": "a055a86a4f7538d3ee2d575c06743281b813052373dea5bff10d201581551341"
+  "splits": 3,
+  "certificate_sha256": "a055a86a4f7538d3ee2d575c06743281b813052373dea5bff10d201581551341",
+  "source": "google-play"
  },
  "moovit": {
   "group": "transit-utility",
@@ -246,22 +254,24 @@
   "package": "com.ubercab",
   "version_name": "4.649.10000",
   "version_code": 309729,
-  "download": "com.ubercab@arm64-v8a.xapk",
-  "download_sha256": "97451a873b0ee4e90897446e58f4fec977eceb6cb8e99ac174803d577d812a3e",
+  "download": "gp-uber.xapk",
+  "download_sha256": "e10a3e91ba922da5bb8bfd3ee19408e8a30151c92e159c46539e883f88123025",
   "base_sha256": "e10a3e91ba922da5bb8bfd3ee19408e8a30151c92e159c46539e883f88123025",
-  "splits": 28,
-  "certificate_sha256": "4003231ab42feb8d955e62fdfaa4fad59567054b9c6bbc3d950299ddfc268392"
+  "splits": 12,
+  "certificate_sha256": "4003231ab42feb8d955e62fdfaa4fad59567054b9c6bbc3d950299ddfc268392",
+  "source": "google-play"
  },
  "waze": {
   "group": "transit-utility",
   "package": "com.waze",
   "version_name": "5.24.0.2",
   "version_code": 1030730,
-  "download": "com.waze@arm64-v8a.xapk",
-  "download_sha256": "348eadcfed27b373b6e6d5ffad3466fd4eeec5eea82d112192a94b5faa526460",
+  "download": "gp-waze.xapk",
+  "download_sha256": "a82b578406205bc3d51a2951b4666e6166b7195080c1205957819c8e8ce59a29",
   "base_sha256": "a82b578406205bc3d51a2951b4666e6166b7195080c1205957819c8e8ce59a29",
-  "splits": 19,
-  "certificate_sha256": "03637f6c5d8f604e6fdb79a6ffbfa578de4e318f8da22fc6106665247f8807d7"
+  "splits": 3,
+  "certificate_sha256": "03637f6c5d8f604e6fdb79a6ffbfa578de4e318f8da22fc6106665247f8807d7",
+  "source": "google-play"
  },
  "whatsapp": {
   "group": "social",
@@ -290,11 +300,12 @@
   "package": "flipboard.app",
   "version_name": "4.3.63",
   "version_code": 5516,
-  "download": "flipboard.app@arm64-v8a.xapk",
-  "download_sha256": "5e255cd2cb588d6ba1e5b2cbbb6c86ec4b51e284ad3fbab5cf3e56650a8ff246",
+  "download": "gp-flipboard.xapk",
+  "download_sha256": "3f900b4fd67392831d1c548a7b91c132aa51312e3c61c875dc811fc8c58f4fc7",
   "base_sha256": "3f900b4fd67392831d1c548a7b91c132aa51312e3c61c875dc811fc8c58f4fc7",
-  "splits": 13,
-  "certificate_sha256": "a6785fa9b3da2a1da4ac1a6f70656046dd7cdda0a442e9f1b50d97076905fca5"
+  "splits": 3,
+  "certificate_sha256": "a6785fa9b3da2a1da4ac1a6f70656046dd7cdda0a442e9f1b50d97076905fca5",
+  "source": "google-play"
  },
  "smartnews": {
   "group": "news",
@@ -323,10 +334,11 @@
   "package": "us.zoom.videomeetings",
   "version_name": "7.1.8.42948",
   "version_code": 6701080,
-  "download": "us.zoom.videomeetings@arm64-v8a.xapk",
-  "download_sha256": "f11c6ccd048c2c2e9ab44fab7a0e885fc4fb97ba001ddd9f64ca44af21967230",
-  "base_sha256": "0ff2a35e6869c855fd6ef9e3aebfb75a02d134cb715b9ccc8d940697fe2bc91b",
+  "download": "gp-zoom.xapk",
+  "download_sha256": "9eaddc5558efca06c6fc3c180a725610f79be5ae6edc4b5fee3f5bead1962b4e",
+  "base_sha256": "9eaddc5558efca06c6fc3c180a725610f79be5ae6edc4b5fee3f5bead1962b4e",
   "splits": 2,
-  "certificate_sha256": "60b75724b34686e52bde944969de120f16bd6d959788d54384494caedd4e445d"
+  "certificate_sha256": "60b75724b34686e52bde944969de120f16bd6d959788d54384494caedd4e445d",
+  "source": "google-play"
  }
 }
