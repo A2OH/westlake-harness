@@ -82,16 +82,12 @@ int main(int argc, char** argv)
     OH_AudioCapturer_Stop(capturer);
     OH_AudioCapturer_Release(capturer);
     OH_AudioStreamBuilder_Destroy(builder);
-    /* Playback capture on this board delivers about five times the rate the stream reports
-     * (240800 frames a second at a nominal 48000). The recording matched the source music only at
-     * the wall-clock rate, so when the two disagree the header carries the measured rate. */
-    {
-        uint32_t measured = (uint32_t) (g_bytes / 2 / (seconds > 0 ? seconds : 1));
-        uint32_t rate = (measured > RATE * 11 / 10 || measured < RATE * 9 / 10) ? measured : RATE;
-        wav_header(g_out, (uint32_t) g_bytes, rate);
-        fclose(g_out);
-        printf("recorded %ld bytes (%d s) from source %d at %u Hz%s\n", g_bytes, seconds, source,
-               (unsigned) rate, rate != RATE ? " (measured; the stream reports 48000)" : "");
-    }
+    /* Playback capture on this board hands back 4800-sample callbacks in which only the first 960
+     * samples (20 ms) are audio and the rest is zero padding, so the file holds about five times
+     * the samples of its duration. It is kept raw, at the stream's true 48 kHz; tone_check.py
+     * rebuilds the audio from the blocks. */
+    wav_header(g_out, (uint32_t) g_bytes, RATE);
+    fclose(g_out);
+    printf("recorded %ld bytes in %d s from source %d\n", g_bytes, seconds, source);
     return g_bytes > 0 ? 0 : 1;
 }

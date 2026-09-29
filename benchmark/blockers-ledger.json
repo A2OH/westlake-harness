@@ -662,6 +662,53 @@
    "corpus": "batch-18",
    "row": "jni:android.media.AudioRecord",
    "symptom": "AudioRecord.native_get_min_buff_size unbound at startup: microphone capture is not ported (27 of 27 natives)"
+  },
+  {
+   "app": "ball2box",
+   "corpus": "batch-15",
+   "row": "ndk:weld:audio",
+   "symptom": "libgodot_android.so: SL_IID_ANDROIDCONFIGURATION unresolved",
+   "fixed_in": "1e98162"
+  },
+  {
+   "app": "ball2box",
+   "corpus": "batch-15",
+   "row": "ndk:weld:audio",
+   "symptom": "after the symbol: OH refused Godot's SL_IID_ENGINE (a namespace copy with another address), no audio; then the buffer queue padded OH's pulls with silence, choppy sound",
+   "fixed_in": "c7d2992"
+  },
+  {
+   "app": "jigsaw",
+   "corpus": "batch-19",
+   "row": "ndk:weld:audio",
+   "symptom": "libgodot_android.so: SL_IID_ANDROIDCONFIGURATION unresolved",
+   "fixed_in": "1e98162"
+  },
+  {
+   "app": "v3",
+   "corpus": "batch-17",
+   "row": "ndk:weld:audio",
+   "symptom": "libgodot_android.so: SL_IID_ANDROIDCONFIGURATION unresolved",
+   "fixed_in": "1e98162"
+  },
+  {
+   "app": "rhythmengine",
+   "corpus": "batch-13",
+   "row": "ndk:weld:audio",
+   "symptom": "liboboe.so: SL_IID_ANDROIDCONFIGURATION unresolved; then Oboe's dlopen(libOpenSLES) reached OH's library past the adapter and OH refused its engine interface",
+   "fixed_in": "c7d2992"
+  },
+  {
+   "app": "duckrun",
+   "corpus": "batch-14",
+   "row": "ndk:weld:audio",
+   "symptom": "libgodot_android.so: SL_IID_ANDROIDCONFIGURATION unresolved",
+   "fixed_in": "1e98162"
+  },
+  {
+   "app": "duckrun",
+   "corpus": "batch-14",
+   "symptom": "libgodot_android.so needs libcamera2ndk.so, which OH does not ship (Godot 4 camera feed)"
   }
  ]
 }

@@ -6,3 +6,6 @@ mkdir -p $HERE/out
 $SDK/llvm/bin/clang --target=aarch64-linux-ohos --sysroot=$SDK/sysroot -O2 -Wall -Wextra -Werror \
   $HERE/oh_record.c -lohaudio -o $HERE/out/oh_record
 echo "built $HERE/out/oh_record"
+$SDK/llvm/bin/clang --target=aarch64-linux-ohos --sysroot=$SDK/sysroot -O2 -Wall -Wextra -Werror \
+  $HERE/tone.c -lohaudio -lm -ldl -o $HERE/out/tone
+echo "built $HERE/out/tone"
