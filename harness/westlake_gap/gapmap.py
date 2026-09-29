@@ -17,6 +17,7 @@ failure already paid for on the device, did a row predict it?
 
 from __future__ import annotations
 
+import bisect
 import json
 import re
 import zipfile
@@ -1388,15 +1389,38 @@ def runtime_class_strings(directory: Path | None) -> set[str] | None:
 
     Registration tables are not always parseable (their layout varies with the compiler), but a
     library that registers a class names it for FindClass. A class named nowhere is registered
-    nowhere; a class named somewhere is given the benefit of the doubt.
+    nowhere; a class named somewhere is given the benefit of the doubt -- per method: its natives
+    count as registered only where their names are strings there too, entered here as "#name".
+    The AudioTrack shim names AudioTrack and registers most of it, but not
+    native_get_buffer_size_frames, whose name is in no library (MuseKit died on it).
     """
     if directory is None or not directory.is_dir():
         return None
     found: set[str] = set()
     for lib in directory.glob("*.so"):
+        data = lib.read_bytes()
         found.update(m.decode() for m in re.findall(rb"(?:android|com/android|sun/nio|java/nio|libcore)/[A-Za-z0-9_/$]+",
-                                                    lib.read_bytes()))
+                                                    data))
+        found.update("#" + m.decode() for m in re.findall(rb"(?<=\x00)[A-Za-z_][A-Za-z0-9_]{1,80}(?=\x00)", data))
     return found
+
+
+_REVERSED_NAMES: dict[tuple[int, int], list[str]] = {}
+
+
+def _names_string(strings: set[str], name: str) -> bool:
+    """Whether a library string is the method name, or ends with it: the linker merges a string
+    into the tail of a longer one (getParameters into native_getParameters)."""
+    if "#" + name in strings:
+        return True
+    reversed_names = _REVERSED_NAMES.get((id(strings), len(strings)))
+    if reversed_names is None:
+        reversed_names = sorted(entry[:0:-1] for entry in strings if entry.startswith("#"))
+        _REVERSED_NAMES.clear()
+        _REVERSED_NAMES[(id(strings), len(strings))] = reversed_names
+    key = name[::-1]
+    i = bisect.bisect_left(reversed_names, key)
+    return i < len(reversed_names) and reversed_names[i].startswith(key)
 
 
 def framework_native_rows(scan: dict[str, Any], runtime: dict[str, Any] | None,
@@ -1421,47 +1445,75 @@ def framework_native_rows(scan: dict[str, Any], runtime: dict[str, Any] | None,
         for name in lib.get("jni_exports") or []:
             exported.add(name if isinstance(name, str) else name.get("symbol", ""))
     classes = runtime.get("classes", {})
+    unbound_cache: dict[str, list[str]] = {}
+
+    def unbound_of(owner: str) -> list[str]:
+        if owner not in unbound_cache:
+            # $ravenwood natives are host-side test doubles, never called on a device.
+            natives = [m for m in (classes.get(owner) or {}).get("native_methods") or [] if "$ravenwood" not in m]
+            if class_strings is not None:
+                named = owner[1:-1] in class_strings
+                unbound_cache[owner] = [m for m in natives
+                                        if not (named and _names_string(class_strings, m[:m.index("(")]))]
+                return unbound_cache[owner]
+            prefix = "Java_" + _jni_mangle(owner[1:-1]) + "_"
+            unbound = []
+            # Named in no runtime library: nothing registers it, whatever other class shares a
+            # native's name and signature (EGL10's _nativeClassInit()V made EGL14's look bound).
+            for method in natives:
+                name, sig = method[:method.index("(")], method[method.index("("):]
+                if (name, sig) in registered:
+                    continue
+                if any(e == prefix + _jni_mangle(name) or e.startswith(prefix + _jni_mangle(name) + "__") for e in exported):
+                    continue
+                unbound.append(method)
+            unbound_cache[owner] = unbound
+        return unbound_cache[owner]
+
+    app_calls = {owner: set(names) for owner, names in scan["inventory"].get("platform_method_names", {}).items()
+                 if owner.startswith(("Landroid/", "Lcom/android/"))}
+    # The app's call to a framework wrapper that calls an unbound native: in a class whose natives
+    # are partly registered this is the only trace (MuseKit's AudioTrack.getBufferSizeInFrames,
+    # Mouse Pounce's AudioManager.getParameters through ExoPlayer). Keyed by the native's class.
+    via: dict[str, dict[str, str]] = defaultdict(dict)
+    for owner, called in app_calls.items():
+        for method, targets in ((classes.get(owner) or {}).get("native_calls") or {}).items():
+            if method[:method.index("(")] not in called:
+                continue
+            for target in targets:
+                target_owner, native = target.split("->", 1)
+                # libcore's natives are ART's own, registered inside the runtime, not by a library.
+                if target_owner.startswith(("Landroid/", "Lcom/android/")) and native in unbound_of(target_owner):
+                    wrapper = f"{owner[1:-1].rsplit('/', 1)[-1]}.{method[:method.index('(')]}"
+                    via[target_owner].setdefault(native, wrapper)
     rows = []
-    for owner, names in sorted(scan["inventory"].get("platform_method_names", {}).items()):
-        if not owner.startswith(("Landroid/", "Lcom/android/")):
-            continue
-        # $ravenwood natives are host-side test doubles, never called on a device.
+    for owner in sorted(set(app_calls) | set(via)):
         natives = [m for m in (classes.get(owner) or {}).get("native_methods") or [] if "$ravenwood" not in m]
-        if not natives or (class_strings is not None and owner[1:-1] in class_strings):
+        unbound = unbound_of(owner)
+        if not natives or not unbound:
             continue
-        prefix = "Java_" + _jni_mangle(owner[1:-1]) + "_"
-        unbound = []
-        # Named in no runtime library: nothing registers it, whatever other class shares a native's
-        # name and signature (EGL10's _nativeClassInit()V made EGL14's look bound).
-        for method in natives if class_strings is None else []:
-            name, sig = method[:method.index("(")], method[method.index("("):]
-            if (name, sig) in registered:
-                continue
-            if any(e == prefix + _jni_mangle(name) or e.startswith(prefix + _jni_mangle(name) + "__") for e in exported):
-                continue
-            unbound.append(method)
-        if class_strings is not None:
-            unbound = list(natives)
-        if not unbound:
-            continue
-        called = set(names)
+        called = app_calls.get(owner, set())
         direct = [m for m in unbound if m[:m.index("(")] in called]
         init = [m for m in unbound if _CLASS_INIT_NATIVE.match(m[:m.index("(")])]
-        entire = len(unbound) == len(natives)
-        if not (direct or init or entire):
+        reached = [m for m in unbound if m in via.get(owner, {})]
+        entire = len(unbound) == len(natives) and bool(called)
+        if not (direct or init or entire or reached):
             continue
         cls = owner[1:-1].replace("/", ".")
         why = ("its class initializer is native and unbound" if init else
                "the app calls an unbound native directly" if direct else
+               "the app calls " + ", ".join(sorted({via[owner][m] for m in reached})[:3])
+               + ", which calls an unbound native" if reached else
                "none of its natives is registered")
+        evidence = f"{why}; the app calls {', '.join(sorted(called)[:4])}" if called else why
         rows.append(_row(
             "framework-natives", f"jni:{cls}", f"{cls}: {len(unbound)} of {len(natives)} natives unregistered",
             oh_touchpoint="the JNI half of the framework class (libandroid_runtime in AOSP)",
             verdict="missing", shim_class="C3",
             effort="S" if len(unbound) <= 5 else "M" if len(unbound) <= 40 else "L",
             confidence=STATIC,
-            app_calls=sorted(called)[:12], open_symbols=(init or direct or unbound)[:12],
-            app_evidence=f"{why}; the app calls {', '.join(sorted(called)[:4])}",
+            app_calls=sorted(called)[:12], open_symbols=(init or direct or reached or unbound)[:12],
+            app_evidence=evidence,
             shim="port the AOSP JNI source for the class and register it at startup, before application bind",
         ))
     return rows

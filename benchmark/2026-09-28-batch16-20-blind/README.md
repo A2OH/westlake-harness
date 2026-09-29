@@ -72,3 +72,27 @@ The 21 blocked apps, by cause:
 | blank or black window | accelerace, spacebeam |
 | a region empty (camera preview, web page) | fairscan, standard |
 | leaves after drawing, nothing logged | wormhole2 |
+
+## Follow-up: the media cluster (after the blind judgement)
+
+Fixed afterwards in westlake `5ae6b75`, tested with the rebuilt `libwl_missing_natives.so` as a
+runtime-library override on build 68. The blind numbers above are unchanged; this is the fix loop.
+
+| app | before | after |
+|---|---|---|
+| ntfy | MediaPlayer.native_init | draws its main screen |
+| Astro Loop | MediaPlayer.native_init | draws, in game |
+| Doors of Doom | MediaPlayer.native_init | draws, in game; its music plays |
+| Mouse Pounce | AudioSystem.getParameters | past audio (ExoPlayer plays through the AudioTrack shim); its Flutter window then fails with EGL_BAD_SURFACE on resize and never shows |
+| MuseKit | AudioTrack buffer size | past AudioTrack; stops on AudioRecord, microphone capture, which is not ported |
+
+So 3 of the 5 now draw, 82 of 100 in all. Doors of Doom's music was checked by recording the
+board's output, not by the player's state logs: see `probes/audio-capture`. The recording matches
+the game's music1.mp3 at the expected position (r = 0.62; shuffled control 0.07).
+
+The harness saw only MediaPlayer, the one class with none of its natives registered. AudioTrack
+and AudioSystem are partly registered, and an app reaches their missing natives through public
+wrappers (AudioTrack.getBufferSizeInFrames, AudioManager.getPlaybackOffloadSupport, two calls
+deep). Two changes now find them. The runtime index records the natives each framework method
+reaches, three calls deep. And a class named by a runtime library counts as bound only for the
+method names that library also holds.

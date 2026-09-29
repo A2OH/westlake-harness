@@ -609,6 +609,59 @@
    "row": "path:/system/etc/security/cacerts",
    "symptom": "Dart TLS: Failed to find root cert cache (/system/etc/security/cacerts)",
    "fixed_in": "576fa43"
+  },
+  {
+   "app": "ntfy",
+   "corpus": "batch-19",
+   "row": "jni:android.media.MediaPlayer",
+   "symptom": "MediaPlayer.native_init unbound: MediaPlayer's static initializer throws during handleBindApplication",
+   "fixed_in": "5ae6b75"
+  },
+  {
+   "app": "game",
+   "corpus": "batch-16",
+   "row": "jni:android.media.MediaPlayer",
+   "symptom": "MediaPlayer.native_init unbound: UnsatisfiedLinkError before a first frame",
+   "fixed_in": "5ae6b75"
+  },
+  {
+   "app": "doorsofdoom",
+   "corpus": "batch-20",
+   "row": "jni:android.media.MediaPlayer",
+   "symptom": "MediaPlayer.native_init unbound: UnsatisfiedLinkError before a first frame",
+   "fixed_in": "5ae6b75"
+  },
+  {
+   "app": "doorsofdoom",
+   "corpus": "batch-20",
+   "row": "jni:android.media.MediaPlayer",
+   "symptom": "after the port: SetFDSource rejected the app's descriptor (AV_ERR_INVALID_VAL), then invoke(GET_TRACK_INFO) failed and MediaPlayer posted MEDIA_ERROR (1,-1010); the game left for its error path",
+   "fixed_in": "5ae6b75"
+  },
+  {
+   "app": "mousepounce",
+   "corpus": "batch-16",
+   "row": "jni:android.media.AudioSystem",
+   "symptom": "ExoPlayer: AudioSystem.getParameters, then native_get_offload_support unbound on the playback thread",
+   "fixed_in": "5ae6b75"
+  },
+  {
+   "app": "mousepounce",
+   "corpus": "batch-16",
+   "symptom": "Flutter: 'Unable to create EGL window surface on resize' (EGL_BAD_SURFACE); the process lives and plays audio, but its window never shows"
+  },
+  {
+   "app": "musekit",
+   "corpus": "batch-18",
+   "row": "jni:android.media.AudioTrack",
+   "symptom": "AudioTrack.native_get_buffer_size_frames, then native_set_loop unbound at startup",
+   "fixed_in": "5ae6b75"
+  },
+  {
+   "app": "musekit",
+   "corpus": "batch-18",
+   "row": "jni:android.media.AudioRecord",
+   "symptom": "AudioRecord.native_get_min_buff_size unbound at startup: microphone capture is not ported (27 of 27 natives)"
   }
  ]
 }

@@ -262,13 +262,52 @@ class FrameworkNatives(unittest.TestCase):
                                                     "Landroid/os/ParcelFileDescriptor;": ["close"]}}}
 
     def test_a_class_no_runtime_library_names_is_unbound(self) -> None:
-        rows = {r["id"]: r for r in gapmap.framework_native_rows(self.SCAN, self.RUNTIME, {"android/opengl/GLES20"})}
+        rows = {r["id"]: r for r in gapmap.framework_native_rows(self.SCAN, self.RUNTIME,
+                                                                 {"android/opengl/GLES20", "#glClear"})}
         self.assertEqual(set(rows), {"jni:android.opengl.EGL14"},
                          "GLES20 is named by a runtime library; ravenwood natives never run on a device")
         egl = rows["jni:android.opengl.EGL14"]
         self.assertEqual(egl["open_symbols"], ["_nativeClassInit()V"],
                          "another class's _nativeClassInit()V registration does not bind EGL14's")
         self.assertIn("class initializer", egl["app_evidence"])
+
+    def test_a_named_class_is_bound_only_for_the_method_names_its_library_holds(self) -> None:
+        runtime = {"classes": {"Landroid/media/AudioTrack;": {
+            "native_methods": ["native_start()V", "native_getParameters()I", "native_get_buffer_size_frames()I"]}}}
+        scan = {"inventory": {"platform_method_names": {"Landroid/media/AudioTrack;": [
+            "native_start", "native_getParameters", "native_get_buffer_size_frames"]}}}
+        strings = {"android/media/AudioTrack", "#native_start", "#native_getParameters_merged_tail",
+                   "#xnative_getParameters"}
+        row = gapmap.framework_native_rows(scan, runtime, strings)[0]
+        self.assertEqual(row["open_symbols"], ["native_get_buffer_size_frames()I"],
+                         "a name stored as the tail of a longer string still counts")
+
+    def test_a_wrapper_reaching_an_unbound_native_flags_the_natives_class(self) -> None:
+        runtime = {"bridge_libraries": [{"jni_registration_entries": [
+                       {"name": "native_start", "signature": "()V"},
+                       {"name": "getDevices", "signature": "()I"}]}],
+                   "classes": {
+                       "Landroid/media/AudioTrack;": {
+                           "native_methods": ["native_start()V", "native_get_buffer_size_frames()I"],
+                           "native_calls": {"play()V": ["Landroid/media/AudioTrack;->native_start()V"],
+                                            "getBufferSizeInFrames()I":
+                                                ["Landroid/media/AudioTrack;->native_get_buffer_size_frames()I"]}},
+                       "Landroid/media/AudioManager;": {
+                           "native_methods": [],
+                           "native_calls": {"getParameters(Ljava/lang/String;)Ljava/lang/String;":
+                                                ["Landroid/media/AudioSystem;->getParameters(Ljava/lang/String;)Ljava/lang/String;"]}},
+                       "Landroid/media/AudioSystem;": {
+                           "native_methods": ["getDevices()I", "getParameters(Ljava/lang/String;)Ljava/lang/String;"]}}}
+        played = {"inventory": {"platform_method_names": {"Landroid/media/AudioTrack;": ["play"]}}}
+        self.assertEqual(gapmap.framework_native_rows(played, runtime), [],
+                         "play reaches only a registered native")
+        sized = {"inventory": {"platform_method_names": {"Landroid/media/AudioTrack;": ["play", "getBufferSizeInFrames"],
+                                                         "Landroid/media/AudioManager;": ["getParameters"]}}}
+        rows = {r["id"]: r for r in gapmap.framework_native_rows(sized, runtime)}
+        self.assertEqual(set(rows), {"jni:android.media.AudioTrack", "jni:android.media.AudioSystem"},
+                         "AudioSystem is flagged though the app never names it")
+        self.assertEqual(rows["jni:android.media.AudioTrack"]["open_symbols"], ["native_get_buffer_size_frames()I"])
+        self.assertIn("AudioManager.getParameters", rows["jni:android.media.AudioSystem"]["app_evidence"])
 
 
 class BlockersLedger(unittest.TestCase):
