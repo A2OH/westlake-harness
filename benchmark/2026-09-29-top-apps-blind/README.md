@@ -56,3 +56,40 @@ Maps were made against that runtime and runtime-index-57nc.
    silent), and a verdict: named (a pre-registered open row names it), or blind spot.
 3. The harness is scored on both: the predictor's precision/recall on draws, and the share of
    first blockers that a pre-registered row named. Each blind spot is a candidate new check.
+
+## Result (launched 2026-09-29, judged by the rules above)
+
+**2 of 29 draw**: LinkedIn (its privacy-agreement dialog) and Duolingo (its welcome screen). The
+F-Droid corpus draws about 80% on the same provider; these apps fail far earlier and in more ways.
+Per-app outcome, first blocker and harness verdict: `outcomes.json`.
+
+**Predictor** (draw vs blocked, 29 apps): predicted blocked 7 -- Threads, CapCut, Snapchat,
+TikTok, Telegram, Transit correctly, Duolingo wrongly. Precision 0.86, recall 0.22 (6 of 27).
+
+**Blocker level** -- did a pre-registered row name the first blocker?
+
+| verdict | apps | n |
+|---|---|---|
+| named | Snapchat (`__assert`), X and Uber (MediaDrm), Telegram (AudioRecord), Spotify (libmediandk), Discord, BBC News, Shazam (board libc++_shared.so shadows the app's) | 8 |
+| carried, cause unconfirmed | TikTok, CapCut (both carry load:shadowed-by-board) | 2 |
+| background row only | Waze (telephony hollow-candidate), Citymapper (provider order unverified) | 2 |
+| blind spot | Facebook, Messenger, Instagram, Threads, WhatsApp, Transit, SmartNews, CNN, NYTimes, Flipboard | 10 |
+| silent, cause unknown | The Guardian, Microsoft Start, Moovit, Reddit, Zoom | 5 |
+
+8 of the 22 blockers found were named in advance (36%); counting the two unconfirmed, 10 of 22.
+
+**Blind-spot clusters -- candidate checks:**
+
+1. App-data file operations Android allows and OH refuses: removing write permission / marking
+   read-only (Facebook, Messenger via SoLoader's lib-compressed; CapCut), and mapping a library
+   from app data (CapCut, errno 13). The existing policy rows cover symlinks and fifos only.
+2. Thread priority 0 rejected (Instagram, CapCut): an argument Android accepts at startup.
+3. Services marked "supplied" whose answers are null or 0 where Android's are real: the memory
+   class (CNN, LruCache maxSize 0), WifiManager connection info (NYTimes), the telephony registry
+   and TrafficStats (Waze). "Supplied" needs to check the specific answers startup code reads.
+4. Provider start order: FirebaseInitProvider must run before androidx.startup (Citymapper).
+5. The app's own JNI natives unregistered (WhatsApp, Transit; TikTok maybe): cause not yet known.
+6. One-offs: a missing ZipEntry (Threads), WorkManager not initialized (SmartNews), an
+   UnsupportedOperationException in an initializer (Flipboard).
+
+Five apps die silently; their logs need the hilog capture before they can be classified.

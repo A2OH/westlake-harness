@@ -1,0 +1,147 @@
+{
+ "linkedin": {
+  "outcome": "draws",
+  "first_blocker": "privacy-agreement dialog",
+  "harness": null
+ },
+ "duolingo": {
+  "outcome": "draws",
+  "first_blocker": "welcome screen",
+  "harness": null
+ },
+ "snapchat": {
+  "outcome": "blocked",
+  "first_blocker": "libclient.so needs __assert (splash only)",
+  "harness": "named: ndk:libc-abi"
+ },
+ "x": {
+  "outcome": "blocked",
+  "first_blocker": "MediaDrm.native_init unbound (spinner only)",
+  "harness": "named: jni:android.media.MediaDrm"
+ },
+ "telegram": {
+  "outcome": "blocked",
+  "first_blocker": "AudioRecord natives unbound; also ExpatParser natives",
+  "harness": "named: jni:android.media.AudioRecord"
+ },
+ "spotify": {
+  "outcome": "blocked",
+  "first_blocker": "libmediandk.so missing; activity start: Width must be positive, 0.0",
+  "harness": "named: load:needed-missing"
+ },
+ "discord": {
+  "outcome": "blocked",
+  "first_blocker": "libreactnative.so: libc++ symbol not found -- board libc++_shared.so shadows the app's",
+  "harness": "named: load:shadowed-by-board"
+ },
+ "bbcnews": {
+  "outcome": "blocked",
+  "first_blocker": "libreactnative.so: libc++ symbol not found -- board libc++_shared.so shadows the app's",
+  "harness": "named: load:shadowed-by-board"
+ },
+ "shazam": {
+  "outcome": "blocked",
+  "first_blocker": "libsigx.so: libc++ symbol not found -- board libc++_shared.so shadows the app's",
+  "harness": "named: load:shadowed-by-board"
+ },
+ "uber": {
+  "outcome": "blocked",
+  "first_blocker": "MediaDrm.native_init unbound",
+  "harness": "named: jni:android.media.MediaDrm"
+ },
+ "tiktok": {
+  "outcome": "blocked",
+  "first_blocker": "ByteDance jato native (nGetArtApexVersion) unregistered, then NPE",
+  "harness": "unconfirmed: carries load:shadowed-by-board"
+ },
+ "capcut": {
+  "outcome": "blocked",
+  "first_blocker": "Thread priority 0 rejected; marking a file read-only fails; mapping libmetasec_ov.so denied (errno 13)",
+  "harness": "unconfirmed: carries load:shadowed-by-board"
+ },
+ "facebook": {
+  "outcome": "blocked",
+  "first_blocker": "cannot remove write permission from app data lib-compressed dir (SoLoader)",
+  "harness": "blind spot: app-data permission change"
+ },
+ "messenger": {
+  "outcome": "blocked",
+  "first_blocker": "cannot remove write permission from app data lib-compressed dir (SoLoader)",
+  "harness": "blind spot: app-data permission change"
+ },
+ "instagram": {
+  "outcome": "blocked",
+  "first_blocker": "Thread priority 0 rejected while creating the Application",
+  "harness": "blind spot: thread priority"
+ },
+ "threads": {
+  "outcome": "blocked",
+  "first_blocker": "NullPointerException on a missing ZipEntry at startup",
+  "harness": "blind spot"
+ },
+ "whatsapp": {
+  "outcome": "blocked",
+  "first_blocker": "its own BreakpadManager.setUpBreakpad native unregistered",
+  "harness": "blind spot: app natives unregistered"
+ },
+ "transit": {
+  "outcome": "blocked",
+  "first_blocker": "its own TransitLib native unregistered (predicted blocked for another reason)",
+  "harness": "blind spot: app natives unregistered"
+ },
+ "smartnews": {
+  "outcome": "blocked",
+  "first_blocker": "WorkManager is not initialized (splash only)",
+  "harness": "blind spot"
+ },
+ "cnn": {
+  "outcome": "blocked",
+  "first_blocker": "LruCache maxSize <= 0 creating the Application: a memory answer of 0",
+  "harness": "blind spot: service answer 0 (svc:activity supplied)"
+ },
+ "nytimes": {
+  "outcome": "blocked",
+  "first_blocker": "WifiManager connection info null in a startup initializer",
+  "harness": "blind spot: service answer null (svc:wifi supplied)"
+ },
+ "waze": {
+  "outcome": "blocked",
+  "first_blocker": "TelephonyRegistry null; TrafficStats not initialized",
+  "harness": "background row only: java:Telephony hollow-candidate"
+ },
+ "citymapper": {
+  "outcome": "blocked",
+  "first_blocker": "Default FirebaseApp not initialized before androidx.startup runs",
+  "harness": "background row only: pm:providers unverified (provider order)"
+ },
+ "flipboard": {
+  "outcome": "blocked",
+  "first_blocker": "UnsupportedOperationException in a startup initializer",
+  "harness": "blind spot"
+ },
+ "guardian": {
+  "outcome": "blocked",
+  "first_blocker": "navigation bar only, content empty; nothing logged",
+  "harness": "unknown: silent"
+ },
+ "msstart": {
+  "outcome": "blocked",
+  "first_blocker": "background only; nothing logged",
+  "harness": "unknown: silent"
+ },
+ "moovit": {
+  "outcome": "blocked",
+  "first_blocker": "left at runtime init; nothing logged",
+  "harness": "unknown: silent"
+ },
+ "reddit": {
+  "outcome": "blocked",
+  "first_blocker": "left at runtime init; nothing logged",
+  "harness": "unknown: silent"
+ },
+ "zoom": {
+  "outcome": "blocked",
+  "first_blocker": "loading bar only; nothing logged",
+  "harness": "unknown: silent"
+ }
+}
