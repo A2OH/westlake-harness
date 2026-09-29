@@ -1,0 +1,135 @@
+{
+ "bbcnews": {
+  "expected": "draws",
+  "because": []
+ },
+ "amazon": {
+  "expected": "draws",
+  "because": []
+ },
+ "citymapper": {
+  "expected": "draws",
+  "because": []
+ },
+ "cnn": {
+  "expected": "draws",
+  "because": []
+ },
+ "discord": {
+  "expected": "draws",
+  "because": []
+ },
+ "duolingo": {
+  "expected": "blocked",
+  "because": [
+   "native:ndk:package",
+   "native:ndk:weld:sensors"
+  ]
+ },
+ "facebook": {
+  "expected": "draws",
+  "because": []
+ },
+ "messenger": {
+  "expected": "draws",
+  "because": []
+ },
+ "guardian": {
+  "expected": "draws",
+  "because": []
+ },
+ "instagram": {
+  "expected": "draws",
+  "because": []
+ },
+ "threads": {
+  "expected": "blocked",
+  "because": [
+   "native:ndk:package"
+  ]
+ },
+ "capcut": {
+  "expected": "blocked",
+  "because": [
+   "native:ndk:weld:sensors"
+  ]
+ },
+ "linkedin": {
+  "expected": "draws",
+  "because": []
+ },
+ "msstart": {
+  "expected": "draws",
+  "because": []
+ },
+ "nytimes": {
+  "expected": "draws",
+  "because": []
+ },
+ "reddit": {
+  "expected": "draws",
+  "because": []
+ },
+ "shazam": {
+  "expected": "draws",
+  "because": []
+ },
+ "snapchat": {
+  "expected": "blocked",
+  "because": [
+   "native:ndk:weld:sensors"
+  ]
+ },
+ "spotify": {
+  "expected": "draws",
+  "because": []
+ },
+ "transit": {
+  "expected": "draws",
+  "because": []
+ },
+ "moovit": {
+  "expected": "draws",
+  "because": []
+ },
+ "x": {
+  "expected": "draws",
+  "because": []
+ },
+ "uber": {
+  "expected": "draws",
+  "because": []
+ },
+ "waze": {
+  "expected": "draws",
+  "because": []
+ },
+ "whatsapp": {
+  "expected": "draws",
+  "because": []
+ },
+ "tiktok": {
+  "expected": "blocked",
+  "because": [
+   "native:ndk:weld:sensors"
+  ]
+ },
+ "flipboard": {
+  "expected": "draws",
+  "because": []
+ },
+ "smartnews": {
+  "expected": "draws",
+  "because": []
+ },
+ "telegram": {
+  "expected": "blocked",
+  "because": [
+   "lookup:sym:runtime-resolved:libnativehelper.so"
+  ]
+ },
+ "zoom": {
+  "expected": "draws",
+  "because": []
+ }
+}
