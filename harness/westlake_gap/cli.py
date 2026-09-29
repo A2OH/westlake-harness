@@ -14,6 +14,8 @@ from .platformapi import annotate, load_platform_index
 from .report import aggregate, markdown_report
 from .scanner import (
     RuntimeResolver,
+    _index_native_calls,
+    quiet_androguard,
     build_runtime_index,
     read_elf,
     read_json,
@@ -53,6 +55,14 @@ def parser() -> argparse.ArgumentParser:
     runtime_summary.add_argument("--runtime-index", required=True, type=Path)
     runtime_summary.add_argument("--out", required=True, type=Path)
     runtime_summary.add_argument("--note", help="optional snapshot availability note")
+
+    native_calls = commands.add_parser(
+        "index-native-calls",
+        help="add framework native-call edges to an existing runtime index (new snapshots include them)")
+    native_calls.add_argument("--runtime-index", required=True, type=Path)
+    native_calls.add_argument("--jar", action="append", default=[], type=Path,
+                              help="the index's boot-classpath JAR, if moved; default: the paths it records")
+    native_calls.add_argument("--out", required=True, type=Path)
 
     scan = commands.add_parser("scan", help="scan one APK or DEX against a runtime index")
     scan.add_argument("input", type=Path)
@@ -528,6 +538,20 @@ def main(argv: list[str] | None = None) -> int:
             summary["snapshot_note"] = args.note
         write_json(args.out, summary)
         print(f"runtime {summary['runtime_lock_id']} summary -> {args.out}")
+        return 0
+    if args.command == "index-native-calls":
+        value = read_json(args.runtime_index)
+        jars = list(args.jar) or [Path(item["path"]) for item in value["boot_classpath"]]
+        quiet_androguard()
+        present = [jar for jar in jars if jar.exists()]
+        by_name = {item["name"]: item["sha256"] for item in value["boot_classpath"]}
+        for jar in present:
+            if jar.name in by_name and sha256_file(jar) != by_name[jar.name]:
+                raise SystemExit(f"{jar} differs from the {jar.name} this index was built from")
+        _index_native_calls(present, value["classes"])
+        write_json(args.out, value)
+        edges = sum(len(c.get("native_calls", {})) for c in value["classes"].values())
+        print(f"{edges} framework methods reach a native, from {len(present)} of {len(jars)} JARs -> {args.out}")
         return 0
     if args.command == "snapshot-runtime":
         jars = list(args.jar)

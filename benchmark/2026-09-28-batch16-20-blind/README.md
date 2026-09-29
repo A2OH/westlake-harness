@@ -96,3 +96,15 @@ wrappers (AudioTrack.getBufferSizeInFrames, AudioManager.getPlaybackOffloadSuppo
 deep). Two changes now find them. The runtime index records the natives each framework method
 reaches, three calls deep. And a class named by a runtime library counts as bound only for the
 method names that library also holds.
+
+## Follow-up: OpenSL ES (after the media cluster)
+
+Jigsaw and V3 (Godot) failed to load their engine: OH's libOpenSLES has no
+SL_IID_ANDROIDCONFIGURATION. Fixed in westlake `1e98162` (the Android configuration interface, and
+interface IDs handed to OH by its own addresses) and `c7d2992` (Oboe's dlopen of libOpenSLES routed
+to the adapter; the buffer queue no longer pads OH's pulls with silence), in shim bionic-shim-nw11.
+Both now draw: **84 of 100** with the fixes, still on framework 68 with overrides.
+
+The sound was checked by ear and by recording: the buffer-queue fix took a 1 kHz test tone from
+48-73% silent 10 ms windows to none (`probes/audio-capture`), and `probes/audio-tone` then found
+and confirmed the fix for AudioTrack float writes through a ByteBuffer (westlake `21676bd`).

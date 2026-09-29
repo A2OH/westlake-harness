@@ -1,5 +1,5 @@
 {
- "note": "first = first launch on the build the batch was predicted against; after = once that batch's fixes landed. wikipedia is counted in loop-1. Organic Maps' first launch uses its corrected pin. Fossify Messages exits by design after its fix (no SMS role) and stays 'blocked'. Seal's 'after' is its own error screen (symlink denied by OH policy), counted as UI like Termux. OsmAnd's 'after' is its current state: it drew on its first launch and now leaves after drawing on every build tried (environment-dependent).",
+ "note": "first = first launch on the build the batch was predicted against; after = once that batch's fixes landed. wikipedia is counted in loop-1. Organic Maps' first launch uses its corrected pin. Fossify Messages exits by design after its fix (no SMS role) and stays 'blocked'. Seal's 'after' is its own error screen (symlink denied by OH policy), counted as UI like Termux. OsmAnd's 'after' is its current state: it drew on its first launch and now leaves after drawing on every build tried (environment-dependent). Ball2Box and Rhythm Engine draw since the OpenSL ES adapter fixes (westlake 1e98162, c7d2992), verified on framework 68 with shim bionic-shim-nw11 and runtime native-runtime-opengl12's libwl_missing_natives.so.",
  "apps": {
   "aegis": {
    "batch": "loop-1",
@@ -813,7 +813,7 @@
   "rhythmengine": {
    "batch": "batch-13",
    "first": "blocked",
-   "after": "blocked"
+   "after": "draws"
   },
   "beatbridge": {
    "batch": "batch-13",
@@ -1030,7 +1030,7 @@
   "ball2box": {
    "batch": "batch-15",
    "first": "blocked",
-   "after": "blocked"
+   "after": "draws"
   },
   "stopwatch": {
    "batch": "batch-15",

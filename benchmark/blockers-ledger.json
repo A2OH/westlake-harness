@@ -708,7 +708,8 @@
   {
    "app": "duckrun",
    "corpus": "batch-14",
-   "symptom": "libgodot_android.so needs libcamera2ndk.so, which OH does not ship (Godot 4 camera feed)"
+   "symptom": "libgodot_android.so needs libcamera2ndk.so, which OH does not ship (Godot 4 camera feed)",
+   "row": "ndk:weld:camera"
   }
  ]
 }
