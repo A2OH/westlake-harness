@@ -18,7 +18,9 @@ from Android:
   Messenger): `ZipFile.getInputStream`, `FileInputStream.skip` to the entry's data, and a
   `funopen` FILE over that InputStream read with `fread` (buffered and unbuffered), `fgetc` and
   1-byte `fread`. The asset holds bytes `i % 251`, so any offset error shows in the first bytes;
-- `File.setLastModified` (Facebook's dex stamp) and NDK `ASharedMemory` (Meta's libstartup).
+- `File.setLastModified` (Facebook's dex stamp) and NDK `ASharedMemory` (Meta's libstartup);
+- libcore natives the runtime left unregistered: `MappedByteBuffer.load()` (Zoom) and an NIO
+  `SocketChannel` round trip through a `Selector` (Mindustry, Unciv: sun.nio.ch.Net).
 
     ./build.sh      # out/runtime-answers-probe.apk (Java, a trivial native library to copy and load,
                     # and libprobeassets.so for the NDK asset check)

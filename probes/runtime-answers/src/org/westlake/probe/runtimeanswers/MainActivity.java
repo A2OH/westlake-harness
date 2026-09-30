@@ -177,6 +177,24 @@ public class MainActivity extends Activity {
             return set + (stamp.lastModified() == when ? ", read back" : ", reads " + stamp.lastModified());
         });
         check("ASharedMemory (NDK)", "size 8192, shared yes", () -> nativeSharedMemory());
+        check("MappedByteBuffer.load of a mapped file", "loaded, first byte 7", () -> {
+            File mapped = new File(getFilesDir(), "mapped");
+            try (FileOutputStream out = new FileOutputStream(mapped)) { out.write(new byte[] {7, 8, 9}); }
+            try (java.io.RandomAccessFile mappedFile = new java.io.RandomAccessFile(mapped, "r")) {
+                java.nio.MappedByteBuffer buffer = mappedFile.getChannel().map(
+                        java.nio.channels.FileChannel.MapMode.READ_ONLY, 0, 3);
+                buffer.load();
+                return "loaded, first byte " + buffer.get(0);
+            }
+        });
+        // Off the main thread, as on Android (NetworkOnMainThreadException otherwise).
+        check("NIO SocketChannel over loopback with a Selector", "echoed 5 bytes", () -> {
+            final String[] answer = {"no answer"};
+            Thread worker = new Thread(() -> { try { answer[0] = nioRoundTrip(); } catch (Throwable t) { answer[0] = "THROWS " + t; } });
+            worker.start();
+            worker.join(5000);
+            return answer[0];
+        });
         check("new MediaRecorder()", "constructs", () -> { new MediaRecorder().release(); return "constructs"; });
         check("AudioRecord.getMinBufferSize(48000, mono, 16-bit)", "> 0 (bytes)",
                 () -> AudioRecord.getMinBufferSize(48000, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT));
@@ -202,6 +220,24 @@ public class MainActivity extends Activity {
         TextView text = new TextView(this);
         text.setText(shown);
         setContentView(text);
+    }
+
+    /** A SocketChannel round trip through a ServerSocketChannel and a Selector over loopback. */
+    private static String nioRoundTrip() throws Exception {
+        try (java.nio.channels.ServerSocketChannel server = java.nio.channels.ServerSocketChannel.open();
+             java.nio.channels.Selector selector = java.nio.channels.Selector.open()) {
+            server.bind(new java.net.InetSocketAddress("127.0.0.1", 0));
+            try (java.nio.channels.SocketChannel client = java.nio.channels.SocketChannel.open(server.getLocalAddress());
+                 java.nio.channels.SocketChannel accepted = server.accept()) {
+                client.write(java.nio.ByteBuffer.wrap("hello".getBytes("UTF-8")));
+                accepted.configureBlocking(false);
+                accepted.register(selector, java.nio.channels.SelectionKey.OP_READ);
+                int ready = selector.select(2000);
+                java.nio.ByteBuffer in = java.nio.ByteBuffer.allocate(16);
+                int n = accepted.read(in);
+                return ready == 1 ? "echoed " + n + " bytes" : "select returned " + ready;
+            }
+        }
     }
 
     private static native String nativeFunopenRead(InputStream stream, int mode);
