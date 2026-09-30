@@ -143,6 +143,32 @@ public class MainActivity extends Activity {
             System.loadLibrary("probeassets");
             return nativeAssetFd(getAssets(), "fd-probe.dat");
         });
+        // Meta's SoLoader reads its superpack archive straight out of the APK (useAssetManager=false);
+        // the archive is stored uncompressed. Each way of reaching those bytes, first 8 in hex.
+        final String apk = getApplicationInfo().sourceDir;
+        check("ZipFile.getInputStream of a stored entry", "0001020304050607", () -> {
+            try (java.util.zip.ZipFile zip = new java.util.zip.ZipFile(apk);
+                 InputStream in = zip.getInputStream(zip.getEntry("assets/fd-probe.dat"))) {
+                return hex(in, 8);
+            }
+        });
+        check("FileInputStream.skip to a stored entry's data", "0001020304050607", () -> {
+            long offset = storedDataOffset(apk, "assets/fd-probe.dat");
+            try (java.io.FileInputStream in = new java.io.FileInputStream(apk)) {
+                long skipped = in.skip(offset);
+                return (skipped == offset ? "" : "skipped " + skipped + " of " + offset + ": ") + hex(in, 8);
+            }
+        });
+        String[] funopenModes = {"fread 28 (superpack's read path)", "fread 28, unbuffered", "fgetc x8", "fread 1 x8"};
+        for (int mode = 0; mode < funopenModes.length; mode++) {
+            final int m = mode;
+            check("funopen over an InputStream: " + funopenModes[mode], "0001020304050607", () -> {
+                try (java.util.zip.ZipFile zip = new java.util.zip.ZipFile(apk);
+                     InputStream in = zip.getInputStream(zip.getEntry("assets/fd-probe.dat"))) {
+                    return nativeFunopenRead(in, m);
+                }
+            });
+        }
         check("new MediaRecorder()", "constructs", () -> { new MediaRecorder().release(); return "constructs"; });
         check("AudioRecord.getMinBufferSize(48000, mono, 16-bit)", "> 0 (bytes)",
                 () -> AudioRecord.getMinBufferSize(48000, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT));
@@ -168,6 +194,37 @@ public class MainActivity extends Activity {
         TextView text = new TextView(this);
         text.setText(shown);
         setContentView(text);
+    }
+
+    private static native String nativeFunopenRead(InputStream stream, int mode);
+
+    private static String hex(InputStream in, int count) throws java.io.IOException {
+        StringBuilder out = new StringBuilder();
+        for (int i = 0; i < count; i++) {
+            int b = in.read();
+            if (b < 0) return out + " (end of stream)";
+            out.append(String.format("%02x", b));
+        }
+        return out.toString();
+    }
+
+    /** The data offset of a stored entry, from its local file header, as a zip reader computes it. */
+    private static long storedDataOffset(String apk, String name) throws java.io.IOException {
+        try (java.io.RandomAccessFile file = new java.io.RandomAccessFile(apk, "r")) {
+            byte[] all = new byte[(int) Math.min(file.length(), 1 << 20)];
+            file.readFully(all);
+            byte[] wanted = name.getBytes("UTF-8");
+            for (int i = 0; i + 30 + wanted.length < all.length; i++) {
+                if (all[i] != 'P' || all[i + 1] != 'K' || all[i + 2] != 3 || all[i + 3] != 4) continue;
+                int nameLength = (all[i + 26] & 0xff) | (all[i + 27] & 0xff) << 8;
+                int extraLength = (all[i + 28] & 0xff) | (all[i + 29] & 0xff) << 8;
+                if (nameLength == wanted.length
+                        && new String(all, i + 30, nameLength, "UTF-8").equals(name)) {
+                    return i + 30 + nameLength + extraLength;
+                }
+            }
+        }
+        throw new java.io.FileNotFoundException(name);
     }
 
     private static native String nativeAssetFd(android.content.res.AssetManager assets, String name);

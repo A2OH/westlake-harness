@@ -22,7 +22,8 @@ mkdir -p "$OUT/lib/arm64-v8a"
 "$CC" -shared -fPIC -O2 -Wall -Werror -o "$OUT/lib/arm64-v8a/libprobeanswers.so" "$ROOT/jni/probe_answers.c"
 "$CC" -shared -fPIC -O2 -Wall -Werror -o "$OUT/lib/arm64-v8a/libprobeassets.so" "$ROOT/jni/probe_assets.c" -landroid
 # An asset stored uncompressed (-0 dat), as superpack's archives are, for AAsset_openFileDescriptor.
-head -c 4096 /dev/zero | tr '\0' 'W' > "$OUT/stage/assets/fd-probe.dat"
+# Bytes i % 251: any offset error shows in the first bytes read.
+python3 -c "import sys; sys.stdout.buffer.write(bytes(i % 251 for i in range(4096)))" > "$OUT/stage/assets/fd-probe.dat"
 
 javac -source 8 -target 8 -Xlint:-options -cp "$ANDROID_JAR" -d "$OUT/classes" \
     "$ROOT/src/org/westlake/probe/runtimeanswers/MainActivity.java"

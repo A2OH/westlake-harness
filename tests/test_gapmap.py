@@ -442,6 +442,16 @@ class AndroidRelocations(unittest.TestCase):
         row = self.rows({"android_relr_launcher": "tools/probe_source_app.py:1"})["load:android-relocations"]
         self.assertEqual(row["verdict"], "supplied")
 
+    def test_funopen_row(self) -> None:
+        elfs = [{"soname": "libsuperpack-jni.so", "name": "lib/arm64-v8a/libsuperpack-jni.so", "abi": "arm64-v8a",
+                 "undefined_symbols": ["funopen@LIBC", "fread@LIBC"]}]
+        scan = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {"elfs": elfs}}
+        rows = lambda loader: {r["id"]: r for r in gapmap.native_loading_rows(
+            {"extract_native_libs": True}, scan, {"present": True}, [], loader=loader)}
+        self.assertEqual(rows(None)["abi:funopen"]["verdict"], "missing")
+        self.assertEqual(rows({"funopen_unbuffered": "framework/webview-shim/webview_bionic_shim.c:1"})
+                         ["abi:funopen"]["verdict"], "supplied")
+
     def test_scanner_reads_the_tags(self) -> None:
         from harness.westlake_gap import scanner
         text = (" 0x0000000000000001 (NEEDED) Shared library: [libc.so]\n"

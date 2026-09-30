@@ -1050,7 +1050,8 @@ def bionic_loader_model(westlake_root: Path | None, manifest_root: Path | None =
     code_cache_copy: the bionic shim loads a library app storage may not map executable from a copy
     in code_cache. android_relr_launcher: the launcher stages the APK's libraries with
     DT_ANDROID_RELR renumbered to DT_RELR; android_relr_shim: the shim does the same for libraries
-    an app writes at run time.
+    an app writes at run time. funopen_unbuffered: the shim's funopen avoids OH's buffered
+    fopencookie refill, which overwrites what it has just read.
     """
     def find(relative: str, marker: str, root: Path | None = westlake_root) -> str | None:
         path = root / relative if root else None
@@ -1062,7 +1063,8 @@ def bionic_loader_model(westlake_root: Path | None, manifest_root: Path | None =
 
     return {"code_cache_copy": find("framework/webview-shim/webview_bionic_shim.c", "westlake_load_from_code_cache("),
             "android_relr_launcher": find("tools/probe_source_app.py", "def android_relr_retagged(", manifest_root),
-            "android_relr_shim": find("framework/webview-shim/android_relocs.c", "write_retagged_copy(")}
+            "android_relr_shim": find("framework/webview-shim/android_relocs.c", "write_retagged_copy("),
+            "funopen_unbuffered": find("framework/webview-shim/webview_bionic_shim.c", "setvbuf(file, NULL, _IONBF, 0)")}
 
 
 def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_extracts: dict[str, Any],
@@ -1127,6 +1129,29 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
             seen_blocking=["hacki (batch-12), fixed by the launch args", "fdroid2 (batch-14), fixed by the launch args"],
             shim="route these libraries through the network ABI translation: " + " ".join(resolvers),
             launch_args=[arg for name in resolvers for arg in ("--android-native-net-target", name)],
+        ))
+    # funopen: the bionic shim supplies it over OH's fopencookie. A buffered cookie FILE on OH is
+    # refilled by calling the reader with the FILE's own buffer, which cookieread also uses for its
+    # last byte, so every refill overwrote what it had read (probes/runtime-answers). superpack reads
+    # its archive through one: Facebook, Instagram and Messenger failed its magic check.
+    funopen_users = sorted({elf.get("soname") or Path(elf["name"]).name for elf in elfs
+                            if "funopen" in {n.split("@")[0] for n in
+                                             elf.get("undefined_symbols", []) + elf.get("undefined_weak_symbols", [])}})
+    if funopen_users:
+        fixed = (loader or {}).get("funopen_unbuffered")
+        rows.append(_row(
+            "native-loading", "abi:funopen",
+            f"funopen streams ({', '.join(funopen_users[:4])}" + (" ..." if len(funopen_users) > 4 else "") + ")",
+            oh_touchpoint="OH musl fopencookie: a buffered refill (__fill_buffer -> cookieread into f->buf) "
+                          "overwrites the bytes it just read",
+            verdict="supplied" if fixed else "missing", shim_class="C2", effort="verify" if fixed else "S",
+            confidence=STATIC, probe="probes/runtime-answers",
+            provider=("the bionic shim's funopen makes the FILE unbuffered and buffers in its cookie"
+                      if fixed else "the shim's funopen is buffered: reads past the first refill are corrupted"),
+            provider_source=fixed,
+            app_evidence=f"{len(funopen_users)} APK libraries import funopen",
+            seen_blocking=["facebook, instagram, messenger (superpack: could not extract file from archive)"],
+            shim="keep funopen FILEs unbuffered on OH, buffering inside the cookie",
         ))
     if not facts["extract_native_libs"] and elfs:
         rows.append(_row(

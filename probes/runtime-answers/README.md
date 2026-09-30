@@ -13,7 +13,11 @@ from Android:
   directory (WhatsApp, CapCut);
 - platform natives: a SAX parse (Telegram), `new MediaRecorder()` (MuseKit), `AudioRecord` minimum
   buffer and 0.5 s of microphone capture (MuseKit), and NDK `AAsset_openFileDescriptor` on an
-  uncompressed asset, the path Meta's superpack takes (Facebook, Instagram).
+  uncompressed asset;
+- a stored APK entry reached the ways Meta's superpack reaches its archive (Facebook, Instagram,
+  Messenger): `ZipFile.getInputStream`, `FileInputStream.skip` to the entry's data, and a
+  `funopen` FILE over that InputStream read with `fread` (buffered and unbuffered), `fgetc` and
+  1-byte `fread`. The asset holds bytes `i % 251`, so any offset error shows in the first bytes.
 
     ./build.sh      # out/runtime-answers-probe.apk (Java, a trivial native library to copy and load,
                     # and libprobeassets.so for the NDK asset check)
@@ -49,5 +53,12 @@ Android. Also:
 | AAsset_openFileDescriptor | fd ok, bytes match | same |
 | new MediaRecorder() | "Unable to initialize media recorder" | constructs |
 | AudioRecord 0.5 s from the microphone | not initialized: OH refuses the capturer | samples |
+| funopen FILE, fread 28 / fread 1 x8 | `131415…` (shim nw19); `000102…` (nw20) | `000102…` |
+| funopen FILE, unbuffered fread / fgetc | `000102…` | `000102…` |
 
 The capturer is refused because the host HAP does not request `ohos.permission.MICROPHONE`.
+
+The funopen answers located a bug in OH's musl: a buffered `fopencookie` FILE is refilled by calling
+the cookie reader with the FILE's own buffer (`__fill_buffer` -> `readx == cookieread`), which
+cookieread also uses for its last byte, so a refill overwrites what it read (byte 1023 appears
+first: 1023 % 251 = 0x13). The shim's funopen now keeps the FILE unbuffered and buffers itself.
