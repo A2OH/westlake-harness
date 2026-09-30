@@ -1584,8 +1584,15 @@ _NIO_IMPLEMENTATIONS = {
     "Ljava/nio/channels/SocketChannel;": ("Lsun/nio/ch/Net;", "Lsun/nio/ch/IOUtil;", "Lsun/nio/ch/SocketChannelImpl;"),
     "Ljava/nio/channels/ServerSocketChannel;": ("Lsun/nio/ch/Net;", "Lsun/nio/ch/IOUtil;", "Lsun/nio/ch/ServerSocketChannelImpl;"),
     "Ljava/nio/channels/DatagramChannel;": ("Lsun/nio/ch/Net;", "Lsun/nio/ch/IOUtil;", "Lsun/nio/ch/DatagramChannelImpl;"),
-    "Ljava/nio/channels/Selector;": ("Lsun/nio/ch/EPoll;", "Lsun/nio/ch/IOUtil;"),
-    "Ljava/nio/channels/spi/SelectorProvider;": ("Lsun/nio/ch/Net;", "Lsun/nio/ch/EPoll;", "Lsun/nio/ch/IOUtil;"),
+    # Android's selector is PollSelectorImpl (PollArrayWrapper); AOSP registers no EPoll natives.
+    "Ljava/nio/channels/Selector;": ("Lsun/nio/ch/PollArrayWrapper;", "Lsun/nio/ch/IOUtil;"),
+    "Ljava/nio/channels/spi/SelectorProvider;": ("Lsun/nio/ch/Net;", "Lsun/nio/ch/PollArrayWrapper;", "Lsun/nio/ch/IOUtil;"),
+}
+# Declared native in libcore but registered by AOSP itself neither (ojluni's Net.c has no entry for
+# them): no Android app can depend on them.
+_AOSP_UNIMPLEMENTED = {
+    "Lsun/nio/ch/Net;": {"remoteInetAddress(Ljava/io/FileDescriptor;)Ljava/net/InetAddress;",
+                          "remotePort(Ljava/io/FileDescriptor;)I"},
 }
 # Declared native, implemented by ART itself (signature-polymorphic invokes, the thread entry).
 _ART_INTRINSIC_OWNERS = {"Ljava/lang/invoke/MethodHandle;", "Ljava/lang/invoke/VarHandle;",
@@ -1638,7 +1645,7 @@ def framework_native_rows(scan: dict[str, Any], runtime: dict[str, Any] | None,
                 if any(e == prefix + _jni_mangle(name) or e.startswith(prefix + _jni_mangle(name) + "__") for e in exported):
                     continue
                 unbound.append(method)
-            unbound_cache[owner] = unbound
+            unbound_cache[owner] = [m for m in unbound if m not in _AOSP_UNIMPLEMENTED.get(owner, ())]
         return unbound_cache[owner]
 
     # libcore's natives are ART's own (libart's stubs register them), so they can be judged only
