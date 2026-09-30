@@ -1082,3 +1082,28 @@ class UsesLibrary(unittest.TestCase):
             self.assertEqual(rows["pm:uses-library:com.google.android.maps"]["verdict"], "absent")
             rows = {r["id"]: r for r in gapmap.uses_library_rows(self.FACTS, {"artifacts": {}}, Path(tmp))}
             self.assertEqual(rows["pm:uses-library:org.apache.http.legacy"]["verdict"], "missing")
+
+
+class LibcoreNatives(unittest.TestCase):
+    RUNTIME = {"bridge_libraries": [{"name": "libart.so", "jni_registration_entries": [
+                    {"name": "hashCode", "signature": "()I"}]}],
+               "system_libraries": [],
+               "classes": {"Ljava/nio/MappedByteBuffer;": {"native_methods": ["load0(JJ)V", "force0(Ljava/io/FileDescriptor;JJ)V"]},
+                           "Ljava/lang/Object;": {"native_methods": ["hashCode()I"]},
+                           "Ljava/util/TimeZone;": {"native_methods": ["getSystemTimeZoneID(Ljava/lang/String;)Ljava/lang/String;"]},
+                           "Ljava/lang/invoke/VarHandle;": {"native_methods": ["get([Ljava/lang/Object;)Ljava/lang/Object;"]}}}
+
+    def rows(self, runtime):
+        scan = {"inventory": {"platform_method_names": {
+            "Ljava/nio/MappedByteBuffer;": ["load"], "Ljava/lang/Object;": ["hashCode"],
+            "Ljava/util/TimeZone;": ["getDefault"], "Ljava/lang/invoke/VarHandle;": ["get"]}}}
+        return {r["id"]: r for r in gapmap.framework_native_rows(scan, runtime)}
+
+    def test_libcore_judged_when_libart_indexed(self) -> None:
+        rows = self.rows(self.RUNTIME)
+        self.assertEqual(set(rows), {"jni:java.nio.MappedByteBuffer"}, "Object is libart's; TimeZone unreached; VarHandle intrinsic")
+        self.assertIn("MappedByteBuffer.load", rows["jni:java.nio.MappedByteBuffer"]["app_evidence"])
+
+    def test_libcore_ignored_without_libart(self) -> None:
+        runtime = dict(self.RUNTIME, bridge_libraries=[])
+        self.assertEqual(self.rows(runtime), {})

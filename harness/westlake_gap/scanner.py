@@ -217,13 +217,15 @@ def _index_native_calls(artifacts: Iterable[Path], classes: dict[str, dict[str, 
     directly, AudioManager.getPlaybackOffloadSupport reaches AudioSystem.native_get_offload_support
     through AudioSystem.getOffloadSupport. In a class whose natives are only partly registered, the
     wrapper is the only static trace of the gap. Calls are followed NATIVE_CALL_DEPTH deep, as
-    declared (no virtual dispatch), through android.* and com.android.* methods. A second pass,
+    declared (no virtual dispatch), through android.*, com.android.* and libcore methods. A second pass,
     because a native's owner may be defined in a later artifact.
     """
     natives = {(owner, key) for owner, record in classes.items() for key in record["native_methods"]}
     if not natives:
         return
-    framework = ("Landroid/", "Lcom/android/")
+    # libcore too: its natives are not all registered either (sun.nio.ch.Net's, reached from the
+    # public NIO channel classes).
+    framework = ("Landroid/", "Lcom/android/", "Ljava/", "Ljavax/", "Lsun/", "Llibcore/", "Ljdk/", "Ldalvik/")
     callees: dict[tuple[str, str], set[tuple[str, str]]] = {}
     for path in artifacts:
         for _, blob in dex_blobs(path.resolve()):

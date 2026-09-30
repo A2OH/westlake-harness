@@ -1577,6 +1577,21 @@ def _names_string(strings: set[str], name: str) -> bool:
     return i < len(reversed_names) and reversed_names[i].startswith(key)
 
 
+_LIBCORE_OWNERS = ("Ljava/", "Ljavax/", "Lsun/", "Llibcore/", "Ljdk/", "Ldalvik/")
+# Public NIO classes whose implementation is chosen through SelectorProvider (virtual dispatch the
+# native-call index does not follow): the implementation classes that hold their natives.
+_NIO_IMPLEMENTATIONS = {
+    "Ljava/nio/channels/SocketChannel;": ("Lsun/nio/ch/Net;", "Lsun/nio/ch/IOUtil;", "Lsun/nio/ch/SocketChannelImpl;"),
+    "Ljava/nio/channels/ServerSocketChannel;": ("Lsun/nio/ch/Net;", "Lsun/nio/ch/IOUtil;", "Lsun/nio/ch/ServerSocketChannelImpl;"),
+    "Ljava/nio/channels/DatagramChannel;": ("Lsun/nio/ch/Net;", "Lsun/nio/ch/IOUtil;", "Lsun/nio/ch/DatagramChannelImpl;"),
+    "Ljava/nio/channels/Selector;": ("Lsun/nio/ch/EPoll;", "Lsun/nio/ch/IOUtil;"),
+    "Ljava/nio/channels/spi/SelectorProvider;": ("Lsun/nio/ch/Net;", "Lsun/nio/ch/EPoll;", "Lsun/nio/ch/IOUtil;"),
+}
+# Declared native, implemented by ART itself (signature-polymorphic invokes, the thread entry).
+_ART_INTRINSIC_OWNERS = {"Ljava/lang/invoke/MethodHandle;", "Ljava/lang/invoke/VarHandle;",
+                         "Ldalvik/system/NativeStart;"}
+
+
 def framework_native_rows(scan: dict[str, Any], runtime: dict[str, Any] | None,
                           class_strings: set[str] | None = None) -> list[dict[str, Any]]:
     """Platform classes the app uses whose native methods no deployed library registers.
@@ -1605,7 +1620,9 @@ def framework_native_rows(scan: dict[str, Any], runtime: dict[str, Any] | None,
         if owner not in unbound_cache:
             # $ravenwood natives are host-side test doubles, never called on a device.
             natives = [m for m in (classes.get(owner) or {}).get("native_methods") or [] if "$ravenwood" not in m]
-            if class_strings is not None:
+            # libcore's natives are registered by table (libart's own, the runtime's libraries) or
+            # exported by name, never looked up by class string: judge them by those alone.
+            if class_strings is not None and not owner.startswith(_LIBCORE_OWNERS):
                 named = owner[1:-1] in class_strings
                 unbound_cache[owner] = [m for m in natives
                                         if not (named and _names_string(class_strings, m[:m.index("(")]))]
@@ -1624,8 +1641,13 @@ def framework_native_rows(scan: dict[str, Any], runtime: dict[str, Any] | None,
             unbound_cache[owner] = unbound
         return unbound_cache[owner]
 
+    # libcore's natives are ART's own (libart's stubs register them), so they can be judged only
+    # when the index includes libart. They are not all there: r73 found MappedByteBuffer.load0
+    # (Zoom's "no compatible CPU" link-error dialog) and sun.nio.ch.Net's natives unregistered.
+    core_indexed = any((lib.get("name") or "") == "libart.so" for lib in runtime.get("bridge_libraries", []))
+    owners = ("Landroid/", "Lcom/android/") + (_LIBCORE_OWNERS if core_indexed else ())
     app_calls = {owner: set(names) for owner, names in scan["inventory"].get("platform_method_names", {}).items()
-                 if owner.startswith(("Landroid/", "Lcom/android/"))}
+                 if owner.startswith(owners) and owner not in _ART_INTRINSIC_OWNERS}
     # The app's call to a framework wrapper that calls an unbound native: in a class whose natives
     # are partly registered this is the only trace (MuseKit's AudioTrack.getBufferSizeInFrames,
     # Mouse Pounce's AudioManager.getParameters through ExoPlayer). Keyed by the native's class.
@@ -1636,10 +1658,17 @@ def framework_native_rows(scan: dict[str, Any], runtime: dict[str, Any] | None,
                 continue
             for target in targets:
                 target_owner, native = target.split("->", 1)
-                # libcore's natives are ART's own, registered inside the runtime, not by a library.
-                if target_owner.startswith(("Landroid/", "Lcom/android/")) and native in unbound_of(target_owner):
+                if (target_owner.startswith(owners) and target_owner not in _ART_INTRINSIC_OWNERS
+                        and native in unbound_of(target_owner)):
                     wrapper = f"{owner[1:-1].rsplit('/', 1)[-1]}.{method[:method.index('(')]}"
                     via[target_owner].setdefault(native, wrapper)
+    if core_indexed:
+        for public, implementations in _NIO_IMPLEMENTATIONS.items():
+            if public not in app_calls:
+                continue
+            for implementation in implementations:
+                for native in unbound_of(implementation):
+                    via[implementation].setdefault(native, public[1:-1].rsplit("/", 1)[-1] + " (its SelectorProvider implementation)")
     rows = []
     for owner in sorted(set(app_calls) | set(via)):
         natives = [m for m in (classes.get(owner) or {}).get("native_methods") or [] if "$ravenwood" not in m]
@@ -1650,7 +1679,17 @@ def framework_native_rows(scan: dict[str, Any], runtime: dict[str, Any] | None,
         direct = [m for m in unbound if m[:m.index("(")] in called]
         init = [m for m in unbound if _CLASS_INIT_NATIVE.match(m[:m.index("(")])]
         reached = [m for m in unbound if m in via.get(owner, {})]
-        entire = len(unbound) == len(natives) and bool(called)
+        # OpenJDK's convention for libcore, whose calls are not indexed: public foo() calls native
+        # foo0() (MappedByteBuffer.load -> load0, FileInputStream.length -> length0).
+        if owner.startswith(_LIBCORE_OWNERS):
+            for m in unbound:
+                name = m[:m.index("(")]
+                if name.endswith("0") and name[:-1] in called and m not in reached:
+                    reached.append(m)
+                    via[owner].setdefault(m, f"{owner[1:-1].rsplit('/', 1)[-1]}.{name[:-1]}")
+        # A libcore class with no registered native is often one whose natives are unused helpers
+        # (TimeZone, Package); flag it only on a traced path to one.
+        entire = len(unbound) == len(natives) and bool(called) and not owner.startswith(_LIBCORE_OWNERS)
         if not (direct or init or entire or reached):
             continue
         cls = owner[1:-1].replace("/", ".")
