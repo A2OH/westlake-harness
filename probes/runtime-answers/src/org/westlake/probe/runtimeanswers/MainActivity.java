@@ -169,6 +169,14 @@ public class MainActivity extends Activity {
                 }
             });
         }
+        check("File.setLastModified on a file", "true, read back", () -> {
+            File stamp = new File(getFilesDir(), "stamp");
+            new FileOutputStream(stamp).close();
+            long when = 1700000000000L;
+            boolean set = stamp.setLastModified(when);
+            return set + (stamp.lastModified() == when ? ", read back" : ", reads " + stamp.lastModified());
+        });
+        check("ASharedMemory (NDK)", "size 8192, shared yes", () -> nativeSharedMemory());
         check("new MediaRecorder()", "constructs", () -> { new MediaRecorder().release(); return "constructs"; });
         check("AudioRecord.getMinBufferSize(48000, mono, 16-bit)", "> 0 (bytes)",
                 () -> AudioRecord.getMinBufferSize(48000, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT));
@@ -197,6 +205,8 @@ public class MainActivity extends Activity {
     }
 
     private static native String nativeFunopenRead(InputStream stream, int mode);
+
+    private static native String nativeSharedMemory();
 
     private static String hex(InputStream in, int count) throws java.io.IOException {
         StringBuilder out = new StringBuilder();

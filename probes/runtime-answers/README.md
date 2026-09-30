@@ -17,7 +17,8 @@ from Android:
 - a stored APK entry reached the ways Meta's superpack reaches its archive (Facebook, Instagram,
   Messenger): `ZipFile.getInputStream`, `FileInputStream.skip` to the entry's data, and a
   `funopen` FILE over that InputStream read with `fread` (buffered and unbuffered), `fgetc` and
-  1-byte `fread`. The asset holds bytes `i % 251`, so any offset error shows in the first bytes.
+  1-byte `fread`. The asset holds bytes `i % 251`, so any offset error shows in the first bytes;
+- `File.setLastModified` (Facebook's dex stamp) and NDK `ASharedMemory` (Meta's libstartup).
 
     ./build.sh      # out/runtime-answers-probe.apk (Java, a trivial native library to copy and load,
                     # and libprobeassets.so for the NDK asset check)
@@ -55,6 +56,8 @@ Android. Also:
 | AudioRecord 0.5 s from the microphone | not initialized: OH refuses the capturer | samples |
 | funopen FILE, fread 28 / fread 1 x8 | `131415…` (shim nw19); `000102…` (nw20) | `000102…` |
 | funopen FILE, unbuffered fread / fgetc | `000102…` | `000102…` |
+| File.setLastModified | true, reads back (natives override 14) | same |
+| ASharedMemory create/getSize/mmap | size 0 via fstat, shared (shim nw24); size by lseek from nw25 | size 8192, shared |
 
 The capturer is refused because the host HAP does not request `ohos.permission.MICROPHONE`.
 

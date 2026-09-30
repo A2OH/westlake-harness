@@ -6,10 +6,12 @@
 #define _BSD_SOURCE 1  /* funopen, as bionic declares it under __USE_BSD */
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
+#include <android/sharedmem.h>
 #include <jni.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <unistd.h>
 
 JNIEXPORT jstring JNICALL
@@ -95,5 +97,27 @@ Java_org_westlake_probe_runtimeanswers_MainActivity_nativeFunopenRead(JNIEnv *en
     if (got < 8) snprintf(result, sizeof(result), "read %zu bytes", got);
     else snprintf(result, sizeof(result), "%02x%02x%02x%02x%02x%02x%02x%02x", header[0], header[1], header[2],
                   header[3], header[4], header[5], header[6], header[7]);
+    return (*env)->NewStringUTF(env, result);
+}
+
+/* ASharedMemory_create + getSize, then a write through one mapping read back through another. */
+JNIEXPORT jstring JNICALL
+Java_org_westlake_probe_runtimeanswers_MainActivity_nativeSharedMemory(JNIEnv *env, jclass cls)
+{
+    (void) cls;
+    char result[96];
+    int fd = ASharedMemory_create("wl-probe", 8192);
+    if (fd < 0) return (*env)->NewStringUTF(env, "ASharedMemory_create failed");
+    size_t size = ASharedMemory_getSize(fd);
+    char *a = mmap(NULL, 8192, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    char *b = mmap(NULL, 8192, PROT_READ, MAP_SHARED, fd, 0);
+    if (a == MAP_FAILED || b == MAP_FAILED) snprintf(result, sizeof(result), "size %zu, mmap failed", size);
+    else {
+        a[4096] = 'W';
+        snprintf(result, sizeof(result), "size %zu, shared %s", size, b[4096] == 'W' ? "yes" : "no");
+    }
+    if (a != MAP_FAILED) munmap(a, 8192);
+    if (b != MAP_FAILED) munmap(b, 8192);
+    close(fd);
     return (*env)->NewStringUTF(env, result);
 }
