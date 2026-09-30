@@ -320,6 +320,18 @@ def _is_hollow_class(class_def: Any) -> bool:
     return not real_methods and not list(class_def.get_fields())
 
 
+# Relocation tags only bionic's linker applies. OH's musl applies DT_ANDROID_RELA (APS2 packed) and
+# standard DT_RELR -- its own libraries carry both -- but skips DT_ANDROID_RELR, leaving every
+# pointer it relocates at its link-time value (Meta's libraries: an INIT_ARRAY entry of 0x2ae2c
+# was called).
+ANDROID_RELOCATION_TAGS = {0x6FFFE000: "ANDROID_RELR"}
+
+
+def _android_relocation_tags(readelf_text: str) -> list[str]:
+    found = {int(tag, 16) for tag in re.findall(r"^\s*0x([0-9a-fA-F]+)\s+\(", readelf_text, re.M)}
+    return sorted(name for tag, name in ANDROID_RELOCATION_TAGS.items() if tag in found)
+
+
 def read_elf(
     path: Path | None = None,
     data: bytes | None = None,
@@ -367,6 +379,7 @@ def read_elf(
             "soname": soname,
             "build_id": build_id,
             "needed": needed,
+            "android_relocation_tags": _android_relocation_tags(text),
             "exported_symbols": sorted(exports),
             "undefined_symbols": sorted(undefined),
             "undefined_weak_symbols": sorted(undefined_weak),

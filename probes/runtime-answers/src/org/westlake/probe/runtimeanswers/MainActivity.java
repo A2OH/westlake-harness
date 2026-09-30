@@ -3,6 +3,9 @@ package org.westlake.probe.runtimeanswers;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
+import android.media.AudioFormat;
+import android.media.AudioRecord;
+import android.media.MediaRecorder;
 import android.net.TrafficStats;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -11,11 +14,15 @@ import android.system.Os;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.widget.TextView;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import javax.xml.parsers.SAXParserFactory;
+import org.xml.sax.Attributes;
+import org.xml.sax.helpers.DefaultHandler;
 
 /**
  * Records, one line each, the answers commercial apps read at startup and that the top-apps blind
@@ -85,6 +92,32 @@ public class MainActivity extends Activity {
         check("Os.chmod(file, 0400)", "ok", () -> { Os.chmod(file.getPath(), 0400); return "ok"; });
         check("Os.chmod(dir, 0500)", "ok", () -> { Os.chmod(dir.getPath(), 0500); return "ok"; });
         check("Os.chmod(dir, 0700)", "ok", () -> { Os.chmod(dir.getPath(), 0700); return "ok"; });
+        // Where can a copied library be mapped executable? Each candidate directory gets its own copy.
+        String runtimeRoot = System.getenv("WESTLAKE_RUNTIME_ROOT");
+        String[][] places = {
+            {"code cache", getCodeCacheDir().getPath()},
+            {"cache", getCacheDir().getPath()},
+            {"no-backup", getNoBackupFilesDir().getPath()},
+            {"runtime root", runtimeRoot == null ? "" : runtimeRoot + "/wl-exec-probe"},
+        };
+        for (String[] place : places) {
+            final String dirPath = place[1];
+            check("System.load from " + place[0] + " (" + dirPath + ")", "loads", () -> {
+                if (dirPath.isEmpty()) return "no such directory";
+                File d = new File(dirPath);
+                d.mkdirs();
+                File lib = new File(d, "libcopied-" + Math.abs(dirPath.hashCode()) + ".so");
+                try (ZipFile apk = new ZipFile(getApplicationInfo().sourceDir)) {
+                    ZipEntry entry = apk.getEntry("lib/arm64-v8a/libprobeanswers.so");
+                    try (InputStream in = apk.getInputStream(entry); FileOutputStream out = new FileOutputStream(lib)) {
+                        byte[] b = new byte[65536];
+                        for (int n; (n = in.read(b)) > 0; ) out.write(b, 0, n);
+                    }
+                }
+                System.load(lib.getPath());
+                return "loaded";
+            });
+        }
         check("System.load of a library copied to app storage", "loads", () -> {
             File lib = new File(getFilesDir(), "libcopied.so");
             try (ZipFile apk = new ZipFile(getApplicationInfo().sourceDir)) {
@@ -99,8 +132,60 @@ public class MainActivity extends Activity {
             System.load(lib.getPath());
             return "loaded";
         });
+        check("SAXParser.parse (expat natives)", "a|b=1|t=\u00e9\u4e2d",
+                () -> {
+                    SaxRecorder seen = new SaxRecorder();
+                    SAXParserFactory.newInstance().newSAXParser().parse(
+                            new ByteArrayInputStream("<a b=\"1\">\u00e9\u4e2d</a>".getBytes("UTF-8")), seen);
+                    return seen.toString();
+                });
+        check("AAsset_openFileDescriptor on an uncompressed asset", "fd ok, bytes match", () -> {
+            System.loadLibrary("probeassets");
+            return nativeAssetFd(getAssets(), "fd-probe.dat");
+        });
+        check("new MediaRecorder()", "constructs", () -> { new MediaRecorder().release(); return "constructs"; });
+        check("AudioRecord.getMinBufferSize(48000, mono, 16-bit)", "> 0 (bytes)",
+                () -> AudioRecord.getMinBufferSize(48000, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT));
+        check("AudioRecord 0.5 s from the microphone", "samples read, non-zero level", () -> {
+            int min = AudioRecord.getMinBufferSize(48000, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
+            AudioRecord rec = new AudioRecord(MediaRecorder.AudioSource.MIC, 48000, AudioFormat.CHANNEL_IN_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT, Math.max(min, 9600));
+            if (rec.getState() != AudioRecord.STATE_INITIALIZED) { rec.release(); return "not initialized"; }
+            rec.startRecording();
+            short[] buf = new short[24000];
+            int got = 0;
+            while (got < buf.length) {
+                int n = rec.read(buf, got, buf.length - got);
+                if (n <= 0) break;
+                got += n;
+            }
+            rec.stop();
+            rec.release();
+            double sum = 0;
+            for (int i = 0; i < got; i++) sum += (double) buf[i] * buf[i];
+            return got + " samples, rms " + Math.round(Math.sqrt(sum / Math.max(1, got)));
+        });
         TextView text = new TextView(this);
         text.setText(shown);
         setContentView(text);
+    }
+
+    private static native String nativeAssetFd(android.content.res.AssetManager assets, String name);
+
+    /** Records the SAX events of a one-element document: qName|b=attr|t=text. */
+    static final class SaxRecorder extends DefaultHandler {
+        private final StringBuilder seen = new StringBuilder();
+
+        @Override public void startElement(String uri, String local, String qName, Attributes attrs) {
+            seen.append(qName).append("|b=").append(attrs.getValue("b"));
+        }
+
+        @Override public void characters(char[] ch, int start, int length) {
+            seen.append("|t=").append(new String(ch, start, length));
+        }
+
+        @Override public String toString() {
+            return seen.toString();
+        }
     }
 }

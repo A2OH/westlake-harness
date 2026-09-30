@@ -412,6 +412,43 @@ class AppStorageExec(unittest.TestCase):
         rows = self.rows({"load_library_calls": [{"api": "loadLibrary", "owner": "Lx/Y;", "value": "foo"}]})
         self.assertNotIn("load:app-storage-exec", rows)
 
+    def test_code_cache_copy_supplies_it(self) -> None:
+        scan = {"apk": {"target_abi": "arm64-v8a"},
+                "inventory": {"elfs": [], "load_library_calls": [{"api": "load", "owner": "Lx/Y;"}]}}
+        rows = {r["id"]: r for r in gapmap.native_loading_rows(
+            {"extract_native_libs": True}, scan, {"present": True}, [],
+            loader={"code_cache_copy": "framework/webview-shim/webview_bionic_shim.c:1"})}
+        self.assertEqual(rows["load:app-storage-exec"]["verdict"], "supplied")
+
+
+class AndroidRelocations(unittest.TestCase):
+    ELFS = [{"soname": "libc++_shared.so", "name": "lib/arm64-v8a/libc++_shared.so", "abi": "arm64-v8a",
+             "android_relocation_tags": ["ANDROID_RELR"]},
+            {"soname": "libplain.so", "name": "lib/arm64-v8a/libplain.so", "abi": "arm64-v8a",
+             "android_relocation_tags": []}]
+
+    def rows(self, loader=None) -> dict:
+        scan = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {"elfs": self.ELFS}}
+        return {r["id"]: r for r in gapmap.native_loading_rows(
+            {"extract_native_libs": True}, scan, {"present": True}, [], loader=loader)}
+
+    def test_flagged_and_missing_without_the_shim(self) -> None:
+        row = self.rows()["load:android-relocations"]
+        self.assertEqual(row["verdict"], "missing")
+        self.assertIn("libc++_shared.so", row["item"])
+        self.assertNotIn("libplain.so", row["item"])
+
+    def test_supplied_by_the_shim(self) -> None:
+        row = self.rows({"android_relocations": "framework/webview-shim/android_relocs.c:1"})["load:android-relocations"]
+        self.assertEqual(row["verdict"], "supplied")
+
+    def test_scanner_reads_the_tags(self) -> None:
+        from harness.westlake_gap import scanner
+        text = (" 0x0000000000000001 (NEEDED) Shared library: [libc.so]\n"
+                " 0x0000000060000011 (LOOS+0x11) 0x12f8\n 0x000000006fffe000 (<unknown>) 0x1310\n"
+                " 0x0000000000000024 (RELR) 0x2000\n")
+        self.assertEqual(scanner._android_relocation_tags(text), ["ANDROID_RELR"], "RELA and RELR are OH's own")
+
 
 class LaunchRemedies(unittest.TestCase):
     def test_network_abi_row_and_launch_args(self) -> None:

@@ -1044,9 +1044,28 @@ def launcher_namespace_option(manifest_root: Path | None) -> dict[str, Any]:
     return found
 
 
+def bionic_loader_model(westlake_root: Path | None) -> dict[str, str | None]:
+    """Where the bionic shim's dlopen supplies what OH's loader does not, as source locations.
+
+    code_cache_copy: a library app storage may not map executable is loaded from a copy in
+    code_cache. android_relocations: DT_ANDROID_RELR is applied by the shim.
+    """
+    def find(relative: str, marker: str) -> str | None:
+        path = westlake_root / relative if westlake_root else None
+        if path is None or not path.exists():
+            return None
+        text = path.read_text(errors="replace")
+        index = text.find(marker)
+        return f"{relative}:{text.count(chr(10), 0, index) + 1}" if index >= 0 else None
+
+    return {"code_cache_copy": find("framework/webview-shim/webview_bionic_shim.c", "westlake_load_from_code_cache("),
+            "android_relocations": find("framework/webview-shim/android_relocs.c", "apply_relr(")}
+
+
 def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_extracts: dict[str, Any],
                         board_paths: list[str] | None = None, namespace_option: dict[str, Any] | None = None,
-                        runtime_libraries: list[str] | None = None) -> list[dict[str, Any]]:
+                        runtime_libraries: list[str] | None = None,
+                        loader: dict[str, str | None] | None = None) -> list[dict[str, Any]]:
     rows = []
     elfs = ohresolve.target_elfs(scan)
     shadowed, targets = shadowed_libraries(scan, board_paths or [])
@@ -1118,24 +1137,52 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
             shim="extract at install/launch, or teach the loader zip-member mapping (WebView needs the latter too)",
         ))
     # Libraries an app copies into its own storage and loads from there. Android maps them
-    # executable; OH's policy refuses (probes/runtime-answers: System.load of a library copied to
-    # app storage fails with errno 13). Meta's SoLoader unpacks every library this way (Facebook,
-    # Messenger); CapCut's libmetasec_ov.so failed the same way.
+    # executable; OH's policy refuses every app-data directory but code_cache (probes/runtime-answers:
+    # files, cache and no_backup fail with errno 13). WhatsApp's SoLoader unpacks every library into
+    # files/decompressed/libs.spo/; CapCut's libmetasec_ov.so failed the same way.
+    loader = loader or {}
     inventory = scan.get("inventory", {})
     loaders = sorted({m.get("owner", "").split("/")[2] for m in inventory.get("declared_native_methods", [])
                       if m.get("owner", "").startswith("Lcom/facebook/soloader/")})
     path_loads = [c for c in inventory.get("load_library_calls", []) if c.get("api") == "load"]
     if loaders or path_loads:
+        copy = loader.get("code_cache_copy")
         rows.append(_row(
             "native-loading", "load:app-storage-exec",
             "Native libraries loaded from the app's own storage",
-            oh_touchpoint="OH SELinux: app data files may not be mapped executable",
-            verdict="missing", shim_class="C6", effort="M", confidence=STATIC,
-            probe="probes/runtime-answers",
+            oh_touchpoint="OH SELinux: app data files may not be mapped executable, except in code_cache",
+            verdict="supplied" if copy else "missing", shim_class="C6", effort="verify" if copy else "M",
+            confidence=STATIC, probe="probes/runtime-answers",
+            provider=("the bionic shim's dlopen retries a refused library from a copy in code_cache/wl-exec"
+                      if copy else "none"),
+            provider_source=copy,
             app_evidence=(("SoLoader unpacks and loads libraries from app storage; " if loaders else "")
                           + (f"System.load with a path from {len(path_loads)} call sites" if path_loads else "")).strip("; "),
+            seen_blocking=["whatsapp, capcut (top-apps batch: failed to map library errno=13)"],
             shim="load such libraries from a location OH lets the app map executable (copy there first), "
                  "or allow app_data_file execute mapping for Westlake apps",
+        ))
+    # DT_ANDROID_RELR (scanner.ANDROID_RELOCATION_TAGS): musl skips it, so a constructor pointer
+    # keeps its link-time value and the load dies calling it.
+    android_relocated = sorted({elf.get("soname") or Path(elf["name"]).name for elf in elfs
+                                if elf.get("android_relocation_tags")})
+    if android_relocated:
+        applied = loader.get("android_relocations")
+        tags = sorted({t for elf in elfs for t in elf.get("android_relocation_tags") or ()})
+        rows.append(_row(
+            "native-loading", "load:android-relocations",
+            f"Libraries with DT_ANDROID_RELR relocations ({', '.join(android_relocated[:4])}"
+            + (" ..." if len(android_relocated) > 4 else "") + ")",
+            oh_touchpoint="OH musl dynamic linker: skips " + ", ".join(tags),
+            verdict="supplied" if applied else "missing", shim_class="C3", effort="verify" if applied else "M",
+            confidence=STATIC,
+            provider=("the bionic shim loads them from a copy with the table hidden, applies it, then runs "
+                      "the constructors" if applied else "none: pointers it relocates keep their link-time values"),
+            provider_source=applied,
+            app_evidence=f"{len(android_relocated)} APK libraries carry {', '.join(tags)}",
+            seen_blocking=["facebook, messenger, instagram (SIGSEGV with pc == fault addr == the library's "
+                           "unrelocated INIT_ARRAY entry)"],
+            shim="apply DT_ANDROID_RELR before running constructors (OH's musl applies DT_ANDROID_RELA and DT_RELR itself)",
         ))
     return rows
 
@@ -1669,7 +1716,8 @@ def build_map(
             + (ndk_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root), ndk_cov) if ndk_cov
                else native_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root)))
             + native_loading_rows(facts, scan, launcher_extraction(manifest_root), board_paths,
-                                  launcher_namespace_option(manifest_root), runtime_libraries)
+                                  launcher_namespace_option(manifest_root), runtime_libraries,
+                                  bionic_loader_model(westlake_root))
             + nio_rows(scan, runtime_class_paths)
             + needed_library_rows(scan, board_paths, runtime_libraries)
             + libc_constant_rows(scan, contracts.libc_constant_model(westlake_root))
