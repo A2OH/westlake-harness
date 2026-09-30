@@ -439,7 +439,7 @@ class AndroidRelocations(unittest.TestCase):
         self.assertNotIn("libplain.so", row["item"])
 
     def test_supplied_by_the_shim(self) -> None:
-        row = self.rows({"android_relocations": "framework/webview-shim/android_relocs.c:1"})["load:android-relocations"]
+        row = self.rows({"android_relr_launcher": "tools/probe_source_app.py:1"})["load:android-relocations"]
         self.assertEqual(row["verdict"], "supplied")
 
     def test_scanner_reads_the_tags(self) -> None:

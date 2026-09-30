@@ -1044,14 +1044,16 @@ def launcher_namespace_option(manifest_root: Path | None) -> dict[str, Any]:
     return found
 
 
-def bionic_loader_model(westlake_root: Path | None) -> dict[str, str | None]:
-    """Where the bionic shim's dlopen supplies what OH's loader does not, as source locations.
+def bionic_loader_model(westlake_root: Path | None, manifest_root: Path | None = None) -> dict[str, str | None]:
+    """Where Westlake supplies what OH's loader does not, as source locations.
 
-    code_cache_copy: a library app storage may not map executable is loaded from a copy in
-    code_cache. android_relocations: DT_ANDROID_RELR is applied by the shim.
+    code_cache_copy: the bionic shim loads a library app storage may not map executable from a copy
+    in code_cache. android_relr_launcher: the launcher stages the APK's libraries with
+    DT_ANDROID_RELR renumbered to DT_RELR; android_relr_shim: the shim does the same for libraries
+    an app writes at run time.
     """
-    def find(relative: str, marker: str) -> str | None:
-        path = westlake_root / relative if westlake_root else None
+    def find(relative: str, marker: str, root: Path | None = westlake_root) -> str | None:
+        path = root / relative if root else None
         if path is None or not path.exists():
             return None
         text = path.read_text(errors="replace")
@@ -1059,7 +1061,8 @@ def bionic_loader_model(westlake_root: Path | None) -> dict[str, str | None]:
         return f"{relative}:{text.count(chr(10), 0, index) + 1}" if index >= 0 else None
 
     return {"code_cache_copy": find("framework/webview-shim/webview_bionic_shim.c", "westlake_load_from_code_cache("),
-            "android_relocations": find("framework/webview-shim/android_relocs.c", "apply_relr(")}
+            "android_relr_launcher": find("tools/probe_source_app.py", "def android_relr_retagged(", manifest_root),
+            "android_relr_shim": find("framework/webview-shim/android_relocs.c", "write_retagged_copy(")}
 
 
 def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_extracts: dict[str, Any],
@@ -1167,22 +1170,25 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
     android_relocated = sorted({elf.get("soname") or Path(elf["name"]).name for elf in elfs
                                 if elf.get("android_relocation_tags")})
     if android_relocated:
-        applied = loader.get("android_relocations")
+        applied = loader.get("android_relr_launcher")
         tags = sorted({t for elf in elfs for t in elf.get("android_relocation_tags") or ()})
         rows.append(_row(
             "native-loading", "load:android-relocations",
             f"Libraries with DT_ANDROID_RELR relocations ({', '.join(android_relocated[:4])}"
             + (" ..." if len(android_relocated) > 4 else "") + ")",
-            oh_touchpoint="OH musl dynamic linker: skips " + ", ".join(tags),
-            verdict="supplied" if applied else "missing", shim_class="C3", effort="verify" if applied else "M",
+            oh_touchpoint="OH musl dynamic linker: skips " + ", ".join(tags) + " (applies standard DT_RELR)",
+            verdict="supplied" if applied else "missing", shim_class="C3", effort="verify" if applied else "S",
             confidence=STATIC,
-            provider=("the bionic shim loads them from a copy with the table hidden, applies it, then runs "
-                      "the constructors" if applied else "none: pointers it relocates keep their link-time values"),
+            provider=("the launcher stages them with the tags renumbered to DT_RELR, which musl applies"
+                      + ("; the bionic shim does the same for libraries the app writes at run time"
+                         if loader.get("android_relr_shim") else "")
+                      if applied else "none: pointers the table covers keep their link-time values"),
             provider_source=applied,
             app_evidence=f"{len(android_relocated)} APK libraries carry {', '.join(tags)}",
             seen_blocking=["facebook, messenger, instagram (SIGSEGV with pc == fault addr == the library's "
                            "unrelocated INIT_ARRAY entry)"],
-            shim="apply DT_ANDROID_RELR before running constructors (OH's musl applies DT_ANDROID_RELA and DT_RELR itself)",
+            shim="renumber DT_ANDROID_RELR/RELRSZ/RELRENT to DT_RELR/RELRSZ/RELRENT (same encoding); "
+                 "OH's musl applies DT_RELR and DT_ANDROID_RELA itself",
         ))
     return rows
 
@@ -1717,7 +1723,7 @@ def build_map(
                else native_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root)))
             + native_loading_rows(facts, scan, launcher_extraction(manifest_root), board_paths,
                                   launcher_namespace_option(manifest_root), runtime_libraries,
-                                  bionic_loader_model(westlake_root))
+                                  bionic_loader_model(westlake_root, manifest_root))
             + nio_rows(scan, runtime_class_paths)
             + needed_library_rows(scan, board_paths, runtime_libraries)
             + libc_constant_rows(scan, contracts.libc_constant_model(westlake_root))
