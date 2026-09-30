@@ -419,6 +419,7 @@ class AppStorageExec(unittest.TestCase):
             {"extract_native_libs": True}, scan, {"present": True}, [],
             loader={"code_cache_copy": "framework/webview-shim/webview_bionic_shim.c:1"})}
         self.assertEqual(rows["load:app-storage-exec"]["verdict"], "supplied")
+        self.assertEqual(rows["load:app-storage-exec"]["launch_args"], ["--android-native-net-app-libraries"])
 
 
 class AndroidRelocations(unittest.TestCase):
@@ -1062,3 +1063,22 @@ class SandboxAndBacktest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class UsesLibrary(unittest.TestCase):
+    FACTS = {"uses_libraries": [{"name": "org.apache.http.legacy", "required": True},
+                                {"name": "com.google.android.maps", "required": False},
+                                {"name": "org.apache.http.legacy", "required": True}]}
+
+    def test_rows(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            bridge = Path(tmp) / "framework/activity/java/AppSchedulerBridge.java"
+            bridge.parent.mkdir(parents=True)
+            bridge.write_text("static List sharedLibraryInfos(String[] jars)")
+            data = {"artifacts": {"framework/org.apache.http.legacy.jar": {}}}
+            rows = {r["id"]: r for r in gapmap.uses_library_rows(self.FACTS, data, Path(tmp))}
+            self.assertEqual(len(rows), 2)
+            self.assertEqual(rows["pm:uses-library:org.apache.http.legacy"]["verdict"], "supplied")
+            self.assertEqual(rows["pm:uses-library:com.google.android.maps"]["verdict"], "absent")
+            rows = {r["id"]: r for r in gapmap.uses_library_rows(self.FACTS, {"artifacts": {}}, Path(tmp))}
+            self.assertEqual(rows["pm:uses-library:org.apache.http.legacy"]["verdict"], "missing")

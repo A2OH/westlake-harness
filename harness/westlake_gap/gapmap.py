@@ -507,6 +507,44 @@ ANDROID_PATHS = {
 }
 
 
+def uses_library_rows(facts: dict[str, Any], runtime_data: dict[str, Any] | None,
+                      westlake_root: Path | None) -> list[dict[str, Any]]:
+    """One row per <uses-library>: the shared library Android puts on the app's class path.
+
+    Westlake resolves a name to <runtime root>/framework/<name>.jar from the runtime data and hands
+    LoadedApk a builtin SharedLibraryInfo for it (AppSchedulerBridge.sharedLibraryInfos). Meta's
+    apps declare org.apache.http.legacy; without it the proxygen library's JNI_OnLoad stopped at
+    FindClass("org/apache/http/Header") and EventBase.init later aborted on an unset method ID.
+    A library an Android device may lack (required="false") is reported as absent, not missing.
+    """
+    bridge = westlake_root / "framework/activity/java/AppSchedulerBridge.java" if westlake_root else None
+    resolves = bool(bridge and bridge.exists() and "sharedLibraryInfos(" in bridge.read_text(errors="replace"))
+    shipped = set((runtime_data or {}).get("artifacts", {}))
+    rows, seen = [], set()
+    for item in facts.get("uses_libraries") or []:
+        name = item.get("name")
+        if not name or name in seen:
+            continue
+        seen.add(name)
+        jar = f"framework/{name}.jar"
+        supplied = resolves and jar in shipped
+        verdict = "supplied" if supplied else ("missing" if item.get("required", True) else "absent")
+        rows.append(_row(
+            "package-manager", "pm:uses-library:" + name, f"Shared library {name}"
+            + ("" if item.get("required", True) else " (optional)"),
+            oh_touchpoint="LoadedApk shared-library class loaders (ApplicationInfo.sharedLibraryInfos)",
+            verdict=verdict, shim_class="C1", effort="verify" if supplied else ("none" if verdict == "absent" else "S"),
+            confidence=STATIC,
+            provider=(f"runtime data ships {jar}; AppSchedulerBridge makes it a builtin SharedLibraryInfo"
+                      if supplied else "the runtime ships no jar for it"),
+            app_evidence=f'<uses-library android:name="{name}" android:required="{str(item.get("required", True)).lower()}">',
+            seen_blocking=(["facebook, messenger (proxygen JNI_OnLoad: ClassNotFoundException org.apache.http.Header)"]
+                           if name == "org.apache.http.legacy" else []),
+            shim=f"build {name} from its AOSP source and ship it as {jar}",
+        ))
+    return rows
+
+
 def android_path_rows(apk: Path | None, scan: dict[str, Any], runtime_data: dict[str, Any] | None,
                       westlake_root: Path | None) -> list[dict[str, Any]]:
     """Android file paths the APK's code names literally, against what the app namespace shows there.
@@ -1189,6 +1227,9 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
             seen_blocking=["whatsapp, capcut (top-apps batch: failed to map library errno=13)"],
             shim="load such libraries from a location OH lets the app map executable (copy there first), "
                  "or allow app_data_file execute mapping for Westlake apps",
+            # Such libraries are NDK code the launch cannot name in advance; they need the Bionic
+            # addrinfo translation too (Messenger's superpack-unpacked liger).
+            launch_args=["--android-native-net-app-libraries"],
         ))
     # DT_ANDROID_RELR (scanner.ANDROID_RELOCATION_TAGS): musl skips it, so a constructor pointer
     # keeps its link-time value and the load dies calling it.
@@ -1741,6 +1782,7 @@ def build_map(
             + engine_surface_rows(scan, surfaceview_model(westlake_root, manifest_root, runtime_libraries))
             + runtime_data_rows(scan)
             + android_path_rows(apk_path, scan, runtime_data, westlake_root)
+            + uses_library_rows(facts, runtime_data, westlake_root)
             + framework_native_rows(scan, runtime_index, runtime_class_paths)
             + lifecycle_native_rows(runtime_index, runtime_class_paths)
             + native_upcall_rows(scan)
