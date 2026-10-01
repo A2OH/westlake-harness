@@ -56,6 +56,20 @@ _RELAYOUT = re.compile(r"OH_WSA-relayout")
 _HELD_BACK = re.compile(r"held back")
 _FATAL = re.compile(r"Fatal signal")
 
+#: A missing platform native throws UnsatisfiedLinkError into Java, which the caller may catch and
+#: carry on: WhatsApp's readProcFile miss in r77 is followed by a successful bind, so it was not
+#: why WhatsApp stopped. Such a miss is a blocker only if no later lifecycle progress follows it.
+_SURVIVABLE = {"native-upcalls"}
+_PROGRESS = re.compile(r"sBindAppDone=true|DecorView|OH_WSA-relayout")
+
+#: A frame the app swapped. A window held back for want of an OH session is the trampoline
+#: activity's when a later one draws: AppManager, Fossify Voice Recorder and Snapchat start a second
+#: activity from the first, whose window is held back, and the second draws. Before this, all three
+#: scored "view" with the held-back line as their blocker.
+_SWAP = re.compile(r"EglManager::swapBuffers ENTRY")
+
+_HELD_BACK_BLOCKER = re.compile(r"held back [\dx]+: (no surface until its activity's window has an OH session)")
+
 #: First-blocker patterns, most specific first. Each yields (category, identity).
 _BLOCKERS = (
     (re.compile(r"Couldn't find meta-data for provider with authority (\S+)"),
@@ -76,8 +90,7 @@ _BLOCKERS = (
      "app-framework", "start activity: {0}"),
     (re.compile(r"RuntimeException: (bindService\(\) failed)"),
      "system-services", "{0}"),
-    (re.compile(r"held back [\dx]+: (no surface until its activity's window has an OH session)"),
-     "app-framework", "{0}"),
+    (_HELD_BACK_BLOCKER, "app-framework", "{0}"),
     # r77: 29 of 48 stopped apps matched none of the above although their logs say why.
     (re.compile(r"ABORT: \S*/hwui/\S*?(\w+)\.cpp ([^\n]{0,70})"),
      "graphics", "hwui {0}: {1}"),
@@ -89,7 +102,7 @@ _BLOCKERS = (
      "app-framework", "process init: {0}: {1}"),
     (re.compile(r"ensureBindApplication FAILED phase=\S+ cause\[[1-9]\]=[\w.$]*?(\w+(?:Exception|Error)): ?([^\n]{0,80})"),
      "app-framework", "bind: {0}: {1}"),
-    (re.compile(r"\[UNCAUGHT\] thread='([^']*)' [\w.$]*?(\w+(?:Exception|Error)): ?([^\n]{0,80})"),
+    (re.compile(r"\[UNCAUGHT\] thread='([^':]*)[^']*' [\w.$]*?(\w+(?:Exception|Error)): ?([^\n]{0,80})"),
      "app-framework", "uncaught on {0}: {1}: {2}"),
     (re.compile(r"Fatal signal (\d+) \((\w+)\)[^\n]*\n(?:[^\n]*\n){0,4}?Thread: \d+ \"([^\"]*)\""),
      "native-crash", "{1} on thread {2}"),
@@ -144,7 +157,9 @@ def first_blocker(text: str) -> tuple[str, str] | tuple[None, None]:
     text = _NOISE.sub(lambda m: " " * len(m.group(0)), text)
     best: tuple[int, str, str] | None = None
     for pattern, category, template in _BLOCKERS:
-        match = pattern.search(text)
+        survived = _SWAP if pattern is _HELD_BACK_BLOCKER else _PROGRESS if category in _SURVIVABLE else None
+        match = next((m for m in pattern.finditer(text)
+                      if survived is None or not survived.search(text, m.end())), None)
         if match is None:
             continue
         if best is None or match.start() < best[0]:
@@ -159,7 +174,9 @@ def score(app: str, text: str) -> Score:
     }
     relayouts = len(_RELAYOUT.findall(text))
     held = len(_HELD_BACK.findall(text))
-    counts["drawing"] = relayouts if held == 0 else 0
+    last_held = text.rfind("held back")
+    drew_after_held = held > 0 and _SWAP.search(text, last_held) is not None
+    counts["drawing"] = relayouts if held == 0 or drew_after_held else 0
 
     # Every rung is evaluated, and the score is the HIGHEST that passed rather than the longest
     # unbroken run. The markers are not equally reliable and a later one is stronger evidence than
@@ -170,7 +187,7 @@ def score(app: str, text: str) -> Score:
     passed = {"spawned": True}
     for name in RUNGS[1:]:
         if name == "drawing":
-            passed[name] = relayouts > 0 and held == 0
+            passed[name] = relayouts > 0 and (held == 0 or drew_after_held)
         else:
             pattern, threshold = _MARKERS[name]
             passed[name] = counts[name] >= threshold
