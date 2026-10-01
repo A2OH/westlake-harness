@@ -1107,3 +1107,37 @@ class LibcoreNatives(unittest.TestCase):
     def test_libcore_ignored_without_libart(self) -> None:
         runtime = dict(self.RUNTIME, bridge_libraries=[])
         self.assertEqual(self.rows(runtime), {})
+
+class AndroidNamespaceNdk(unittest.TestCase):
+    RUNTIME = {"bridge_libraries": [
+        {"name": "libandroid.so", "needed": ["libhwui.so"], "exported_symbols": ["ALooper_prepare"]},
+        {"name": "libhwui.so", "needed": [], "exported_symbols": ["AHardwareBuffer_unlock", "glGetError"]}]}
+    NAMESPACE = [{"name": "libandroid.so", "exported_symbols": []}]
+    NDK = {"symbols": [{"library": "libandroid.so", "symbol": s}
+                       for s in ("ALooper_prepare", "AHardwareBuffer_unlock")]}
+    SCAN = {"apk": {}, "inventory": {"elfs": [
+        {"name": "libscroll.so", "needed": ["libandroid.so", "libGLESv2.so"],
+         "undefined_symbols": ["AHardwareBuffer_unlock", "ALooper_prepare", "glGetError"]}]}}
+
+    def rows(self, rows, shim=frozenset()):
+        return gapmap.android_namespace_rows(self.SCAN, rows, self.NAMESPACE, self.RUNTIME, set(shim), self.NDK)
+
+    def test_routed_library_needs_what_only_the_runtime_copy_reaches(self) -> None:
+        routed = [{"id": "load:x", "launch_args": ["--android-native-target", "libscroll.so"]}]
+        (row,) = self.rows(routed)
+        self.assertEqual(row["id"], "load:android-namespace-ndk:libandroid.so")
+        self.assertEqual(row["open_symbols"], ["AHardwareBuffer_unlock", "ALooper_prepare"], "glGetError is not libandroid's")
+        self.assertEqual(row["verdict"], "missing")
+        (row,) = self.rows(routed, {"AHardwareBuffer_unlock", "ALooper_prepare"})
+        self.assertEqual(row["verdict"], "supplied")
+
+    def test_default_namespace_loads_are_not_affected(self) -> None:
+        self.assertEqual(self.rows([]), [])
+        self.assertEqual(len(self.rows([{"id": "load:app-storage-exec"}])), 1)
+
+    def test_macro_forwarders_count_as_shim_exports(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            shim = Path(tmp) / "framework/webview-shim/webview_bionic_shim.c"
+            shim.parent.mkdir(parents=True)
+            shim.write_text("WESTLAKE_ALOOPER_FORWARD(int, AHardwareBuffer_unlock, (void *b, int *f), (b, f))\n")
+            self.assertIn("AHardwareBuffer_unlock", gapmap.bionic_shim_exports(Path(tmp)))

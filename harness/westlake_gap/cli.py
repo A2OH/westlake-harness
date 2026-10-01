@@ -253,6 +253,9 @@ def parser() -> argparse.ArgumentParser:
     gap.add_argument("--runtime-data", type=Path,
                      help="the runtime data build (its directory or artifacts.json): which Android files the runtime "
                           "ships, for the Android paths the app reads directly")
+    gap.add_argument("--android-namespace-dir", type=Path,
+                     help="libraries the Android namespace finds before the runtime's (the staged webview-t-lib): "
+                          "NDK symbols the runtime defines that a library routed there cannot reach")
     gap.add_argument("--policy", type=Path, default=Path(__file__).parent / "data" / "oh-app-data-policy.json")
     gap.add_argument("--blockers", type=Path, help="known-blockers JSON: backtest the map against observed failures")
     gap.add_argument("--blockers-status", action="store_true",
@@ -444,7 +447,10 @@ def main(argv: list[str] | None = None) -> int:
                             ledger=read_json(args.ledger) if args.ledger else None,
                             aosp_root=args.aosp, apk_path=args.apk,
                             runtime_data=read_json(args.runtime_data / "artifacts.json" if args.runtime_data.is_dir()
-                                                   else args.runtime_data) if args.runtime_data else None)
+                                                   else args.runtime_data) if args.runtime_data else None,
+                            android_namespace_libs=[read_elf(path=p, label=p.name)
+                                                    for p in sorted(args.android_namespace_dir.glob("*.so"))]
+                            if args.android_namespace_dir else None)
         if args.westlake_label:
             gap_map["provider"]["westlake"] = {"branch": args.westlake_label, "commit": args.westlake_label, "uncommitted": []}
         results = None

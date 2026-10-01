@@ -1393,6 +1393,8 @@ def bionic_shim_exports(westlake_root: Path) -> set[str]:
     text = shim.read_text(errors="replace")
     names = set(re.findall(r"^(?:[A-Za-z_][\w \*]*?[\s\*])?([A-Za-z_]\w*)\s*\([^;]*\)\s*\{", text, re.M))
     names |= set(re.findall(r"^[A-Za-z_][\w \*]*?\s\**(__sF|_ctype_)\b", text, re.M))
+    # Forwarders a macro defines: WESTLAKE_ALOOPER_FORWARD(ret, name, params, args).
+    names |= set(re.findall(r"^WESTLAKE_\w+_FORWARD\([^,]+,\s*(\w+)\s*,", text, re.M))
     return {n for n in names if not n.startswith("westlake_") and n not in {"if", "for", "while", "switch", "return"}}
 
 
@@ -1786,6 +1788,89 @@ def apply_ledger(rows: list[dict[str, Any]], ledger: dict[str, Any]) -> None:
             row["seen_blocking"] = seen[row["id"]]
 
 
+def android_namespace_rows(scan: dict[str, Any], rows: list[dict[str, Any]],
+                           namespace_libs: list[dict[str, Any]] | None, runtime: dict[str, Any] | None,
+                           shim_exports: set[str], ndk_cov: dict[str, Any] | None) -> list[dict[str, Any]]:
+    """NDK symbols the runtime supplies that a library in the Android namespace still cannot reach.
+
+    A library the launcher routes to the Android namespace (--android-native-target), or one the
+    app writes and loads at run time, finds its DT_NEEDED in that namespace's search order, where
+    the WebView shim's directory comes before the runtime: its libandroid.so is the WebView shim's
+    74-symbol copy, not the runtime's. An import the runtime's copy (or a library it needs, such
+    as libhwui.so for AHardwareBuffer_*) defines therefore fails to relocate there unless the
+    bionic shim, global in that namespace, forwards it. Instagram's libscrollmerged.so stopped on
+    AHardwareBuffer_unlock that way in r77 while the map counted the symbol as supplied.
+    """
+    if not namespace_libs or not runtime or not ndk_cov:
+        return []
+    # Only what the NDK declares for the library: the runtime's libhwui.so also exports GL, zlib and
+    # log entry points, which an importer gets from its other DT_NEEDED, not from libandroid.so.
+    declared: dict[str, set[str]] = defaultdict(set)
+    for item in ndk_cov["symbols"]:
+        declared[item["library"]].add(item["symbol"])
+    targets = set()
+    for row in rows:
+        args = row.get("launch_args") or []
+        targets |= {value for flag, value in zip(args[0::2], args[1::2]) if flag == "--android-native-target"}
+    app_written = any(row["id"] == "load:app-storage-exec" for row in rows)
+    if not targets and not app_written:
+        return []
+    bridge = {lib.get("soname") or lib["name"]: lib for lib in runtime.get("bridge_libraries", [])}
+
+    def runtime_closure(name: str) -> set[str]:
+        seen, queue, symbols = {name}, [name], set()
+        while queue:
+            lib = bridge.get(queue.pop())
+            if lib is None:
+                continue
+            symbols |= set(lib.get("exported_symbols", []))
+            for dep in lib.get("needed", []):
+                if dep in bridge and dep not in seen:
+                    seen.add(dep)
+                    queue.append(dep)
+        return symbols
+
+    elfs = ohresolve.target_elfs(scan)
+    packaged = set()
+    for elf in elfs:
+        packaged |= set(elf.get("exported_symbols", []))
+    out = []
+    for lib in namespace_libs:
+        name = lib.get("soname") or lib["name"]
+        if name not in bridge:
+            continue
+        unreachable = (runtime_closure(name) & declared.get(name, set())) - set(lib.get("exported_symbols", [])) - packaged
+        importers: dict[str, set[str]] = defaultdict(set)
+        routed = False
+        for elf in elfs:
+            if name not in elf.get("needed", []):
+                continue
+            elf_name = elf.get("soname") or elf["name"].rsplit("/", 1)[-1]
+            if targets and elf_name not in targets and not app_written:
+                continue
+            routed |= elf_name in targets
+            for symbol in set(elf.get("undefined_symbols", [])) & unreachable:
+                importers[symbol].add(elf_name)
+        if not importers:
+            continue
+        names = sorted(importers)
+        open_ = [n for n in names if n not in shim_exports]
+        libs = sorted({lib for users in importers.values() for lib in users})
+        out.append(_row(
+            "native-symbols", f"load:android-namespace-ndk:{name}",
+            f"{len(names)} {name} symbols the runtime defines but the Android namespace's {name} lacks",
+            importing_libraries=libs[:12], confidence=STATIC,
+            oh_touchpoint="none: a Westlake namespace layout", verdict="supplied" if not open_ else "missing",
+            shim_class="C0" if not open_ else "C1", effort="none" if not open_ else "XS",
+            provider=f"{len(names) - len(open_)} of {len(names)} forwarded by the Westlake bionic shim",
+            open_symbols=open_[:20], covered_symbols=[n for n in names if n in shim_exports][:20],
+            app_evidence=("imported by libraries the launcher routes to the Android namespace" if routed else
+                          "the app writes and loads libraries at run time, which load in the Android namespace; "
+                          "its packaged libraries import these, so the ones it writes likely do too"),
+            shim="forward each from the bionic shim to the runtime's own library, as it does ALooper_*"))
+    return out
+
+
 def launch_args(rows: list[dict[str, Any]]) -> list[str]:
     """Every row's launch_args, flag and value pairs kept together, each pair once."""
     pairs: list[tuple[str, str]] = []
@@ -1817,6 +1902,7 @@ def build_map(
     ledger: dict[str, Any] | None = None,
     apk_path: Path | None = None,
     runtime_data: dict[str, Any] | None = None,
+    android_namespace_libs: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     westlake_services = services.westlake_service_model(westlake_root)
     pm = contracts.pm_adapter_model(westlake_root)
@@ -1848,6 +1934,8 @@ def build_map(
                                runtime_libraries)
             + runtime_resolved_rows(scan, ndk_cov)
             + sandbox_rows(scan, policy) + external_rows(facts, scan, refused_libraries(westlake_root)))
+    rows += android_namespace_rows(scan, rows, android_namespace_libs, runtime_index,
+                                   bionic_shim_exports(westlake_root), ndk_cov)
     if ledger:
         apply_ledger(rows, ledger)
     gap_map = {
