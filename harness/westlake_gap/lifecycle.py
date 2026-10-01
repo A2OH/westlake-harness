@@ -78,6 +78,21 @@ _BLOCKERS = (
      "system-services", "{0}"),
     (re.compile(r"held back [\dx]+: (no surface until its activity's window has an OH session)"),
      "app-framework", "{0}"),
+    # r77: 29 of 48 stopped apps matched none of the above although their logs say why.
+    (re.compile(r"ABORT: \S*/hwui/\S*?(\w+)\.cpp ([^\n]{0,70})"),
+     "graphics", "hwui {0}: {1}"),
+    (re.compile(r"ABORT: ([^\n/][^\n]{0,79})"),
+     "native-crash", "abort: {0}"),
+    (re.compile(r"java\.lang\.UnsatisfiedLinkError: ([^\n]{0,100})"),
+     "native-loading", "{0}"),
+    (re.compile(r"\[INITCHILD-FAIL\]\s+caused by: [\w.$]*?(\w+(?:Exception|Error)): ?([^\n]{0,80})"),
+     "app-framework", "process init: {0}: {1}"),
+    (re.compile(r"ensureBindApplication FAILED phase=\S+ cause\[[1-9]\]=[\w.$]*?(\w+(?:Exception|Error)): ?([^\n]{0,80})"),
+     "app-framework", "bind: {0}: {1}"),
+    (re.compile(r"\[UNCAUGHT\] thread='([^']*)' [\w.$]*?(\w+(?:Exception|Error)): ?([^\n]{0,80})"),
+     "app-framework", "uncaught on {0}: {1}: {2}"),
+    (re.compile(r"Fatal signal (\d+) \((\w+)\)[^\n]*\n(?:[^\n]*\n){0,4}?Thread: \d+ \"([^\"]*)\""),
+     "native-crash", "{1} on thread {2}"),
 )
 
 #: Lines every launch emits. Counting these as blockers was a real error earlier in the work --
