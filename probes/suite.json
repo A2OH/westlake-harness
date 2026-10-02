@@ -92,6 +92,17 @@
         "phase=searchpath verdict=FAIL",
         "phase=windowcontext verdict=FAIL"
       ]
+    },
+    {
+      "name": "gl-contracts",
+      "lock_key": "gl-contracts-probe",
+      "apk": "gl-contracts/out/gl-contracts-probe.apk",
+      "pass": [
+        "[WL-GL-PROBE] verdict=ALL_PASS"
+      ],
+      "fail": [
+        "verdict=FAIL"
+      ]
     }
   ]
 }
