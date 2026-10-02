@@ -1,0 +1,483 @@
+{
+ "counts": {
+  "named": 9,
+  "unscorable": 46,
+  "not-named": 2
+ },
+ "results": [
+  {
+   "app": "aaaaxy",
+   "stage": "bound",
+   "category": "native-loading",
+   "blocker": "Error relocating /data/local/tmp/asx/lib/arm64-v8a/libgojni.so: AConfiguration_delete: symbol not fo",
+   "outcome": "named",
+   "rows": [
+    "ndk:package=missing"
+   ]
+  },
+  {
+   "app": "aat",
+   "stage": "activity",
+   "category": "app-framework",
+   "blocker": "start activity: ArithmeticException",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "andstatus",
+   "stage": "view",
+   "category": null,
+   "blocker": null,
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "beatbridge",
+   "stage": "bound",
+   "category": null,
+   "blocker": null,
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "capcut",
+   "stage": "bound",
+   "category": null,
+   "blocker": null,
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "cardswithcats",
+   "stage": "view",
+   "category": null,
+   "blocker": null,
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "cclauncher",
+   "stage": "view",
+   "category": null,
+   "blocker": null,
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "clauncher",
+   "stage": "activity",
+   "category": "app-framework",
+   "blocker": "start activity: InflateException",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "cnn",
+   "stage": "runtime-init",
+   "category": "app-framework",
+   "blocker": "bind: RuntimeException: Unable to create application com.cnn.mobile.android.phone.CnnApplication: java.l",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "diesimu",
+   "stage": "view",
+   "category": "native-loading",
+   "blocker": "No implementation found for void org.libsdl.app.SDLActivity.nativeSetenv(java.lang.String, java.lang",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "discord",
+   "stage": "bound",
+   "category": null,
+   "blocker": null,
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "drawanywhere",
+   "stage": "bound",
+   "category": null,
+   "blocker": null,
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "duckrun",
+   "stage": "bound",
+   "category": "native-loading",
+   "blocker": "Error loading shared library libcamera2ndk.so: (needed by /data/local/tmp/asx/lib/arm64-v8a/libgodot",
+   "outcome": "named",
+   "rows": [
+    "load:needed-missing=missing"
+   ]
+  },
+  {
+   "app": "econverter",
+   "stage": "bound",
+   "category": "native-crash",
+   "blocker": "SIGSEGV on thread com.econverter.",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "elementx",
+   "stage": "runtime-init",
+   "category": "native-crash",
+   "blocker": "SIGSEGV on thread io.element.andr",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "emacs",
+   "stage": "runtime-init",
+   "category": "app-framework",
+   "blocker": "bind: UnsatisfiedLinkError: Error relocating /data/local/tmp/asx/lib/arm64-v8a/libselinux_emacs.so: fts_open",
+   "outcome": "named",
+   "rows": [
+    "ndk:libc-abi=missing"
+   ]
+  },
+  {
+   "app": "facebooknotifica",
+   "stage": "activity",
+   "category": "app-framework",
+   "blocker": "start activity: InflateException",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "fennec",
+   "stage": "runtime-init",
+   "category": null,
+   "blocker": null,
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "flipboard",
+   "stage": "runtime-init",
+   "category": "app-framework",
+   "blocker": "bind: RuntimeException: Unable to get provider androidx.startup.InitializationProvider: eqb: java.lang.U",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "fmessages",
+   "stage": "bound",
+   "category": null,
+   "blocker": null,
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "fvoicerec",
+   "stage": "view",
+   "category": "app-framework",
+   "blocker": "process init: IllegalStateException: null",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "geotagvideocamer",
+   "stage": "view",
+   "category": "graphics",
+   "blocker": "hwui AutoBackendTextureRelease: Invalid GrBackendTexture. Width==480, height==560, protected==0",
+   "outcome": "not-named",
+   "rows": []
+  },
+  {
+   "app": "insigno",
+   "stage": "bound",
+   "category": "native-crash",
+   "blocker": "SIGABRT on thread mali-cmar-backe",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "instagram",
+   "stage": "runtime-init",
+   "category": "native-symbols",
+   "blocker": "AHardwareBuffer_unlock",
+   "outcome": "named",
+   "rows": [
+    "load:android-namespace-ndk:libandroid.so=missing"
+   ]
+  },
+  {
+   "app": "internetradio",
+   "stage": "bound",
+   "category": "app-framework",
+   "blocker": "process init: NullPointerException: Attempt to invoke InvokeType(2) method 'java.lang.Class java.lang.Object.getClas",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "libretube",
+   "stage": "runtime-init",
+   "category": "app-framework",
+   "blocker": "bind: RuntimeException: Unable to create application com.github.libretube.LibreTubeApp: java.lang.Illega",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "linphone",
+   "stage": "bound",
+   "category": "system-services",
+   "blocker": "UsageStatsManager.getAppStandbyBucket on null service",
+   "outcome": "named",
+   "rows": [
+    "svc:usagestats=null"
+   ]
+  },
+  {
+   "app": "messenger",
+   "stage": "view",
+   "category": null,
+   "blocker": null,
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "mobilev2",
+   "stage": "view",
+   "category": null,
+   "blocker": null,
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "mousepounce",
+   "stage": "view",
+   "category": null,
+   "blocker": null,
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "musekit",
+   "stage": "view",
+   "category": "app-framework",
+   "blocker": "process init: IllegalStateException: startRecording() called on an uninitialized AudioRecord.",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "nounours",
+   "stage": "bound",
+   "category": "app-framework",
+   "blocker": "uncaught on Thread-3: IllegalStateException: null",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "nytimes",
+   "stage": "activity",
+   "category": "app-framework",
+   "blocker": "start activity: RuntimeException",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "onloc",
+   "stage": "view",
+   "category": "app-framework",
+   "blocker": "process init: NullPointerException: Attempt to invoke InvokeType(2) method 'java.lang.Class java.lang.Object.getClas",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "opencamera",
+   "stage": "bound",
+   "category": "native-upcalls",
+   "blocker": "android.hardware.Camera._getCameraInfo",
+   "outcome": "named",
+   "rows": [
+    "jni:android.hardware.Camera=missing"
+   ]
+  },
+  {
+   "app": "opflashcontrol",
+   "stage": "view",
+   "category": "app-framework",
+   "blocker": "process init: IllegalStateException: Slider value(80.0) must be greater or equal to valueFrom(0.0), and lower or equa",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "otgmaster",
+   "stage": "activity",
+   "category": "app-framework",
+   "blocker": "start activity: NullPointerException",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "playmaker",
+   "stage": "bound",
+   "category": "native-loading",
+   "blocker": "Error loading shared library libcamera2ndk.so: (needed by /data/local/tmp/asx/lib/arm64-v8a/libgodot",
+   "outcome": "named",
+   "rows": [
+    "load:needed-missing=missing"
+   ]
+  },
+  {
+   "app": "ppsspp",
+   "stage": "bound",
+   "category": "native-crash",
+   "blocker": "SIGSEGV on thread androidInit",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "quitter",
+   "stage": "runtime-init",
+   "category": "app-framework",
+   "blocker": "bind: RuntimeException: Unable to get provider dev.fluttercommunity.workmanager.WorkmanagerInitializer: ",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "reddit",
+   "stage": "view",
+   "category": null,
+   "blocker": null,
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "redreader",
+   "stage": "bound",
+   "category": null,
+   "blocker": null,
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "rethink",
+   "stage": "bound",
+   "category": null,
+   "blocker": null,
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "scrambledexif",
+   "stage": "bound",
+   "category": "app-framework",
+   "blocker": "process init: RuntimeException: Unable to resume activity {com.jarsilio.android.scrambledeggsif/com.jarsilio.and",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "shazam",
+   "stage": "bound",
+   "category": null,
+   "blocker": null,
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "shortcut",
+   "stage": "bound",
+   "category": null,
+   "blocker": null,
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "spotify",
+   "stage": "activity",
+   "category": "app-framework",
+   "blocker": "uncaught on DefaultDispatcher-worker-4: UnsatisfiedLinkError: Error loading shared library libmediandk.so: (needed by /data/data/com.spotify.m",
+   "outcome": "named",
+   "rows": [
+    "load:needed-missing=missing"
+   ]
+  },
+  {
+   "app": "telegram",
+   "stage": "view",
+   "category": "graphics",
+   "blocker": "hwui AutoBackendTextureRelease: Invalid GrBackendTexture. Width==450, height==338, protected==0",
+   "outcome": "not-named",
+   "rows": []
+  },
+  {
+   "app": "threads",
+   "stage": "runtime-init",
+   "category": "app-framework",
+   "blocker": "uncaught on Lacrima_startup_1:1790835848292-c109eb83-a8a8-bba6-420c-ef3df7d255cc: NullPointerException: Attempt to invoke InvokeType(2) method 'long java.util.zip.ZipEntry.getSize()' o",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "translator",
+   "stage": "runtime-init",
+   "category": "app-framework",
+   "blocker": "bind: UnsatisfiedLinkError: Unable to load library 'bindings':",
+   "outcome": "named",
+   "rows": [
+    "load:shadowed-by-board=missing"
+   ]
+  },
+  {
+   "app": "usp",
+   "stage": "view",
+   "category": "native-crash",
+   "blocker": "abort: drawRenderNode called on a context with no surface!",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "waze",
+   "stage": "view",
+   "category": "native-crash",
+   "blocker": "SIGABRT on thread Native Thread",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "werewolvesgame",
+   "stage": "bound",
+   "category": null,
+   "blocker": null,
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "whatsapp",
+   "stage": "view",
+   "category": null,
+   "blocker": null,
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "wormhole",
+   "stage": "bound",
+   "category": null,
+   "blocker": null,
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "wormhole2",
+   "stage": "view",
+   "category": null,
+   "blocker": null,
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "x",
+   "stage": "view",
+   "category": "native-crash",
+   "blocker": "SIGABRT on thread RenderThread",
+   "outcome": "unscorable",
+   "rows": []
+  }
+ ]
+}
