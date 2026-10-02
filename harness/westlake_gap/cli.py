@@ -14,6 +14,8 @@ from .platformapi import annotate, load_platform_index
 from .report import aggregate, markdown_report
 from .scanner import (
     RuntimeResolver,
+    _index_native_calls,
+    quiet_androguard,
     build_runtime_index,
     read_elf,
     read_json,
@@ -53,6 +55,14 @@ def parser() -> argparse.ArgumentParser:
     runtime_summary.add_argument("--runtime-index", required=True, type=Path)
     runtime_summary.add_argument("--out", required=True, type=Path)
     runtime_summary.add_argument("--note", help="optional snapshot availability note")
+
+    native_calls = commands.add_parser(
+        "index-native-calls",
+        help="add framework native-call edges to an existing runtime index (new snapshots include them)")
+    native_calls.add_argument("--runtime-index", required=True, type=Path)
+    native_calls.add_argument("--jar", action="append", default=[], type=Path,
+                              help="the index's boot-classpath JAR, if moved; default: the paths it records")
+    native_calls.add_argument("--out", required=True, type=Path)
 
     scan = commands.add_parser("scan", help="scan one APK or DEX against a runtime index")
     scan.add_argument("input", type=Path)
@@ -240,6 +250,12 @@ def parser() -> argparse.ArgumentParser:
     gap.add_argument("--runtime-libs", type=Path,
                      help="the staged native runtime: a directory, its artifacts.json, or a listing one per line. "
                           "Finds libraries the runtime ships that its own loader answers without opening")
+    gap.add_argument("--runtime-data", type=Path,
+                     help="the runtime data build (its directory or artifacts.json): which Android files the runtime "
+                          "ships, for the Android paths the app reads directly")
+    gap.add_argument("--android-namespace-dir", type=Path,
+                     help="libraries the Android namespace finds before the runtime's (the staged webview-t-lib): "
+                          "NDK symbols the runtime defines that a library routed there cannot reach")
     gap.add_argument("--policy", type=Path, default=Path(__file__).parent / "data" / "oh-app-data-policy.json")
     gap.add_argument("--blockers", type=Path, help="known-blockers JSON: backtest the map against observed failures")
     gap.add_argument("--blockers-status", action="store_true",
@@ -429,7 +445,12 @@ def main(argv: list[str] | None = None) -> int:
                             runtime_class_paths=runtime_class_strings(args.runtime_libs)
                             if args.runtime_libs and args.runtime_libs.is_dir() else None,
                             ledger=read_json(args.ledger) if args.ledger else None,
-                            aosp_root=args.aosp)
+                            aosp_root=args.aosp, apk_path=args.apk,
+                            runtime_data=read_json(args.runtime_data / "artifacts.json" if args.runtime_data.is_dir()
+                                                   else args.runtime_data) if args.runtime_data else None,
+                            android_namespace_libs=[read_elf(path=p, label=p.name)
+                                                    for p in sorted(args.android_namespace_dir.glob("*.so"))]
+                            if args.android_namespace_dir else None)
         if args.westlake_label:
             gap_map["provider"]["westlake"] = {"branch": args.westlake_label, "commit": args.westlake_label, "uncommitted": []}
         results = None
@@ -523,6 +544,20 @@ def main(argv: list[str] | None = None) -> int:
             summary["snapshot_note"] = args.note
         write_json(args.out, summary)
         print(f"runtime {summary['runtime_lock_id']} summary -> {args.out}")
+        return 0
+    if args.command == "index-native-calls":
+        value = read_json(args.runtime_index)
+        jars = list(args.jar) or [Path(item["path"]) for item in value["boot_classpath"]]
+        quiet_androguard()
+        present = [jar for jar in jars if jar.exists()]
+        by_name = {item["name"]: item["sha256"] for item in value["boot_classpath"]}
+        for jar in present:
+            if jar.name in by_name and sha256_file(jar) != by_name[jar.name]:
+                raise SystemExit(f"{jar} differs from the {jar.name} this index was built from")
+        _index_native_calls(present, value["classes"])
+        write_json(args.out, value)
+        edges = sum(len(c.get("native_calls", {})) for c in value["classes"].values())
+        print(f"{edges} framework methods reach a native, from {len(present)} of {len(jars)} JARs -> {args.out}")
         return 0
     if args.command == "snapshot-runtime":
         jars = list(args.jar)

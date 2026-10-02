@@ -147,12 +147,18 @@ def pm_adapter_model(westlake_root: Path) -> dict[str, Any]:
     registry = westlake_root / "framework/package-manager/java/SourcePackageRegistry.java"
     reg = registry.read_text(errors="replace") if registry.exists() else ""
     splits = westlake_root / "framework/package-manager/java/SplitApkResolver.java"
+    bridge = westlake_root / "framework/activity/java/AppSchedulerBridge.java"
     return {
         "methods": methods,
         # Semantics the source-app path must reproduce from PackageManagerService, checked in source.
         "semantics": {
             "direct_boot_match_defaults": _evidence(reg, r"MATCH_DIRECT_BOOT_AWARE\s*\|\s*PackageManager\.MATCH_DIRECT_BOOT_UNAWARE|MATCH_DIRECT_BOOT_UNAWARE", registry, westlake_root),
             "split_paths_populated": _evidence(splits.read_text(errors="replace") if splits.exists() else "", r"splitSourceDirs\s*=", splits, westlake_root),
+            # PackageManager hands providers to ActivityThread sorted by descending initOrder
+            # (ComputerEngine.sProviderInitOrderSorter); the bind path must sort them the same way.
+            "providers_sorted_by_init_order": _evidence(
+                bridge.read_text(errors="replace") if bridge.exists() else "",
+                r"[Pp]roviders\.sort\([^;]*initOrder", bridge, westlake_root),
         },
         "provenance": git_state(westlake_root),
     }
@@ -246,7 +252,18 @@ def keystore_model(westlake_root: Path) -> dict[str, Any]:
             replacement = {"present": True, "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, declared.start()) + 1}",
                            "hardware_backed": bool(backend.search(text))}
             break
-    return {"installed": first(aosp_install), "replacement": replacement, "backend": first(backend)}
+    # Every provider name a runtime Provider registers: Android installs two ("AndroidKeyStore" for
+    # keys, "AndroidKeyStoreBCWorkaround" for operations on them) and apps name each directly.
+    registered: dict[str, str] = {}
+    for path, text in sources.items():
+        for match in re.finditer(r'\bclass\s+\w+\s+extends\s+(?:java\.security\.)?Provider\b', text):
+            body = text[match.end():]
+            name = re.search(r'\bNAME\s*=\s*"([^"]+)"|super\(\s*"([^"]+)"', body)
+            if name:
+                registered.setdefault(name.group(1) or name.group(2),
+                                      f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, match.start()) + 1}")
+    return {"installed": first(aosp_install), "replacement": replacement, "backend": first(backend),
+            "registered": registered}
 
 
 def _strip_java_comments(text: str) -> str:

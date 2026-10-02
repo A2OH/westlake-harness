@@ -206,6 +206,68 @@ def _ordered_inner_apks(archive: zipfile.ZipFile) -> list[str]:
         return sorted(names, key=lambda name: ("config." in name or "split" in name, name))
 
 
+NATIVE_CALL_DEPTH = 3
+
+
+def _index_native_calls(artifacts: Iterable[Path], classes: dict[str, dict[str, Any]]) -> None:
+    """Record, per framework method, the native methods it reaches within the framework.
+
+    An app rarely calls a framework native itself: it calls a public wrapper and the wrapper calls
+    the native, sometimes through another: AudioTrack.getBufferSizeInFrames calls its native
+    directly, AudioManager.getPlaybackOffloadSupport reaches AudioSystem.native_get_offload_support
+    through AudioSystem.getOffloadSupport. In a class whose natives are only partly registered, the
+    wrapper is the only static trace of the gap. Calls are followed NATIVE_CALL_DEPTH deep, as
+    declared (no virtual dispatch), through android.*, com.android.* and libcore methods. A second pass,
+    because a native's owner may be defined in a later artifact.
+    """
+    natives = {(owner, key) for owner, record in classes.items() for key in record["native_methods"]}
+    if not natives:
+        return
+    # libcore too: its natives are not all registered either (sun.nio.ch.Net's, reached from the
+    # public NIO channel classes).
+    framework = ("Landroid/", "Lcom/android/", "Ljava/", "Ljavax/", "Lsun/", "Llibcore/", "Ljdk/", "Ldalvik/")
+    callees: dict[tuple[str, str], set[tuple[str, str]]] = {}
+    for path in artifacts:
+        for _, blob in dex_blobs(path.resolve()):
+            dex = DEX(blob)
+            for class_def in dex.get_classes():
+                owner = str(class_def.get_name())
+                record = classes.get(owner)
+                if record is None or record["artifact"] != path.resolve().name or not owner.startswith(framework):
+                    continue
+                for method in class_def.get_methods():
+                    targets: set[tuple[str, str]] = set()
+                    try:
+                        instructions = list(method.get_instructions())
+                    except Exception:
+                        continue
+                    for instruction in instructions:
+                        if not instruction.get_name().startswith("invoke-"):
+                            continue
+                        try:
+                            target_owner, target, proto = dex.get_cm_method(int(instruction.get_ref_kind()))
+                        except Exception:
+                            continue
+                        if str(target_owner).startswith(framework):
+                            targets.add((str(target_owner), method_key(str(target), compact_descriptor(proto))))
+                    if targets:
+                        callees[(owner, method_key(method.get_name(), method.get_descriptor()))] = targets
+    for (owner, key), direct in callees.items():
+        reached: set[tuple[str, str]] = set()
+        frontier, seen = direct, {(owner, key)}
+        for _ in range(NATIVE_CALL_DEPTH):
+            following: set[tuple[str, str]] = set()
+            for callee in frontier - seen:
+                seen.add(callee)
+                if callee in natives:
+                    reached.add(callee)
+                else:
+                    following |= callees.get(callee, set())
+            frontier = following
+        if reached:
+            classes[owner].setdefault("native_calls", {})[key] = sorted(f"{o}->{k}" for o, k in reached)
+
+
 def class_record(class_def: Any, artifact: str) -> dict[str, Any]:
     methods: list[str] = []
     fields: list[str] = []
@@ -260,6 +322,18 @@ def _is_hollow_class(class_def: Any) -> bool:
     return not real_methods and not list(class_def.get_fields())
 
 
+# Relocation tags only bionic's linker applies. OH's musl applies DT_ANDROID_RELA (APS2 packed) and
+# standard DT_RELR -- its own libraries carry both -- but skips DT_ANDROID_RELR, leaving every
+# pointer it relocates at its link-time value (Meta's libraries: an INIT_ARRAY entry of 0x2ae2c
+# was called).
+ANDROID_RELOCATION_TAGS = {0x6FFFE000: "ANDROID_RELR"}
+
+
+def _android_relocation_tags(readelf_text: str) -> list[str]:
+    found = {int(tag, 16) for tag in re.findall(r"^\s*0x([0-9a-fA-F]+)\s+\(", readelf_text, re.M)}
+    return sorted(name for tag, name in ANDROID_RELOCATION_TAGS.items() if tag in found)
+
+
 def read_elf(
     path: Path | None = None,
     data: bytes | None = None,
@@ -307,6 +381,7 @@ def read_elf(
             "soname": soname,
             "build_id": build_id,
             "needed": needed,
+            "android_relocation_tags": _android_relocation_tags(text),
             "exported_symbols": sorted(exports),
             "undefined_symbols": sorted(undefined),
             "undefined_weak_symbols": sorted(undefined_weak),
@@ -454,6 +529,7 @@ def build_runtime_index(
                     continue
                 classes[owner] = class_record(class_def, path.name)
         artifact_records.append(record)
+    _index_native_calls(artifacts, classes)
 
     elf_records = [read_elf(path=path.resolve(), label=path.name) for path in bridge_libraries]
     system_records = [read_elf(path=path.resolve(), label=path.name) for path in system_libraries]

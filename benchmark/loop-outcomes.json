@@ -1,5 +1,5 @@
 {
- "note": "first = first launch on the build the batch was predicted against; after = once that batch's fixes landed. wikipedia is counted in loop-1. Organic Maps' first launch uses its corrected pin. Fossify Messages exits by design after its fix (no SMS role) and stays 'blocked'. Seal's 'after' is its own error screen (symlink denied by OH policy), counted as UI like Termux. OsmAnd's 'after' is its current state: it drew on its first launch and now leaves after drawing on every build tried (environment-dependent).",
+ "note": "first = first launch on the build the batch was predicted against; after = once that batch's fixes landed. wikipedia is counted in loop-1. Organic Maps' first launch uses its corrected pin. Fossify Messages exits by design after its fix (no SMS role) and stays 'blocked'. Seal's 'after' is its own error screen (symlink denied by OH policy), counted as UI like Termux. OsmAnd's 'after' is its current state: it drew on its first launch and now leaves after drawing on every build tried (environment-dependent). Ball2Box and Rhythm Engine draw since the OpenSL ES adapter fixes (westlake 1e98162, c7d2992), verified on framework 68 with shim bionic-shim-nw11 and runtime native-runtime-opengl12's libwl_missing_natives.so.",
  "apps": {
   "aegis": {
    "batch": "loop-1",
@@ -94,7 +94,8 @@
   "fluffychat": {
    "batch": "corpus-2",
    "first": "blocked",
-   "after": "blocked"
+   "after": "draws",
+   "fixed_on": "framework 66"
   },
   "breezyweather": {
    "batch": "corpus-2",
@@ -155,7 +156,8 @@
   "obtainium": {
    "batch": "corpus-3",
    "first": "blocked",
-   "after": "blocked"
+   "after": "draws",
+   "fixed_on": "framework 66"
   },
   "files": {
    "batch": "batch-4",
@@ -508,6 +510,533 @@
    "batch": "batch-10",
    "first": "blocked",
    "after": "draws"
+  },
+  "batterytemperatu": {
+   "batch": "batch-11",
+   "first": "draws",
+   "after": "draws"
+  },
+  "chat": {
+   "batch": "batch-11",
+   "first": "draws",
+   "after": "draws"
+  },
+  "flicky": {
+   "batch": "batch-11",
+   "first": "draws",
+   "after": "draws"
+  },
+  "gitlab": {
+   "batch": "batch-11",
+   "first": "draws",
+   "after": "draws"
+  },
+  "graph89": {
+   "batch": "batch-11",
+   "first": "draws",
+   "after": "draws"
+  },
+  "hourly": {
+   "batch": "batch-11",
+   "first": "draws",
+   "after": "draws"
+  },
+  "solipsism": {
+   "batch": "batch-11",
+   "first": "draws",
+   "after": "draws"
+  },
+  "soundaura": {
+   "batch": "batch-11",
+   "first": "draws",
+   "after": "draws"
+  },
+  "stochapop": {
+   "batch": "batch-11",
+   "first": "draws",
+   "after": "draws"
+  },
+  "cardswithcats": {
+   "batch": "batch-11",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "castlab": {
+   "batch": "batch-11",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 68"
+  },
+  "geotagvideocamer": {
+   "batch": "batch-11",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "librelibrivoxlis": {
+   "batch": "batch-11",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 66"
+  },
+  "mobilev2": {
+   "batch": "batch-11",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "nori": {
+   "batch": "batch-11",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 68"
+  },
+  "obtainx": {
+   "batch": "batch-11",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 63"
+  },
+  "toolbox": {
+   "batch": "batch-11",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 67"
+  },
+  "bim": {
+   "batch": "batch-11",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "jtx": {
+   "batch": "batch-11",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "nounours": {
+   "batch": "batch-11",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "blockads": {
+   "batch": "batch-12",
+   "first": "draws",
+   "after": "draws"
+  },
+  "fluffy": {
+   "batch": "batch-12",
+   "first": "draws",
+   "after": "draws"
+  },
+  "letterbox": {
+   "batch": "batch-12",
+   "first": "draws",
+   "after": "draws"
+  },
+  "librecontactsbac": {
+   "batch": "batch-12",
+   "first": "draws",
+   "after": "draws"
+  },
+  "photoediting": {
+   "batch": "batch-12",
+   "first": "draws",
+   "after": "draws"
+  },
+  "stable": {
+   "batch": "batch-12",
+   "first": "draws",
+   "after": "draws"
+  },
+  "sterna": {
+   "batch": "batch-12",
+   "first": "draws",
+   "after": "draws"
+  },
+  "viewer": {
+   "batch": "batch-12",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "ytdl": {
+   "batch": "batch-12",
+   "first": "draws",
+   "after": "draws"
+  },
+  "diesimu": {
+   "batch": "batch-12",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "fitbook": {
+   "batch": "batch-12",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 63"
+  },
+  "fosswarn": {
+   "batch": "batch-12",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 66"
+  },
+  "hacki": {
+   "batch": "batch-12",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 66"
+  },
+  "localsendapp": {
+   "batch": "batch-12",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 63"
+  },
+  "opflashcontrol": {
+   "batch": "batch-12",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "usp": {
+   "batch": "batch-12",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "vaultexplorer": {
+   "batch": "batch-12",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 63"
+  },
+  "waterflyiii": {
+   "batch": "batch-12",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 63"
+  },
+  "wormhole": {
+   "batch": "batch-12",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "emacs": {
+   "batch": "batch-12",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "airlyrics": {
+   "batch": "batch-13",
+   "first": "draws",
+   "after": "draws"
+  },
+  "arcticons": {
+   "batch": "batch-13",
+   "first": "draws",
+   "after": "draws"
+  },
+  "cloudgallery": {
+   "batch": "batch-13",
+   "first": "draws",
+   "after": "draws"
+  },
+  "editor2": {
+   "batch": "batch-13",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "hypostats": {
+   "batch": "batch-13",
+   "first": "draws",
+   "after": "draws"
+  },
+  "indic": {
+   "batch": "batch-13",
+   "first": "draws",
+   "after": "draws"
+  },
+  "kryptos": {
+   "batch": "batch-13",
+   "first": "draws",
+   "after": "draws"
+  },
+  "macat": {
+   "batch": "batch-13",
+   "first": "draws",
+   "after": "draws"
+  },
+  "meditationtimer": {
+   "batch": "batch-13",
+   "first": "draws",
+   "after": "draws"
+  },
+  "pilltime": {
+   "batch": "batch-13",
+   "first": "draws",
+   "after": "draws"
+  },
+  "tryst": {
+   "batch": "batch-13",
+   "first": "draws",
+   "after": "draws"
+  },
+  "cclauncher": {
+   "batch": "batch-13",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "fdroid2": {
+   "batch": "batch-13",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 66"
+  },
+  "fluxnews": {
+   "batch": "batch-13",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "marketmonk": {
+   "batch": "batch-13",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 63"
+  },
+  "mucke": {
+   "batch": "batch-13",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 66"
+  },
+  "onloc": {
+   "batch": "batch-13",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "rhythmengine": {
+   "batch": "batch-13",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "beatbridge": {
+   "batch": "batch-13",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "quitter": {
+   "batch": "batch-13",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "agrahn": {
+   "batch": "batch-14",
+   "first": "draws",
+   "after": "draws"
+  },
+  "deku": {
+   "batch": "batch-14",
+   "first": "draws",
+   "after": "draws"
+  },
+  "droidrops": {
+   "batch": "batch-14",
+   "first": "draws",
+   "after": "draws"
+  },
+  "fdroid3": {
+   "batch": "batch-14",
+   "first": "draws",
+   "after": "draws"
+  },
+  "gotify": {
+   "batch": "batch-14",
+   "first": "draws",
+   "after": "draws"
+  },
+  "networkscanner": {
+   "batch": "batch-14",
+   "first": "draws",
+   "after": "draws"
+  },
+  "notifilter": {
+   "batch": "batch-14",
+   "first": "draws",
+   "after": "draws"
+  },
+  "rouelibre": {
+   "batch": "batch-14",
+   "first": "draws",
+   "after": "draws"
+  },
+  "siftrecipes": {
+   "batch": "batch-14",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 68"
+  },
+  "uturn": {
+   "batch": "batch-14",
+   "first": "draws",
+   "after": "draws"
+  },
+  "cardabase": {
+   "batch": "batch-14",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 66"
+  },
+  "jiyi": {
+   "batch": "batch-14",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 67"
+  },
+  "rushhour": {
+   "batch": "batch-14",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 68"
+  },
+  "todo": {
+   "batch": "batch-14",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 63"
+  },
+  "aaaaxy": {
+   "batch": "batch-14",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "duckrun": {
+   "batch": "batch-14",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "econverter": {
+   "batch": "batch-14",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "internetradio": {
+   "batch": "batch-14",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "werewolvesgame": {
+   "batch": "batch-14",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "translator": {
+   "batch": "batch-14",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "droidpad": {
+   "batch": "batch-15",
+   "first": "draws",
+   "after": "draws"
+  },
+  "eventfahrplan": {
+   "batch": "batch-15",
+   "first": "draws",
+   "after": "draws"
+  },
+  "infraarcana": {
+   "batch": "batch-15",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "polishedrecognit": {
+   "batch": "batch-15",
+   "first": "draws",
+   "after": "draws"
+  },
+  "rebooter": {
+   "batch": "batch-15",
+   "first": "draws",
+   "after": "draws"
+  },
+  "simpletextcrypt": {
+   "batch": "batch-15",
+   "first": "draws",
+   "after": "draws"
+  },
+  "ssh": {
+   "batch": "batch-15",
+   "first": "draws",
+   "after": "draws"
+  },
+  "texetescribe": {
+   "batch": "batch-15",
+   "first": "draws",
+   "after": "draws"
+  },
+  "ttsutil": {
+   "batch": "batch-15",
+   "first": "draws",
+   "after": "draws"
+  },
+  "balygroceriestra": {
+   "batch": "batch-15",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 63"
+  },
+  "burgerparty": {
+   "batch": "batch-15",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 63"
+  },
+  "hematimer": {
+   "batch": "batch-15",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 63"
+  },
+  "marlin": {
+   "batch": "batch-15",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 68"
+  },
+  "mobile": {
+   "batch": "batch-15",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 68"
+  },
+  "myquran": {
+   "batch": "batch-15",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 63"
+  },
+  "ntodotxt": {
+   "batch": "batch-15",
+   "first": "blocked",
+   "after": "draws",
+   "fixed_on": "framework 63"
+  },
+  "tinywheels": {
+   "batch": "batch-15",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "otgmaster": {
+   "batch": "batch-15",
+   "first": "blocked",
+   "after": "blocked"
+  },
+  "ball2box": {
+   "batch": "batch-15",
+   "first": "blocked",
+   "after": "draws"
+  },
+  "stopwatch": {
+   "batch": "batch-15",
+   "first": "not-launchable",
+   "after": "not-launchable",
+   "note": "declares no launchable activity"
   }
  }
 }

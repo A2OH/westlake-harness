@@ -1,0 +1,414 @@
+{
+ "anxreader": {
+  "expected": "draws",
+  "because": []
+ },
+ "game": {
+  "expected": "draws",
+  "because": []
+ },
+ "alarm": {
+  "expected": "draws",
+  "because": []
+ },
+ "soundpod": {
+  "expected": "draws",
+  "because": []
+ },
+ "universalinstall": {
+  "expected": "draws",
+  "because": []
+ },
+ "fdroid4": {
+  "expected": "draws",
+  "because": []
+ },
+ "voiceplus": {
+  "expected": "draws",
+  "because": []
+ },
+ "healthybatterych": {
+  "expected": "draws",
+  "because": []
+ },
+ "sanmill": {
+  "expected": "draws",
+  "because": []
+ },
+ "linkhub": {
+  "expected": "draws",
+  "because": []
+ },
+ "standard": {
+  "expected": "draws",
+  "because": []
+ },
+ "plus": {
+  "expected": "draws",
+  "because": []
+ },
+ "minimalcalendarw": {
+  "expected": "draws",
+  "because": []
+ },
+ "fairscan": {
+  "expected": "draws",
+  "because": []
+ },
+ "mousepounce": {
+  "expected": "draws",
+  "because": []
+ },
+ "nekovideo": {
+  "expected": "draws",
+  "because": []
+ },
+ "androideggs": {
+  "expected": "draws",
+  "because": []
+ },
+ "clock": {
+  "expected": "draws",
+  "because": []
+ },
+ "backup": {
+  "expected": "draws",
+  "because": []
+ },
+ "labnex": {
+  "expected": "draws",
+  "because": []
+ },
+ "openalertviewer": {
+  "expected": "draws",
+  "because": []
+ },
+ "pcontacts": {
+  "expected": "draws",
+  "because": []
+ },
+ "intra": {
+  "expected": "draws",
+  "because": []
+ },
+ "v3": {
+  "expected": "draws",
+  "because": []
+ },
+ "chance": {
+  "expected": "draws",
+  "because": []
+ },
+ "chompass": {
+  "expected": "draws",
+  "because": []
+ },
+ "torrentsdigger": {
+  "expected": "draws",
+  "because": []
+ },
+ "drawanywhere": {
+  "expected": "draws",
+  "because": []
+ },
+ "viewer2": {
+  "expected": "draws",
+  "because": []
+ },
+ "hamtest": {
+  "expected": "draws",
+  "because": []
+ },
+ "k9": {
+  "expected": "draws",
+  "because": []
+ },
+ "sosring": {
+  "expected": "draws",
+  "because": []
+ },
+ "lemuroid": {
+  "expected": "draws",
+  "because": []
+ },
+ "droidfs": {
+  "expected": "draws",
+  "because": []
+ },
+ "shortcut": {
+  "expected": "draws",
+  "because": []
+ },
+ "wormhole2": {
+  "expected": "draws",
+  "because": []
+ },
+ "clearsms": {
+  "expected": "draws",
+  "because": []
+ },
+ "shizuwall": {
+  "expected": "draws",
+  "because": []
+ },
+ "flashdim": {
+  "expected": "draws",
+  "because": []
+ },
+ "nora": {
+  "expected": "blocked",
+  "because": [
+   "native:ndk:package"
+  ]
+ },
+ "photoswooper": {
+  "expected": "draws",
+  "because": []
+ },
+ "vrcaa": {
+  "expected": "draws",
+  "because": []
+ },
+ "spacebeam": {
+  "expected": "draws",
+  "because": []
+ },
+ "trale": {
+  "expected": "draws",
+  "because": []
+ },
+ "bluemoon": {
+  "expected": "draws",
+  "because": []
+ },
+ "daynight": {
+  "expected": "draws",
+  "because": []
+ },
+ "client": {
+  "expected": "draws",
+  "because": []
+ },
+ "inventory": {
+  "expected": "draws",
+  "because": []
+ },
+ "broadboard": {
+  "expected": "draws",
+  "because": []
+ },
+ "clauncher": {
+  "expected": "draws",
+  "because": []
+ },
+ "felicity": {
+  "expected": "draws",
+  "because": []
+ },
+ "aat": {
+  "expected": "draws",
+  "because": []
+ },
+ "rush": {
+  "expected": "draws",
+  "because": []
+ },
+ "mypricelog": {
+  "expected": "draws",
+  "because": []
+ },
+ "medtimer": {
+  "expected": "draws",
+  "because": []
+ },
+ "brethap": {
+  "expected": "draws",
+  "because": []
+ },
+ "moodcairns": {
+  "expected": "draws",
+  "because": []
+ },
+ "zerion": {
+  "expected": "draws",
+  "because": []
+ },
+ "miniter": {
+  "expected": "draws",
+  "because": []
+ },
+ "musekit": {
+  "expected": "draws",
+  "because": []
+ },
+ "insigno": {
+  "expected": "draws",
+  "because": []
+ },
+ "rknhardering": {
+  "expected": "draws",
+  "because": []
+ },
+ "rssaid": {
+  "expected": "draws",
+  "because": []
+ },
+ "remindiary": {
+  "expected": "draws",
+  "because": []
+ },
+ "activitytrace": {
+  "expected": "draws",
+  "because": []
+ },
+ "playtube": {
+  "expected": "draws",
+  "because": []
+ },
+ "pictionarygenera": {
+  "expected": "draws",
+  "because": []
+ },
+ "gruenerpass": {
+  "expected": "draws",
+  "because": []
+ },
+ "pando85": {
+  "expected": "draws",
+  "because": []
+ },
+ "linphone": {
+  "expected": "blocked",
+  "because": [
+   "native:ndk:weld:buffers",
+   "native:ndk:weld:camera"
+  ]
+ },
+ "playmaker": {
+  "expected": "blocked",
+  "because": [
+   "native:ndk:weld:buffers",
+   "native:ndk:weld:camera"
+  ]
+ },
+ "oeffisounds": {
+  "expected": "draws",
+  "because": []
+ },
+ "zaragozatarjetab": {
+  "expected": "draws",
+  "because": []
+ },
+ "ntfy": {
+  "expected": "draws",
+  "because": []
+ },
+ "jigsaw": {
+  "expected": "draws",
+  "because": []
+ },
+ "i2pradio": {
+  "expected": "draws",
+  "because": []
+ },
+ "fdroid5": {
+  "expected": "draws",
+  "because": []
+ },
+ "broccoli": {
+  "expected": "draws",
+  "because": []
+ },
+ "soundtree": {
+  "expected": "draws",
+  "because": []
+ },
+ "biblelockscreen": {
+  "expected": "draws",
+  "because": []
+ },
+ "sshborg": {
+  "expected": "draws",
+  "because": []
+ },
+ "remote": {
+  "expected": "draws",
+  "because": []
+ },
+ "doorsofdoom": {
+  "expected": "draws",
+  "because": []
+ },
+ "fosdem": {
+  "expected": "draws",
+  "because": []
+ },
+ "fortunetelling": {
+  "expected": "draws",
+  "because": []
+ },
+ "ruammij": {
+  "expected": "draws",
+  "because": []
+ },
+ "anarchre": {
+  "expected": "blocked",
+  "because": [
+   "native:ndk:weld:sensors"
+  ]
+ },
+ "aisleron": {
+  "expected": "draws",
+  "because": []
+ },
+ "facebooknotifica": {
+  "expected": "draws",
+  "because": []
+ },
+ "transcriber": {
+  "expected": "draws",
+  "because": []
+ },
+ "accelerace": {
+  "expected": "draws",
+  "because": []
+ },
+ "flexify": {
+  "expected": "draws",
+  "because": []
+ },
+ "composestopwatch": {
+  "expected": "draws",
+  "because": []
+ },
+ "cpudefense": {
+  "expected": "draws",
+  "because": []
+ },
+ "stims": {
+  "expected": "draws",
+  "because": []
+ },
+ "doit": {
+  "expected": "draws",
+  "because": []
+ },
+ "markdowneditor": {
+  "expected": "draws",
+  "because": []
+ },
+ "cryptosafe": {
+  "expected": "draws",
+  "because": []
+ },
+ "rhvoice": {
+  "expected": "draws",
+  "because": []
+ },
+ "timetracking": {
+  "expected": "blocked",
+  "because": [
+   "native:ndk:package"
+  ]
+ }
+}

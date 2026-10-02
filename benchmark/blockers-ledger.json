@@ -483,6 +483,233 @@
    "row": null,
    "symptom": "intermittent: when inotify_add_watch succeeds, its own WatchService poller thread SIGSEGVs at address 0 (3 of 4 launches on build 57); when the watch is denied it draws",
    "fixed_in": null
+  },
+  {
+   "app": "nori",
+   "corpus": "batch-11",
+   "row": "ns:assets",
+   "symptom": "React Native: 'Unable to load script' -- the Android namespace's libandroid (WebView shim) forwards AAsset* to libwestlake_asset_bridge.so, which no build ships",
+   "fixed_in": "westlake b24a118 + 432c000 (framework 68, shim nw9)"
+  },
+  {
+   "app": "rushhour",
+   "corpus": "batch-13",
+   "row": "ns:assets",
+   "symptom": "React Native: 'Unable to load script' (Android-namespace AAsset bridge, as nori)",
+   "fixed_in": "westlake b24a118 + 432c000 (framework 68, shim nw9)"
+  },
+  {
+   "app": "marlin",
+   "corpus": "batch-14",
+   "row": "ns:assets",
+   "symptom": "React Native: 'Unable to load script' (Android-namespace AAsset bridge, as nori)",
+   "fixed_in": "westlake b24a118 + 432c000 (framework 68, shim nw9)"
+  },
+  {
+   "app": "mobile",
+   "corpus": "batch-14",
+   "row": "ns:assets",
+   "symptom": "React Native: 'Unable to load script' (Android-namespace AAsset bridge, as nori)",
+   "fixed_in": "westlake b24a118 + 432c000 (framework 68, shim nw9)"
+  },
+  {
+   "app": "siftrecipes",
+   "corpus": "batch-15",
+   "row": "ns:assets",
+   "symptom": "React Native: 'Unable to load script' (Android-namespace AAsset bridge, as nori); window stays empty",
+   "fixed_in": "westlake b24a118 + 432c000 (framework 68, shim nw9)"
+  },
+  {
+   "app": "mindustry",
+   "corpus": "loop-1",
+   "row": "nio:channels",
+   "symptom": "framework 63: sun.nio.ch.Net.pollinValue unregistered (NIO Selector); libwestlake_runtime_boundary has no sun.nio.ch natives",
+   "fixed_in": null
+  },
+  {
+   "app": "unciv",
+   "corpus": "batch-5",
+   "row": "nio:channels",
+   "symptom": "framework 63: sun.nio.ch.Net.pollinValue unregistered (Ktor Selector)",
+   "fixed_in": null
+  },
+  {
+   "app": "infraarcana",
+   "corpus": "batch-13",
+   "row": "load:needed-missing",
+   "symptom": "SDL2 needs libGLESv1_CM.so, which OH does not ship",
+   "fixed_in": null
+  },
+  {
+   "app": "fluxnews",
+   "corpus": "batch-12",
+   "row": null,
+   "symptom": "Flutter: a dialog renders as an empty card over a scrim",
+   "fixed_in": null
+  },
+  {
+   "app": "hacki",
+   "corpus": "batch-12",
+   "row": "abi:addrinfo",
+   "symptom": "Dart socket_base.h unreachable: getaddrinfo results in musl field order",
+   "fixed_in": "run2 launch_args (abi:addrinfo)"
+  },
+  {
+   "app": "fdroid2",
+   "corpus": "batch-14",
+   "row": "abi:addrinfo",
+   "symptom": "Dart abort on the addrinfo field order (as hacki)",
+   "fixed_in": "run2 launch_args (abi:addrinfo)"
+  },
+  {
+   "app": "jiyi",
+   "corpus": "batch-13",
+   "row": "jca:AndroidKeyStoreBCWorkaround",
+   "symptom": "flutter_secure_storage: NoSuchProviderException AndroidKeyStoreBCWorkaround",
+   "fixed_in": "bb1bebf"
+  },
+  {
+   "app": "toolbox",
+   "corpus": "batch-11",
+   "row": "jca:AndroidKeyStoreBCWorkaround",
+   "symptom": "flutter_secure_storage: NoSuchProviderException AndroidKeyStoreBCWorkaround",
+   "fixed_in": "bb1bebf"
+  },
+  {
+   "app": "fosswarn",
+   "corpus": "batch-12",
+   "row": "pm:call:getInstallSourceInfo",
+   "symptom": "package_info_plus: PlatformException(Name not found) from a null getInstallSourceInfo",
+   "fixed_in": "f8a40b3"
+  },
+  {
+   "app": "cardabase",
+   "corpus": "batch-12",
+   "row": "pm:call:getInstallSourceInfo",
+   "symptom": "package_info_plus: PlatformException(Name not found) from a null getInstallSourceInfo",
+   "fixed_in": "f8a40b3"
+  },
+  {
+   "app": "mucke",
+   "corpus": "batch-14",
+   "row": "pm:call:getInstallSourceInfo",
+   "symptom": "package_info_plus Name not found; then MediaSession.setQueue NPE (null ISession binder)",
+   "fixed_in": "f8a40b3 + a715e48"
+  },
+  {
+   "app": "librelibrivoxlis",
+   "corpus": "batch-11",
+   "row": null,
+   "symptom": "audio_service: MediaSession.setQueue NPE (inert ISession returned a null binder)",
+   "fixed_in": "a715e48"
+  },
+  {
+   "app": "fluffychat",
+   "corpus": "corpus-2",
+   "row": "path:/system/etc/security/cacerts",
+   "symptom": "Dart TLS: Failed to find root cert cache (/system/etc/security/cacerts)",
+   "fixed_in": "576fa43"
+  },
+  {
+   "app": "ntfy",
+   "corpus": "batch-19",
+   "row": "jni:android.media.MediaPlayer",
+   "symptom": "MediaPlayer.native_init unbound: MediaPlayer's static initializer throws during handleBindApplication",
+   "fixed_in": "5ae6b75"
+  },
+  {
+   "app": "game",
+   "corpus": "batch-16",
+   "row": "jni:android.media.MediaPlayer",
+   "symptom": "MediaPlayer.native_init unbound: UnsatisfiedLinkError before a first frame",
+   "fixed_in": "5ae6b75"
+  },
+  {
+   "app": "doorsofdoom",
+   "corpus": "batch-20",
+   "row": "jni:android.media.MediaPlayer",
+   "symptom": "MediaPlayer.native_init unbound: UnsatisfiedLinkError before a first frame",
+   "fixed_in": "5ae6b75"
+  },
+  {
+   "app": "doorsofdoom",
+   "corpus": "batch-20",
+   "row": "jni:android.media.MediaPlayer",
+   "symptom": "after the port: SetFDSource rejected the app's descriptor (AV_ERR_INVALID_VAL), then invoke(GET_TRACK_INFO) failed and MediaPlayer posted MEDIA_ERROR (1,-1010); the game left for its error path",
+   "fixed_in": "5ae6b75"
+  },
+  {
+   "app": "mousepounce",
+   "corpus": "batch-16",
+   "row": "jni:android.media.AudioSystem",
+   "symptom": "ExoPlayer: AudioSystem.getParameters, then native_get_offload_support unbound on the playback thread",
+   "fixed_in": "5ae6b75"
+  },
+  {
+   "app": "mousepounce",
+   "corpus": "batch-16",
+   "symptom": "Flutter: 'Unable to create EGL window surface on resize' (EGL_BAD_SURFACE); the process lives and plays audio, but its window never shows"
+  },
+  {
+   "app": "musekit",
+   "corpus": "batch-18",
+   "row": "jni:android.media.AudioTrack",
+   "symptom": "AudioTrack.native_get_buffer_size_frames, then native_set_loop unbound at startup",
+   "fixed_in": "5ae6b75"
+  },
+  {
+   "app": "musekit",
+   "corpus": "batch-18",
+   "row": "jni:android.media.AudioRecord",
+   "symptom": "AudioRecord.native_get_min_buff_size unbound at startup: microphone capture is not ported (27 of 27 natives)"
+  },
+  {
+   "app": "ball2box",
+   "corpus": "batch-15",
+   "row": "ndk:weld:audio",
+   "symptom": "libgodot_android.so: SL_IID_ANDROIDCONFIGURATION unresolved",
+   "fixed_in": "1e98162"
+  },
+  {
+   "app": "ball2box",
+   "corpus": "batch-15",
+   "row": "ndk:weld:audio",
+   "symptom": "after the symbol: OH refused Godot's SL_IID_ENGINE (a namespace copy with another address), no audio; then the buffer queue padded OH's pulls with silence, choppy sound",
+   "fixed_in": "c7d2992"
+  },
+  {
+   "app": "jigsaw",
+   "corpus": "batch-19",
+   "row": "ndk:weld:audio",
+   "symptom": "libgodot_android.so: SL_IID_ANDROIDCONFIGURATION unresolved",
+   "fixed_in": "1e98162"
+  },
+  {
+   "app": "v3",
+   "corpus": "batch-17",
+   "row": "ndk:weld:audio",
+   "symptom": "libgodot_android.so: SL_IID_ANDROIDCONFIGURATION unresolved",
+   "fixed_in": "1e98162"
+  },
+  {
+   "app": "rhythmengine",
+   "corpus": "batch-13",
+   "row": "ndk:weld:audio",
+   "symptom": "liboboe.so: SL_IID_ANDROIDCONFIGURATION unresolved; then Oboe's dlopen(libOpenSLES) reached OH's library past the adapter and OH refused its engine interface",
+   "fixed_in": "c7d2992"
+  },
+  {
+   "app": "duckrun",
+   "corpus": "batch-14",
+   "row": "ndk:weld:audio",
+   "symptom": "libgodot_android.so: SL_IID_ANDROIDCONFIGURATION unresolved",
+   "fixed_in": "1e98162"
+  },
+  {
+   "app": "duckrun",
+   "corpus": "batch-14",
+   "symptom": "libgodot_android.so needs libcamera2ndk.so, which OH does not ship (Godot 4 camera feed)",
+   "row": "ndk:weld:camera"
   }
  ]
 }
