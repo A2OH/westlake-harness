@@ -1112,6 +1112,13 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
     rows = []
     elfs = ohresolve.target_elfs(scan)
     shadowed, targets = shadowed_libraries(scan, board_paths or [])
+    # The graph is by DT_NEEDED name (the SONAME), but the launcher routes files by name, and a name it
+    # cannot find stops the launch: TikTok's libeffect_plugin.so is libeffect.so, and r77 and r82
+    # never launched it ("Android namespace target is not a pinned APK DSO").
+    files: dict[str, str] = {}
+    for elf in elfs:
+        base = elf["name"].rsplit("/", 1)[-1]
+        files.setdefault(elf.get("soname") or base, base)
     if shadowed:
         option = namespace_option or {"present": False, "source": None}
         rows.append(_row(
@@ -1125,7 +1132,7 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
             app_evidence=f"{len(targets)} APK libraries reach them through DT_NEEDED",
             shim=f"load these {len(targets)} libraries in the isolated Android namespace so DT_NEEDED picks the APK's copy "
                  "(e.g. NDK libc++_shared is std::__ndk1; OH's is not): " + " ".join(targets),
-            launch_args=[arg for name in targets for arg in ("--android-native-target", name)],
+            launch_args=[arg for name in targets for arg in ("--android-native-target", files.get(name, name))],
         ))
         # In that namespace libandroid.so is the WebView shim's, whose AAsset* go through a companion
         # (libwestlake_asset_bridge.so) to the framework's asset manager. React Native loads its
@@ -1846,9 +1853,10 @@ def android_namespace_rows(scan: dict[str, Any], rows: list[dict[str, Any]],
             if name not in elf.get("needed", []):
                 continue
             elf_name = elf.get("soname") or elf["name"].rsplit("/", 1)[-1]
-            if targets and elf_name not in targets and not app_written:
+            in_targets = elf_name in targets or elf["name"].rsplit("/", 1)[-1] in targets
+            if targets and not in_targets and not app_written:
                 continue
-            routed |= elf_name in targets
+            routed |= in_targets
             for symbol in set(elf.get("undefined_symbols", [])) & unreachable:
                 importers[symbol].add(elf_name)
         if not importers:
