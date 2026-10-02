@@ -99,7 +99,13 @@ Five apps die silently; their logs need the hilog capture before they can be cla
 The fixes after this batch, and a scoring of every map against the first blockers of the next
 whole-corpus run (r77), are recorded in
 [2026-10-01-r77-first-blocker-scoring](../2026-10-01-r77-first-blocker-scoring/README.md). On the
-state committed there, Telegram (welcome screen with its animated intro) and X (login screen) draw.
-Threads gets past its missing ZipEntry and now stops on a native crash. Instagram loads its packed
-libraries but reaches no activity yet. The full per-app state will follow with that record's
-regression run.
+state committed there:
+- X draws its login screen.
+- Telegram draws its welcome screen with the animated intro, but in most launches its own GL thread
+  then crashes (open).
+- Threads gets past its missing ZipEntry and now stops on a native crash.
+- Instagram loads its packed libraries but reaches no activity yet.
+- TikTok launches for the first time (a harness naming bug had stopped every launch) and is still
+  starting up at 45 s.
+
+That record's regression run (r82) has the whole corpus.

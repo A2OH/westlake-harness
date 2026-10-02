@@ -1035,6 +1035,20 @@ static jstring Runtime_nativeLoad(JNIEnv* env, jclass clazz, jstring filename,
         self.assertEqual(row["launch_args"][:2], ["--android-native-target", "libc++_shared.so"])
         self.assertEqual(gapmap.native_loading_rows(facts, scan, {"present": True}, []), [], "no board listing, no claim")
 
+    def test_launch_targets_are_file_names(self) -> None:
+        # TikTok ships libeffect_plugin.so with the SONAME libeffect.so; the launcher routes files.
+        scan = {"inventory": {"elfs": [
+            {"name": "lib/arm64-v8a/libc++_shared.so", "soname": "libc++_shared.so", "needed": ["libc.so"]},
+            {"name": "lib/arm64-v8a/libeffect_plugin.so", "soname": "libeffect.so", "needed": ["libc++_shared.so"]}]}}
+        board = ["/system/lib64/libc++_shared.so"]
+        with tempfile.TemporaryDirectory(prefix="westlake-ns-") as temp:
+            launcher = Path(temp)
+            _write(launcher / "tools/probe_source_app.py", "parser.add_argument('--android-native-target', action='append')")
+            rows = gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True}, board,
+                                              gapmap.launcher_namespace_option(launcher))
+        targets = rows[0]["launch_args"][1::2]
+        self.assertEqual(targets, ["libc++_shared.so", "libeffect_plugin.so"])
+
 
 class SandboxAndBacktest(unittest.TestCase):
     def test_realm_fifo_is_predicted(self) -> None:

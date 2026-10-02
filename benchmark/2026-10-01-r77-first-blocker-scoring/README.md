@@ -13,7 +13,7 @@ gap map, made before launch against the same provider.
   exception with no platform symbol, a native crash, or the app's own native class.
 
 Files: `lifecycle.json` (`python -m westlake_gap.lifecycle <logs> --json`) and `score.json`, the
-result after the changes below.
+result after the changes below. `r82-lifecycle.json` classifies the regression run at the end.
 
 ## Result
 
@@ -104,7 +104,8 @@ Each fix exposed the next problem:
      Telegram ran 4,440 TextureView frames.
 
 Targeted runs on the committed state:
-- Telegram shows its welcome screen with the animated intro.
+- Telegram shows its welcome screen with the animated intro. That run was the exception: in most
+  launches its own GL thread then crashes (see the regression check below).
 - X shows its login screen.
 - geotagvideocamer draws.
 - burgerparty, doorsofdoom and jigsaw draw again.
@@ -126,16 +127,35 @@ TextureView frames. "Drew" is not enough; check that the content the app renders
 - **Instagram:** its packed libraries load, but it reaches no activity within 45 s (open). Its one
   failed name lookup was a numeric-host probe, not a DNS fault.
 
-## Regression check
+## Regression check (r82)
 
-The whole corpus is being rerun on the committed state (framework 78 with the shim above). At the
-time of writing, 224 of 329 apps had run with no regression against r77, and geotagvideocamer
-gained. fmessages moved too, but that app varies from round to round. The full result will be
-appended here.
+The whole corpus was rerun on the committed state: framework 78 with the shim above.
+`r82-lifecycle.json` is its classification.
+
+- **Coverage:** 328 of 329 apps ran. The 327 also classified in r77 compare as 324 at the same
+  lifecycle stage, 3 further along and none further back. 272 draw, against 270 in r77.
+- **Gained:** X (its login screen) and geotagvideocamer (its map-tiles notice over a live MapLibre
+  map, which renders through the TextureView path above). Both are confirmed on the screenshots.
+  fmessages moved too, but that app varies from round to round.
+- **Threads** stays at runtime-init but stops later: after the split fix it reaches a native crash
+  on its startup thread.
+- **Telegram is not a gain yet.**
+  - It draws its welcome screen. Then its own GL thread (`EGLThread`) crashes with a null
+    dereference (SIGSEGV at 0x40), at the same code site every time, about 120 TextureView frames in.
+  - That happened in 5 of 6 launches under SELinux enforcing. The one clean launch, above, ran under
+    permissive for a hilog capture.
+  - The enforcing launches show SELinux denials only for a logging socket. The crash is open.
+- **TikTok** had never launched, in r77 or in r82.
+  - The harness named two of its Android-namespace libraries by SONAME: TikTok's
+    `libeffect_plugin.so` is `libeffect.so`. The launcher refuses a target that is not one of the
+    app's files, so it stopped before starting TikTok.
+  - The gap map now emits file names. TikTok then launched for the first time, and at 45 s it was
+    still binding its application, verifying its large dex.
 
 ## Commits
 
-- Harness: `351c42c` (scorer), `54cbe2e` (Android-namespace rows), `e8224d9` (classifier), in #21.
+- Harness: `351c42c` (scorer), `54cbe2e` (Android-namespace rows), `e8224d9` (classifier), in #21;
+  `f116483` (launch targets by file name).
 - Westlake `corpus2-fixes`, in order:
   - `9ec07f4`: AHardwareBuffer forwarders, EGL import, damage region, `eglTerminate`.
   - `8894944`: AChoreographer forwarders.
