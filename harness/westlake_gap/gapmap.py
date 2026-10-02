@@ -20,6 +20,7 @@ from __future__ import annotations
 import bisect
 import json
 import re
+import sys
 import zipfile
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -1879,6 +1880,18 @@ def android_namespace_rows(scan: dict[str, Any], rows: list[dict[str, Any]],
     return out
 
 
+_LIBRARY_TARGET_FLAGS = ("--android-native-target", "--android-native-net-target")
+
+
+def unpackaged_launch_targets(args: list[str], scan: dict[str, Any]) -> list[str]:
+    """Library targets in launch args that name no packaged file. The launcher routes files by name and
+    refuses such a target, so the app never starts: TikTok's maps once named libeffect.so, the SONAME
+    of its libeffect_plugin.so, and TikTok did not launch in two whole-corpus runs."""
+    files = {elf["name"].rsplit("/", 1)[-1] for elf in ohresolve.target_elfs(scan)}
+    return sorted({value for flag, value in zip(args[0::2], args[1::2])
+                   if flag in _LIBRARY_TARGET_FLAGS and value not in files})
+
+
 def launch_args(rows: list[dict[str, Any]]) -> list[str]:
     """Every row's launch_args, flag and value pairs kept together, each pair once."""
     pairs: list[tuple[str, str]] = []
@@ -1957,6 +1970,10 @@ def build_map(
         # launcher can close is closed on the app's first launch.
         "launch_args": launch_args(rows),
     }
+    bad_targets = unpackaged_launch_targets(gap_map["launch_args"], scan)
+    if bad_targets:
+        gap_map["checks"] = {"unpackaged_launch_targets": bad_targets}
+        print("gap-map: launch targets name no packaged file: " + " ".join(bad_targets), file=sys.stderr)
     if probe_results:
         apply_probe_results(gap_map, probe_results)
     if observed:

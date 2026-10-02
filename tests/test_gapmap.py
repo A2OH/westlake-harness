@@ -1050,6 +1050,14 @@ static jstring Runtime_nativeLoad(JNIEnv* env, jclass clazz, jstring filename,
         self.assertEqual(targets, ["libc++_shared.so", "libeffect_plugin.so"])
 
 
+class LaunchArgsCheck(unittest.TestCase):
+    def test_a_target_naming_no_packaged_file_is_reported(self) -> None:
+        scan = {"inventory": {"elfs": [{"name": "lib/arm64-v8a/libeffect_plugin.so", "soname": "libeffect.so"}]}}
+        args = ["--android-native-target", "libeffect_plugin.so", "--android-native-target", "libeffect.so",
+                "--android-native-net-target", "libgone.so", "--app-oat-dir", "/x"]
+        self.assertEqual(gapmap.unpackaged_launch_targets(args, scan), ["libeffect.so", "libgone.so"])
+
+
 class SandboxAndBacktest(unittest.TestCase):
     def test_realm_fifo_is_predicted(self) -> None:
         policy = {"oh": {"domain": "u:r:normal_hap:s0", "app_data_type": "u:object_r:appdat:s0",
