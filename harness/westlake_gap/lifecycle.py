@@ -134,6 +134,8 @@ class Score:
     markers: dict = field(default_factory=dict)
     anomaly: str | None = None
     screen: str | None = None
+    crash_site: dict | None = None
+    main_thread: dict | None = None
 
     def as_dict(self) -> dict:
         return {k: v for k, v in self.__dict__.items()
@@ -231,15 +233,36 @@ def screen_state(image: Path) -> str | None:
     return "host" if sum(abs(x - y) for x, y in zip(a, b)) / len(a) < 2.0 else "app"
 
 
+def add_evidence(s: Score, text: str, maps_text: str | None) -> None:
+    """What a run left beside the log (see evidence.py): a native crash placed in a library by the
+    process map sampled during the run, and, for an app that is not drawing and names no blocker,
+    what its Java main thread was doing in the last thread dump."""
+    from . import evidence
+    if maps_text and s.fatal:
+        s.crash_site = evidence.crash_site(text, maps_text)
+        if s.crash_site and s.blocker_category == "native-crash":
+            pc = s.crash_site["pc"]
+            s.blocker += " in %s+%s" % (pc["library"], pc["offset"])
+    thread = evidence.main_thread(text)
+    if thread:
+        s.main_thread = thread
+        if s.blocker is None and s.rung_name != "drawing":
+            frame = thread["first_app_frame"] or (thread["frames"][0] if thread["frames"] else "?")
+            s.blocker_category, s.blocker = "stall", "main thread %s at %s" % (thread["waiting"], frame)
+
+
 def score_paths(paths: list[Path]) -> list[Score]:
     scores = []
     for path in sorted(paths):
-        s = score(path.stem, path.read_text(errors="replace"))
+        text = path.read_text(errors="replace")
+        s = score(path.stem, text)
         s.screen = screen_state(path.with_suffix(".jpeg"))
         if s.screen == "host" and s.rung_name == "drawing":
             # The screenshot decides: it drew, and is no longer on screen.
             s.rung, s.rung_name, s.blocking = RUNGS.index("view"), "view", True
             s.anomaly = "drew, but the screenshot shows the host screen: the app left or died"
+        maps = path.with_suffix(".maps")
+        add_evidence(s, text, maps.read_text(errors="replace") if maps.exists() else None)
         scores.append(s)
     return scores
 

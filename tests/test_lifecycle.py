@@ -41,5 +41,32 @@ class FirstBlocker(unittest.TestCase):
         self.assertEqual((drew.rung_name, drew.blocker), ("drawing", None))
 
 
+class Evidence(unittest.TestCase):
+    CRASH = ("Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR) fault addr 0x40\nThread: 9911 \"EGLThread\"\n"
+             "Registers:\n    x30: 0x0000007f90ace7a0\n     sp: 0x0000007e9774ed20     pc: 0x0000007f90acde28\n")
+    MAPS = ("7f90780000-7f90b00000 r-xp 00000000 fd:00 123 /vendor/lib64/chipsetsdk/libGLES_mali.z.so\n"
+            "7f90b00000-7f90b10000 r--p 00380000 fd:00 123 /vendor/lib64/chipsetsdk/libGLES_mali.z.so\n")
+
+    def test_native_crash_is_placed_in_its_library(self) -> None:
+        from westlake_gap import evidence, lifecycle
+        site = evidence.crash_site(self.CRASH, self.MAPS)
+        self.assertEqual((site["thread"], site["pc"]["library"], site["pc"]["offset"]),
+                         ("EGLThread", "libGLES_mali.z.so", "0x34de28"))
+        s = lifecycle.score("app", "kRegJNI loop done\n" + self.CRASH)
+        lifecycle.add_evidence(s, "kRegJNI loop done\n" + self.CRASH, self.MAPS)
+        self.assertEqual(s.blocker, "SIGSEGV on thread EGLThread in libGLES_mali.z.so+0x34de28")
+
+    def test_stalled_main_thread_becomes_the_blocker(self) -> None:
+        from westlake_gap import lifecycle
+        dump = ('DALVIK THREADS (2):\n"Thread-2" prio=5 tid=1 Blocked\n  | state=S schedstat=( 1 2 3 )\n'
+                "  at java.lang.Object.wait(Native method)\n  at com.example.Init.await(Init.java:3)\n"
+                '"HeapTaskDaemon" prio=5 tid=2 Waiting\n  at java.lang.Object.wait(Native method)\n')
+        text = "kRegJNI loop done\nsBindAppDone=true\n" + dump
+        s = lifecycle.score("app", text)
+        lifecycle.add_evidence(s, text, None)
+        self.assertEqual((s.blocker_category, s.blocker),
+                         ("stall", "main thread waiting on a monitor at com.example.Init.await(Init.java:3)"))
+
+
 if __name__ == "__main__":
     unittest.main()
