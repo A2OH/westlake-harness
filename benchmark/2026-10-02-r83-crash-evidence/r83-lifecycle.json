@@ -1,0 +1,6669 @@
+[
+ {
+  "app": "aaaaxy",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 419,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "native-loading",
+  "blocker": "Error relocating /data/local/tmp/asx/lib/arm64-v8a/libgojni.so: AConfiguration_delete: symbol not fo",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "aat",
+  "rung": 3,
+  "rung_name": "activity",
+  "lines": 436,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "app-framework",
+  "blocker": "start activity: ArithmeticException",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "accelerace",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 8772,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "activitytrace",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 537,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "adaway",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 560,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "aegis",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 651,
+  "fatal": 0,
+  "relayouts": 18,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 18
+  },
+  "screen": "app"
+ },
+ {
+  "app": "agrahn",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 752,
+  "fatal": 0,
+  "relayouts": 22,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 22
+  },
+  "screen": "app"
+ },
+ {
+  "app": "airlyrics",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 552,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "aisleron",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 545,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "alarm",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 527,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "amaze",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 995,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "anarchre",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 806,
+  "fatal": 0,
+  "relayouts": 37,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 37
+  },
+  "screen": "app"
+ },
+ {
+  "app": "androideggs",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 882,
+  "fatal": 0,
+  "relayouts": 37,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 37
+  },
+  "screen": "app"
+ },
+ {
+  "app": "andstatus",
+  "rung": 4,
+  "rung_name": "view",
+  "lines": 1200,
+  "fatal": 0,
+  "relayouts": 18,
+  "held_back": 0,
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 18
+  },
+  "anomaly": "drew, but the screenshot shows the host screen: the app left or died",
+  "screen": "host"
+ },
+ {
+  "app": "anki",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 678,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "antennapod",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 679,
+  "fatal": 0,
+  "relayouts": 18,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 18
+  },
+  "screen": "app"
+ },
+ {
+  "app": "antimine",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 566,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "anxreader",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 684,
+  "fatal": 0,
+  "relayouts": 17,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 17
+  },
+  "screen": "app"
+ },
+ {
+  "app": "appmanager",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 959,
+  "fatal": 0,
+  "relayouts": 52,
+  "held_back": 1,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 4,
+   "view": 4,
+   "drawing": 52
+  },
+  "screen": "app"
+ },
+ {
+  "app": "arcticons",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 749,
+  "fatal": 0,
+  "relayouts": 25,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 25
+  },
+  "screen": "app"
+ },
+ {
+  "app": "aurorastore",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 570,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "backup",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 528,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "ball2box",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 698,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "balygroceriestra",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 641,
+  "fatal": 0,
+  "relayouts": 17,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 17
+  },
+  "screen": "app"
+ },
+ {
+  "app": "batterytemperatu",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 589,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "bbcnews",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1463,
+  "fatal": 0,
+  "relayouts": 15,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 15
+  },
+  "screen": "app"
+ },
+ {
+  "app": "beatbridge",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 377,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "biblelockscreen",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 561,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "bim",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 416,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "native-loading",
+  "blocker": "No implementation found for void iscool.jni.JniService.configure(android.content.Context) (tried Jav",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "blockads",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 606,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocker_category": "app-framework",
+  "blocker": "uncaught on Thread-2: NullPointerException: Attempt to invoke InvokeType(4) method 'boolean android.net.IVpnManager.prepareV",
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "bluemoon",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 535,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "breezyweather",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 560,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "brethap",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 648,
+  "fatal": 0,
+  "relayouts": 20,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 20
+  },
+  "screen": "app"
+ },
+ {
+  "app": "briar",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 4440,
+  "fatal": 0,
+  "relayouts": 26,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 26
+  },
+  "screen": "app"
+ },
+ {
+  "app": "broadboard",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 708,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "broccoli",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 551,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "burgerparty",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 813,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "capcut",
+  "rung": 1,
+  "rung_name": "runtime-init",
+  "lines": 453,
+  "fatal": 1,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "native-crash",
+  "blocker": "SIGSEGV on thread aInitSchedule-4: a fault inside musl's allocator: the heap was corrupt before this call (allocating for libshadowhook.so+0x207d76c)",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 0,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host",
+  "crash_dump": {
+   "signal": "SIGSEGV",
+   "code": "SEGV_MAPERR",
+   "address": "0x0",
+   "thread": "aInitSchedule-4",
+   "frames": [
+    {
+     "pc": 880160,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1",
+     "symbol": "__libc_malloc_impl+1332"
+    },
+    {
+     "pc": 802104,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1",
+     "symbol": "libc_gwp_asan_calloc+80"
+    },
+    {
+     "pc": 34068332,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/libshadowhook.so",
+     "library": "libshadowhook.so"
+    },
+    {
+     "pc": 34056608,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/libshadowhook.so",
+     "library": "libshadowhook.so"
+    },
+    {
+     "pc": 15902352,
+     "path": "/data/local/tmp/asx/libart.so",
+     "library": "libart.so"
+    },
+    {
+     "pc": 23271589,
+     "library": "[Unknown]"
+    }
+   ],
+   "first_app_frame": "libshadowhook.so+0x207d76c",
+   "kind": "heap",
+   "summary": "a fault inside musl's allocator: the heap was corrupt before this call (allocating for libshadowhook.so+0x207d76c)"
+  }
+ },
+ {
+  "app": "cardabase",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 678,
+  "fatal": 0,
+  "relayouts": 17,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 17
+  },
+  "screen": "app"
+ },
+ {
+  "app": "cardswithcats",
+  "rung": 4,
+  "rung_name": "view",
+  "lines": 609,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "anomaly": "drew, but the screenshot shows the host screen: the app left or died",
+  "screen": "host"
+ },
+ {
+  "app": "castlab",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 2861,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "catima",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 540,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "cclauncher",
+  "rung": 4,
+  "rung_name": "view",
+  "lines": 558,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "anomaly": "drew, but the screenshot shows the host screen: the app left or died",
+  "screen": "host"
+ },
+ {
+  "app": "chance",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 538,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "chat",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 543,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "chompass",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 553,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "chrono",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 546,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "citymapper",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1131,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "clauncher",
+  "rung": 3,
+  "rung_name": "activity",
+  "lines": 492,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "app-framework",
+  "blocker": "start activity: InflateException",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "clearsms",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 532,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "client",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 678,
+  "fatal": 0,
+  "relayouts": 15,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 15
+  },
+  "screen": "app"
+ },
+ {
+  "app": "clock",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 538,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "cloudgallery",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 585,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "cnn",
+  "rung": 1,
+  "rung_name": "runtime-init",
+  "lines": 547,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "app-framework",
+  "blocker": "bind: RuntimeException: Unable to create application com.cnn.mobile.android.phone.CnnApplication: java.l",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 0,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "composestopwatch",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 924,
+  "fatal": 0,
+  "relayouts": 41,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 4,
+   "view": 4,
+   "drawing": 41
+  },
+  "screen": "app"
+ },
+ {
+  "app": "connectbot",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 563,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "conversations",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 707,
+  "fatal": 0,
+  "relayouts": 18,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 18
+  },
+  "screen": "app"
+ },
+ {
+  "app": "cpudefense",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 516,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "cryptosafe",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 540,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "davx5",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 716,
+  "fatal": 0,
+  "relayouts": 22,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 22
+  },
+  "screen": "app"
+ },
+ {
+  "app": "daynight",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 749,
+  "fatal": 0,
+  "relayouts": 25,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 25
+  },
+  "screen": "app"
+ },
+ {
+  "app": "deku",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 580,
+  "fatal": 0,
+  "relayouts": 8,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 8
+  },
+  "screen": "app"
+ },
+ {
+  "app": "diesimu",
+  "rung": 4,
+  "rung_name": "view",
+  "lines": 613,
+  "fatal": 0,
+  "relayouts": 8,
+  "held_back": 0,
+  "blocker_category": "native-loading",
+  "blocker": "No implementation found for void org.libsdl.app.SDLActivity.nativeSetenv(java.lang.String, java.lang",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 8
+  },
+  "anomaly": "drew, but the screenshot shows the host screen: the app left or died",
+  "screen": "host"
+ },
+ {
+  "app": "discord",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 590,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "doit",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 539,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "doorsofdoom",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 683,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "drawanywhere",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 378,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "droidfs",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 863,
+  "fatal": 0,
+  "relayouts": 43,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 43
+  },
+  "screen": "app"
+ },
+ {
+  "app": "droidify",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1101,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "droidpad",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 533,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "droidrops",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 536,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "duckduckgo",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 887,
+  "fatal": 0,
+  "relayouts": 22,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 22
+  },
+  "screen": "app"
+ },
+ {
+  "app": "duckrun",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 454,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "native-loading",
+  "blocker": "Error loading shared library libcamera2ndk.so: (needed by /data/local/tmp/asx/lib/arm64-v8a/libgodot",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "duolingo",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 2178,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "econverter",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 419,
+  "fatal": 1,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "native-crash",
+  "blocker": "SIGSEGV on thread com.econverter.: a null function pointer called from libpython3.11.so+0x499ba4",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host",
+  "crash_dump": {
+   "signal": "SIGSEGV",
+   "code": "SEGV_MAPERR",
+   "address": "0x0",
+   "thread": "com.econverter.",
+   "frames": [
+    {
+     "pc": 0,
+     "library": "not mapped"
+    },
+    {
+     "pc": 4823972,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/libpython3.11.so",
+     "library": "libpython3.11.so"
+    },
+    {
+     "pc": 4011452,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/libpython3.11.so",
+     "library": "libpython3.11.so"
+    },
+    {
+     "pc": 4610776,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/libpython3.11.so",
+     "library": "libpython3.11.so"
+    },
+    {
+     "pc": 4589672,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/libpython3.11.so",
+     "library": "libpython3.11.so"
+    },
+    {
+     "pc": 3715308,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/libpython3.11.so",
+     "library": "libpython3.11.so"
+    },
+    {
+     "pc": 3714748,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/libpython3.11.so",
+     "library": "libpython3.11.so"
+    },
+    {
+     "pc": 4813172,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/libpython3.11.so",
+     "library": "libpython3.11.so"
+    }
+   ],
+   "first_app_frame": "libpython3.11.so+0x499ba4",
+   "kind": "null-call",
+   "summary": "a null function pointer called from libpython3.11.so+0x499ba4"
+  }
+ },
+ {
+  "app": "editor",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 521,
+  "fatal": 0,
+  "relayouts": 8,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 8
+  },
+  "screen": "app"
+ },
+ {
+  "app": "editor2",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 8493,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "element",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 760,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "elementx",
+  "rung": 1,
+  "rung_name": "runtime-init",
+  "lines": 383,
+  "fatal": 1,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "native-crash",
+  "blocker": "SIGSEGV on thread io.element.andr: in libmatrix_sdk_ffi.so+0x2940495f00",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 0,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host",
+  "crash_dump": {
+   "signal": "SIGSEGV",
+   "code": "SEGV_MAPERR",
+   "address": "0x6f734a6f666e99",
+   "thread": "io.element.andr",
+   "frames": [
+    {
+     "pc": 177172209408,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/libmatrix_sdk_ffi.so",
+     "library": "libmatrix_sdk_ffi.so"
+    },
+    {
+     "pc": 177172209044,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/libmatrix_sdk_ffi.so",
+     "library": "libmatrix_sdk_ffi.so"
+    },
+    {
+     "pc": 177152472576,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/libmatrix_sdk_ffi.so",
+     "library": "libmatrix_sdk_ffi.so"
+    },
+    {
+     "pc": 177183151356,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/libmatrix_sdk_ffi.so",
+     "library": "libmatrix_sdk_ffi.so"
+    },
+    {
+     "pc": 177152271188,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/libmatrix_sdk_ffi.so",
+     "library": "libmatrix_sdk_ffi.so"
+    },
+    {
+     "pc": 177149949736,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/libmatrix_sdk_ffi.so",
+     "library": "libmatrix_sdk_ffi.so"
+    },
+    {
+     "pc": 177152555576,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/libmatrix_sdk_ffi.so",
+     "library": "libmatrix_sdk_ffi.so"
+    },
+    {
+     "pc": 177147890560,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/libmatrix_sdk_ffi.so",
+     "library": "libmatrix_sdk_ffi.so"
+    }
+   ],
+   "first_app_frame": "libmatrix_sdk_ffi.so+0x2940495f00",
+   "kind": "fault",
+   "summary": "in libmatrix_sdk_ffi.so+0x2940495f00"
+  }
+ },
+ {
+  "app": "emacs",
+  "rung": 1,
+  "rung_name": "runtime-init",
+  "lines": 491,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "app-framework",
+  "blocker": "bind: UnsatisfiedLinkError: Error relocating /data/local/tmp/asx/lib/arm64-v8a/libselinux_emacs.so: fts_open",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 0,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "etar",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 554,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "eventfahrplan",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1161,
+  "fatal": 0,
+  "relayouts": 55,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 4,
+   "view": 4,
+   "drawing": 55
+  },
+  "screen": "app"
+ },
+ {
+  "app": "facebook",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1428,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "facebooknotifica",
+  "rung": 3,
+  "rung_name": "activity",
+  "lines": 518,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "app-framework",
+  "blocker": "start activity: InflateException",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "fairemail",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 717,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "fairscan",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 668,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocker_category": "native-loading",
+  "blocker": "Error loading shared library libmediandk.so: (needed by /data/local/tmp/asx/lib/arm64-v8a/libopencv_",
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "fcalendar",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 560,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "fcamera",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 687,
+  "fatal": 0,
+  "relayouts": 8,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 8
+  },
+  "screen": "app"
+ },
+ {
+  "app": "fclock",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 756,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "fcontacts",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 559,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "fdroid",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 540,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "fdroid2",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 758,
+  "fatal": 0,
+  "relayouts": 20,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 20
+  },
+  "screen": "app"
+ },
+ {
+  "app": "fdroid3",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 742,
+  "fatal": 0,
+  "relayouts": 8,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 8
+  },
+  "screen": "app"
+ },
+ {
+  "app": "fdroid4",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 577,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "fdroid5",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 637,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "feeder",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 547,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "felicity",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 527,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "fennec",
+  "rung": 1,
+  "rung_name": "runtime-init",
+  "lines": 395,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 0,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "ffiles",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 572,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocker_category": "app-framework",
+  "blocker": "uncaught on Thread-12: NullPointerException: Attempt to invoke InvokeType(2) method 'java.lang.Class java.lang.Object.getClas",
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "ffupdater",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 561,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "files",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 459,
+  "fatal": 1,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "native-crash",
+  "blocker": "SIGSEGV on thread ervice.Poller-1: a fault inside musl's allocator: the heap was corrupt before this call (allocating for libsyscall.so+0x3928c)",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host",
+  "crash_dump": {
+   "signal": "SIGSEGV",
+   "code": "SEGV_MAPERR",
+   "address": "0x0",
+   "thread": "ervice.Poller-1",
+   "frames": [
+    {
+     "pc": 880160,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1",
+     "symbol": "__libc_malloc_impl+1332"
+    },
+    {
+     "pc": 802104,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1",
+     "symbol": "libc_gwp_asan_calloc+80"
+    },
+    {
+     "pc": 1037796,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1",
+     "symbol": "__getgrent_a+348"
+    },
+    {
+     "pc": 1035464,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1",
+     "symbol": "__getgr_a+248"
+    },
+    {
+     "pc": 1037268,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1",
+     "symbol": "getgrgid+80"
+    },
+    {
+     "pc": 234124,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/libsyscall.so",
+     "library": "libsyscall.so"
+    },
+    {
+     "pc": 15902352,
+     "path": "/data/local/tmp/asx/libart.so",
+     "library": "libart.so"
+    }
+   ],
+   "first_app_frame": "libsyscall.so+0x3928c",
+   "kind": "heap",
+   "summary": "a fault inside musl's allocator: the heap was corrupt before this call (allocating for libsyscall.so+0x3928c)"
+  }
+ },
+ {
+  "app": "fitbook",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 701,
+  "fatal": 0,
+  "relayouts": 17,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 17
+  },
+  "screen": "app"
+ },
+ {
+  "app": "fitotrack",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 834,
+  "fatal": 0,
+  "relayouts": 41,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 41
+  },
+  "screen": "app"
+ },
+ {
+  "app": "flashdim",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1340,
+  "fatal": 0,
+  "relayouts": 130,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 130
+  },
+  "screen": "app"
+ },
+ {
+  "app": "flexify",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 665,
+  "fatal": 0,
+  "relayouts": 17,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 17
+  },
+  "screen": "app"
+ },
+ {
+  "app": "flicky",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 537,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "flipboard",
+  "rung": 1,
+  "rung_name": "runtime-init",
+  "lines": 567,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "app-framework",
+  "blocker": "bind: RuntimeException: Unable to get provider androidx.startup.InitializationProvider: eqb: java.lang.U",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 0,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "fluffy",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 526,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "fluffychat",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 665,
+  "fatal": 0,
+  "relayouts": 17,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 17
+  },
+  "screen": "app"
+ },
+ {
+  "app": "fluxnews",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 2867,
+  "fatal": 0,
+  "relayouts": 17,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 17
+  },
+  "screen": "app"
+ },
+ {
+  "app": "fmessages",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 412,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "fnotes",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 646,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocker_category": "app-framework",
+  "blocker": "uncaught on Thread-4: SQLiteException: no such collation sequence: UNICODE (code 257): , while compiling: SELECT * FROM",
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "fortunetelling",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 574,
+  "fatal": 0,
+  "relayouts": 8,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 8
+  },
+  "screen": "app"
+ },
+ {
+  "app": "fosdem",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 567,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "fosswarn",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 635,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "fphone",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 572,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "freeotp",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 530,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "fvoicerec",
+  "rung": 4,
+  "rung_name": "view",
+  "lines": 725,
+  "fatal": 0,
+  "relayouts": 18,
+  "held_back": 1,
+  "blocker_category": "app-framework",
+  "blocker": "process init: IllegalStateException: null",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 18
+  },
+  "anomaly": "drew, but the screenshot shows the host screen: the app left or died",
+  "screen": "host"
+ },
+ {
+  "app": "gadgetbridge",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 2619,
+  "fatal": 0,
+  "relayouts": 146,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 4,
+   "view": 4,
+   "drawing": 146
+  },
+  "screen": "app"
+ },
+ {
+  "app": "gallery",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 556,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "game",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 4632,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "geotagvideocamer",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1104,
+  "fatal": 0,
+  "relayouts": 41,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 4,
+   "view": 4,
+   "drawing": 41
+  },
+  "screen": "app"
+ },
+ {
+  "app": "gh4a",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 545,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "gitlab",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 536,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "gotify",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 558,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "gpscockpit",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 993,
+  "fatal": 0,
+  "relayouts": 34,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 34
+  },
+  "screen": "app"
+ },
+ {
+  "app": "graph89",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 540,
+  "fatal": 0,
+  "relayouts": 8,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 8
+  },
+  "screen": "app"
+ },
+ {
+  "app": "gruenerpass",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 536,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "guardian",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1279,
+  "fatal": 0,
+  "relayouts": 27,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 4,
+   "view": 4,
+   "drawing": 27
+  },
+  "screen": "app"
+ },
+ {
+  "app": "hacki",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 8267,
+  "fatal": 0,
+  "relayouts": 17,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 17
+  },
+  "screen": "app"
+ },
+ {
+  "app": "hamtest",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 527,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "healthybatterych",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 542,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "hematimer",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 610,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "homeassistant",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 642,
+  "fatal": 0,
+  "relayouts": 14,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 14
+  },
+  "screen": "app"
+ },
+ {
+  "app": "hourly",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 535,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "hypostats",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 534,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "i2pradio",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 584,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "icsx5",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 574,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "indic",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1995,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "infraarcana",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 806,
+  "fatal": 0,
+  "relayouts": 37,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 37
+  },
+  "screen": "app"
+ },
+ {
+  "app": "insigno",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 400,
+  "fatal": 1,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "native-crash",
+  "blocker": "SIGABRT on thread mali-cmar-backe: aborted from libGLES_mali.z.so",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host",
+  "crash_dump": {
+   "signal": "SIGABRT",
+   "code": "SI_TKILL",
+   "address": "0x131544600001401",
+   "thread": "mali-cmar-backe",
+   "frames": [
+    {
+     "pc": 1119044,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1",
+     "symbol": "raise+384"
+    },
+    {
+     "pc": 775516,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1",
+     "symbol": "abort+20"
+    },
+    {
+     "pc": 3871344,
+     "path": "/vendor/lib64/chipsetsdk/libGLES_mali.z.so",
+     "library": "libGLES_mali.z.so"
+    },
+    {
+     "pc": 6350284,
+     "path": "/vendor/lib64/chipsetsdk/libGLES_mali.z.so",
+     "library": "libGLES_mali.z.so",
+     "symbol": "cdbgp_quit+8"
+    },
+    {
+     "pc": 3571396,
+     "path": "/vendor/lib64/chipsetsdk/libGLES_mali.z.so",
+     "library": "libGLES_mali.z.so",
+     "symbol": "base_jd_event_term+92"
+    },
+    {
+     "pc": 6405996,
+     "path": "/vendor/lib64/chipsetsdk/libGLES_mali.z.so",
+     "library": "libGLES_mali.z.so",
+     "symbol": "cmarp_backend_thread+284"
+    },
+    {
+     "pc": 1247720,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1",
+     "symbol": "start+236"
+    },
+    {
+     "pc": 616740,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1"
+    }
+   ],
+   "kind": "abort",
+   "summary": "aborted from libGLES_mali.z.so"
+  }
+ },
+ {
+  "app": "instagram",
+  "rung": 1,
+  "rung_name": "runtime-init",
+  "lines": 686,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 0,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "internetradio",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 607,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "app-framework",
+  "blocker": "process init: NullPointerException: Attempt to invoke InvokeType(2) method 'java.lang.Class java.lang.Object.getClas",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "intra",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 3512,
+  "fatal": 0,
+  "relayouts": 25,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 25
+  },
+  "screen": "app"
+ },
+ {
+  "app": "inventory",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 528,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "jami",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 4169,
+  "fatal": 0,
+  "relayouts": 40,
+  "held_back": 0,
+  "blocker_category": "native-loading",
+  "blocker": "No implementation found for void net.jami.daemon.JamiServiceJNI.swig_module_init() (tried Java_net_j",
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 40
+  },
+  "screen": "app"
+ },
+ {
+  "app": "jellyfin",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 590,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "jigsaw",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 709,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "jiyi",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1055,
+  "fatal": 0,
+  "relayouts": 17,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 17
+  },
+  "screen": "app"
+ },
+ {
+  "app": "jtx",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 566,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "justplayer",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 4242,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "k9",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 4199,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "kdeconnect",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 551,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "keepassdx",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 3956,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "kore",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 558,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "kryptos",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 538,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "labnex",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 538,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "lemuroid",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 577,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "letterbox",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 523,
+  "fatal": 0,
+  "relayouts": 8,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 8
+  },
+  "screen": "app"
+ },
+ {
+  "app": "librecontactsbac",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 517,
+  "fatal": 0,
+  "relayouts": 8,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 8
+  },
+  "screen": "app"
+ },
+ {
+  "app": "librelibrivoxlis",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 15339,
+  "fatal": 0,
+  "relayouts": 17,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 17
+  },
+  "screen": "app"
+ },
+ {
+  "app": "libretorrent",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 535,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "libretube",
+  "rung": 1,
+  "rung_name": "runtime-init",
+  "lines": 418,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "app-framework",
+  "blocker": "bind: RuntimeException: Unable to create application com.github.libretube.LibreTubeApp: java.lang.Illega",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 0,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "linkedin",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 763,
+  "fatal": 0,
+  "relayouts": 31,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 31
+  },
+  "screen": "app"
+ },
+ {
+  "app": "linkhub",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 538,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "linphone",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 628,
+  "fatal": 1,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "system-services",
+  "blocker": "UsageStatsManager.getAppStandbyBucket on null service",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host",
+  "main_thread": {
+   "name": "Thread-2",
+   "java_state": "ThreadState(0)",
+   "state": "R",
+   "waiting": "running",
+   "frames": [
+    "android.view.ContextThemeWrapper.getTheme(unavailable:0)",
+    "I3.k.getTheme(unavailable:12)",
+    "android.content.Context.obtainStyledAttributes(unavailable:0)",
+    "androidx.constraintlayout.widget.ConstraintLayout.generateLayoutParams(SourceFile:68)",
+    "android.view.LayoutInflater.rInflate(unavailable:95)",
+    "android.view.LayoutInflater.rInflateChildren(unavailable:9)",
+    "android.view.LayoutInflater.parseInclude(unavailable:213)",
+    "android.view.LayoutInflater.rInflate(unavailable:68)"
+   ],
+   "first_app_frame": "I3.k.getTheme(unavailable:12)"
+  },
+  "crash_dump": {
+   "signal": "SIGABRT",
+   "code": "SI_TKILL",
+   "address": "0x1315446000010c6",
+   "thread": "Core Thread",
+   "frames": [
+    {
+     "pc": 1119044,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1",
+     "symbol": "raise+384"
+    },
+    {
+     "pc": 775516,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1",
+     "symbol": "abort+20"
+    },
+    {
+     "pc": 13776420,
+     "path": "/data/local/tmp/asx/libart.so",
+     "library": "libart.so"
+    },
+    {
+     "pc": 6966128,
+     "path": "/data/local/tmp/asx/libart.so",
+     "library": "libart.so"
+    },
+    {
+     "pc": 6964208,
+     "path": "/data/local/tmp/asx/libart.so",
+     "library": "libart.so"
+    },
+    {
+     "pc": 14033944,
+     "path": "/data/local/tmp/asx/libart.so",
+     "library": "libart.so"
+    },
+    {
+     "pc": 10787396,
+     "path": "/data/local/tmp/asx/libart.so",
+     "library": "libart.so"
+    },
+    {
+     "pc": 12542920,
+     "path": "/data/local/tmp/asx/libart.so",
+     "library": "libart.so"
+    }
+   ],
+   "first_app_frame": "liblinphone.so+0x11f6458",
+   "kind": "abort",
+   "summary": "aborted from libart.so"
+  }
+ },
+ {
+  "app": "linuxcmd",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 525,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "localsendapp",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 7664,
+  "fatal": 0,
+  "relayouts": 20,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 20
+  },
+  "screen": "app"
+ },
+ {
+  "app": "macat",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 533,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "markdowneditor",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1109,
+  "fatal": 0,
+  "relayouts": 14,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 14
+  },
+  "screen": "app"
+ },
+ {
+  "app": "marketmonk",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 624,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "markor",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 875,
+  "fatal": 0,
+  "relayouts": 18,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 18
+  },
+  "screen": "app"
+ },
+ {
+  "app": "marlin",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 616,
+  "fatal": 0,
+  "relayouts": 14,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 14
+  },
+  "screen": "app"
+ },
+ {
+  "app": "mastodon",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 503,
+  "fatal": 0,
+  "relayouts": 8,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 8
+  },
+  "screen": "app"
+ },
+ {
+  "app": "meditationtimer",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 553,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "medtimer",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 685,
+  "fatal": 0,
+  "relayouts": 18,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 18
+  },
+  "screen": "app"
+ },
+ {
+  "app": "messenger",
+  "rung": 4,
+  "rung_name": "view",
+  "lines": 1235,
+  "fatal": 1,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocker_category": "native-crash",
+  "blocker": "SIGABRT on thread dgw_mns_event_l: aborted from libstartup.so",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "anomaly": "drew, but the screenshot shows the host screen: the app left or died",
+  "screen": "host",
+  "crash_dump": {
+   "signal": "SIGABRT",
+   "code": "SI_TKILL",
+   "address": "0x131544600004b50",
+   "thread": "dgw_mns_event_l",
+   "frames": [
+    {
+     "pc": 1119044,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1",
+     "symbol": "raise+384"
+    },
+    {
+     "pc": 775516,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1",
+     "symbol": "abort+20"
+    },
+    {
+     "pc": 44976988,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/libstartup.so",
+     "library": "libstartup.so"
+    }
+   ],
+   "first_app_frame": "libstartup.so+0x2ae4b5c",
+   "kind": "abort",
+   "summary": "aborted from libstartup.so"
+  }
+ },
+ {
+  "app": "mindustry",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 589,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "minimalcalendarw",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 540,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "miniter",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 532,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "mobile",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 628,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "mobilev2",
+  "rung": 4,
+  "rung_name": "view",
+  "lines": 1038,
+  "fatal": 0,
+  "relayouts": 17,
+  "held_back": 0,
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 17
+  },
+  "anomaly": "drew, but the screenshot shows the host screen: the app left or died",
+  "screen": "host"
+ },
+ {
+  "app": "moodcairns",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 537,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "moovit",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1298,
+  "fatal": 0,
+  "relayouts": 8,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 8
+  },
+  "screen": "app"
+ },
+ {
+  "app": "mousepounce",
+  "rung": 4,
+  "rung_name": "view",
+  "lines": 1056,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "anomaly": "drew, but the screenshot shows the host screen: the app left or died",
+  "screen": "host"
+ },
+ {
+  "app": "mpv",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 527,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "msstart",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1193,
+  "fatal": 0,
+  "relayouts": 22,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 22
+  },
+  "screen": "app"
+ },
+ {
+  "app": "mucke",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 778,
+  "fatal": 0,
+  "relayouts": 17,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 17
+  },
+  "screen": "app"
+ },
+ {
+  "app": "musekit",
+  "rung": 4,
+  "rung_name": "view",
+  "lines": 757,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "app-framework",
+  "blocker": "process init: IllegalStateException: startRecording() called on an uninitialized AudioRecord.",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "musicplayer",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 568,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "mypricelog",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 535,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "myquran",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 627,
+  "fatal": 0,
+  "relayouts": 17,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 17
+  },
+  "screen": "app"
+ },
+ {
+  "app": "ncnotes",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 701,
+  "fatal": 0,
+  "relayouts": 22,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 22
+  },
+  "screen": "app"
+ },
+ {
+  "app": "nctalk",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 813,
+  "fatal": 0,
+  "relayouts": 18,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 18
+  },
+  "screen": "app"
+ },
+ {
+  "app": "nekovideo",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 564,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "networkscanner",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 546,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "newpipe",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1076,
+  "fatal": 0,
+  "relayouts": 40,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 40
+  },
+  "screen": "app"
+ },
+ {
+  "app": "nextcloud",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 967,
+  "fatal": 0,
+  "relayouts": 26,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 26
+  },
+  "screen": "app"
+ },
+ {
+  "app": "noice",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 709,
+  "fatal": 0,
+  "relayouts": 18,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 18
+  },
+  "screen": "app"
+ },
+ {
+  "app": "nora",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 2133,
+  "fatal": 0,
+  "relayouts": 14,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 14
+  },
+  "screen": "app"
+ },
+ {
+  "app": "nori",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 850,
+  "fatal": 0,
+  "relayouts": 17,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 17
+  },
+  "screen": "app"
+ },
+ {
+  "app": "notifilter",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 543,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "nounours",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 465,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "app-framework",
+  "blocker": "uncaught on Thread-3: IllegalStateException: null",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "ntfy",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 554,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "ntodotxt",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 613,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "nytimes",
+  "rung": 3,
+  "rung_name": "activity",
+  "lines": 861,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "app-framework",
+  "blocker": "start activity: RuntimeException",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "obtainium",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 693,
+  "fatal": 0,
+  "relayouts": 20,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 20
+  },
+  "screen": "app"
+ },
+ {
+  "app": "obtainx",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 655,
+  "fatal": 0,
+  "relayouts": 14,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 14
+  },
+  "screen": "app"
+ },
+ {
+  "app": "oeffisounds",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 731,
+  "fatal": 0,
+  "relayouts": 25,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 25
+  },
+  "screen": "app"
+ },
+ {
+  "app": "onloc",
+  "rung": 4,
+  "rung_name": "view",
+  "lines": 794,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocker_category": "app-framework",
+  "blocker": "process init: NullPointerException: Attempt to invoke InvokeType(2) method 'java.lang.Class java.lang.Object.getClas",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 11
+  },
+  "anomaly": "drew, but the screenshot shows the host screen: the app left or died",
+  "screen": "host"
+ },
+ {
+  "app": "ooniprobe",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1040,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "openalertviewer",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 636,
+  "fatal": 0,
+  "relayouts": 17,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 17
+  },
+  "screen": "app"
+ },
+ {
+  "app": "opencamera",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 465,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "native-upcalls",
+  "blocker": "android.hardware.Camera._getCameraInfo",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "openhab",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 826,
+  "fatal": 0,
+  "relayouts": 18,
+  "held_back": 0,
+  "blocker_category": "app-framework",
+  "blocker": "uncaught on Thread-2: NullPointerException: Attempt to invoke InvokeType(4) method 'boolean java.util.Enumeration.hasMoreEle",
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 18
+  },
+  "screen": "app"
+ },
+ {
+  "app": "openkeychain",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 541,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "opentracks",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 530,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "opflashcontrol",
+  "rung": 4,
+  "rung_name": "view",
+  "lines": 594,
+  "fatal": 0,
+  "relayouts": 5,
+  "held_back": 0,
+  "blocker_category": "app-framework",
+  "blocker": "process init: IllegalStateException: Slider value(80.0) must be greater or equal to valueFrom(0.0), and lower or equa",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 5
+  },
+  "anomaly": "drew, but the screenshot shows the host screen: the app left or died",
+  "screen": "host"
+ },
+ {
+  "app": "organicmaps",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 739,
+  "fatal": 0,
+  "relayouts": 16,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 16
+  },
+  "screen": "app"
+ },
+ {
+  "app": "osmand",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1099,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "otgmaster",
+  "rung": 3,
+  "rung_name": "activity",
+  "lines": 444,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "app-framework",
+  "blocker": "start activity: NullPointerException",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "pando85",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 793,
+  "fatal": 0,
+  "relayouts": 29,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 29
+  },
+  "screen": "app"
+ },
+ {
+  "app": "pcontacts",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 537,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "photoediting",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 518,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "photoswooper",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 555,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "pictionarygenera",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 603,
+  "fatal": 0,
+  "relayouts": 14,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 14
+  },
+  "screen": "app"
+ },
+ {
+  "app": "pilltime",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 767,
+  "fatal": 0,
+  "relayouts": 28,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 28
+  },
+  "screen": "app"
+ },
+ {
+  "app": "pipepipe",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1320,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "playmaker",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 457,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "native-loading",
+  "blocker": "Error loading shared library libcamera2ndk.so: (needed by /data/local/tmp/asx/lib/arm64-v8a/libgodot",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "playtube",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 559,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "plus",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 712,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "polishedrecognit",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 560,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "pomodoro",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 555,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "ppsspp",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 395,
+  "fatal": 1,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "native-crash",
+  "blocker": "SIGSEGV on thread androidInit: in libhwui.so+0x6ba160",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host",
+  "crash_dump": {
+   "signal": "SIGSEGV",
+   "code": "SEGV_MAPERR",
+   "address": "0x0",
+   "thread": "androidInit",
+   "frames": [
+    {
+     "pc": 7053664,
+     "path": "/data/local/tmp/asx/libhwui.so",
+     "library": "libhwui.so"
+    },
+    {
+     "pc": 7051716,
+     "path": "/data/local/tmp/asx/libhwui.so",
+     "library": "libhwui.so"
+    },
+    {
+     "pc": 17926964,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/libppsspp_jni.so",
+     "library": "libppsspp_jni.so"
+    },
+    {
+     "pc": 17927708,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/libppsspp_jni.so",
+     "library": "libppsspp_jni.so"
+    },
+    {
+     "pc": 18307980,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/libppsspp_jni.so",
+     "library": "libppsspp_jni.so"
+    },
+    {
+     "pc": 18275952,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/libppsspp_jni.so",
+     "library": "libppsspp_jni.so"
+    },
+    {
+     "pc": 15902352,
+     "path": "/data/local/tmp/asx/libart.so",
+     "library": "libart.so"
+    }
+   ],
+   "first_app_frame": "libppsspp_jni.so+0x1118b34",
+   "kind": "fault",
+   "summary": "in libhwui.so+0x6ba160"
+  }
+ },
+ {
+  "app": "quitter",
+  "rung": 1,
+  "rung_name": "runtime-init",
+  "lines": 405,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "app-framework",
+  "blocker": "bind: RuntimeException: Unable to get provider dev.fluttercommunity.workmanager.WorkmanagerInitializer: ",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 0,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "radiodroid",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 725,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "rebooter",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1150,
+  "fatal": 0,
+  "relayouts": 94,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 94
+  },
+  "screen": "app"
+ },
+ {
+  "app": "reddit",
+  "rung": 4,
+  "rung_name": "view",
+  "lines": 1063,
+  "fatal": 0,
+  "relayouts": 14,
+  "held_back": 0,
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 14
+  },
+  "anomaly": "drew, but the screenshot shows the host screen: the app left or died",
+  "screen": "host"
+ },
+ {
+  "app": "redmoon",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 665,
+  "fatal": 0,
+  "relayouts": 18,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 18
+  },
+  "screen": "app"
+ },
+ {
+  "app": "redreader",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 384,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "remindiary",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 600,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "remote",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 530,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "rethink",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 450,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "app"
+ },
+ {
+  "app": "retromusic",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 6423,
+  "fatal": 0,
+  "relayouts": 25,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 25
+  },
+  "screen": "app"
+ },
+ {
+  "app": "rhvoice",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 726,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "rhythmengine",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 548,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "rknhardering",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 778,
+  "fatal": 0,
+  "relayouts": 31,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 31
+  },
+  "screen": "app"
+ },
+ {
+  "app": "rouelibre",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 540,
+  "fatal": 0,
+  "relayouts": 8,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 8
+  },
+  "screen": "app"
+ },
+ {
+  "app": "rssaid",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1138,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "ruammij",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1946,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "rush",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 548,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "rushhour",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 962,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "sanmill",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 774,
+  "fatal": 0,
+  "relayouts": 17,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 17
+  },
+  "screen": "app"
+ },
+ {
+  "app": "scrambledexif",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 441,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "app-framework",
+  "blocker": "process init: RuntimeException: Unable to resume activity {com.jarsilio.android.scrambledeggsif/com.jarsilio.and",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "seal",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1162,
+  "fatal": 0,
+  "relayouts": 54,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 4,
+   "view": 4,
+   "drawing": 54
+  },
+  "screen": "app"
+ },
+ {
+  "app": "shatteredpd",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 864,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "shazam",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 548,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "shizuwall",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 547,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "shortcut",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 361,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "siftrecipes",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 770,
+  "fatal": 0,
+  "relayouts": 19,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 19
+  },
+  "screen": "app"
+ },
+ {
+  "app": "simpletextcrypt",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 754,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "smartnews",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 739,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocker_category": "app-framework",
+  "blocker": "uncaught on DefaultDispatcher-worker-3: NullPointerException: Attempt to invoke InvokeType(4) method 'java.lang.Object kotlin.jvm.functions.Fu",
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "snapchat",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1718,
+  "fatal": 0,
+  "relayouts": 20,
+  "held_back": 1,
+  "blocker_category": "native-upcalls",
+  "blocker": "libcore.io.Memory.unsafeBulkGet",
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 20
+  },
+  "screen": "app"
+ },
+ {
+  "app": "solipsism",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 552,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "sosring",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 539,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "soundaura",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 3008,
+  "fatal": 0,
+  "relayouts": 35,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 35
+  },
+  "screen": "app"
+ },
+ {
+  "app": "soundpod",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 788,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "soundtree",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 586,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "spacebeam",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 2276,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "spotify",
+  "rung": 3,
+  "rung_name": "activity",
+  "lines": 995,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "app-framework",
+  "blocker": "uncaught on DefaultDispatcher-worker-1: UnsatisfiedLinkError: Error loading shared library libmediandk.so: (needed by /data/data/com.spotify.m",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "ssh",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 674,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "sshborg",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 808,
+  "fatal": 0,
+  "relayouts": 34,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 34
+  },
+  "screen": "app"
+ },
+ {
+  "app": "stable",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1146,
+  "fatal": 0,
+  "relayouts": 83,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 83
+  },
+  "screen": "app"
+ },
+ {
+  "app": "standard",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 7545,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 4,
+   "view": 4,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "sterna",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 557,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "stims",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 530,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "stochapop",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 566,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "streetcomplete",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 653,
+  "fatal": 0,
+  "relayouts": 10,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 10
+  },
+  "screen": "app"
+ },
+ {
+  "app": "suntimes",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 692,
+  "fatal": 0,
+  "relayouts": 15,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 15
+  },
+  "screen": "app"
+ },
+ {
+  "app": "supertuxkart",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1340,
+  "fatal": 0,
+  "relayouts": 130,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 130
+  },
+  "screen": "app"
+ },
+ {
+  "app": "tasks",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 603,
+  "fatal": 0,
+  "relayouts": 14,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 14
+  },
+  "screen": "app"
+ },
+ {
+  "app": "telegram",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 4827,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "termux",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1365,
+  "fatal": 0,
+  "relayouts": 51,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 8,
+   "view": 8,
+   "drawing": 51
+  },
+  "screen": "app"
+ },
+ {
+  "app": "texetescribe",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 529,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "threads",
+  "rung": 1,
+  "rung_name": "runtime-init",
+  "lines": 421,
+  "fatal": 1,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "native-crash",
+  "blocker": "SIGSEGV on thread com.instagram.b: a constructor pointer kept its link-time value (0x482a0): a relocation the loader did not apply",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 0,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host",
+  "crash_dump": {
+   "signal": "SIGSEGV",
+   "code": "SEGV_ACCERR",
+   "address": "0x582a0",
+   "thread": "com.instagram.b",
+   "frames": [
+    {
+     "pc": 295584,
+     "library": "[Unknown]"
+    },
+    {
+     "pc": 525032,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1",
+     "symbol": "do_init_fini+444"
+    },
+    {
+     "pc": 15559672,
+     "path": "/data/local/tmp/asx/libart.so",
+     "library": "libart.so"
+    },
+    {
+     "pc": 15555024,
+     "path": "/data/local/tmp/asx/libart.so",
+     "library": "libart.so"
+    },
+    {
+     "pc": 12497084,
+     "path": "/data/local/tmp/asx/libart.so",
+     "library": "libart.so"
+    },
+    {
+     "pc": 15584608,
+     "path": "/data/local/tmp/asx/libart.so",
+     "library": "libart.so"
+    },
+    {
+     "pc": 15902352,
+     "path": "/data/local/tmp/asx/libart.so",
+     "library": "libart.so"
+    }
+   ],
+   "kind": "unrelocated-constructor",
+   "summary": "a constructor pointer kept its link-time value (0x482a0): a relocation the loader did not apply"
+  }
+ },
+ {
+  "app": "thunderbird",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 4212,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "tiktok",
+  "rung": 1,
+  "rung_name": "runtime-init",
+  "lines": 774,
+  "fatal": 1,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "native-crash",
+  "blocker": "SIGSEGV on thread acceleratePlayH: a library constructor (INIT_ARRAY entry) is null: musl calls it, bionic skips it",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 0,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host",
+  "crash_dump": {
+   "signal": "SIGSEGV",
+   "code": "SEGV_MAPERR",
+   "address": "0x0",
+   "thread": "acceleratePlayH",
+   "frames": [
+    {
+     "pc": 0,
+     "library": "not mapped"
+    },
+    {
+     "pc": 525032,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1",
+     "symbol": "do_init_fini+444"
+    },
+    {
+     "pc": 15559672,
+     "path": "/data/local/tmp/asx/libart.so",
+     "library": "libart.so"
+    },
+    {
+     "pc": 15555024,
+     "path": "/data/local/tmp/asx/libart.so",
+     "library": "libart.so"
+    },
+    {
+     "pc": 12497084,
+     "path": "/data/local/tmp/asx/libart.so",
+     "library": "libart.so"
+    },
+    {
+     "pc": 15584608,
+     "path": "/data/local/tmp/asx/libart.so",
+     "library": "libart.so"
+    },
+    {
+     "pc": 15902352,
+     "path": "/data/local/tmp/asx/libart.so",
+     "library": "libart.so"
+    },
+    {
+     "pc": 16864204,
+     "library": "[Unknown]"
+    }
+   ],
+   "kind": "null-constructor",
+   "summary": "a library constructor (INIT_ARRAY entry) is null: musl calls it, bionic skips it"
+  }
+ },
+ {
+  "app": "timetracking",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 661,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "tinywheels",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 664,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "todo",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 670,
+  "fatal": 0,
+  "relayouts": 20,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 20
+  },
+  "screen": "app"
+ },
+ {
+  "app": "toolbox",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 658,
+  "fatal": 0,
+  "relayouts": 20,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 20
+  },
+  "screen": "app"
+ },
+ {
+  "app": "torrentsdigger",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 735,
+  "fatal": 0,
+  "relayouts": 17,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 17
+  },
+  "screen": "app"
+ },
+ {
+  "app": "trailsense",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 606,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "trale",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 617,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "transcriber",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 529,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "transistor",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 542,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "transit",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 2936,
+  "fatal": 0,
+  "relayouts": 27,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 4,
+   "view": 4,
+   "drawing": 27
+  },
+  "screen": "app"
+ },
+ {
+  "app": "translateyou",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 769,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "translator",
+  "rung": 1,
+  "rung_name": "runtime-init",
+  "lines": 417,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "app-framework",
+  "blocker": "bind: UnsatisfiedLinkError: Unable to load library 'bindings':",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 0,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "tryst",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 522,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "ttsutil",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 544,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "tusky",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 566,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "uber",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1109,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "uhabits",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 654,
+  "fatal": 0,
+  "relayouts": 15,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 15
+  },
+  "screen": "app"
+ },
+ {
+  "app": "unciv",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 591,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "universalinstall",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 4158,
+  "fatal": 0,
+  "relayouts": 22,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 22
+  },
+  "screen": "app"
+ },
+ {
+  "app": "usp",
+  "rung": 4,
+  "rung_name": "view",
+  "lines": 576,
+  "fatal": 1,
+  "relayouts": 8,
+  "held_back": 0,
+  "blocker_category": "native-crash",
+  "blocker": "abort: drawRenderNode called on a context with no surface!",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 8
+  },
+  "anomaly": "drew, but the screenshot shows the host screen: the app left or died",
+  "screen": "host",
+  "crash_dump": {
+   "signal": "SIGABRT",
+   "code": "SI_TKILL",
+   "address": "0x131544600002095",
+   "thread": "RenderThread",
+   "frames": [
+    {
+     "pc": 1119044,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1",
+     "symbol": "raise+384"
+    },
+    {
+     "pc": 775516,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1",
+     "symbol": "abort+20"
+    },
+    {
+     "pc": 1778644,
+     "path": "/data/local/tmp/asx/liboh_android_runtime.so",
+     "library": "liboh_android_runtime.so"
+    },
+    {
+     "pc": 127340,
+     "path": "/data/local/tmp/asx/libbase.so",
+     "library": "libbase.so"
+    },
+    {
+     "pc": 30968,
+     "path": "/data/local/tmp/asx/liblog.so",
+     "library": "liblog.so"
+    },
+    {
+     "pc": 3895524,
+     "path": "/data/local/tmp/asx/libhwui.so",
+     "library": "libhwui.so"
+    },
+    {
+     "pc": 3950140,
+     "path": "/data/local/tmp/asx/libhwui.so",
+     "library": "libhwui.so"
+    },
+    {
+     "pc": 3966688,
+     "path": "/data/local/tmp/asx/libhwui.so",
+     "library": "libhwui.so"
+    }
+   ],
+   "kind": "abort",
+   "summary": "aborted from liboh_android_runtime.so"
+  }
+ },
+ {
+  "app": "uturn",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 521,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "v3",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 713,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "vaultexplorer",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 611,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "viewer",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 486,
+  "fatal": 0,
+  "relayouts": 8,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 8
+  },
+  "screen": "app"
+ },
+ {
+  "app": "viewer2",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 547,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "vlc-fdroid",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 462,
+  "fatal": 0,
+  "relayouts": 5,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 0,
+   "view": 0,
+   "drawing": 5
+  },
+  "anomaly": "reached drawing without activity, view",
+  "screen": "app"
+ },
+ {
+  "app": "voice",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 552,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "voiceplus",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 550,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "vrcaa",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 534,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "waterflyiii",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 600,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "waze",
+  "rung": 4,
+  "rung_name": "view",
+  "lines": 838,
+  "fatal": 1,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocker_category": "native-crash",
+  "blocker": "SIGABRT on thread Native Thread: aborted from libwaze.so",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "anomaly": "drew, but the screenshot shows the host screen: the app left or died",
+  "screen": "host",
+  "crash_dump": {
+   "signal": "SIGABRT",
+   "code": "SI_TKILL",
+   "address": "0x1315446000007c2",
+   "thread": "Native Thread",
+   "frames": [
+    {
+     "pc": 1119044,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1",
+     "symbol": "raise+384"
+    },
+    {
+     "pc": 775516,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1",
+     "symbol": "abort+20"
+    },
+    {
+     "pc": 102928952,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/.libwaze.so.westlake-init.1986.0",
+     "library": "libwaze.so"
+    },
+    {
+     "pc": 102935944,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/.libwaze.so.westlake-init.1986.0",
+     "library": "libwaze.so"
+    },
+    {
+     "pc": 102935908,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/.libwaze.so.westlake-init.1986.0",
+     "library": "libwaze.so"
+    },
+    {
+     "pc": 102807844,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/.libwaze.so.westlake-init.1986.0",
+     "library": "libwaze.so"
+    },
+    {
+     "pc": 102807648,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/.libwaze.so.westlake-init.1986.0",
+     "library": "libwaze.so"
+    },
+    {
+     "pc": 102806436,
+     "path": "/data/local/tmp/asx/lib/arm64-v8a/.libwaze.so.westlake-init.1986.0",
+     "library": "libwaze.so"
+    }
+   ],
+   "first_app_frame": "libwaze.so+0x6229238",
+   "kind": "abort",
+   "summary": "aborted from libwaze.so"
+  }
+ },
+ {
+  "app": "werewolvesgame",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 442,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "whatsapp",
+  "rung": 1,
+  "rung_name": "runtime-init",
+  "lines": 485,
+  "fatal": 1,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocker_category": "native-crash",
+  "blocker": "SIGSEGV on thread 73(1071595525)): in libart.so+0xad1c3c",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 0,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host",
+  "crash_dump": {
+   "signal": "SIGSEGV",
+   "code": "SEGV_MAPERR",
+   "address": "0x80007fa48aad20",
+   "thread": "73(1071595525))",
+   "frames": [
+    {
+     "pc": 11344956,
+     "path": "/data/local/tmp/asx/libart.so",
+     "library": "libart.so"
+    },
+    {
+     "pc": 11349216,
+     "path": "/data/local/tmp/asx/libart.so",
+     "library": "libart.so"
+    },
+    {
+     "pc": 11350112,
+     "path": "/data/local/tmp/asx/libart.so",
+     "library": "libart.so"
+    },
+    {
+     "pc": 11167684,
+     "path": "/data/local/tmp/asx/libart.so",
+     "library": "libart.so"
+    },
+    {
+     "pc": 11166740,
+     "path": "/data/local/tmp/asx/libart.so",
+     "library": "libart.so"
+    },
+    {
+     "pc": 11135228,
+     "path": "/data/local/tmp/asx/libart.so",
+     "library": "libart.so"
+    },
+    {
+     "pc": 15892108,
+     "path": "/data/local/tmp/asx/libart.so",
+     "library": "libart.so"
+    }
+   ],
+   "kind": "fault",
+   "summary": "in libart.so+0xad1c3c"
+  }
+ },
+ {
+  "app": "wifianalyzer",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 3926,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "wikipedia",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 767,
+  "fatal": 0,
+  "relayouts": 18,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 18
+  },
+  "screen": "app"
+ },
+ {
+  "app": "wormhole",
+  "rung": 2,
+  "rung_name": "bound",
+  "lines": 13480,
+  "fatal": 0,
+  "relayouts": 0,
+  "held_back": 0,
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 0,
+   "view": 0,
+   "drawing": 0
+  },
+  "screen": "host"
+ },
+ {
+  "app": "wormhole2",
+  "rung": 4,
+  "rung_name": "view",
+  "lines": 594,
+  "fatal": 0,
+  "relayouts": 14,
+  "held_back": 0,
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 14
+  },
+  "anomaly": "drew, but the screenshot shows the host screen: the app left or died",
+  "screen": "host"
+ },
+ {
+  "app": "x",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1833,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "xtra",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 549,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "ytdl",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1251,
+  "fatal": 0,
+  "relayouts": 100,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 100
+  },
+  "screen": "app"
+ },
+ {
+  "app": "zaragozatarjetab",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 518,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app"
+ },
+ {
+  "app": "zerion",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1041,
+  "fatal": 0,
+  "relayouts": 44,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 4,
+   "view": 4,
+   "drawing": 44
+  },
+  "screen": "app"
+ },
+ {
+  "app": "zoom",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1148,
+  "fatal": 0,
+  "relayouts": 34,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 3,
+   "view": 3,
+   "drawing": 34
+  },
+  "screen": "app"
+ }
+]
