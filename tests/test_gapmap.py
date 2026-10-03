@@ -1234,6 +1234,15 @@ class ApkMemberLoads(unittest.TestCase):
         self.assertEqual(rows["load:apk-member"]["verdict"], "supplied")
 
 
+class SymbolVersions(unittest.TestCase):
+    def test_version_mismatches_are_their_own_row(self) -> None:
+        missing = [{"symbol": "__system_property_read_callback", "importers": 1, "importing_libraries": ["libcore.so"],
+                    "surface": "libc", "version_mismatch": {"wanted": ["LIBC_O"], "defined": ["LIBC"]}}]
+        rows = gapmap.symbol_version_rows(missing)
+        self.assertEqual(rows[0]["open_symbols"], ["__system_property_read_callback@LIBC_O (defined @LIBC)"])
+        self.assertEqual(gapmap.symbol_version_rows([{"symbol": "x", "importing_libraries": []}]), [])
+
+
 class SandboxAndBacktest(unittest.TestCase):
     def test_realm_fifo_is_predicted(self) -> None:
         policy = {"oh": {"domain": "u:r:normal_hap:s0", "app_data_type": "u:object_r:appdat:s0",

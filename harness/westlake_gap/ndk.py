@@ -52,6 +52,31 @@ def elf_exports(data: bytes) -> set[str]:
             if s.name and s["st_shndx"] != "SHN_UNDEF" and s["st_info"]["bind"] in ("STB_GLOBAL", "STB_WEAK")}
 
 
+def elf_export_versions(data: bytes) -> dict[str, str]:
+    """Defined dynamic symbols with the version they are defined under, for a library that versions
+    its symbols (an empty dict for one that does not: musl, most of the runtime). OH's loader
+    binds a versioned import to a versioned library only under the same version name."""
+    if data[:4] != b"\x7fELF":
+        return {}
+    elf = ELFFile(io.BytesIO(data))
+    table, versym, verdef = (elf.get_section_by_name(name) for name in (".dynsym", ".gnu.version", ".gnu.version_d"))
+    if table is None or versym is None or verdef is None:
+        return {}
+    names = {}
+    for definition, auxiliaries in verdef.iter_versions():
+        if not definition["vd_flags"] & 1:  # VER_FLG_BASE names the library, not a version
+            names[definition["vd_ndx"]] = next(iter(auxiliaries)).name
+    out = {}
+    for index, symbol in enumerate(table.iter_symbols()):
+        if not symbol.name or symbol["st_shndx"] == "SHN_UNDEF" or symbol["st_info"]["bind"] not in ("STB_GLOBAL", "STB_WEAK"):
+            continue
+        ndx = versym.get_symbol(index)["ndx"]
+        ndx = ndx if isinstance(ndx, int) else 1
+        if ndx & 0x7FFF in names:
+            out[symbol.name] = names[ndx & 0x7FFF]
+    return out
+
+
 def ndk_surface(api_dir: Path) -> dict[str, list[str]]:
     """Public NDK symbols per library, from the stub libraries of one API level of an NDK sysroot."""
     surface = {}
@@ -69,7 +94,8 @@ def library_exports(directory: Path) -> dict[str, dict[str, Any]]:
         data = path.read_bytes()
         exports = elf_exports(data)
         if exports:
-            out[path.name] = {"sha256": hashlib.sha256(data).hexdigest(), "exports": exports}
+            out[path.name] = {"sha256": hashlib.sha256(data).hexdigest(), "exports": exports,
+                              "versions": elf_export_versions(data)}
     return out
 
 

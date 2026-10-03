@@ -370,7 +370,8 @@ def main(argv: list[str] | None = None) -> int:
         from . import ohresolve
 
         provided, libraries = ohresolve.index_exports(args.lib_dir)
-        app = ohresolve.resolve(read_json(args.scan), provided, ohresolve.ndk_declarations(args.ndk_api_dir))
+        app = ohresolve.resolve(read_json(args.scan), provided, ohresolve.ndk_declarations(args.ndk_api_dir),
+                                ohresolve.index_export_versions(args.lib_dir))
         write_json(args.out, {"board": {"description": args.board, "libraries_indexed": libraries},
                               "apps": {args.app_key: app}})
         print(f"{args.app_key}: {app['resolved']}/{app['symbols']} resolved, {len(app['missing'])} missing "

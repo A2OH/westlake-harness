@@ -29,6 +29,20 @@ def index_exports(directories: list[Path]) -> tuple[set[str], list[str]]:
     return exports, sorted(libraries)
 
 
+def index_export_versions(directories: list[Path]) -> dict[str, set[str | None]]:
+    """For every provided symbol, the versions it is defined under; None stands for a definition in
+    a library without symbol versions, which satisfies an import of any version."""
+    versions: dict[str, set[str | None]] = {}
+    for directory in directories:
+        for name, record in ndk.library_exports(directory).items():
+            if ndk.is_variant(name):
+                continue
+            defined = record.get("versions") or {}
+            for symbol in record["exports"]:
+                versions.setdefault(symbol, set()).add(defined.get(symbol))
+    return versions
+
+
 def ndk_declarations(api_dir: Path | None) -> dict[str, str]:
     if api_dir is None:
         return {}
@@ -54,7 +68,12 @@ def packaged_elfs(scan: dict[str, Any]) -> list[dict[str, Any]]:
     return [elf for elf in target_elfs(scan) if elf.get("origin") != "unpacked"]
 
 
-def resolve(scan: dict[str, Any], provided: set[str], declared: dict[str, str]) -> dict[str, Any]:
+def resolve(scan: dict[str, Any], provided: set[str], declared: dict[str, str],
+            versions: dict[str, set[str | None]] | None = None) -> dict[str, Any]:
+    """With versions (index_export_versions), an import that asks for a version resolves only against
+    a definition under that version or one in an unversioned library, as OH's loader binds:
+    Messenger's libcore.so asked for __system_property_read_callback@LIBC_O, and the bionic shim
+    defined it under LIBC only."""
     elfs = target_elfs(scan)
     own: set[str] = set()
     for elf in elfs:
@@ -66,9 +85,22 @@ def resolve(scan: dict[str, Any], provided: set[str], declared: dict[str, str]) 
         for symbol in elf.get("undefined_symbols", []):
             if symbol not in weak:
                 importers.setdefault(symbol, set()).add(name)
+    wanted: dict[str, set[str]] = {}
+    for elf in elfs:
+        for symbol, version in (elf.get("import_versions") or {}).items():
+            wanted.setdefault(symbol, set()).add(version)
     missing = []
     for symbol, names in sorted(importers.items()):
-        if symbol in own or symbol in provided:
+        if symbol in own:
+            continue
+        if symbol in provided:
+            defined = (versions or {}).get(symbol)
+            if not defined or None in defined or not wanted.get(symbol) or wanted[symbol] <= defined:
+                continue
+            missing.append({"symbol": symbol, "importers": len(names), "importing_libraries": sorted(names),
+                            "surface": declared.get(symbol, "bionic-private (not in the NDK)"),
+                            "version_mismatch": {"wanted": sorted(wanted[symbol] - defined),
+                                                 "defined": sorted(defined)}})
             continue
         missing.append({"symbol": symbol, "importers": len(names), "importing_libraries": sorted(names),
                         "surface": declared.get(symbol, "bionic-private (not in the NDK)")})

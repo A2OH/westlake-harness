@@ -881,6 +881,28 @@ def apply_probe_results(gap_map: dict[str, Any], results: dict[str, Any]) -> Non
                 row["provider"] = result["finding"]
 
 
+def symbol_version_rows(oh_missing: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Imports a library defines, but under another symbol version. OH's loader binds a versioned
+    import to a versioned library only under the same version name, so the load fails as if the
+    symbol were absent: Messenger's libcore.so asked for __system_property_read_callback@LIBC_O, and
+    the bionic shim defined it under LIBC."""
+    mismatched = [item for item in oh_missing if item.get("version_mismatch")]
+    if not mismatched:
+        return []
+    return [_row(
+        "native-symbols", "abi:symbol-version",
+        "Imports defined under another symbol version (" + ", ".join(i["symbol"] for i in mismatched[:4])
+        + (" ..." if len(mismatched) > 4 else "") + ")",
+        oh_touchpoint="OH musl's loader: a versioned import matches a versioned library only by version name",
+        verdict="missing", shim_class="C1", effort="XS", confidence=STATIC,
+        open_symbols=[f"{i['symbol']}@{'/'.join(i['version_mismatch']['wanted'])} "
+                      f"(defined @{'/'.join(i['version_mismatch']['defined'])})" for i in mismatched][:12],
+        app_evidence="; ".join(f"{i['symbol']}: {', '.join(i['importing_libraries'][:3])}" for i in mismatched[:4]),
+        seen_blocking=["messenger (superpack libcore.so: __system_property_read_callback@LIBC_O)"],
+        shim="define the symbol under the version Bionic gives it (the bionic shim's version script)",
+    )]
+
+
 def native_symbol_rows(scan: dict[str, Any], oh_missing: list[dict[str, Any]], shim_exports: set[str]) -> list[dict[str, Any]]:
     importers: dict[str, list[str]] = defaultdict(list)
     for elf in ohresolve.target_elfs(scan):
@@ -2105,8 +2127,11 @@ def build_map(
             + framework_native_rows(scan, runtime_index, runtime_class_paths)
             + lifecycle_native_rows(runtime_index, runtime_class_paths)
             + native_upcall_rows(scan)
-            + (ndk_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root), ndk_cov) if ndk_cov
-               else native_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root)))
+            + (ndk_symbol_rows(scan, [m for m in oh_missing if not m.get("version_mismatch")],
+                               bionic_shim_exports(westlake_root), ndk_cov) if ndk_cov
+               else native_symbol_rows(scan, [m for m in oh_missing if not m.get("version_mismatch")],
+                                       bionic_shim_exports(westlake_root)))
+            + symbol_version_rows(oh_missing)
             + native_loading_rows(facts, scan, launcher_extraction(manifest_root), board_paths,
                                   launcher_namespace_option(manifest_root), runtime_libraries,
                                   bionic_loader_model(westlake_root, manifest_root))

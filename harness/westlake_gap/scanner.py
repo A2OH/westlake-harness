@@ -334,6 +334,16 @@ def _android_relocation_tags(readelf_text: str) -> list[str]:
     return sorted(name for tag, name in ANDROID_RELOCATION_TAGS.items() if tag in found)
 
 
+_VERSIONED_IMPORT = re.compile(r"\sUND\s+([A-Za-z_][\w.$]*)@([A-Za-z_]\w*)")
+
+
+def import_versions(readelf_text: str) -> dict[str, Any]:
+    """Imports that ask for a symbol version (Bionic's libc: __system_property_read_callback@LIBC_O),
+    from readelf's dynamic symbol table."""
+    found = {match[1]: match[2] for match in _VERSIONED_IMPORT.finditer(readelf_text)}
+    return {"import_versions": found} if found else {}
+
+
 _SIGNAL_NAMES = ("sigaction", "sigaction64", "sigprocmask", "sigprocmask64", "pthread_sigmask", "pthread_sigmask64")
 
 
@@ -457,6 +467,7 @@ def read_elf(
             "null_array_entries": null_array_entries(raw),
             **art_internal_names(raw),
             **signal_lookups(raw, set(undefined) | set(undefined_weak)),
+            **import_versions(text),
             "exported_symbols": sorted(exports),
             "undefined_symbols": sorted(undefined),
             "undefined_weak_symbols": sorted(undefined_weak),
