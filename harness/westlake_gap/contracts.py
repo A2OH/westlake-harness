@@ -197,6 +197,21 @@ def direct_launch_am_model(westlake_root: Path) -> dict[str, Any]:
             "source": f"{path.relative_to(westlake_root)}:{line}" if stub else None}
 
 
+def activity_client_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether the in-process IActivityClientController answers the task queries, or returns a
+    constant: getTaskForActivity backs Activity.isTaskRoot() and getTaskId()."""
+    path = westlake_root / "framework/activity/java/ActivityClientControllerAdapter.java"
+    text = path.read_text(errors="replace") if path.exists() else ""
+    match = re.search(r"public int getTaskForActivity\([^)]*\)\s*\{", text)
+    if not match:
+        return {"task_for_activity": None, "source": None}
+    body = _braced_block(text, match.start())
+    hollow = re.fullmatch(r"\s*return\s+-?\d+;\s*", body) is not None
+    line = text.count("\n", 0, match.start()) + 1
+    return {"task_for_activity": "constant" if hollow else "answered",
+            "source": f"{path.relative_to(westlake_root)}:{line}"}
+
+
 def window_adapter_model(westlake_root: Path) -> dict[str, Any]:
     """Window-manager semantics the in-process IWindowSession must reproduce, checked in source."""
     path = westlake_root / "framework/window/java/WindowSessionAdapter.java"

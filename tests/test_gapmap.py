@@ -1261,6 +1261,23 @@ class Interposition(unittest.TestCase):
                                                    self.RUNTIME, []), [])
 
 
+class TaskRoot(unittest.TestCase):
+    def test_a_constant_task_answer_is_a_gap_for_apps_that_ask(self) -> None:
+        from westlake_gap.contracts import activity_client_model
+        scan = {"inventory": {"platform_method_names": {"Landroid/app/Activity;": ["isTaskRoot", "finish"]}}}
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "framework/activity/java/ActivityClientControllerAdapter.java"
+            _write(source, "class A { @Override\n    public int getTaskForActivity(IBinder token, boolean onlyRoot) { return -1; } }")
+            model = activity_client_model(root)
+            self.assertEqual(model["task_for_activity"], "constant")
+            self.assertEqual(gapmap.task_root_rows(scan, model)[0]["verdict"], "missing")
+            _write(source, "class A { public int getTaskForActivity(IBinder token, boolean onlyRoot) {\n"
+                           "        int position = taskPosition(token);\n        return position == 0 ? 1 : -1;\n    } }")
+            self.assertEqual(gapmap.task_root_rows(scan, activity_client_model(root))[0]["verdict"], "supplied")
+        self.assertEqual(gapmap.task_root_rows({"inventory": {"platform_method_names": {}}}, {"task_for_activity": "constant"}), [])
+
+
 class SandboxAndBacktest(unittest.TestCase):
     def test_realm_fifo_is_predicted(self) -> None:
         policy = {"oh": {"domain": "u:r:normal_hap:s0", "app_data_type": "u:object_r:appdat:s0",

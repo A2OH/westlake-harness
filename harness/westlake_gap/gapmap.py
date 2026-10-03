@@ -932,6 +932,29 @@ def interposition_rows(scan: dict[str, Any], runtime: dict[str, Any] | None,
     )]
 
 
+def task_root_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """Activity.isTaskRoot() and getTaskId(), which ask the activity client controller for the
+    activity's task. A constant -1 makes every activity a non-root of no task: Instagram's launcher
+    activity finished itself ("is not the root. Finishing activity instead of launching")."""
+    called = set(scan["inventory"].get("platform_method_names", {}).get("Landroid/app/Activity;", []))
+    used = sorted(called & {"isTaskRoot", "getTaskId", "moveTaskToBack"})
+    if not used or model.get("task_for_activity") is None:
+        return []
+    answered = model["task_for_activity"] == "answered"
+    return [_row(
+        "app-framework", "am:task-root", "Activity task queries (" + ", ".join(used) + ")",
+        oh_touchpoint="none: the in-process activity client controller answers for the absent system_server",
+        verdict="supplied" if answered else "missing", shim_class="C9" if not answered else "C0",
+        effort="verify" if answered else "XS", confidence=STATIC,
+        provider=("the adapter keeps the app's one task and its root" if answered else
+                  "getTaskForActivity returns a constant -1: no activity is ever a task root"),
+        provider_source=model.get("source"),
+        app_evidence="the app calls Activity." + ", Activity.".join(used),
+        seen_blocking=["instagram (its launcher activity finished itself: \"is not the root\")"],
+        shim="answer getTaskForActivity with the process's task id, and the oldest live activity as its root",
+    )]
+
+
 def symbol_version_rows(oh_missing: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Imports a library defines, but under another symbol version. OH's loader binds a versioned
     import to a versioned library only under the same version name, so the load fails as if the
@@ -2183,6 +2206,7 @@ def build_map(
                else native_symbol_rows(scan, [m for m in oh_missing if not m.get("version_mismatch")],
                                        bionic_shim_exports(westlake_root)))
             + symbol_version_rows(oh_missing)
+            + task_root_rows(scan, contracts.activity_client_model(westlake_root))
             + native_loading_rows(facts, scan, launcher_extraction(manifest_root), board_paths,
                                   launcher_namespace_option(manifest_root), runtime_libraries,
                                   bionic_loader_model(westlake_root, manifest_root))
