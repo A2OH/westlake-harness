@@ -128,6 +128,14 @@ class Evidence(unittest.TestCase):
         self.assertEqual(s.blocker, "SIGILL on tid 7545 (hilog only, no crash dump), right after: "
                                     "flag is AI_NUMERICHOST but host is Illegal")
 
+    def test_startup_times_come_from_the_hilog(self) -> None:
+        from westlake_gap import evidence
+        hilog = ("10-03 11:25:25.346 22245 22245 I C00f00/AppSpawnX: Child process started, pid=<private>\n"
+                 "10-03 11:25:27.601 22245 22262 I C00f00/OH_ACCAdapter: activityResumed: OnDrawListener attached, FG deferred\n"
+                 "10-03 11:25:28.131 22245 22262 W C00f00/OH_ACCAdapter: activityResumed (first-frame): no OH token mapping\n")
+        self.assertEqual(evidence.startup_times(hilog), {"resumed": 2.26, "first_frame": 2.79})
+        self.assertIsNone(evidence.startup_times("10-03 11:25:25.346 1 1 I C00f00/X: other\n"))
+
 
 if __name__ == "__main__":
     unittest.main()

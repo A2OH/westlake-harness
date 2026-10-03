@@ -214,3 +214,25 @@ def hilog_signal(hilog: str) -> dict | None:
             found["after"] = before.split(": ", 1)[-1][:160]
         return found
     return None
+
+
+_STARTUP_MARKS = (("resumed", "activityResumed: OnDrawListener attached"),
+                  ("first_frame", "activityResumed (first-frame)"))
+
+
+def startup_times(hilog: str) -> dict | None:
+    """Seconds from the process starting (AppSpawnX's "Child process started") to its activity
+    resuming and to that activity's first frame, from the app's own hilog. Compiled code, a slow
+    main thread or a stall shows up here first: Telegram reached its first frame in 2.5 s with its
+    code compiled, TikTok in 44 s interpreted."""
+    start, found = None, {}
+    for line in hilog.splitlines():
+        if start is None and "Child process started" in line:
+            start = _seconds(line)
+            continue
+        for key, marker in _STARTUP_MARKS:
+            if start is not None and key not in found and marker in line:
+                when = _seconds(line)
+                if when is not None:
+                    found[key] = round(when - start, 2)
+    return found or None

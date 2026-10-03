@@ -138,6 +138,7 @@ class Score:
     main_thread: dict | None = None
     crash_dump: dict | None = None
     hilog_signal: dict | None = None
+    startup: dict | None = None
 
     def as_dict(self) -> dict:
         return {k: v for k, v in self.__dict__.items()
@@ -253,6 +254,12 @@ def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str 
         elif s.blocker_category == "native-crash" and dump["signal"] in s.blocker and ":" not in s.blocker:
             # The log saw the signal and thread; the dump says what happened.
             s.blocker += ": " + dump["summary"]
+    startup = evidence.startup_times(hilog_text) if hilog_text else None
+    if startup:
+        s.startup = startup
+        if "first_frame" in startup and s.screen == "host" and s.anomaly is None:
+            s.anomaly = ("its activity drew a first frame %.1f s after start, but the screenshot shows the "
+                         "host screen: the window went away" % startup["first_frame"])
     signal = evidence.hilog_signal(hilog_text) if hilog_text and not dump else None
     if signal:
         s.hilog_signal = signal
