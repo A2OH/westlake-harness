@@ -8,6 +8,10 @@ Two kinds of stop leave the log without a blocker the lifecycle patterns can nam
   driver's EGL surface code, not in Telegram or Westlake.
 * a stall: the app is alive at the screenshot and draws nothing. ART's thread dump (SIGQUIT, or the
   "All threads" dump of a runtime abort) shows what the Java main thread is doing.
+* a native crash the log never mentions: a fault outside ART's handlers (a null constructor called
+  by the loader, a fault inside musl's allocator) prints nothing to stderr. OH's crash dump
+  (faultloggerd's cppcrash, beside the log as <app>.cppcrash) has the faulting thread and frames.
+  In r83 such dumps existed for 12 apps the log scored as "no blocker" or as a slow start.
 """
 from __future__ import annotations
 
@@ -92,4 +96,121 @@ def main_thread(stderr: str) -> dict | None:
                                                                    "libcore.", "com.android."))), None)
         return {"name": head[1], "java_state": head[3], "state": state[1] if state else None,
                 "waiting": waiting, "frames": frames, "first_app_frame": app_frame}
+    return None
+
+
+_CPP_REASON = re.compile(r"^Reason:Signal:(\w+)\((\w+)\)@(?:0x)?([0-9a-fA-F]+)", re.M)
+_CPP_THREAD = re.compile(r"^Fault thread info:\s*\nTid:(\d+), Name:(.*)$", re.M)
+_CPP_FRAME = re.compile(r"^#(\d+) pc ([0-9a-f]+) (.*)$")
+# Westlake's runtime libraries: OH's dumper names the nearest exported symbol, which for these is
+# not the function (libart.so frames read as vixl or riscv64 assembler code), so no name is kept.
+_RUNTIME_DIR = "/data/local/tmp/asx/"
+_APP_DIRS = ("/data/local/tmp/asx/lib/", "/data/data/", "/data/user/")
+_INIT_COPY = re.compile(r"^\.(.+\.so)\.westlake-init\.\d+\.\d+$")
+
+
+def _dump_frame(match: re.Match) -> dict:
+    rest = match[3].strip()
+    frame = {"pc": int(match[2], 16)}
+    if rest.startswith(("Not mapped", "[Unknown]")):
+        frame["library"] = rest.split()[0] if rest.startswith("[") else "not mapped"
+        return frame
+    path = rest.split("(", 1)[0].strip().removesuffix(" (deleted)").strip()
+    name = path.rsplit("/", 1)[-1]
+    copy = _INIT_COPY.match(name)  # the shim's private copy of an app library, loaded once
+    frame["path"], frame["library"] = path, copy[1] if copy else name
+    symbol = re.match(r"[^(]*\(([^)]*\+\d+)\)", rest)
+    if symbol and not (path.startswith(_RUNTIME_DIR) and not path.startswith(_APP_DIRS)):
+        frame["symbol"] = symbol[1]
+    return frame
+
+
+def _is_app(frame: dict) -> bool:
+    return frame.get("path", "").startswith(_APP_DIRS)
+
+
+def cppcrash(text: str) -> dict | None:
+    """The fault in an OH crash dump: signal, address, faulting thread, its top frames, and what the
+    frames say happened when it is one of the shapes Westlake apps keep hitting."""
+    reason = _CPP_REASON.search(text)
+    if reason is None:
+        return None
+    dump = {"signal": reason[1], "code": reason[2], "address": hex(int(reason[3], 16))}
+    thread = _CPP_THREAD.search(text)
+    frames = []
+    if thread:
+        dump["thread"] = thread[2].strip()
+        for line in text[thread.end():].lstrip("\n").splitlines():
+            match = _CPP_FRAME.match(line)
+            if match is None:
+                break
+            frames.append(_dump_frame(match))
+    dump["frames"] = frames[:8]
+    app = next((f for f in frames if _is_app(f)), None)
+    if app:
+        dump["first_app_frame"] = "%s+%#x" % (app["library"], app["pc"])
+    top = frames[0] if frames else {}
+    caller = frames[1] if len(frames) > 1 else {}
+    from_init = caller.get("symbol", "").startswith("do_init_fini")
+    if from_init and (top.get("library") == "not mapped" or top.get("pc") == 0):
+        dump["kind"] = "null-constructor"
+        dump["summary"] = "a library constructor (INIT_ARRAY entry) is null: musl calls it, bionic skips it"
+    elif from_init and top.get("library") == "[Unknown]":
+        dump["kind"] = "unrelocated-constructor"
+        dump["summary"] = "a constructor pointer kept its link-time value (%#x): a relocation the loader did not apply" % top["pc"]
+    elif top.get("library", "").startswith("ld-musl") and re.match(r"(__libc_malloc_impl|__libc_free|malloc|free|realloc|calloc|alloc_)", top.get("symbol", "")):
+        dump["kind"] = "heap"
+        dump["summary"] = "a fault inside musl's allocator: the heap was corrupt before this call"
+        if app:
+            dump["summary"] += " (allocating for %s)" % dump["first_app_frame"]
+    elif dump["signal"] == "SIGABRT":
+        after = next((f for f in frames if not re.match(r"(raise|abort)\b", f.get("symbol", ""))), None)
+        dump["kind"] = "abort"
+        dump["summary"] = "aborted from %s" % (after["library"] if after else "?")
+    elif top.get("library") == "not mapped" and caller:
+        dump["kind"] = "null-call"
+        dump["summary"] = "a null function pointer called from %s+%#x" % (caller.get("library", "?"), caller.get("pc", 0))
+    else:
+        dump["kind"] = "fault"
+        dump["summary"] = "in %s+%#x" % (top.get("library", "?"), top.get("pc", 0))
+    return dump
+
+
+_SIGNAL_NAMES = {4: "SIGILL", 5: "SIGTRAP", 6: "SIGABRT", 7: "SIGBUS", 8: "SIGFPE", 11: "SIGSEGV"}
+_HILOG_TIME = re.compile(r"^\d\d-\d\d (\d\d):(\d\d):(\d\d)\.(\d+)\s+\d+\s+(\d+) ")
+_PASSED_ON = re.compile(r"MUSL-SIGCHAIN: signal_chain_handler call usr sigaction for signal: (\d+)")
+_DFX_THREAD = re.compile(r"DFX_SignalHandler :: signo\((\d+)\), pid\(\d+\), processName\([^)]*\), threadName\(([^)]*)\)")
+
+
+def _seconds(line: str) -> float | None:
+    match = _HILOG_TIME.match(line)
+    return (int(match[1]) * 3600 + int(match[2]) * 60 + int(match[3]) + float("0." + match[4])) if match else None
+
+
+def hilog_signal(hilog: str) -> dict | None:
+    """A fatal signal in the app's own hilog (hilog -P) that left no crash dump: one ART's handler did
+    not claim (musl's signal chain passed it to the app's or OH's handler) and after which the
+    process logged for under two seconds more. Instagram died that way, a SIGILL right after a
+    numeric-host getaddrinfo, with nothing in its log or the fault log."""
+    lines = hilog.splitlines()
+    last = next((t for t in map(_seconds, reversed(lines)) if t is not None), None)
+    for index in range(len(lines) - 1, -1, -1):
+        match = _PASSED_ON.search(lines[index])
+        if not match or int(match[1]) not in _SIGNAL_NAMES:
+            continue
+        when = _seconds(lines[index])
+        if when is None or last is None or last - when > 2:
+            return None
+        tid = _HILOG_TIME.match(lines[index])[5]
+        found = {"signal": _SIGNAL_NAMES[int(match[1])], "tid": int(tid)}
+        thread = next((m[2] for m in map(_DFX_THREAD.search, lines[max(0, index - 40):index])
+                       if m and m[1] == match[1]), None)
+        if thread:
+            found["thread"] = thread
+        before = next((l for l in reversed(lines[max(0, index - 40):index])
+                       if _HILOG_TIME.match(l) and _HILOG_TIME.match(l)[5] == tid
+                       and "MUSL-SIGCHAIN" not in l and "DfxSignalHandler" not in l), None)
+        if before:
+            found["after"] = before.split(": ", 1)[-1][:160]
+        return found
     return None

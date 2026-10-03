@@ -67,6 +67,67 @@ class Evidence(unittest.TestCase):
         self.assertEqual((s.blocker_category, s.blocker),
                          ("stall", "main thread waiting on a monitor at com.example.Init.await(Init.java:3)"))
 
+    DUMP = ("Build info:OpenHarmony 6.1.0.31\nPid:6719\nReason:Signal:SIGSEGV(SEGV_MAPERR)@000000000000000000 \n"
+            "Fault thread info:\nTid:6808, Name:acceleratePlayH\n#00 pc 0000000000000000 Not mapped\n"
+            "#01 pc 00000000000802e8 /system/lib/ld-musl-aarch64.so.1(do_init_fini+444)(a9d018197b852b7e)\n"
+            "#02 pc 0000000000ed6bf8 /data/local/tmp/asx/libart.so(vixl::aarch64::Assembler::pacib()+40)\n\n"
+            "Registers:\n")
+
+    def test_crash_dump_names_what_the_log_never_saw(self) -> None:
+        from westlake_gap import evidence, lifecycle
+        dump = evidence.cppcrash(self.DUMP)
+        self.assertEqual((dump["signal"], dump["thread"], dump["kind"]), ("SIGSEGV", "acceleratePlayH", "null-constructor"))
+        # Westlake's runtime libraries get no symbol: the dumper names the nearest exported one.
+        self.assertNotIn("symbol", dump["frames"][2])
+        text = "kRegJNI loop done\n"
+        s = lifecycle.score("tiktok", text)
+        lifecycle.add_evidence(s, text, None, self.DUMP)
+        self.assertEqual((s.blocker_category, s.fatal), ("native-crash", 1))
+        self.assertIn("acceleratePlayH: a library constructor (INIT_ARRAY entry) is null", s.blocker)
+
+    def test_crash_dump_shapes(self) -> None:
+        from westlake_gap import evidence
+        head = "Reason:Signal:%s@0000000000000000\nFault thread info:\nTid:1, Name:t\n"
+        heap = evidence.cppcrash(head % "SIGSEGV(SEGV_MAPERR)"
+                                 + "#00 pc 00000000000d6e20 /system/lib/ld-musl-aarch64.so.1(__libc_malloc_impl+1332)(ab)\n"
+                                 + "#01 pc 000000000003928c /data/local/tmp/asx/lib/arm64-v8a/libsyscall.so\n")
+        self.assertEqual((heap["kind"], heap["first_app_frame"]), ("heap", "libsyscall.so+0x3928c"))
+        abort = evidence.cppcrash(head % "SIGABRT(SI_TKILL)"
+                                  + "#00 pc 0000000000111344 /system/lib/ld-musl-aarch64.so.1(raise+384)(ab)\n"
+                                  + "#01 pc 00000000000bd55c /system/lib/ld-musl-aarch64.so.1(abort+20)(ab)\n"
+                                  + "#02 pc 0000000006229238 /data/local/tmp/asx/lib/arm64-v8a/.libwaze.so.westlake-init.1986.0 (deleted)\n")
+        self.assertEqual(abort["summary"], "aborted from libwaze.so")
+        call = evidence.cppcrash(head % "SIGSEGV(SEGV_MAPERR)" + "#00 pc 0000000000000000 Not mapped\n"
+                                 + "#01 pc 0000000000499ba4 /data/local/tmp/asx/lib/arm64-v8a/libpython3.11.so\n")
+        self.assertEqual(call["summary"], "a null function pointer called from libpython3.11.so+0x499ba4")
+        init = evidence.cppcrash(head % "SIGSEGV(SEGV_ACCERR)" + "#00 pc 00000000000482a0 [Unknown]\n"
+                                 + "#01 pc 00000000000802e8 /system/lib/ld-musl-aarch64.so.1(do_init_fini+444)(ab)\n")
+        self.assertEqual(init["kind"], "unrelocated-constructor")
+
+    def test_crash_dump_completes_a_crash_the_log_saw(self) -> None:
+        from westlake_gap import lifecycle
+        text = "kRegJNI loop done\nFatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR) fault addr 0x0\nThread: 1 \"acceleratePlayH\"\n"
+        s = lifecycle.score("tiktok", text)
+        lifecycle.add_evidence(s, text, None, self.DUMP)
+        self.assertTrue(s.blocker.endswith(": a library constructor (INIT_ARRAY entry) is null: musl calls it, bionic skips it"))
+
+    def test_a_signal_only_the_hilog_saw(self) -> None:
+        from westlake_gap import evidence, lifecycle
+        hilog = ("10-03 10:19:36.586  7402  7402 I C00f00/AppSpawnX: Child process started\n"
+                 "10-03 10:19:46.745  7402  7471 W C03f07/MUSL-SIGCHAIN: signal_chain_handler call 0 rd sigchain action for signal: 11\n"
+                 "10-03 10:19:46.745  7402  7471 W C03f07/MUSL-SIGCHAIN: signal_chain_handler call 0 rd sigchain action for signal: 11 directly return\n"
+                 "10-03 10:19:54.969  7402  7545 W C03f07/MUSL: flag is AI_NUMERICHOST but host is Illegal\n"
+                 "10-03 10:19:54.973  7402  7545 W C03f07/MUSL-SIGCHAIN: signal_chain_handler call usr sigaction for signal: 4 sig_action.sa_sigaction=7ed1a28d64\n")
+        self.assertEqual(evidence.hilog_signal(hilog), {"signal": "SIGILL", "tid": 7545,
+                                                        "after": "flag is AI_NUMERICHOST but host is Illegal"})
+        # A signal the app's handler took and the process lived on past is not a crash.
+        later = hilog + "10-03 10:20:30.000  7402  7402 I C00f00/App: still running\n"
+        self.assertIsNone(evidence.hilog_signal(later))
+        s = lifecycle.score("instagram", "kRegJNI loop done\n")
+        lifecycle.add_evidence(s, "kRegJNI loop done\n", None, None, hilog)
+        self.assertEqual(s.blocker, "SIGILL on tid 7545 (hilog only, no crash dump), right after: "
+                                    "flag is AI_NUMERICHOST but host is Illegal")
+
 
 if __name__ == "__main__":
     unittest.main()

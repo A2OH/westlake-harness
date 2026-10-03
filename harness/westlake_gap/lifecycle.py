@@ -136,6 +136,8 @@ class Score:
     screen: str | None = None
     crash_site: dict | None = None
     main_thread: dict | None = None
+    crash_dump: dict | None = None
+    hilog_signal: dict | None = None
 
     def as_dict(self) -> dict:
         return {k: v for k, v in self.__dict__.items()
@@ -233,11 +235,33 @@ def screen_state(image: Path) -> str | None:
     return "host" if sum(abs(x - y) for x, y in zip(a, b)) / len(a) < 2.0 else "app"
 
 
-def add_evidence(s: Score, text: str, maps_text: str | None) -> None:
-    """What a run left beside the log (see evidence.py): a native crash placed in a library by the
-    process map sampled during the run, and, for an app that is not drawing and names no blocker,
-    what its Java main thread was doing in the last thread dump."""
+def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str | None = None,
+                 hilog_text: str | None = None) -> None:
+    """What a run left beside the log (see evidence.py): OH's crash dump of the process, a native
+    crash placed in a library by the process map sampled during the run, and, for an app that is not
+    drawing and names no blocker, what its Java main thread was doing in the last thread dump."""
     from . import evidence
+    dump = evidence.cppcrash(cppcrash_text) if cppcrash_text else None
+    if dump:
+        s.crash_dump = dump
+        s.fatal = max(s.fatal, 1)
+        # The dump outranks a log that names nothing, a stall or a non-blocking event: the process
+        # died there. A blocker the log names stays first; the dump is kept beside it.
+        if s.blocker is None or s.blocker_category == "stall" or not s.blocking:
+            s.blocker_category, s.blocking = "native-crash", True
+            s.blocker = "%s on thread %s: %s" % (dump["signal"], dump.get("thread", "?"), dump["summary"])
+        elif s.blocker_category == "native-crash" and dump["signal"] in s.blocker and ":" not in s.blocker:
+            # The log saw the signal and thread; the dump says what happened.
+            s.blocker += ": " + dump["summary"]
+    signal = evidence.hilog_signal(hilog_text) if hilog_text and not dump else None
+    if signal:
+        s.hilog_signal = signal
+        s.fatal = max(s.fatal, 1)
+        if s.blocker is None or s.blocker_category == "stall" or not s.blocking:
+            s.blocker_category, s.blocking = "native-crash", True
+            s.blocker = "%s on %s (hilog only, no crash dump)%s" % (
+                signal["signal"], "thread " + signal["thread"] if "thread" in signal else "tid %d" % signal["tid"],
+                ", right after: " + signal["after"] if "after" in signal else "")
     if maps_text and s.fatal:
         s.crash_site = evidence.crash_site(text, maps_text)
         if s.crash_site and s.blocker_category == "native-crash":
@@ -261,8 +285,10 @@ def score_paths(paths: list[Path]) -> list[Score]:
             # The screenshot decides: it drew, and is no longer on screen.
             s.rung, s.rung_name, s.blocking = RUNGS.index("view"), "view", True
             s.anomaly = "drew, but the screenshot shows the host screen: the app left or died"
-        maps = path.with_suffix(".maps")
-        add_evidence(s, text, maps.read_text(errors="replace") if maps.exists() else None)
+        maps, dump, hilog = path.with_suffix(".maps"), path.with_suffix(".cppcrash"), path.with_suffix(".hilog")
+        add_evidence(s, text, maps.read_text(errors="replace") if maps.exists() else None,
+                     dump.read_text(errors="replace") if dump.exists() else None,
+                     hilog.read_text(errors="replace") if hilog.exists() else None)
         scores.append(s)
     return scores
 
