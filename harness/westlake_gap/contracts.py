@@ -325,7 +325,10 @@ def signal_abi_model(westlake_root: Path) -> dict[str, Any]:
     text = _strip_java_comments(raw)
     translated = sorted(name for name in SIGNAL_ABI_CALLS | SIGNAL_ABI_CALLS_64
                         if re.search(rf"^\s*int\s+{name}\s*\(", text, re.M))
-    dlsym = re.search(r"^\s*void\s*\*\s*dlsym\s*\(", text, re.M)
+    # A lookup by name reaches the translation through a dlsym interposer, or because an Android
+    # caller's dlopen("libc.so") gets this library's own handle (searched before musl's).
+    dlsym = (re.search(r"^\s*void\s*\*\s*dlsym\s*\(", text, re.M)
+             or re.search(r'strcmp\(basename, "libc\.so"\) == 0 && caller_is_android_dso', text))
     first = re.search(r"^\s*int\s+sigaction\s*\(", text, re.M)
     return {"translated": translated, "scope": android_caller_scope(text),
             "dlsym": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, dlsym.start()) + 1}" if dlsym else None,
