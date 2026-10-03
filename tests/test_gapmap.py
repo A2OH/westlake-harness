@@ -1206,6 +1206,21 @@ class SignalAbi(unittest.TestCase):
         self.assertIn("looked up by name in libshadowhook.so", rows[0]["app_evidence"])
 
 
+class ApkMemberLoads(unittest.TestCase):
+    def test_soloader_with_unfixed_split_libraries_is_a_row(self) -> None:
+        scan = {"inventory": {"elfs": [
+            {"name": "split_config.arm64_v8a.apk!lib/arm64-v8a/libc++_shared.so", "split_apk": "split_config.arm64_v8a.apk",
+             "android_relocation_tags": ["ANDROID_RELR"]},
+        ], "declared_native_methods": [{"owner": "Lcom/facebook/soloader/SoLoader;", "name": "x"}],
+            "load_library_calls": []}}
+        rows = {r["id"]: r for r in gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True},
+                                                                [], None, loader={})}
+        self.assertEqual(rows["load:apk-member"]["verdict"], "missing")
+        rows = {r["id"]: r for r in gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True},
+                                                                [], None, loader={"apk_member_redirect": "shim.c:1"})}
+        self.assertEqual(rows["load:apk-member"]["verdict"], "supplied")
+
+
 class SandboxAndBacktest(unittest.TestCase):
     def test_realm_fifo_is_predicted(self) -> None:
         policy = {"oh": {"domain": "u:r:normal_hap:s0", "app_data_type": "u:object_r:appdat:s0",

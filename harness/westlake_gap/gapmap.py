@@ -984,7 +984,7 @@ def signal_abi_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[st
                                 for symbol, libs in sorted(importers.items())][:4]
                                + ([f"looked up by name in {', '.join(sorted(lookups)[:4])}"] if lookups else [])
                                + ([f"{len(written)} of the importers written at run time"] if written else [])),
-        seen_blocking=["whatsapp (t140: its Breakpad setup, running from a wl-exec copy, got a 152-byte old action in a "
+        seen_blocking=["whatsapp (a rerun of r83: its Breakpad setup, running from a wl-exec copy, got a 152-byte old action in a "
                        "32-byte struct and freed the std::string it clobbered, 4 s in)"],
         suspected_blocking=["capcut, tiktok (a SIGSEGV handler of 0x18000804, bionic flags in musl's handler slot; "
                             "heap faults in musl's allocator)"],
@@ -1159,7 +1159,8 @@ def bionic_loader_model(westlake_root: Path | None, manifest_root: Path | None =
             "android_relr_launcher": find("tools/probe_source_app.py", "def android_relr_retagged(", manifest_root),
             "android_relr_shim": find("framework/webview-shim/android_relocs.c", "wl_write_loadable_copy("),
             "null_entries_launcher": find("tools/probe_source_app.py", "def init_array_sanitized(", manifest_root),
-            "funopen_unbuffered": find("framework/webview-shim/webview_bionic_shim.c", "setvbuf(file, NULL, _IONBF, 0)")}
+            "funopen_unbuffered": find("framework/webview-shim/webview_bionic_shim.c", "setvbuf(file, NULL, _IONBF, 0)"),
+            "apk_member_redirect": find("framework/webview-shim/webview_bionic_shim.c", 'strstr(filename, ".apk!/lib/")')}
 
 
 def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_extracts: dict[str, Any],
@@ -1279,6 +1280,27 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
     loaders = sorted({m.get("owner", "").split("/")[2] for m in inventory.get("declared_native_methods", [])
                       if m.get("owner", "").startswith("Lcom/facebook/soloader/")})
     path_loads = [c for c in inventory.get("load_library_calls", []) if c.get("api") == "load"]
+    # A library loaded from inside an APK (<apk>!/lib/<abi>/<name>): OH's loader maps the stored member
+    # itself and so gets the APK's bytes, without the fixes the launcher applies to the copy it
+    # stages. SoLoader does this with a split APK: Threads' libc++_shared.so kept DT_ANDROID_RELR.
+    unfixed = sorted({elf.get("soname") or Path(elf["name"]).name for elf in packaged
+                      if elf.get("split_apk") and (elf.get("android_relocation_tags")
+                                                   or (elf.get("null_array_entries") or {}).get("init"))})
+    if loaders and unfixed:
+        redirect = loader.get("apk_member_redirect")
+        rows.append(_row(
+            "native-loading", "load:apk-member",
+            f"Split-APK libraries SoLoader may load in place ({', '.join(unfixed[:4])}" + (" ..." if len(unfixed) > 4 else "") + ")",
+            oh_touchpoint="OH musl dlopen: maps a stored zip member (<apk>!/lib/<abi>/<name>) itself",
+            verdict="supplied" if redirect else "missing", shim_class="C3", effort="verify" if redirect else "S",
+            confidence=STATIC, provider=("the bionic shim loads the launcher's staged copy for such a path" if redirect else
+                                         "none: the in-place load bypasses the staged, fixed copy"),
+            provider_source=redirect,
+            app_evidence=f"SoLoader is in the app; {len(unfixed)} split-APK libraries need a staging fix",
+            seen_blocking=["threads (r83 and a rerun: libc++_shared.so from split_config.arm64_v8a.apk, constructor "
+                           "at its link-time address)"],
+            shim="answer an APK-member path with the staged copy of the same library",
+        ))
     if loaders or path_loads or unpacked:
         copy = loader.get("code_cache_copy")
         rows.append(_row(
@@ -1394,7 +1416,7 @@ def art_internal_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
         verdict="unverified", shim_class="C2", effort="L", confidence=STATIC,
         provider="none: nothing keeps the runtime's layout to the one the reported SDK level implies",
         app_evidence="; ".join(f"{name} names {count} ({', '.join(sample[:2])})" for name, count, sample in users[:6]),
-        suspected_blocking=["capcut (r83 and t140: musl's allocator faults about 10 s in, after libjato, "
+        suspected_blocking=["capcut (r83 and a rerun: musl's allocator faults about 10 s in, after libjato, "
                             "libsysoptimizer and libgodzilla-sysopt load; unconfirmed)"],
         shim="report the SDK level the runtime's ART is built from, or make these libraries' version check "
              "fail closed (most disable themselves on an unknown layout)",
