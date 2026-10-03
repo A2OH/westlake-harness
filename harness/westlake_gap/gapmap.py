@@ -881,6 +881,57 @@ def apply_probe_results(gap_map: dict[str, Any], results: dict[str, Any]) -> Non
                 row["provider"] = result["finding"]
 
 
+def interposition_rows(scan: dict[str, Any], runtime: dict[str, Any] | None,
+                       rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """App libraries exporting symbols a runtime library also exports.
+
+    Android shows an app's code only the NDK's public libraries; Westlake's runtime libraries are
+    global in the default namespace, where System.loadLibrary puts the app's own. An app library's
+    calls to its own exported functions go through its PLT and bind to the first definition in the
+    global scope, so a runtime library carrying the same symbols takes them over. PPSSPP's own Vulkan
+    Memory Allocator calls ran in libhwui.so's copy and crashed in CalcAllocationParams. A copy of
+    HarfBuzz, FreeType or libpng in an app meets the runtime's libharfbuzz_ng, libft2 and libpng the
+    same way. A library routed to the Android namespace does not see them.
+    """
+    if not runtime:
+        return []
+    owners: dict[str, set[str]] = defaultdict(set)
+    for lib in runtime.get("bridge_libraries", []):
+        for symbol in lib.get("exported_symbols") or []:
+            owners[symbol].add(lib.get("soname") or lib.get("name") or "?")
+    routed = set()
+    for row in rows:
+        args = row.get("launch_args") or []
+        routed |= {value for flag, value in zip(args[0::2], args[1::2]) if flag == "--android-native-target"}
+    hits: dict[str, Counter] = {}
+    for elf in ohresolve.target_elfs(scan):
+        name = elf["name"].rsplit("/", 1)[-1]
+        counts = Counter(owner for symbol in elf.get("exported_symbols") or []
+                         if symbol not in ("JNI_OnLoad", "JNI_OnUnload") and not symbol.startswith("Java_")
+                         for owner in owners.get(symbol, ()))
+        if sum(counts.values()) >= 3:
+            hits[name] = counts
+    if not hits:
+        return []
+    exposed = sorted(name for name in hits if name not in routed)
+    evidence = "; ".join(f"{name}: " + ", ".join(f"{count} with {owner}" for owner, count in hits[name].most_common(2))
+                         for name in sorted(hits, key=lambda n: -sum(hits[n].values()))[:4])
+    return [_row(
+        "native-loading", "load:interposed-by-runtime",
+        f"App libraries whose own symbols a runtime library also exports ({', '.join(sorted(hits)[:4])}"
+        + (" ..." if len(hits) > 4 else "") + ")",
+        oh_touchpoint="the default namespace: Westlake's runtime libraries are global there, ahead of the app's",
+        verdict="missing" if exposed else "supplied", shim_class="C3", effort="S" if exposed else "verify",
+        confidence=STATIC, open_symbols=exposed[:12],
+        provider=("routed to the Android namespace, where the runtime's libraries are not global" if not exposed else
+                  f"{len(exposed)} of {len(hits)} load in the default namespace"),
+        app_evidence=evidence,
+        seen_blocking=["ppsspp (r83: its own VMA calls ran in libhwui.so's copy; SIGSEGV in CalcAllocationParams)"],
+        shim="route these libraries to the Android namespace (--android-native-target), or stop the runtime's "
+             "libraries exporting what Android keeps private to the platform",
+    )]
+
+
 def symbol_version_rows(oh_missing: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Imports a library defines, but under another symbol version. OH's loader binds a versioned
     import to a versioned library only under the same version name, so the load fails as if the
@@ -2150,6 +2201,7 @@ def build_map(
             + sandbox_rows(scan, policy) + external_rows(facts, scan, refused_libraries(westlake_root)))
     rows += android_namespace_rows(scan, rows, android_namespace_libs, runtime_index,
                                    bionic_shim_exports(westlake_root), ndk_cov)
+    rows += interposition_rows(scan, runtime_index, rows)
     if ledger:
         apply_ledger(rows, ledger)
     gap_map = {

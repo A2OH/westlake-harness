@@ -1243,6 +1243,24 @@ class SymbolVersions(unittest.TestCase):
         self.assertEqual(gapmap.symbol_version_rows([{"symbol": "x", "importing_libraries": []}]), [])
 
 
+class Interposition(unittest.TestCase):
+    RUNTIME = {"bridge_libraries": [{"name": "libhwui.so", "exported_symbols": [
+        "vmaCreateAllocator", "vmaCreateBuffer", "vmaDestroyBuffer", "JNI_OnLoad", "SkCanvas_draw"]}]}
+
+    def test_an_app_library_sharing_the_runtimes_symbols_is_flagged_unless_routed(self) -> None:
+        scan = {"inventory": {"elfs": [
+            {"name": "lib/arm64-v8a/libppsspp_jni.so",
+             "exported_symbols": ["vmaCreateAllocator", "vmaCreateBuffer", "vmaDestroyBuffer", "JNI_OnLoad"]},
+            {"name": "lib/arm64-v8a/libplain.so", "exported_symbols": ["JNI_OnLoad", "Java_a_b_c"]}]}}
+        row = gapmap.interposition_rows(scan, self.RUNTIME, [])[0]
+        self.assertEqual((row["verdict"], row["open_symbols"]), ("missing", ["libppsspp_jni.so"]))
+        self.assertIn("libppsspp_jni.so: 3 with libhwui.so", row["app_evidence"])
+        routed = [{"launch_args": ["--android-native-target", "libppsspp_jni.so"]}]
+        self.assertEqual(gapmap.interposition_rows(scan, self.RUNTIME, routed)[0]["verdict"], "supplied")
+        self.assertEqual(gapmap.interposition_rows({"inventory": {"elfs": [scan["inventory"]["elfs"][1]]}},
+                                                   self.RUNTIME, []), [])
+
+
 class SandboxAndBacktest(unittest.TestCase):
     def test_realm_fifo_is_predicted(self) -> None:
         policy = {"oh": {"domain": "u:r:normal_hap:s0", "app_data_type": "u:object_r:appdat:s0",
