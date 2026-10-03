@@ -28,6 +28,14 @@ class ProbeSuite(unittest.TestCase):
         self.assertEqual(run_suite.evaluate(both, procs), "pass")
         self.assertEqual(run_suite.evaluate(["[WL-RUNNING-PROCS] phase=application verdict=FAIL_NULL"], procs), "fail")
 
+    def test_a_hilog_marker_fails_a_probe_that_passed_in_app(self) -> None:
+        gl = SUITE["gl-contracts"]
+        passed = ["[WL-GL-PROBE] verdict=ALL_PASS"]
+        self.assertEqual(run_suite.evaluate(passed, gl, []), "pass")
+        starved = ["10-03 10:30:33.706 10221 10286 E C01401/Bufferqueue: <native_window.cpp:229-NativeWindowRequestBuffer>: "
+                   "RequestBuffer ret:40601000, uniqueId: 43898860732416."]
+        self.assertEqual(run_suite.evaluate(passed, gl, starved), "fail")
+
     def test_tap_comes_from_the_probe(self) -> None:
         dialog = SUITE["dialog-before-window"]
         lines = ["[WL-DIALOG-ORDER] placement=CENTRED at 280,634 size=640x651",

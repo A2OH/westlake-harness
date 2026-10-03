@@ -36,10 +36,15 @@ TAP_CHANNEL = "/data/local/tmp/noice_tap"
 
 # ---- pure logic (unit-tested) ------------------------------------------------------------------
 
-def evaluate(lines: list[str], probe: dict[str, Any]) -> str:
-    """'fail' if any fail marker appeared, 'pass' once every pass marker has, else 'pending'."""
+def evaluate(lines: list[str], probe: dict[str, Any], hilog: list[str] | None = None) -> str:
+    """'fail' if any fail marker appeared, in the probe's log or (fail_hilog) in its process's hilog,
+    'pass' once every pass marker has, else 'pending'. A platform fault the app survives this time
+    shows only in the hilog: gl-contracts' consumer-stall passed in-app on the old GL bindings
+    while OH's buffer queue logged the failed buffer request that crashed Telegram."""
     text = "\n".join(lines)
     if any(marker in text for marker in probe.get("fail", [])):
+        return "fail"
+    if any(marker in line for marker in probe.get("fail_hilog", []) for line in hilog or []):
         return "fail"
     if all(marker in text for marker in probe["pass"]):
         return "pass"
@@ -144,6 +149,11 @@ def run_probe(probe: dict[str, Any], args: argparse.Namespace, device: Device, l
                 tapped = True
                 continue
             status = evaluate(lines, probe)
+            if status == "pass" and probe.get("fail_hilog"):
+                hilog = device.shell(f"hilog -x -P {child}", timeout=120).splitlines()
+                hits = [line for line in hilog if any(m in line for m in probe["fail_hilog"])]
+                status = evaluate(lines, probe, hits)
+                lines += ["(hilog) " + line.strip() for line in hits[:2]]
             if status != "pending":
                 break
             if "EXITED" in device.shell(f"[ -d /proc/{child} ] && echo ALIVE || echo EXITED"):
