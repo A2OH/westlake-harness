@@ -318,6 +318,19 @@ class LifecycleNatives(unittest.TestCase):
             "getApplication()Landroid/app/Application;": ["Landroid/os/Binder;->getCallingUid()I"]}},
         "Landroid/database/sqlite/SQLiteGlobal;": {"native_methods": ["nativeReleaseMemory()I"]}}}
 
+    def test_buffer_classes_reach_libcore_memory(self) -> None:
+        """Instagram: CharBuffer.get(char[]) on a view over a byte[] reaches HeapByteBuffer and then
+        Memory.unsafeBulkGet, behind virtual dispatch the native-call index does not follow."""
+        runtime = {"bridge_libraries": [{"name": "libart.so", "jni_registration_entries": [
+                       {"name": "peekIntArray", "signature": "(J[IIIZ)V"}]}],
+                   "classes": {"Llibcore/io/Memory;": {"native_methods": [
+                       "peekIntArray(J[IIIZ)V", "unsafeBulkGet(Ljava/lang/Object;II[BIIZ)V"]}}}
+        scan = {"inventory": {"platform_method_names": {"Ljava/nio/CharBuffer;": ["get"]}}}
+        rows = {r["id"]: r for r in gapmap.framework_native_rows(scan, runtime)}
+        row = rows["jni:libcore.io.Memory"]
+        self.assertEqual(row["open_symbols"], ["unsafeBulkGet(Ljava/lang/Object;II[BIIZ)V"])
+        self.assertIn("CharBuffer (its heap or direct buffer implementation)", row["app_evidence"])
+
     def test_natives_the_framework_reaches_are_flagged_for_every_app(self) -> None:
         strings = {"android/database/sqlite/SQLiteGlobal", "#nativeReleaseMemory", "android/app/ActivityThread"}
         rows = {r["id"]: r for r in gapmap.lifecycle_native_rows(self.RUNTIME, strings)}

@@ -1750,6 +1750,14 @@ _NIO_IMPLEMENTATIONS = {
     "Ljava/nio/channels/Selector;": ("Lsun/nio/ch/PollArrayWrapper;", "Lsun/nio/ch/IOUtil;"),
     "Ljava/nio/channels/spi/SelectorProvider;": ("Lsun/nio/ch/Net;", "Lsun/nio/ch/PollArrayWrapper;", "Lsun/nio/ch/IOUtil;"),
 }
+# Public NIO buffer classes whose typed bulk gets and puts reach libcore.io.Memory's natives through
+# the heap or direct implementation (HeapByteBuffer -> Memory.unsafeBulkGet, a direct buffer ->
+# Memory.peekIntArray ...), behind virtual dispatch the native-call index does not follow. Instagram
+# died on unsafeBulkGet; Mindustry and Unciv on pokeFloatArray and pokeShortArray.
+_BUFFER_IMPLEMENTATIONS = {
+    "Ljava/nio/" + name + ";": ("Llibcore/io/Memory;",)
+    for name in ("ByteBuffer", "CharBuffer", "ShortBuffer", "IntBuffer", "LongBuffer", "FloatBuffer", "DoubleBuffer")
+}
 # Declared native in libcore but registered by AOSP itself neither (ojluni's Net.c has no entry for
 # them): no Android app can depend on them.
 _AOSP_UNIMPLEMENTED = {
@@ -1832,12 +1840,14 @@ def framework_native_rows(scan: dict[str, Any], runtime: dict[str, Any] | None,
                     wrapper = f"{owner[1:-1].rsplit('/', 1)[-1]}.{method[:method.index('(')]}"
                     via[target_owner].setdefault(native, wrapper)
     if core_indexed:
-        for public, implementations in _NIO_IMPLEMENTATIONS.items():
-            if public not in app_calls:
-                continue
-            for implementation in implementations:
-                for native in unbound_of(implementation):
-                    via[implementation].setdefault(native, public[1:-1].rsplit("/", 1)[-1] + " (its SelectorProvider implementation)")
+        for table, how in ((_NIO_IMPLEMENTATIONS, "its SelectorProvider implementation"),
+                           (_BUFFER_IMPLEMENTATIONS, "its heap or direct buffer implementation")):
+            for public, implementations in table.items():
+                if public not in app_calls:
+                    continue
+                for implementation in implementations:
+                    for native in unbound_of(implementation):
+                        via[implementation].setdefault(native, public[1:-1].rsplit("/", 1)[-1] + f" ({how})")
     rows = []
     for owner in sorted(set(app_calls) | set(via)):
         natives = [m for m in (classes.get(owner) or {}).get("native_methods") or [] if "$ravenwood" not in m]
