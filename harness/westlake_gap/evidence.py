@@ -236,3 +236,40 @@ def startup_times(hilog: str) -> dict | None:
                 if when is not None:
                     found[key] = round(when - start, 2)
     return found or None
+
+
+_WITNESS = re.compile(r"\[WESTLAKE-SIGNAL-WITNESS\] signal=(0x[0-9a-f]+) code=(0x[0-9a-f]+) tid=(0x[0-9a-f]+) "
+                      r"thread=(.*?) pc=(0x[0-9a-f]+) x30=(0x[0-9a-f]+)")
+
+
+_WITNESS_AT = re.compile(r" at (\S+)\+(0x[0-9a-f]+)")
+_WITNESS_FROM = re.compile(r" from (\S+)\+(0x[0-9a-f]+)")
+_WITNESS_INSN = re.compile(r" insn=(0x[0-9a-f]+) next=(0x[0-9a-f]+)")
+
+
+def signal_witnesses(stderr: str, maps_text: str | None = None) -> list[dict]:
+    """The bionic shim's signal witness lines (SIGILL, SIGTRAP, SIGBUS: the signals that can end a
+    process without a crash dump). pc and x30 come placed by the shim itself (from /proc/self/maps
+    at the signal, as file offsets), or by the process map the run sampled. insn is the word the
+    CPU refused, which is not always the file's: Meta's tooling writes a trap (0xf4ccffcc) over
+    abort's first instruction. A witnessed signal is not necessarily fatal: a library probing the
+    CPU catches its own SIGILL."""
+    maps = parse_maps(maps_text) if maps_text else []
+    found = []
+    for match in _WITNESS.finditer(stderr):
+        line_end = stderr.find("\n", match.end())
+        rest = stderr[match.end():line_end if line_end >= 0 else len(stderr)]
+        event = {"signal": _SIGNAL_NAMES.get(int(match[1], 16), int(match[1], 16)), "code": int(match[2], 16),
+                 "tid": int(match[3], 16), "thread": match[4]}
+        for key, value, inline in (("pc", match[5], _WITNESS_AT.search(rest)), ("caller", match[6], _WITNESS_FROM.search(rest))):
+            if inline:
+                event[key] = {"library": inline[1].rsplit("/", 1)[-1], "path": inline[1], "offset": inline[2]}
+                continue
+            placed = place(int(value, 16), maps) if maps else None
+            event[key] = ({"library": placed[0].rsplit("/", 1)[-1], "path": placed[0], "offset": hex(placed[1])}
+                          if placed else {"address": value})
+        insn = _WITNESS_INSN.search(rest)
+        if insn:
+            event["insn"], event["next"] = insn[1], insn[2]
+        found.append(event)
+    return found

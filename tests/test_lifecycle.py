@@ -136,6 +136,32 @@ class Evidence(unittest.TestCase):
         self.assertEqual(evidence.startup_times(hilog), {"resumed": 2.26, "first_frame": 2.79})
         self.assertIsNone(evidence.startup_times("10-03 11:25:25.346 1 1 I C00f00/X: other\n"))
 
+    def test_the_shim_witness_places_a_signal_without_a_dump(self) -> None:
+        from westlake_gap import evidence, lifecycle
+        log = ("kRegJNI loop done\n[WESTLAKE-SIGNAL-WITNESS] signal=0x4 code=0x1 tid=0x1d79 thread=MnsNetworking "
+               "pc=0x7f00001234 x30=0x7f00002000\n")
+        maps = "7f00000000-7f00010000 r-xp 00000000 fd:00 1 /data/data/pkg/lib-compressed/libstartup.so\n"
+        witness = evidence.signal_witnesses(log, maps)[0]
+        self.assertEqual((witness["signal"], witness["tid"], witness["pc"]["library"], witness["pc"]["offset"]),
+                         ("SIGILL", 7545, "libstartup.so", "0x1234"))
+        hilog = ("10-03 10:19:36.586  7402  7402 I C00f00/AppSpawnX: Child process started\n"
+                 "10-03 10:19:54.969  7402  7545 W C03f07/MUSL: flag is AI_NUMERICHOST but host is Illegal\n"
+                 "10-03 10:19:54.973  7402  7545 W C03f07/MUSL-SIGCHAIN: signal_chain_handler call usr sigaction for signal: 4 x\n")
+        s = lifecycle.score("instagram", log)
+        lifecycle.add_evidence(s, log, maps, None, hilog)
+        self.assertEqual(s.blocker, "SIGILL on thread MnsNetworking at libstartup.so+0x1234 (from libstartup.so+0x2000) "
+                                    "(hilog only, no crash dump), right after: flag is AI_NUMERICHOST but host is Illegal")
+
+    def test_the_witness_places_its_own_addresses(self) -> None:
+        from westlake_gap import evidence
+        log = ("[WESTLAKE-SIGNAL-WITNESS] signal=0x4 code=0x1 tid=0x5788 thread=MNSEventLoop1 pc=0x7f98dd8548 "
+               "x30=0x7ecd8dc3e0 at /system/lib/ld-musl-aarch64.so.1+0xbc548 insn=0xf4ccffcc next=0xa9037bfd "
+               "from /data/local/tmp/asx/lib/arm64-v8a/libstartup.so+0x71c3e0 x0=0x1\n")
+        witness = evidence.signal_witnesses(log)[0]
+        self.assertEqual((witness["pc"]["library"], witness["pc"]["offset"], witness["insn"]),
+                         ("ld-musl-aarch64.so.1", "0xbc548", "0xf4ccffcc"))
+        self.assertEqual(witness["caller"]["library"], "libstartup.so")
+
 
 if __name__ == "__main__":
     unittest.main()

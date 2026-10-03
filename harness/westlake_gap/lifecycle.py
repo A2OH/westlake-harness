@@ -264,10 +264,21 @@ def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str 
     if signal:
         s.hilog_signal = signal
         s.fatal = max(s.fatal, 1)
+        # The shim's witness saw the same signal on the same thread: where it was raised.
+        witness = next((w for w in reversed(evidence.signal_witnesses(text, maps_text))
+                        if w["signal"] == signal["signal"] and w["tid"] == signal["tid"]), None)
+        if witness:
+            signal["witness"] = witness
         if s.blocker is None or s.blocker_category == "stall" or not s.blocking:
             s.blocker_category, s.blocking = "native-crash", True
-            s.blocker = "%s on %s (hilog only, no crash dump)%s" % (
-                signal["signal"], "thread " + signal["thread"] if "thread" in signal else "tid %d" % signal["tid"],
+            where = ""
+            if witness and "library" in witness["pc"]:
+                where = " at %s+%s" % (witness["pc"]["library"], witness["pc"]["offset"])
+                if "library" in witness["caller"]:
+                    where += " (from %s+%s)" % (witness["caller"]["library"], witness["caller"]["offset"])
+            s.blocker = "%s on %s%s (hilog only, no crash dump)%s" % (
+                signal["signal"], "thread " + (witness or signal).get("thread", "") if (witness or signal).get("thread")
+                else "tid %d" % signal["tid"], where,
                 ", right after: " + signal["after"] if "after" in signal else "")
     if maps_text and s.fatal:
         s.crash_site = evidence.crash_site(text, maps_text)
