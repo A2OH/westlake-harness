@@ -160,7 +160,8 @@ All local; none pushed yet.
   - `089ade1` crash dumps and hilog-only signals;
   - `9e814cf` probe hilog markers;
   - `2e804ac` written libraries and the three rows;
-  - `9df761a` startup times from the app's hilog.
+  - `9df761a` startup times from the app's hilog;
+  - `64d7d97` libraries SoLoader may load from inside a split APK.
 - Launcher (manifest):
   - `ac38c4e` staging host-compiled code;
   - `58493c6` null init/fini entries.
