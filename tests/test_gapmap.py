@@ -1058,6 +1058,154 @@ class LaunchArgsCheck(unittest.TestCase):
         self.assertEqual(gapmap.unpackaged_launch_targets(args, scan), ["libeffect.so", "libgone.so"])
 
 
+class UnpackedLibraries(unittest.TestCase):
+    """Libraries the app wrote at run time (scan --unpacked-libs) count as code the process loads,
+    never as files the launcher can name."""
+    SCAN = {"inventory": {"elfs": [
+        {"name": "lib/arm64-v8a/libc++_shared.so", "soname": "libc++_shared.so", "needed": []},
+        {"name": "lib/arm64-v8a/libsuperpack-jni.so", "soname": "libsuperpack-jni.so", "needed": ["libc++_shared.so"],
+         "undefined_symbols": ["funopen"]},
+        {"name": "/data/data/com.whatsapp/files/decompressed/libs.spo/libessential.so", "soname": "libessential.so",
+         "needed": ["libc++_shared.so"], "undefined_symbols": ["getaddrinfo"], "origin": "unpacked",
+         "android_relocation_tags": ["DT_ANDROID_RELR"]},
+    ], "declared_native_methods": [], "load_library_calls": []}}
+
+    def test_a_target_naming_a_written_library_is_reported(self) -> None:
+        args = ["--android-native-target", "libsuperpack-jni.so", "--android-native-target", "libessential.so"]
+        self.assertEqual(gapmap.unpackaged_launch_targets(args, self.SCAN), ["libessential.so"])
+
+    def test_written_libraries_are_never_launch_targets(self) -> None:
+        shadowed, targets = gapmap.shadowed_libraries(self.SCAN, ["/system/lib64/libc++_shared.so"])
+        self.assertEqual(targets, ["libc++_shared.so", "libsuperpack-jni.so"])
+        rows = gapmap.native_loading_rows({"extract_native_libs": True}, self.SCAN, {"present": True},
+                                          ["/system/lib64/libc++_shared.so"],
+                                          {"present": True, "source": "x", "net": {"present": True, "source": "y"}},
+                                          loader={"android_relr_launcher": "launcher", "code_cache_copy": "shim"})
+        by_id = {row["id"]: row for row in rows}
+        self.assertNotIn("libessential.so", by_id["load:shadowed-by-board"]["launch_args"])
+        # Its getaddrinfo is translated by the app-libraries switch, not by name.
+        self.assertNotIn("abi:addrinfo", by_id)
+        self.assertEqual(by_id["load:app-storage-exec"]["launch_args"], ["--android-native-net-app-libraries"])
+        self.assertIn("1 libraries harvested", by_id["load:app-storage-exec"]["app_evidence"])
+        # The launcher renumbers what it stages; a written library needs the shim to.
+        self.assertEqual(by_id["load:android-relocations"]["verdict"], "missing")
+        rows = gapmap.native_loading_rows({"extract_native_libs": True}, self.SCAN, {"present": True}, [], None,
+                                          loader={"android_relr_launcher": "launcher", "android_relr_shim": "shim"})
+        self.assertEqual({row["id"]: row for row in rows}["load:android-relocations"]["verdict"], "supplied")
+
+    def test_harvest_inventory_skips_copies_and_non_elf_files(self) -> None:
+        import hashlib
+        import json
+        import sys
+        from westlake_gap.scanner import unpacked_elf_inventory
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            elf = Path(sys.executable).resolve().read_bytes()
+            (root / "pkg/lib").mkdir(parents=True)
+            (root / "pkg/lib/libwritten.so").write_bytes(elf)
+            (root / "pkg/lib/libcopy.so").write_bytes(b"copy")
+            (root / "pkg/lib/libpartial.so").write_bytes(b"\x00partial")
+            entries = [{"file": "pkg/lib/" + name, "device_path": "/data/data/pkg/lib/" + name,
+                        "sha256": hashlib.sha256((root / "pkg/lib" / name).read_bytes()).hexdigest(), "elf": is_elf}
+                       for name, is_elf in (("libwritten.so", True), ("libcopy.so", True), ("libpartial.so", False))]
+            (root / "harvest.json").write_text(json.dumps({"libraries": entries}))
+            packaged = [{"name": "lib/arm64-v8a/libcopy.so", "sha256": entries[1]["sha256"]}]
+            records = unpacked_elf_inventory(root, packaged)
+        self.assertEqual([r["name"] for r in records], ["/data/data/pkg/lib/libwritten.so"])
+        self.assertEqual(records[0]["origin"], "unpacked")
+
+
+def _elf_with_init_array(values: list[int], relocated: list[int]) -> bytes:
+    """A minimal ELF64 shared object: one PT_LOAD over the file, a PT_DYNAMIC naming a RELA table and
+    an init array of ``values``, with an R_AARCH64_RELATIVE relocation for each slot in ``relocated``."""
+    import struct
+    dyn, rela, array = 0x100, 0x200, 0x300
+    size = array + 8 * len(values)
+    data = bytearray(size)
+    data[:16] = b"\x7fELF\x02\x01\x01" + bytes(9)
+    struct.pack_into("<HHIQQQIHHHHHH", data, 16, 3, 183, 1, 0, 64, 0, 0, 64, 56, 2, 64, 0, 0)
+    struct.pack_into("<IIQQQQQQ", data, 64, 1, 5, 0, 0, 0, size, size, 0x1000)
+    struct.pack_into("<IIQQQQQQ", data, 120, 2, 6, dyn, dyn, dyn, 96, 96, 8)
+    for i, (tag, value) in enumerate([(7, rela), (8, 24 * len(relocated)), (9, 24), (25, array),
+                                      (27, 8 * len(values)), (0, 0)]):
+        struct.pack_into("<QQ", data, dyn + 16 * i, tag, value)
+    for i, slot in enumerate(relocated):
+        struct.pack_into("<QQq", data, rela + 24 * i, array + 8 * slot, 1027, 0x1234)
+    for i, value in enumerate(values):
+        struct.pack_into("<Q", data, array + 8 * i, value)
+    return bytes(data)
+
+
+class NullConstructors(unittest.TestCase):
+    def test_unrelocated_null_and_minus_one_entries_are_counted(self) -> None:
+        from westlake_gap.scanner import null_array_entries
+        # A RELA-relocated slot reads 0 in the file; only unrelocated 0 and -1 are null.
+        self.assertEqual(null_array_entries(_elf_with_init_array([0, 0, 2 ** 64 - 1, 0], [0, 3])), {"init": 2})
+        self.assertEqual(null_array_entries(_elf_with_init_array([0], [0])), {})
+
+    def test_the_launcher_fix_supplies_packaged_libraries_only(self) -> None:
+        scan = {"inventory": {"elfs": [
+            {"name": "lib/arm64-v8a/libttffmpeg.so", "null_array_entries": {"init": 1}},
+            {"name": "lib/arm64-v8a/libplain.so", "null_array_entries": {}},
+        ], "declared_native_methods": [], "load_library_calls": []}}
+        loader = {"null_entries_launcher": "tools/probe_source_app.py:30"}
+        rows = {r["id"]: r for r in gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True},
+                                                                [], None, loader=loader)}
+        self.assertEqual(rows["load:null-constructors"]["verdict"], "supplied")
+        self.assertIn("libttffmpeg.so", rows["load:null-constructors"]["item"])
+        scan["inventory"]["elfs"].append({"name": "/data/data/pkg/lib/libwritten.so", "origin": "unpacked",
+                                          "null_array_entries": {"init": 1}})
+        rows = {r["id"]: r for r in gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True},
+                                                                [], None, loader=loader)}
+        self.assertEqual((rows["load:null-constructors"]["verdict"], rows["load:null-constructors"]["open_symbols"]),
+                         ("missing", ["libwritten.so"]))
+        rows = {r["id"]: r for r in gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True},
+                                                                [], None, loader={})}
+        self.assertIn("not its dependencies", rows["load:null-constructors"]["provider"])
+
+
+class ArtInternals(unittest.TestCase):
+    def test_libraries_naming_art_internals_are_a_row(self) -> None:
+        from westlake_gap.scanner import art_internal_names
+        raw = b"\x00_ZN3art2gc4Heap18GrowForUtilizationEPNS0_9collector16GarbageCollectorEm\x00_ZN3art7Runtime5StartEv\x00"
+        found = art_internal_names(raw)
+        self.assertEqual(found["art_internal_symbols"], 2)
+        self.assertEqual(art_internal_names(b"\x00plain\x00"), {})
+        scan = {"inventory": {"elfs": [
+            {"name": "lib/arm64-v8a/libjato.so", "art_internal_symbols": 174, "art_internal_sample": ["_ZN3art10ArtRuntime"]},
+            {"name": "lib/arm64-v8a/libone.so", "art_internal_symbols": 1},
+        ]}}
+        rows = gapmap.art_internal_rows(scan)
+        self.assertEqual([r["id"] for r in rows], ["art:internals"])
+        self.assertIn("libjato.so names 174", rows[0]["app_evidence"])
+        self.assertNotIn("libone.so", rows[0]["item"])
+
+
+class SignalAbi(unittest.TestCase):
+    MODEL = {"translated": ["sigaction", "sigemptyset"], "scope": {"packaged": True, "written": False},
+             "dlsym": None, "source": "webview_bionic_shim.c:426"}
+
+    def test_lookups_by_name_are_found(self) -> None:
+        from westlake_gap.scanner import signal_lookups
+        raw = b"\x00libc.so\x00sigaction64\x00sigaction\x00"
+        self.assertEqual(signal_lookups(raw, set()), {"signal_lookups": ["sigaction", "sigaction64"]})
+        self.assertEqual(signal_lookups(raw, {"sigaction", "sigaction64"}), {})
+
+    def test_coverage_follows_the_callers_the_shim_counts(self) -> None:
+        packaged = {"name": "lib/arm64-v8a/libcrash.so", "undefined_symbols": ["sigaction", "sigemptyset"]}
+        rows = gapmap.signal_abi_rows({"inventory": {"elfs": [packaged]}}, self.MODEL)
+        self.assertEqual(rows[0]["verdict"], "supplied")
+        written = {"name": "/data/data/com.whatsapp/files/decompressed/libs.spo/libessential.so",
+                   "undefined_symbols": ["sigaction"], "origin": "unpacked"}
+        rows = gapmap.signal_abi_rows({"inventory": {"elfs": [packaged, written]}}, self.MODEL)
+        self.assertEqual((rows[0]["verdict"], rows[0]["open_symbols"]), ("missing", ["libraries written at run time"]))
+        hook = {"name": "lib/arm64-v8a/libshadowhook.so", "signal_lookups": ["sigaction", "sigaction64"]}
+        model = dict(self.MODEL, scope={"packaged": True, "written": True})
+        rows = gapmap.signal_abi_rows({"inventory": {"elfs": [packaged, hook]}}, model)
+        self.assertEqual(rows[0]["open_symbols"], ["lookups by name"])
+        self.assertIn("looked up by name in libshadowhook.so", rows[0]["app_evidence"])
+
+
 class SandboxAndBacktest(unittest.TestCase):
     def test_realm_fifo_is_predicted(self) -> None:
         policy = {"oh": {"domain": "u:r:normal_hap:s0", "app_data_type": "u:object_r:appdat:s0",

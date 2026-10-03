@@ -334,6 +334,78 @@ def _android_relocation_tags(readelf_text: str) -> list[str]:
     return sorted(name for tag, name in ANDROID_RELOCATION_TAGS.items() if tag in found)
 
 
+_SIGNAL_NAMES = ("sigaction", "sigaction64", "sigprocmask", "sigprocmask64", "pthread_sigmask", "pthread_sigmask64")
+
+
+def signal_lookups(raw: bytes, imported: set[str]) -> dict[str, Any]:
+    """Signal calls a library names as a string without importing them: it looks them up with dlsym,
+    usually in libc's own handle, past any interposer (ByteDance's bytesig in shadowhook and
+    bytehook takes sigaction64 or sigaction that way to put its handler first)."""
+    names = sorted(name for name in _SIGNAL_NAMES
+                   if name not in imported and b"\x00" + name.encode() + b"\x00" in raw)
+    return {"signal_lookups": names} if names else {}
+
+
+_ART_INTERNAL = re.compile(rb"_ZN3art[A-Za-z0-9_]{4,}")
+
+
+def art_internal_names(raw: bytes) -> dict[str, Any]:
+    """ART's own C++ symbols a library names: performance and crash libraries (ByteDance's jato,
+    sysoptimizer, godzilla; npth) look them up in libart.so and patch the runtime through them, at
+    offsets they choose by the device's SDK level. Empty for an ordinary library."""
+    names = sorted({m.decode() for m in _ART_INTERNAL.findall(raw)})
+    return {"art_internal_symbols": len(names), "art_internal_sample": names[:6]} if names else {}
+
+
+_PACKED_RELOCATION_TAGS = {0x6000000F, 0x60000010, 0x60000011, 0x60000012}  # DT_ANDROID_REL{,SZ}, RELA{,SZ}
+
+
+def null_array_entries(raw: bytes) -> dict[str, int] | None:
+    """Null or -1 entries in the init and fini arrays that no relocation fills: bionic skips them
+    (soinfo::call_array), OH's musl calls them and jumps to address 0 (TikTok's libttffmpeg.so).
+    None when the library's relocations are in Android's packed format, which is not decoded here."""
+    if raw[:4] != b"\x7fELF" or raw[4] != 2 or raw[5] != 1:
+        return None
+    u64 = lambda at: int.from_bytes(raw[at:at + 8], "little")
+    phoff, count = u64(0x20), int.from_bytes(raw[0x38:0x3A], "little")
+    loads, dynamic = [], None
+    for index in range(count):
+        header = phoff + index * 56
+        kind = int.from_bytes(raw[header:header + 4], "little")
+        if kind == 1:
+            loads.append((u64(header + 16), u64(header + 8), u64(header + 32)))
+        elif kind == 2:
+            dynamic = (u64(header + 8), u64(header + 32))
+    if dynamic is None:
+        return {}
+
+    def offset_of(vaddr: int) -> int | None:
+        return next((offset + vaddr - start for start, offset, size in loads if start <= vaddr < start + size), None)
+
+    tags: dict[int, int] = {}
+    for position in range(dynamic[0], min(dynamic[0] + dynamic[1], len(raw) - 15), 16):
+        tag = u64(position)
+        if tag == 0:
+            break
+        tags.setdefault(tag, u64(position + 8))
+    if _PACKED_RELOCATION_TAGS & set(tags):
+        return None
+    targets: set[int] = set()
+    if 7 in tags and 8 in tags and offset_of(tags[7]) is not None:
+        start, entry = offset_of(tags[7]), tags.get(9, 24) or 24
+        targets = {u64(at) for at in range(start, min(start + tags[8], len(raw) - 7), entry)}
+    out = {}
+    for name, array, size in (("init", 25, 27), ("fini", 26, 28)):
+        if array not in tags or size not in tags or offset_of(tags[array]) is None:
+            continue
+        start = offset_of(tags[array])
+        nulls = sum(1 for i in range(tags[size] // 8)
+                    if u64(start + 8 * i) in (0, 0xFFFFFFFFFFFFFFFF) and tags[array] + 8 * i not in targets)
+        if nulls:
+            out[name] = nulls
+    return out
+
+
 def read_elf(
     path: Path | None = None,
     data: bytes | None = None,
@@ -382,6 +454,9 @@ def read_elf(
             "build_id": build_id,
             "needed": needed,
             "android_relocation_tags": _android_relocation_tags(text),
+            "null_array_entries": null_array_entries(raw),
+            **art_internal_names(raw),
+            **signal_lookups(raw, set(undefined) | set(undefined_weak)),
             "exported_symbols": sorted(exports),
             "undefined_symbols": sorted(undefined),
             "undefined_weak_symbols": sorted(undefined_weak),
@@ -1052,6 +1127,39 @@ def apk_elf_inventory(path: Path) -> list[dict[str, Any]]:
     return records
 
 
+def unpacked_elf_inventory(directory: Path, packaged: Iterable[dict[str, Any]] = ()) -> list[dict[str, Any]]:
+    """The libraries an app wrote under its data directory at run time, harvested from a run.
+
+    A superpack unpacked by SoLoader (WhatsApp's files/decompressed/libs.spo/, Instagram's
+    lib-compressed/), Chaquopy's extracted modules or a downloaded plugin is code the APK does not
+    package as lib/<abi>/*.so, so no scan of the APK sees its imports. ``directory`` holds the files as
+    <pkg>/<path> with a harvest.json listing each one's device path (inputs run4.sh). A file with the
+    hash of a packaged library is that library extracted again and is left out; a file that is not
+    an ELF file (an archive or a partial write under a .so name) is skipped.
+    """
+    manifest = json.loads((directory / "harvest.json").read_text())
+    seen = {record.get("sha256") for record in packaged}
+    records: list[dict[str, Any]] = []
+    for entry in manifest.get("libraries", []):
+        if not entry.get("elf") or entry.get("sha256") in seen:
+            continue
+        seen.add(entry.get("sha256"))
+        path = directory / entry["file"]
+        try:
+            record = read_elf(path=path, label=entry["device_path"])
+        except (OSError, subprocess.SubprocessError) as exc:
+            record = {"name": entry["device_path"], "error": str(exc)}
+        record["origin"] = "unpacked"
+        record["harvest_file"] = str(path)
+        records.append(record)
+    return records
+
+
+def is_unpacked(record: dict[str, Any]) -> bool:
+    """A library the app wrote at run time: the launcher cannot name it, only what the APK packages."""
+    return record.get("origin") == "unpacked"
+
+
 def _append_elf_records(
     archive: zipfile.ZipFile, prefix: str, records: list[dict[str, Any]]
 ) -> None:
@@ -1092,7 +1200,13 @@ def _append_elf_records(
 
 
 def _read_archive_member(path: Path, record: dict[str, Any]) -> bytes | None:
-    """Read one packaged ELF back out of the APK, including from a nested split archive."""
+    """Read one packaged ELF back out of the APK, including from a nested split archive, or a
+    harvested one from its file."""
+    if record.get("harvest_file"):
+        try:
+            return Path(record["harvest_file"]).read_bytes()
+        except OSError:
+            return None
     entry = record.get("archive_entry")
     if not entry:
         return None
@@ -1201,11 +1315,14 @@ def scan_apk(
     target_abi: str | None = None,
     native_reach: bool = False,
     platform_members: dict[str, Any] | None = None,
+    unpacked_libs: Path | None = None,
 ) -> dict[str, Any]:
     inventory = inventory_dex(path)
     resolver = RuntimeResolver(runtime)
     identity = apk_metadata(path)
     elf_records = apk_elf_inventory(path) if include_elf else []
+    if include_elf and unpacked_libs is not None:
+        elf_records += unpacked_elf_inventory(unpacked_libs, elf_records)
     target_abi = target_abi or runtime.get("target_abi") or _single_elf_abi(runtime.get("bridge_libraries", []))
     available_abis = sorted({record["abi"] for record in elf_records if record.get("abi")})
     if target_abi:
@@ -1534,8 +1651,9 @@ def scan_apk(
                 "abi_mismatch_elf_count": sum(
                     not record.get("abi_matches_machine", True) for record in elf_records
                 ),
-                "packaged_elf_count": len(elf_records),
-                "selected_packaged_elf_count": len(selected_elfs),
+                "packaged_elf_count": sum(not is_unpacked(record) for record in elf_records),
+                "unpacked_elf_count": sum(is_unpacked(record) for record in elf_records),
+                "selected_packaged_elf_count": sum(not is_unpacked(record) for record in selected_elfs),
                 "selected_runtime_elf_count": len(selected_runtime_elfs),
                 "recovered_registration_entry_count": sum(
                     len(elf.get("jni_registration_entries", [])) for elf in selected_elfs

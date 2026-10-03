@@ -921,7 +921,12 @@ def libc_constant_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict
     if not importers:
         return []
     untranslated = sorted(set(importers) - set(model["translated"]))
-    covered = model["scope"] == "packaged-libraries" and not untranslated
+    callers = model.get("callers", {"packaged": model["scope"] == "packaged-libraries", "written": False})
+    written = sorted({elf.get("soname") or elf["name"].rsplit("/", 1)[-1] for elf in ohresolve.target_elfs(scan)
+                      if elf.get("origin") == "unpacked"
+                      and contracts.LIBC_CONSTANT_NAMESPACE_CALLS & set(elf.get("undefined_symbols", []))})
+    covered = (model["scope"] == "packaged-libraries" and not untranslated and callers.get("packaged")
+               and (callers.get("written") or not written))
     return [_row(
         "native-symbols", "libc:constant-namespace",
         "libc calls carrying a constant each libc numbers differently (" + ", ".join(sorted(importers)) + ")",
@@ -929,7 +934,10 @@ def libc_constant_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict
         verdict="supplied" if covered else "missing", shim_class="C0" if covered else "C2",
         effort="verify" if covered else "S", confidence=STATIC,
         provider=("the bionic shim translates them by name for the app's packaged libraries"
+                  + (" and the ones it writes" if written else "")
                   if covered else
+                  f"the shim translates them for packaged libraries, not the {len(written)} the app writes "
+                  f"({', '.join(written[:3])})" if written and callers.get("packaged") else
                   f"the shim translates {', '.join(model['translated'])} for {model['scope'].replace('-', ' ')}"
                   if model["translated"] else "nothing translates them: musl answers a different limit"),
         provider_source=model["source"],
@@ -937,6 +945,51 @@ def libc_constant_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict
                                for symbol, names in sorted(importers.items())),
         shim="translate the selector by name at the libc boundary for every library built against bionic; "
              "the call resolves and returns a plausible number either way, so nothing fails at load time",
+    )]
+
+
+def signal_abi_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """Signal calls made with bionic's structures. Passed to musl as they are, a sigaction installs
+    bionic's flags word as the handler (0x18000804 in TikTok's and CapCut's chains) and writes a
+    152-byte old action into a 32-byte one; sigemptyset writes 128 bytes into 8."""
+    names = contracts.SIGNAL_ABI_CALLS | contracts.SIGNAL_ABI_CALLS_64
+    importers: dict[str, list[str]] = defaultdict(list)
+    written: set[str] = set()
+    lookups: dict[str, list[str]] = {}
+    for elf in ohresolve.target_elfs(scan):
+        name = elf.get("soname") or elf["name"].rsplit("/", 1)[-1]
+        used = names & {s.split("@")[0] for s in elf.get("undefined_symbols", []) + elf.get("undefined_weak_symbols", [])}
+        for symbol in used:
+            importers[symbol].append(name)
+        if used and elf.get("origin") == "unpacked":
+            written.add(name)
+        if elf.get("signal_lookups"):
+            lookups[name] = elf["signal_lookups"]
+    if not importers and not lookups:
+        return []
+    scope = model["scope"]
+    untranslated = sorted(set(importers) - set(model["translated"]))
+    open_ = (untranslated + ([] if scope.get("packaged") else ["packaged callers"])
+             + (["libraries written at run time"] if written and not scope.get("written") else [])
+             + (["lookups by name"] if lookups and not model.get("dlsym") else []))
+    return [_row(
+        "native-symbols", "abi:signal",
+        "Signal calls with bionic's structures (" + ", ".join(sorted(importers) or sorted({n for v in lookups.values() for n in v})) + ")",
+        oh_touchpoint="OH musl: struct sigaction 152 bytes, handler first; sigset_t 128 bytes (bionic: 32, flags first; 8)",
+        verdict="supplied" if not open_ else "missing", shim_class="C2", effort="verify" if not open_ else "S",
+        confidence=STATIC, provider=("the bionic shim translates them for every bionic-built caller" if not open_ else
+                                     "not translated for: " + ", ".join(open_)),
+        provider_source=model.get("source"), open_symbols=open_[:12],
+        app_evidence="; ".join([f"{symbol}: {len(libs)} libraries, e.g. {', '.join(sorted(libs)[:3])}"
+                                for symbol, libs in sorted(importers.items())][:4]
+                               + ([f"looked up by name in {', '.join(sorted(lookups)[:4])}"] if lookups else [])
+                               + ([f"{len(written)} of the importers written at run time"] if written else [])),
+        seen_blocking=["whatsapp (t140: its Breakpad setup, running from a wl-exec copy, got a 152-byte old action in a "
+                       "32-byte struct and freed the std::string it clobbered, 4 s in)"],
+        suspected_blocking=["capcut, tiktok (a SIGSEGV handler of 0x18000804, bionic flags in musl's handler slot; "
+                            "heap faults in musl's allocator)"],
+        shim="translate for every bionic-built caller, the libraries the app writes included, and answer a dlsym of "
+             "these names from such a caller with the translating version",
     )]
 
 
@@ -1048,7 +1101,8 @@ def shadowed_libraries(scan: dict[str, Any], board_paths: list[str]) -> tuple[di
         if path.startswith(_SEARCHED_BEFORE_APP):
             board.setdefault(path.rsplit("/", 1)[-1], path)
     needed: dict[str, set[str]] = {}
-    for elf in ohresolve.target_elfs(scan):
+    # Packaged only: a library the app writes at run time loads in the Android namespace already.
+    for elf in ohresolve.packaged_elfs(scan):
         name = elf.get("soname") or elf["name"].rsplit("/", 1)[-1]
         needed.setdefault(name, set()).update(elf.get("needed", []))
     shadowed = {name: board[name] for name in needed if name in board}
@@ -1089,7 +1143,8 @@ def bionic_loader_model(westlake_root: Path | None, manifest_root: Path | None =
     code_cache_copy: the bionic shim loads a library app storage may not map executable from a copy
     in code_cache. android_relr_launcher: the launcher stages the APK's libraries with
     DT_ANDROID_RELR renumbered to DT_RELR; android_relr_shim: the shim does the same for libraries
-    an app writes at run time. funopen_unbuffered: the shim's funopen avoids OH's buffered
+    an app writes at run time. null_entries_launcher: the launcher drops null init/fini array entries
+    from the libraries it stages. funopen_unbuffered: the shim's funopen avoids OH's buffered
     fopencookie refill, which overwrites what it has just read.
     """
     def find(relative: str, marker: str, root: Path | None = westlake_root) -> str | None:
@@ -1102,7 +1157,8 @@ def bionic_loader_model(westlake_root: Path | None, manifest_root: Path | None =
 
     return {"code_cache_copy": find("framework/webview-shim/webview_bionic_shim.c", "westlake_load_from_code_cache("),
             "android_relr_launcher": find("tools/probe_source_app.py", "def android_relr_retagged(", manifest_root),
-            "android_relr_shim": find("framework/webview-shim/android_relocs.c", "write_retagged_copy("),
+            "android_relr_shim": find("framework/webview-shim/android_relocs.c", "wl_write_loadable_copy("),
+            "null_entries_launcher": find("tools/probe_source_app.py", "def init_array_sanitized(", manifest_root),
             "funopen_unbuffered": find("framework/webview-shim/webview_bionic_shim.c", "setvbuf(file, NULL, _IONBF, 0)")}
 
 
@@ -1112,12 +1168,14 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
                         loader: dict[str, str | None] | None = None) -> list[dict[str, Any]]:
     rows = []
     elfs = ohresolve.target_elfs(scan)
+    packaged = ohresolve.packaged_elfs(scan)
+    unpacked = [elf for elf in elfs if elf.get("origin") == "unpacked"]
     shadowed, targets = shadowed_libraries(scan, board_paths or [])
     # The graph is by DT_NEEDED name (the SONAME), but the launcher routes files by name, and a name it
     # cannot find stops the launch: TikTok's libeffect_plugin.so is libeffect.so, and r77 and r82
     # never launched it ("Android namespace target is not a pinned APK DSO").
     files: dict[str, str] = {}
-    for elf in elfs:
+    for elf in packaged:
         base = elf["name"].rsplit("/", 1)[-1]
         files.setdefault(elf.get("soname") or base, base)
     if shadowed:
@@ -1156,7 +1214,9 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
                 seen_blocking=["nori, rushhour, marlin, mobile, siftrecipes (React Native: Unable to load script)"],
                 shim="ship the companion in the parent namespace and let the Android namespace inherit it",
             ))
-    resolvers = sorted({elf.get("soname") or Path(elf["name"]).name for elf in elfs
+    # Packaged only: the launcher names a library to translate by file, and one the app writes at run
+    # time is covered by --android-native-net-app-libraries (load:app-storage-exec below).
+    resolvers = sorted({elf.get("soname") or Path(elf["name"]).name for elf in packaged
                         if NETWORK_ABI_IMPORTS & {name.split("@")[0] for name in
                                                   elf.get("undefined_symbols", []) + elf.get("undefined_weak_symbols", [])}})
     if resolvers:
@@ -1199,9 +1259,9 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
             seen_blocking=["facebook, instagram, messenger (superpack: could not extract file from archive)"],
             shim="keep funopen FILEs unbuffered on OH, buffering inside the cookie",
         ))
-    if not facts["extract_native_libs"] and elfs:
+    if not facts["extract_native_libs"] and packaged:
         rows.append(_row(
-            "native-loading", "load:in-apk", f"Libraries mapped straight out of the APK ({len(elfs)} .so, extractNativeLibs=false)",
+            "native-loading", "load:in-apk", f"Libraries mapped straight out of the APK ({len(packaged)} .so, extractNativeLibs=false)",
             oh_touchpoint="OH dynamic linker (cannot map zip!/ members: board test 2026-09-18)",
             verdict="supplied" if launcher_extracts["present"] else "missing",
             shim_class="C0" if launcher_extracts["present"] else "C3",
@@ -1219,7 +1279,7 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
     loaders = sorted({m.get("owner", "").split("/")[2] for m in inventory.get("declared_native_methods", [])
                       if m.get("owner", "").startswith("Lcom/facebook/soloader/")})
     path_loads = [c for c in inventory.get("load_library_calls", []) if c.get("api") == "load"]
-    if loaders or path_loads:
+    if loaders or path_loads or unpacked:
         copy = loader.get("code_cache_copy")
         rows.append(_row(
             "native-loading", "load:app-storage-exec",
@@ -1231,7 +1291,9 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
                       if copy else "none"),
             provider_source=copy,
             app_evidence=(("SoLoader unpacks and loads libraries from app storage; " if loaders else "")
-                          + (f"System.load with a path from {len(path_loads)} call sites" if path_loads else "")).strip("; "),
+                          + (f"System.load with a path from {len(path_loads)} call sites; " if path_loads else "")
+                          + (f"{len(unpacked)} libraries harvested from its data directory after a run"
+                             if unpacked else "")).strip("; "),
             seen_blocking=["whatsapp, capcut (top-apps batch: failed to map library errno=13)"],
             shim="load such libraries from a location OH lets the app map executable (copy there first), "
                  "or allow app_data_file execute mapping for Westlake apps",
@@ -1239,12 +1301,52 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
             # addrinfo translation too (Messenger's superpack-unpacked liger).
             launch_args=["--android-native-net-app-libraries"],
         ))
+    # Null init array entries (scanner.null_array_entries): bionic skips them, musl calls them. ART's
+    # OpenNativeLibrary drops them from the library it loads, not from that library's dependencies.
+    null_init = sorted({elf.get("soname") or Path(elf["name"]).name for elf in elfs
+                        if (elf.get("null_array_entries") or {}).get("init")})
+    if null_init:
+        written = sorted({elf.get("soname") or Path(elf["name"]).name for elf in unpacked
+                          if (elf.get("null_array_entries") or {}).get("init")})
+        fixed = loader.get("null_entries_launcher")
+        supplied = bool(fixed) and not written
+        rows.append(_row(
+            "native-loading", "load:null-constructors",
+            f"Libraries whose init array holds null entries ({', '.join(null_init[:4])}"
+            + (" ..." if len(null_init) > 4 else "") + ")",
+            oh_touchpoint="OH musl do_init_fini: calls every init array entry; bionic skips 0 and -1",
+            verdict="supplied" if supplied else "missing", shim_class="C3",
+            effort="verify" if supplied else "XS" if not written else "S", confidence=STATIC,
+            provider=(("the launcher drops them from every library it stages" if fixed else
+                       "ART drops them only from a library System.loadLibrary names, not its dependencies")
+                      + (f"; nothing drops them from the {len(written)} written at run time" if written else "")),
+            provider_source=fixed,
+            app_evidence=f"{len(null_init)} libraries", open_symbols=written[:12],
+            seen_blocking=["tiktok (r83, t138: pc 0 from do_init_fini; libttffmpeg.so, a dependency of "
+                           "libttmverify.so)", "toutiao (libEncryptor.so)"],
+            shim="drop null and -1 entries (compacting the rest, relocations included) before the loader sees the library",
+        ))
     # DT_ANDROID_RELR (scanner.ANDROID_RELOCATION_TAGS): musl skips it, so a constructor pointer
     # keeps its link-time value and the load dies calling it.
     android_relocated = sorted({elf.get("soname") or Path(elf["name"]).name for elf in elfs
                                 if elf.get("android_relocation_tags")})
     if android_relocated:
-        applied = loader.get("android_relr_launcher")
+        # The launcher renumbers what it stages; a library written at run time needs the shim to.
+        written = sorted({elf.get("soname") or Path(elf["name"]).name for elf in unpacked
+                          if elf.get("android_relocation_tags")})
+        staged = len(written) < len(android_relocated)
+        launcher_fix, shim_fix = loader.get("android_relr_launcher"), loader.get("android_relr_shim")
+        applied = (launcher_fix or not staged) and (shim_fix or not written)
+        if applied:
+            provider = ("the launcher stages them with the tags renumbered to DT_RELR, which musl applies"
+                        if staged else "")
+            if shim_fix:
+                provider += ("; " if provider else "") + "the bionic shim does the same for libraries the app writes at run time"
+        elif launcher_fix and staged:
+            provider = (f"the launcher renumbers only what it stages; nothing renumbers the {len(written)} "
+                        "written at run time: their pointers keep link-time values")
+        else:
+            provider = "none: pointers the table covers keep their link-time values"
         tags = sorted({t for elf in elfs for t in elf.get("android_relocation_tags") or ()})
         rows.append(_row(
             "native-loading", "load:android-relocations",
@@ -1252,13 +1354,10 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
             + (" ..." if len(android_relocated) > 4 else "") + ")",
             oh_touchpoint="OH musl dynamic linker: skips " + ", ".join(tags) + " (applies standard DT_RELR)",
             verdict="supplied" if applied else "missing", shim_class="C3", effort="verify" if applied else "S",
-            confidence=STATIC,
-            provider=("the launcher stages them with the tags renumbered to DT_RELR, which musl applies"
-                      + ("; the bionic shim does the same for libraries the app writes at run time"
-                         if loader.get("android_relr_shim") else "")
-                      if applied else "none: pointers the table covers keep their link-time values"),
-            provider_source=applied,
-            app_evidence=f"{len(android_relocated)} APK libraries carry {', '.join(tags)}",
+            confidence=STATIC, provider=provider,
+            provider_source=(launcher_fix if staged else shim_fix) or None,
+            app_evidence=f"{len(android_relocated)} APK libraries carry {', '.join(tags)}"
+                         + (f", {len(written)} of them written at run time ({', '.join(written[:3])})" if written else ""),
             seen_blocking=["facebook, messenger, instagram (SIGSEGV with pc == fault addr == the library's "
                            "unrelocated INIT_ARRAY entry)"],
             shim="renumber DT_ANDROID_RELR/RELRSZ/RELRENT to DT_RELR/RELRSZ/RELRENT (same encoding); "
@@ -1269,6 +1368,37 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
 
 # Always present: the bionic names OH's musl loader answers for itself.
 _LOADER_PROVIDED = {"libc.so", "libm.so", "libdl.so", "ld-android.so"}
+
+
+# The SDK level Westlake reports (android_os_SystemProperties.cpp's table, mirrored by the bionic
+# shim) and the ART its runtime is built from.
+REPORTED_SDK, ART_SOURCE = 34, "AOSP 15 (API 35)"
+
+
+def art_internal_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
+    """Libraries that reach into ART through its C++ symbols. They find them (Westlake's libart.so
+    exports every symbol; on Android they read its symbol table) and patch heap, GC, JIT and thread
+    state at offsets chosen by the SDK level the device reports. Westlake reports 34 and runs an
+    AOSP 15 ART, so what they write lands by Android 14's layout in Android 15's structures."""
+    users = sorted(((elf.get("soname") or Path(elf["name"]).name, elf["art_internal_symbols"],
+                     elf.get("art_internal_sample", []))
+                    for elf in ohresolve.target_elfs(scan) if elf.get("art_internal_symbols", 0) >= 3),
+                   key=lambda item: -item[1])
+    if not users:
+        return []
+    return [_row(
+        "native-symbols", "art:internals",
+        f"Libraries that patch ART internals ({', '.join(name for name, _, _ in users[:4])}"
+        + (" ..." if len(users) > 4 else "") + ")",
+        oh_touchpoint=f"Westlake's ART: built from {ART_SOURCE}, reported as SDK {REPORTED_SDK}",
+        verdict="unverified", shim_class="C2", effort="L", confidence=STATIC,
+        provider="none: nothing keeps the runtime's layout to the one the reported SDK level implies",
+        app_evidence="; ".join(f"{name} names {count} ({', '.join(sample[:2])})" for name, count, sample in users[:6]),
+        suspected_blocking=["capcut (r83 and t140: musl's allocator faults about 10 s in, after libjato, "
+                            "libsysoptimizer and libgodzilla-sysopt load; unconfirmed)"],
+        shim="report the SDK level the runtime's ART is built from, or make these libraries' version check "
+             "fail closed (most disable themselves on an unknown layout)",
+    )]
 
 
 def needed_library_rows(scan: dict[str, Any], board_paths: list[str] | None,
@@ -1821,6 +1951,7 @@ def android_namespace_rows(scan: dict[str, Any], rows: list[dict[str, Any]],
         args = row.get("launch_args") or []
         targets |= {value for flag, value in zip(args[0::2], args[1::2]) if flag == "--android-native-target"}
     app_written = any(row["id"] == "load:app-storage-exec" for row in rows)
+    written = {elf["name"] for elf in ohresolve.target_elfs(scan) if elf.get("origin") == "unpacked"}
     if not targets and not app_written:
         return []
     bridge = {lib.get("soname") or lib["name"]: lib for lib in runtime.get("bridge_libraries", [])}
@@ -1849,7 +1980,7 @@ def android_namespace_rows(scan: dict[str, Any], rows: list[dict[str, Any]],
             continue
         unreachable = (runtime_closure(name) & declared.get(name, set())) - set(lib.get("exported_symbols", [])) - packaged
         importers: dict[str, set[str]] = defaultdict(set)
-        routed = False
+        routed = harvested = False
         for elf in elfs:
             if name not in elf.get("needed", []):
                 continue
@@ -1860,6 +1991,7 @@ def android_namespace_rows(scan: dict[str, Any], rows: list[dict[str, Any]],
             routed |= in_targets
             for symbol in set(elf.get("undefined_symbols", [])) & unreachable:
                 importers[symbol].add(elf_name)
+                harvested |= elf["name"] in written
         if not importers:
             continue
         names = sorted(importers)
@@ -1874,6 +2006,8 @@ def android_namespace_rows(scan: dict[str, Any], rows: list[dict[str, Any]],
             provider=f"{len(names) - len(open_)} of {len(names)} forwarded by the Westlake bionic shim",
             open_symbols=open_[:20], covered_symbols=[n for n in names if n in shim_exports][:20],
             app_evidence=("imported by libraries the launcher routes to the Android namespace" if routed else
+                          "imported by libraries the app wrote at run time (harvested after a run), which load "
+                          "in the Android namespace" if harvested else
                           "the app writes and loads libraries at run time, which load in the Android namespace; "
                           "its packaged libraries import these, so the ones it writes likely do too"),
             shim="forward each from the bionic shim to the runtime's own library, as it does ALooper_*"))
@@ -1887,7 +2021,7 @@ def unpackaged_launch_targets(args: list[str], scan: dict[str, Any]) -> list[str
     """Library targets in launch args that name no packaged file. The launcher routes files by name and
     refuses such a target, so the app never starts: TikTok's maps once named libeffect.so, the SONAME
     of its libeffect_plugin.so, and TikTok did not launch in two whole-corpus runs."""
-    files = {elf["name"].rsplit("/", 1)[-1] for elf in ohresolve.target_elfs(scan)}
+    files = {elf["name"].rsplit("/", 1)[-1] for elf in ohresolve.packaged_elfs(scan)}
     return sorted({value for flag, value in zip(args[0::2], args[1::2])
                    if flag in _LIBRARY_TARGET_FLAGS and value not in files})
 
@@ -1945,8 +2079,10 @@ def build_map(
                                   launcher_namespace_option(manifest_root), runtime_libraries,
                                   bionic_loader_model(westlake_root, manifest_root))
             + nio_rows(scan, runtime_class_paths)
+            + art_internal_rows(scan)
             + needed_library_rows(scan, board_paths, runtime_libraries)
             + libc_constant_rows(scan, contracts.libc_constant_model(westlake_root))
+            + signal_abi_rows(scan, contracts.signal_abi_model(westlake_root))
             + security_rows(scan, contracts.keystore_model(westlake_root))
             + webview_rows(scan, webview_process_model(aosp_root, westlake_root))
             # art-build sits beside the westlake checkout in the same workspace; absent, the row

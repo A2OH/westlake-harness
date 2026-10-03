@@ -281,6 +281,42 @@ def _strip_java_comments(text: str) -> str:
 LIBC_CONSTANT_NAMESPACE_CALLS = {"sysconf", "pathconf", "fpathconf", "confstr"}
 
 
+def android_caller_scope(text: str) -> dict[str, bool]:
+    """Which callers the bionic shim's caller_is_android_dso counts as built against bionic: the
+    app's packaged libraries (/data/local/tmp/asx/lib/), and the ones it writes and loads from its
+    own storage (/data/data/..., the code_cache/wl-exec copies)."""
+    if "caller_is_android_dso(void" not in text:
+        # The test is used but not defined here: it has always covered the packaged libraries.
+        return {"packaged": "caller_is_android_dso(" in text, "written": False}
+    body = _braced_block(text, text.index("caller_is_android_dso(void"))
+    return {"packaged": "/data/local/tmp/asx/lib/" in body, "written": '"/data/data/"' in body}
+
+
+# Signal calls whose structures bionic and OH musl lay out differently on arm64: struct sigaction is
+# 32 bytes in bionic and 152 in musl (flags first in one, the handler first in the other), sigset_t
+# 8 bytes and 128.
+SIGNAL_ABI_CALLS = {"sigaction", "sigemptyset", "sigfillset", "sigaddset", "sigdelset", "sigismember",
+                    "sigprocmask", "pthread_sigmask"}
+SIGNAL_ABI_CALLS_64 = {name + "64" for name in SIGNAL_ABI_CALLS}
+
+
+def signal_abi_model(westlake_root: Path) -> dict[str, Any]:
+    """Which signal calls the bionic shim translates, for which callers, and whether a lookup by
+    name (dlsym) reaches the translation too."""
+    path = westlake_root / "framework/webview-shim/webview_bionic_shim.c"
+    if not path.exists():
+        return {"translated": [], "scope": {"packaged": False, "written": False}, "dlsym": None, "source": None}
+    raw = path.read_text(errors="replace")
+    text = _strip_java_comments(raw)
+    translated = sorted(name for name in SIGNAL_ABI_CALLS | SIGNAL_ABI_CALLS_64
+                        if re.search(rf"^\s*int\s+{name}\s*\(", text, re.M))
+    dlsym = re.search(r"^\s*void\s*\*\s*dlsym\s*\(", text, re.M)
+    first = re.search(r"^\s*int\s+sigaction\s*\(", text, re.M)
+    return {"translated": translated, "scope": android_caller_scope(text),
+            "dlsym": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, dlsym.start()) + 1}" if dlsym else None,
+            "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, first.start()) + 1}" if first else None}
+
+
 def libc_constant_model(westlake_root: Path) -> dict[str, Any]:
     """Whether the bionic shim translates those constants, and for which callers.
 
@@ -303,7 +339,7 @@ def libc_constant_model(westlake_root: Path) -> dict[str, Any]:
         else:
             scope = "all-callers"
     line = text.count(chr(10), 0, text.index(f"{translated[0]}(")) + 1 if translated else None
-    return {"translated": translated, "scope": scope,
+    return {"translated": translated, "scope": scope, "callers": android_caller_scope(text),
             "source": f"{path.relative_to(westlake_root)}:{line}" if translated else None}
 
 

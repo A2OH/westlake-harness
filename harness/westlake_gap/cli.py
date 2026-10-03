@@ -80,6 +80,11 @@ def parser() -> argparse.ArgumentParser:
         action="store_true",
         help="attribute unresolved native imports to the JNI methods that reach them (needs llvm-objdump)",
     )
+    scan.add_argument(
+        "--unpacked-libs",
+        type=Path,
+        help="libraries the app wrote at run time, harvested from a run: a directory with harvest.json",
+    )
 
     bench = commands.add_parser("benchmark", help="scan a directory and create portfolio outputs")
     bench.add_argument("input", type=Path, help="directory containing APK files")
@@ -598,6 +603,7 @@ def main(argv: list[str] | None = None) -> int:
             target_abi=args.target_abi,
             native_reach=args.native_reach,
             platform_members=members,
+            unpacked_libs=args.unpacked_libs,
         )
         write_json(args.out, value)
         print(f"{value['apk'].get('package')}: {value['summary']['finding_count']} findings -> {args.out}")

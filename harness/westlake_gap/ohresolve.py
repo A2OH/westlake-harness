@@ -48,6 +48,12 @@ def target_elfs(scan: dict[str, Any]) -> list[dict[str, Any]]:
     return [elf for elf in elfs if elf.get("abi", target) == target] if target else list(elfs)
 
 
+def packaged_elfs(scan: dict[str, Any]) -> list[dict[str, Any]]:
+    """target_elfs without the libraries harvested from the app's storage after a run (scan
+    --unpacked-libs): the launcher stages and routes only what the APK packages."""
+    return [elf for elf in target_elfs(scan) if elf.get("origin") != "unpacked"]
+
+
 def resolve(scan: dict[str, Any], provided: set[str], declared: dict[str, str]) -> dict[str, Any]:
     elfs = target_elfs(scan)
     own: set[str] = set()
