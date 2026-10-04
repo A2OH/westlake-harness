@@ -251,7 +251,7 @@ def score(app: str, text: str) -> Score:
     return Score(app=app, rung=rung, rung_name=RUNGS[rung], lines=lines,
                  fatal=len(_FATAL.findall(text)), relayouts=relayouts, held_back=held,
                  blocker_category=category, blocker=blocker, blocking=blocking,
-                 markers=counts, anomaly=anomaly, root_cause=root_cause(text) if blocking else None)
+                 markers=counts, anomaly=anomaly, root_cause=root_cause(text))
 
 
 _HOST_SCREEN = Path(__file__).parent / "data" / "host-screen.png"
