@@ -175,6 +175,11 @@ def service_rows(scan: dict[str, Any], aosp: dict[str, Any], westlake: dict[str,
     casts: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for cast in inventory.get("nonnull_casts") or []:
         casts["L" + cast["type"].replace(".", "/") + ";"].append(cast)
+    # Requests whose result the app null-checks right away (R8's compiled Kotlin checks).
+    checked: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for request in requests:
+        if request.get("null_checked"):
+            checked[request.get("service") or request.get("manager_class") or ""].append(request)
     rows = []
     for entry in services.service_map(requests, aosp, westlake, calls):
         verdict = entry["verdict"]
@@ -203,12 +208,14 @@ def service_rows(scan: dict[str, Any], aosp: dict[str, Any], westlake: dict[str,
         basis = entry.get("westlake_basis") or {}
         # A null manager is survivable only where the caller checks. Kotlin's `as Manager` does
         # not: it throws, and inside a JS host function that is a JS exception.
-        throwing = casts.get(entry.get("manager", ""), []) if verdict in {services.NULL, services.UNRESOLVED} else []
+        throwing = (casts.get(entry.get("manager", ""), []) + checked.get(entry["service"], [])
+                    + checked.get(entry.get("manager", ""), [])) if verdict in {services.NULL, services.UNRESOLVED} else []
         evidence = None
         if throwing:
             owners = sorted({f"{c['owner'].strip('L;').replace('/', '.')}.{c['method']}" for c in throwing})
-            evidence = (f"{entry['site_count']} call sites; Kotlin casts it non-null in {len(owners)} methods "
-                        f"(e.g. {', '.join(owners[:3])}): a null answer throws there, it is not skipped")
+            evidence = (f"{entry['site_count']} call sites; the app requires it non-null in {len(owners)} methods, "
+                        f"by a Kotlin cast or a compiled null check (e.g. {', '.join(owners[:3])}): a null answer "
+                        f"throws there, it is not skipped")
         # A hollow binder answers null, and a manager that unwraps the answer (getList() on a
         # ParceledListSlice) throws inside the framework: no app code can catch it.
         unwrapping = entry.get("unwrapping_calls", []) if verdict == services.HOLLOW else []

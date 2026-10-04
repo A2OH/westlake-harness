@@ -57,6 +57,37 @@ class ServiceRequestCapture(unittest.TestCase):
             self.assertTrue(by_method["direct"]["binder_direct"])
             self.assertTrue(by_method["computed"]["dynamic"], "a computed name must be reported, not guessed")
 
+    def test_a_null_checked_service_result_is_marked(self) -> None:
+        """clauncher: R8 compiles Kotlin's non-null check to getClass() on the manager, so a null
+        getSystemService("device_policy") threw in HomeFragment; no cast message marks it."""
+        javac, d8 = shutil.which("javac"), _find_android_d8()
+        if not javac or not d8:
+            self.skipTest("javac and d8 are required for the executable fixture")
+        with tempfile.TemporaryDirectory(prefix="westlake-nullcheck-") as temp:
+            root = Path(temp)
+            _write(root / "api/android/content/Context.java", """package android.content;
+                public abstract class Context { public abstract Object getSystemService(String name); }""")
+            _write(root / "app/fixture/ChecksServices.java", """package fixture;
+                import android.content.Context;
+                public class ChecksServices {
+                    static Object compiledCheck(Context c) { Object m = c.getSystemService("device_policy"); m.getClass(); return m; }
+                    static Object required(Context c) { return java.util.Objects.requireNonNull(c.getSystemService("uimode")); }
+                    static Object unchecked(Context c) { Object m = c.getSystemService("alarm"); return m; }
+                    static void discarded(Context c, Object other) { c.getSystemService("power"); other.getClass(); }
+                }""")
+            api, app, dex = root / "api-classes", root / "app-classes", root / "dex"
+            for directory in (api, app, dex):
+                directory.mkdir()
+            _run(javac, "--release", "8", "-d", str(api), *map(str, (root / "api").rglob("*.java")))
+            _run(javac, "--release", "8", "-cp", str(api), "-d", str(app), str(root / "app/fixture/ChecksServices.java"))
+            _run(d8, "--min-api", "21", "--output", str(dex), str(app / "fixture/ChecksServices.class"))
+
+            by_method = {r["method"]: r for r in inventory_dex(dex / "classes.dex").service_requests}
+            self.assertTrue(by_method["compiledCheck"].get("null_checked"))
+            self.assertTrue(by_method["required"].get("null_checked"))
+            self.assertFalse(by_method["unchecked"].get("null_checked"))
+            self.assertFalse(by_method["discarded"].get("null_checked"), "a discarded result is not the value checked")
+
     def test_feature_queries_name_the_feature(self) -> None:
         javac, d8 = shutil.which("javac"), _find_android_d8()
         if not javac or not d8:

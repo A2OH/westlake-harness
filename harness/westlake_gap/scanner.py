@@ -755,6 +755,11 @@ def _inventory_defined_methods(
 def _inventory_instructions(dex: DEX, method: Any, caller: dict[str, Any], out: DexInventory) -> None:
     string_regs: dict[int, str] = {}
     class_regs: dict[int, str] = {}
+    # A service request whose result is about to be null-checked: R8 compiles Kotlin's non-null
+    # checks to Object.getClass() on the value (or keeps Intrinsics.checkNotNull*), so a null
+    # manager throws a few instructions after the call. clauncher's HomeFragment does that to
+    # getSystemService("device_policy").
+    pending: dict[str, Any] | None = None
     for offset, instruction in method.get_instructions_idx():
         name = instruction.get_name()
         try:
@@ -762,6 +767,21 @@ def _inventory_instructions(dex: DEX, method: Any, caller: dict[str, Any], out: 
         except Exception:
             operands = []
         registers = [int(op[1]) for op in operands if int(op[0]) == 0]
+        if pending is not None:
+            if pending["register"] is None:
+                # The result is taken right after the call, or discarded.
+                if name == "move-result-object" and registers:
+                    pending["register"] = registers[0]
+                else:
+                    pending = None
+            elif registers and registers[0] == pending["register"] \
+                    and name.startswith("invoke-") and _is_null_check(dex, instruction):
+                pending["request"]["null_checked"] = True
+                pending = None
+            if pending is not None:
+                pending["left"] -= 1
+                if pending["left"] <= 0:
+                    pending = None
 
         if name in {"const-string", "const-string/jumbo"} and registers:
             string_regs[registers[0]] = str(instruction.get_string())
@@ -811,7 +831,10 @@ def _inventory_instructions(dex: DEX, method: Any, caller: dict[str, Any], out: 
                     if len(out.method_sites[key]) < 8:
                         out.method_sites[key].append({**caller, "offset": offset, "opcode": name})
                 _detect_string_call(key, registers, string_regs, caller, offset, out)
+                requested = len(out.service_requests)
                 _detect_service_call(key, registers, string_regs, class_regs, caller, offset, out)
+                if len(out.service_requests) > requested:
+                    pending = {"request": out.service_requests[-1], "register": None, "left": 6}
                 _detect_jca_call(key, registers, string_regs, caller, offset, out)
                 _detect_feature_query(key, registers, string_regs, caller, offset, out)
             except (IndexError, TypeError, ValueError):
@@ -926,6 +949,24 @@ def _detect_service_call(
         return
     request["dynamic"] = request.get("service") is None and request.get("manager_class") is None
     out.service_requests.append({**caller, "offset": offset, "call_owner": owner, **request})
+
+
+_NULL_CHECKS = {
+    ("Ljava/lang/Object;", "getClass"),
+    ("Ljava/util/Objects;", "requireNonNull"),
+    ("Lkotlin/jvm/internal/Intrinsics;", "checkNotNull"),
+    ("Lkotlin/jvm/internal/Intrinsics;", "checkNotNullExpressionValue"),
+    ("Lkotlin/jvm/internal/Intrinsics;", "checkNotNullParameter"),
+}
+
+
+def _is_null_check(dex: DEX, instruction: Any) -> bool:
+    """An invoke that throws when its first argument is null and is there only to check it."""
+    try:
+        owner, target, _ = dex.get_cm_method(int(instruction.get_ref_kind()))
+    except Exception:
+        return False
+    return (str(owner), str(target)) in _NULL_CHECKS
 
 
 def _detect_feature_query(
