@@ -1235,6 +1235,39 @@ def signal_abi_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[st
     )]
 
 
+def static_mutex_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """Mutexes a library initializes with Bionic's static recursive or error-checking initializer and
+    then locks (scanner.bionic_static_mutexes). musl reads the type from the low bits of the word
+    Bionic put it in bits 14-15 of, so both are normal mutexes to it: a recursive relock deadlocks
+    on its own thread, an error-checking one no longer reports EDEADLK."""
+    found: dict[str, dict[str, int]] = {}
+    for elf in ohresolve.target_elfs(scan):
+        if elf.get("bionic_static_mutexes"):
+            found[elf.get("soname") or elf["name"].rsplit("/", 1)[-1]] = elf["bionic_static_mutexes"]
+    if not found:
+        return []
+    open_ = [name for name in contracts.STATIC_MUTEX_LOCKS if name not in model.get("adopted", [])]
+    kinds = sorted({kind for counts in found.values() for kind in counts})
+    return [_row(
+        "native-symbols", "abi:static-mutex-init",
+        f"Bionic static {' and '.join(kinds)} mutex initializers ({', '.join(sorted(found)[:4])})",
+        oh_touchpoint="OH musl: the mutex type is the low bits of the first word (Bionic: bits 14-15, 0x4000 recursive, "
+                      "0x8000 error-checking); musl locks either as a normal mutex",
+        verdict="supplied" if not open_ else "missing", shim_class="C2", effort="verify" if not open_ else "S",
+        confidence=STATIC,
+        provider=("the bionic shim's lock calls convert an unlocked mutex holding Bionic's type word to musl's "
+                  "type before musl locks it" if not open_ else "not converted in: " + ", ".join(open_)),
+        provider_source=model.get("source"), open_symbols=open_,
+        app_evidence="; ".join(f"{name}: " + ", ".join(f"{count} {kind}" for kind, count in sorted(counts.items()))
+                               + " locked as initialized" for name, counts in sorted(found.items())[:6]),
+        seen_blocking=["discord (r84: sentry-native's sentry_init holds its options lock and takes it again in "
+                       "sentry_close; the crash-reporting thread never left initSentryNative and the main thread "
+                       "waited out two 30 s application-initialization timeouts, first frame at 62.9 s)"],
+        shim="convert the type word of an unlocked mutex holding Bionic's static initializer to musl's recursive or "
+             "error-checking type before musl's lock sees it; a held mutex is left alone",
+    )]
+
+
 def native_upcall_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
     """One row per library that calls back into Java: what it names, and what the runtime lacks."""
     rows = []
@@ -2406,6 +2439,7 @@ def build_map(
             + needed_library_rows(scan, board_paths, runtime_libraries)
             + libc_constant_rows(scan, contracts.libc_constant_model(westlake_root))
             + signal_abi_rows(scan, contracts.signal_abi_model(westlake_root))
+            + static_mutex_rows(scan, contracts.static_mutex_model(westlake_root))
             + security_rows(scan, contracts.keystore_model(westlake_root))
             + webview_rows(scan, webview_process_model(aosp_root, westlake_root))
             # art-build sits beside the westlake checkout in the same workspace; absent, the row

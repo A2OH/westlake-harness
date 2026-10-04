@@ -1377,6 +1377,59 @@ class SignalAbi(unittest.TestCase):
         self.assertIn("looked up by name in libshadowhook.so", rows[0]["app_evidence"])
 
 
+def _adrp(rd: int, pc: int, target: int) -> int:
+    pages = ((target & ~0xFFF) - (pc & ~0xFFF)) >> 12
+    return 0x90000000 | ((pages & 3) << 29) | (((pages >> 2) & 0x7FFFF) << 5) | rd
+
+
+def _add(rd: int, rn: int, imm: int) -> int:
+    return 0x91000000 | (imm << 10) | (rn << 5) | rd
+
+
+class StaticMutexes(unittest.TestCase):
+    MODEL = {"adopted": ["pthread_mutex_lock", "pthread_mutex_trylock"], "source": "webview_bionic_shim.c:613"}
+
+    def test_the_address_handed_to_a_lock_is_followed_back(self) -> None:
+        from westlake_gap.scanner import x0_address_before
+        base, mutex = 0x10000, 0x2B80CC
+        words = [_adrp(8, base, mutex), 0xD503201F, _add(0, 8, mutex & 0xFFF), 0x94000000]   # adrp x8; nop; add x0, x8
+        self.assertEqual(x0_address_before(words, 3, base), mutex)
+        words = [_adrp(19, base, mutex), _add(19, 19, mutex & 0xFFF), 0xAA1303E0, 0x94000000]  # mov x0, x19
+        self.assertEqual(x0_address_before(words, 3, base), mutex)
+        # Through the GOT: adrp x0, slot page; ldr x0, [x0, #slot]; the slot holds the mutex's address.
+        slot = 0x2A0010
+        words = [_adrp(0, base, slot), 0xF9400000 | (((slot & 0xFFF) // 8) << 10), 0x94000000]
+        self.assertEqual(x0_address_before(words, 2, base, {slot: mutex}), mutex)
+        self.assertIsNone(x0_address_before(words, 2, base, {}))
+        # A call in between leaves x0 to its return value.
+        words = [_adrp(0, base, mutex), _add(0, 0, mutex & 0xFFF), 0x94000010, 0x94000000]
+        self.assertIsNone(x0_address_before(words, 3, base))
+
+    def test_only_locked_initializers_are_a_row_and_the_shim_converts_them(self) -> None:
+        sentry = {"name": "lib/arm64-v8a/libsentry.so", "bionic_static_mutexes": {"recursive": 1}}
+        plain = {"name": "lib/arm64-v8a/libplain.so"}
+        rows = gapmap.static_mutex_rows({"inventory": {"elfs": [sentry, plain]}}, self.MODEL)
+        self.assertEqual((rows[0]["id"], rows[0]["verdict"]), ("abi:static-mutex-init", "supplied"))
+        self.assertIn("libsentry.so: 1 recursive locked as initialized", rows[0]["app_evidence"])
+        rows = gapmap.static_mutex_rows({"inventory": {"elfs": [sentry]}}, {"adopted": [], "source": None})
+        self.assertEqual((rows[0]["verdict"], rows[0]["open_symbols"]),
+                         ("missing", ["pthread_mutex_lock", "pthread_mutex_trylock"]))
+        self.assertEqual(gapmap.static_mutex_rows({"inventory": {"elfs": [plain]}}, self.MODEL), [])
+
+    def test_the_model_reads_the_shims_lock_calls(self) -> None:
+        import tempfile
+        from westlake_gap import contracts
+        with tempfile.TemporaryDirectory() as tmp:
+            shim = Path(tmp) / "framework/webview-shim/webview_bionic_shim.c"
+            shim.parent.mkdir(parents=True)
+            shim.write_text("static void adopt(pthread_mutex_t *mutex)\n{\n    if (*(int *) mutex == 0x4000) {}\n}\n"
+                            "int pthread_mutex_lock(pthread_mutex_t *mutex)\n{\n    adopt(mutex);\n"
+                            "    return pthread_mutex_timedlock(mutex, NULL);\n}\n")
+            model = contracts.static_mutex_model(Path(tmp))
+        self.assertEqual(model["adopted"], ["pthread_mutex_lock"])
+        self.assertTrue(model["source"].endswith(":5"))
+
+
 class ApkMemberLoads(unittest.TestCase):
     def test_soloader_with_unfixed_split_libraries_is_a_row(self) -> None:
         scan = {"inventory": {"elfs": [

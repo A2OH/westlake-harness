@@ -403,6 +403,34 @@ def signal_abi_model(westlake_root: Path) -> dict[str, Any]:
             "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, first.start()) + 1}" if first else None}
 
 
+#: The lock calls that must see a Bionic static mutex initializer converted to musl's type first.
+STATIC_MUTEX_LOCKS = ("pthread_mutex_lock", "pthread_mutex_trylock")
+
+
+def static_mutex_model(westlake_root: Path) -> dict[str, Any]:
+    """Which lock calls the bionic shim defines that convert Bionic's static recursive and
+    error-checking initializers (0x4000, 0x8000 in the type word) to musl's types before musl locks
+    the mutex. Defined in the preloaded shim, they are every caller's."""
+    path = westlake_root / "framework/webview-shim/webview_bionic_shim.c"
+    if not path.exists():
+        return {"adopted": [], "source": None}
+    text = _strip_java_comments(path.read_text(errors="replace"))
+    adopted, first = [], None
+    for name in STATIC_MUTEX_LOCKS:
+        match = re.search(rf"^\s*int\s+{name}\s*\(", text, re.M)
+        if not match or "0x4000" not in text:
+            continue
+        body = _braced_block(text, match.start())
+        callee = re.search(r"(\w+)\(\s*mutex\s*\)\s*;", body)
+        # The conversion is called first thing, or lives in a helper called there that tests 0x4000.
+        helper = callee and re.search(rf"\b{callee[1]}\s*\([^;{{]*\)\s*\{{", text)
+        if helper and "0x4000" in _braced_block(text, helper.start()):
+            adopted.append(name)
+            first = first or match
+    return {"adopted": adopted,
+            "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, first.start()) + 1}" if first else None}
+
+
 def libc_constant_model(westlake_root: Path) -> dict[str, Any]:
     """Whether the bionic shim translates those constants, and for which callers.
 

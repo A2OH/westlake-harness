@@ -12,6 +12,7 @@ import io
 import json
 import os
 import re
+import struct
 import gc
 import subprocess
 import tempfile
@@ -416,6 +417,120 @@ def null_array_entries(raw: bytes) -> dict[str, int] | None:
     return out
 
 
+#: Bionic's PTHREAD_RECURSIVE_MUTEX_INITIALIZER and PTHREAD_ERRORCHECK_MUTEX_INITIALIZER: the type in
+#: bits 14-15 of the first of the mutex's ten words. musl keeps its type in the low bits and reads
+#: both as a normal mutex, so a recursive lock deadlocks on its own thread.
+_BIONIC_MUTEX_TYPES = {0x4000: "recursive", 0x8000: "errorcheck"}
+_MUTEX_LOCKS = ("pthread_mutex_lock", "pthread_mutex_trylock", "pthread_mutex_timedlock")
+
+
+def _sext(value: int, bits: int) -> int:
+    return value - (1 << bits) if value & (1 << (bits - 1)) else value
+
+
+def x0_address_before(words: list[int], index: int, base: int, got: dict[int, int] | None = None) -> int | None:
+    """The address the call at ``words[index]`` passes in x0, when the instructions just before it
+    build it: adrp then add, through movs, or a GOT load (adrp then ldr). None for anything else: a
+    call, branch or other write in between, or a value from memory the GOT does not explain."""
+    # Walking back from the call: ``want`` is the register x0's value comes from, ``offset`` what
+    # adds put on top of it. A GOT load (ldr) moves the offset so far onto the loaded pointer.
+    want, offset, slot, after_load = 0, 0, None, 0
+    for j in range(index - 1, max(index - 24, -1), -1):
+        insn = words[j]
+        if (insn & 0x7C000000) == 0x14000000 or (insn & 0xFFFFFC1F) in (0xD63F0000, 0xD65F0000, 0xD61F0000):
+            return None                                   # b, bl, blr, ret, br: x0 is not built here
+        if (insn & 0x1F) != want:
+            continue
+        if (insn & 0xFF800000) == 0x91000000:             # add xd, xn, #imm{, lsl 12}
+            offset += ((insn >> 10) & 0xFFF) << (12 * ((insn >> 22) & 1))
+            want = (insn >> 5) & 0x1F
+        elif (insn & 0xFFE0FFE0) == 0xAA0003E0:           # mov xd, xm
+            want = (insn >> 16) & 0x1F
+        elif (insn & 0xFFC00000) == 0xF9400000 and slot is None and got is not None:
+            slot, after_load, offset = ((insn >> 10) & 0xFFF) * 8, offset, 0   # ldr xd, [xn, #imm]
+            want = (insn >> 5) & 0x1F
+        elif (insn & 0x9F000000) == 0x90000000:           # adrp xd, page
+            page = ((base + 4 * j) & ~0xFFF) + (_sext((((insn >> 5) & 0x7FFFF) << 2) | ((insn >> 29) & 3), 21) << 12)
+            if slot is None:
+                return page + offset
+            target = (got or {}).get(page + offset + slot)
+            return None if target is None else target + after_load
+        else:
+            return None
+    return None
+
+
+def bionic_static_mutexes(data: bytes) -> dict[str, Any]:
+    """Mutexes initialized with Bionic's recursive or error-checking static initializer that the
+    library's code locks: one whose address is built right before a call to pthread_mutex_lock (or
+    trylock, timedlock). A ten-word object in .data that only looks like one, and is never passed to
+    a lock, is not counted; one locked through a pointer kept elsewhere is missed."""
+    try:
+        from elftools.elf.elffile import ELFFile
+        from elftools.elf.relocation import RelocationSection
+
+        elf = ELFFile(io.BytesIO(data))
+        if elf["e_machine"] != "EM_AARCH64":
+            return {}
+        section = elf.get_section_by_name(".data")
+        if section is None or section["sh_type"] == "SHT_NOBITS":
+            return {}
+        contents, start = section.data(), section["sh_addr"]
+        candidates = {}
+        for at in range((-start) % 4, len(contents) - 39, 4):
+            first = int.from_bytes(contents[at:at + 4], "little")
+            if first in _BIONIC_MUTEX_TYPES and not any(contents[at + 4:at + 40]):
+                candidates[start + at] = _BIONIC_MUTEX_TYPES[first]
+        if not candidates:
+            return {}
+        jump_slots, got = {}, {}
+        for relocations in elf.iter_sections():
+            if not isinstance(relocations, RelocationSection) or not relocations.is_RELA():
+                continue
+            symbols = elf.get_section(relocations["sh_link"])
+            for relocation in relocations.iter_relocations():
+                kind, index = relocation["r_info_type"], relocation["r_info_sym"]
+                if kind == 1026 and index:                # R_AARCH64_JUMP_SLOT
+                    jump_slots[relocation["r_offset"]] = symbols.get_symbol(index).name
+                elif kind == 1027:                        # R_AARCH64_RELATIVE
+                    got[relocation["r_offset"]] = relocation["r_addend"]
+                elif kind == 1025 and index:              # R_AARCH64_GLOB_DAT
+                    symbol = symbols.get_symbol(index)
+                    if symbol["st_shndx"] != "SHN_UNDEF":
+                        got[relocation["r_offset"]] = symbol["st_value"] + relocation["r_addend"]
+        stubs = set()
+        plt = elf.get_section_by_name(".plt")
+        if plt is not None:
+            code, base = plt.data(), plt["sh_addr"]
+            words = [int.from_bytes(code[i:i + 4], "little") for i in range(0, len(code) - 3, 4)]
+            for i in range(len(words) - 1):
+                adrp, load = words[i], words[i + 1]
+                if (adrp & 0x9F00001F) != 0x90000010 or (load & 0xFFC003FF) != 0xF9400211:
+                    continue                              # adrp x16, page; ldr x17, [x16, #slot]
+                page = ((base + 4 * i) & ~0xFFF) + (_sext((((adrp >> 5) & 0x7FFFF) << 2) | ((adrp >> 29) & 3), 21) << 12)
+                if jump_slots.get(page + ((load >> 10) & 0xFFF) * 8) in _MUTEX_LOCKS:
+                    stubs.add(base + 4 * i)
+                    if i and words[i - 1] == 0xD503245F:  # bti c opens the entry
+                        stubs.add(base + 4 * (i - 1))
+        text = elf.get_section_by_name(".text")
+        if not stubs or text is None:
+            return {}
+        code, base = text.data(), text["sh_addr"]
+        words = [w for (w,) in struct.iter_unpack("<I", code[:len(code) - len(code) % 4])]
+        locked = {}
+        for index, insn in enumerate(words):
+            if (insn & 0xFC000000) == 0x94000000 and base + 4 * index + _sext(insn & 0x3FFFFFF, 26) * 4 in stubs:
+                address = x0_address_before(words, index, base, got)
+                if address in candidates:
+                    locked[address] = candidates[address]
+        if not locked:
+            return {}
+        counts = Counter(locked.values())
+        return {"bionic_static_mutexes": dict(sorted(counts.items()))}
+    except Exception:
+        return {}
+
+
 def read_elf(
     path: Path | None = None,
     data: bytes | None = None,
@@ -467,6 +582,7 @@ def read_elf(
             "null_array_entries": null_array_entries(raw),
             **art_internal_names(raw),
             **signal_lookups(raw, set(undefined) | set(undefined_weak)),
+            **bionic_static_mutexes(raw),
             **import_versions(text),
             "exported_symbols": sorted(exports),
             "undefined_symbols": sorted(undefined),
