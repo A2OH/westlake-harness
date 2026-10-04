@@ -357,6 +357,17 @@ def signal_lookups(raw: bytes, imported: set[str]) -> dict[str, Any]:
     return {"signal_lookups": names} if names else {}
 
 
+_EGL_NAMES = ("eglCreateWindowSurface", "eglTerminate")
+
+
+def egl_lookups(raw: bytes, imported: set[str]) -> dict[str, Any]:
+    """EGL entry points a library names as a string without importing them: it dlopens libEGL.so
+    and looks them up by handle, past the preloaded shim's own (SDL does this for all of EGL)."""
+    names = sorted(name for name in _EGL_NAMES
+                   if name not in imported and b"\x00" + name.encode() + b"\x00" in raw)
+    return {"egl_lookups": names} if names else {}
+
+
 _ART_INTERNAL = re.compile(rb"_ZN3art[A-Za-z0-9_]{4,}")
 
 
@@ -609,6 +620,7 @@ def read_elf(
             **packed_init_entries(raw),
             **art_internal_names(raw),
             **signal_lookups(raw, set(undefined) | set(undefined_weak)),
+            **egl_lookups(raw, set(undefined) | set(undefined_weak)),
             **bionic_static_mutexes(raw),
             **import_versions(text),
             "exported_symbols": sorted(exports),

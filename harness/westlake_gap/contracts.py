@@ -359,8 +359,12 @@ def native_egl_window_model(westlake_root: Path) -> dict[str, Any]:
     match = re.search(r"^\S[^\n;]*\beglCreateWindowSurface\([^;{]*\)\s*\{", text, re.M)
     body = _braced_block(text, match.start()) if match else ""
     line = text.count("\n", 0, match.start()) + 1 if match else None
+    by_handle = re.search(r"\bwestlake_egl_by_handle\(", text)
     return {"unwraps": "anw_get_oh" in body,
-            "source": f"{path.relative_to(westlake_root)}:{line}" if match else None}
+            "source": f"{path.relative_to(westlake_root)}:{line}" if match else None,
+            # An Android library's dlsym of these by handle gets the shim's, not OH's EGL directly.
+            "by_handle": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, by_handle.start()) + 1}"
+            if by_handle else None}
 
 
 def activity_client_model(westlake_root: Path) -> dict[str, Any]:

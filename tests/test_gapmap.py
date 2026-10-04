@@ -1820,6 +1820,25 @@ class NativeEglWindow(unittest.TestCase):
             self.assertEqual(row["app_evidence"], "libflutter.so imports eglCreateWindowSurface")
         self.assertEqual(gapmap.native_egl_window_rows({"inventory": {"elfs": []}}, {"unwraps": True}), [])
 
+    def test_egl_looked_up_by_handle_needs_the_shims_dlsym(self) -> None:
+        """anarchre: SDL dlopens libEGL.so and takes eglCreateWindowSurface by handle, past the shim."""
+        from westlake_gap import scanner
+        from westlake_gap.contracts import native_egl_window_model
+        raw = b"\x7fELF..\x00libEGL.so\x00eglCreateWindowSurface\x00eglTerminate\x00"
+        self.assertEqual(scanner.egl_lookups(raw, set()), {"egl_lookups": ["eglCreateWindowSurface", "eglTerminate"]})
+        self.assertEqual(scanner.egl_lookups(raw, {"eglCreateWindowSurface", "eglTerminate"}), {})
+        scan = {"inventory": {"elfs": [{"name": "lib/arm64-v8a/libSDL3.so", "soname": "libSDL3.so",
+                                        "abi_matches_machine": True, "egl_lookups": ["eglCreateWindowSurface"]}]}}
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "framework/webview-shim/webview_bionic_shim.c"
+            _write(source, "unsigned eglTerminate(void *display)\n{\n    return 1;\n}\n")
+            rows = gapmap.native_egl_window_rows(scan, native_egl_window_model(root))
+            self.assertEqual([(r["id"], r["verdict"]) for r in rows], [("egl:by-handle", "missing")])
+            _write(source, "static void *westlake_egl_by_handle(const char *name)\n{\n    return 0;\n}\n")
+            rows = gapmap.native_egl_window_rows(scan, native_egl_window_model(root))
+            self.assertEqual([(r["id"], r["verdict"]) for r in rows], [("egl:by-handle", "supplied")])
+
 class SandboxAndBacktest(unittest.TestCase):
     def test_realm_fifo_is_predicted(self) -> None:
         policy = {"oh": {"domain": "u:r:normal_hap:s0", "app_data_type": "u:object_r:appdat:s0",

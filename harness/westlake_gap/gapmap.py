@@ -1304,13 +1304,33 @@ def native_egl_window_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[
     """App code that creates its own EGL window surface. ANativeWindow_fromSurface gives it the
     adapter's AOSP-shaped window, which OH's EGL rejects: Flutter's Skia renderer (apps that opt out
     of Impeller) got no surface for its SurfaceView and never drew."""
-    libraries = sorted({elf.get("soname") or elf.get("name") for elf in scan["inventory"].get("elfs") or []
-                        if elf.get("abi_matches_machine", True)
-                        and "eglCreateWindowSurface" in (elf.get("undefined_symbols") or [])})
+    elfs = [elf for elf in scan["inventory"].get("elfs") or [] if elf.get("abi_matches_machine", True)]
+    libraries = sorted({elf.get("soname") or elf.get("name") for elf in elfs
+                        if "eglCreateWindowSurface" in (elf.get("undefined_symbols") or [])})
+    # Libraries that look EGL up by handle (SDL dlopens libEGL.so): they reach the shim's entry
+    # points only if its dlsym hands them over.
+    by_handle = sorted({elf.get("soname") or elf.get("name") for elf in elfs if elf.get("egl_lookups")})
+    rows = []
+    if by_handle:
+        handled = bool(model.get("by_handle"))
+        rows.append(_row(
+            "window", "egl:by-handle", "EGL looked up by handle from native code (" + ", ".join(by_handle[:4]) + ")",
+            oh_touchpoint="graphic_2d (OH's EGL; its NDK libEGL.so loads into OH's ndk namespace)",
+            verdict="supplied" if handled else "missing", shim_class="C0" if handled else "C6",
+            effort="verify" if handled else "S", confidence=STATIC,
+            provider=("the shim answers an Android dlopen of libEGL.so with the runtime's EGL and a dlsym of "
+                      "eglCreateWindowSurface or eglTerminate with its own" if handled else
+                      "lookups by handle reach OH's EGL directly: the adapter's window is refused and eglTerminate "
+                      "tears down the display hwui renders through"),
+            provider_source=model.get("by_handle"),
+            app_evidence=f"{', '.join(by_handle[:4])} name EGL entry points without importing them",
+            seen_blocking=["anarchre (SDL: eglCreateWindowSurface refused, then hwui aborted with EGL_NOT_INITIALIZED)"],
+            shim="answer dlopen(libEGL.so) with the runtime's EGL and dlsym of the shim's EGL overrides with its own",
+        ))
     if not libraries:
-        return []
+        return rows
     supplied = bool(model.get("unwraps"))
-    return [_row(
+    return rows + [_row(
         "window", "egl:native-window", "EGL window surfaces created from native code",
         oh_touchpoint="graphic_2d (OHNativeWindow under OH's EGL)",
         verdict="supplied" if supplied else "missing", shim_class="C0" if supplied else "C6",
