@@ -269,6 +269,48 @@ class ServiceVerdicts(unittest.TestCase):
         self.assertNotIn("feature:android.hardware.touchscreen", rows, "no service backs a form factor")
         self.assertNotIn("feature:android.hardware.nfc", rows, "a feature reported absent promises nothing")
 
+    def test_feature_table_claims_with_versions(self) -> None:
+        """The claims can live in a CLAIMED_FEATURES table with versions; the WebView answer stays
+        conditional."""
+        _write(self.root / "westlake/framework/package-manager/java/PackageManagerAdapter.java", """class PackageManagerAdapter {
+            @Override
+            public boolean hasSystemFeature(String name, int version) {
+                if ("android.software.webview".equals(name)) {
+                    return getSideloadedWebViewPackageInfo() != null;
+                }
+                Integer claimed = name != null ? CLAIMED_FEATURES.get(name) : null;
+                return claimed != null && claimed >= version;
+            }
+            private static final int VULKAN_API_VERSION = (1 << 22) | (2 << 12);  // 1.2.0
+            private static final java.util.Map<String, Integer> CLAIMED_FEATURES = new java.util.LinkedHashMap<>();
+            static {
+                CLAIMED_FEATURES.put("android.hardware.touchscreen", 0);
+                CLAIMED_FEATURES.put("android.hardware.vulkan.version", VULKAN_API_VERSION);
+            }
+        }""")
+        claims = feature_claims_model(self.root / "westlake")
+        self.assertEqual(claims["claimed"], ["android.hardware.touchscreen", "android.hardware.vulkan.version"])
+        self.assertEqual(claims["versions"]["android.hardware.vulkan.version"], 0x402000)
+        self.assertEqual(claims["conditional"], {"android.software.webview": "getSideloadedWebViewPackageInfo() != null"})
+
+    def test_vulkan_feature_must_match_the_runtime_loader(self) -> None:
+        """Godot (duckrun): unclaimed Vulkan sent its Java side to an OpenGL view while its engine,
+        finding the runtime's libvulkan, chose Vulkan and had no window."""
+        site = {"owner": "Lorg/godotengine/godot/Godot;", "method": "meetsVulkanRequirements", "offset": 50}
+        scan = {"inventory": {"feature_queries": [{**site, "feature": "android.hardware.vulkan.version"}]}}
+        unclaimed = {"claimed": ["android.hardware.touchscreen"], "versions": {}, "source": "PM.java:1"}
+        claimed = {"claimed": ["android.hardware.vulkan.version"],
+                   "versions": {"android.hardware.vulkan.version": 0x402000}, "source": "PM.java:1"}
+        row = gapmap.vulkan_feature_rows(scan, unclaimed, ["libvulkan.so"])[0]
+        self.assertEqual((row["id"], row["verdict"]), ("feature:android.hardware.vulkan.version", "contradicted"))
+        row = gapmap.vulkan_feature_rows(scan, claimed, ["libvulkan.so"])[0]
+        self.assertEqual(row["verdict"], "supplied")
+        self.assertIn("Vulkan 1.2.0", row["provider"])
+        self.assertEqual(gapmap.vulkan_feature_rows(scan, claimed, [])[0]["verdict"], "contradicted",
+                         "a claim with no loader sends the app to a Vulkan that is not there")
+        self.assertEqual(gapmap.vulkan_feature_rows(scan, unclaimed, []), [], "absent and unclaimed agree")
+        self.assertEqual(gapmap.vulkan_feature_rows({"inventory": {}}, unclaimed, ["libvulkan.so"]), [])
+
     def test_a_proxy_that_throws_is_strict_not_hollow(self) -> None:
         """Burger King: WebView's policy provider called UserManager.getApplicationRestrictions; the
         runtime-published user proxy threw, Chromium aborted. The static model had read the native

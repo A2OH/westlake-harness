@@ -1281,6 +1281,54 @@ def feature_rows(scan: dict[str, Any], claims: dict[str, Any], aosp: dict[str, A
     return rows
 
 
+def _vulkan_version(encoded: int) -> str:
+    """VK_MAKE_API_VERSION's major.minor.patch, as android.hardware.vulkan.version carries it."""
+    return f"{(encoded >> 22) & 0x7f}.{(encoded >> 12) & 0x3ff}.{encoded & 0xfff}"
+
+
+def vulkan_feature_rows(scan: dict[str, Any], claims: dict[str, Any],
+                        runtime_libraries: list[str] | None) -> list[dict[str, Any]]:
+    """An app that asks for android.hardware.vulkan.version must get the answer its native side
+    finds. Godot checks the feature in Java before it makes a Vulkan view, and its engine probes
+    libvulkan on its own: with the runtime's libvulkan working and the feature unclaimed, the Java
+    side fell back to an OpenGL view that never hands the engine a window, while the engine chose
+    Vulkan, failed on the null window and called its renderer through a null pointer (duckrun,
+    playmaker)."""
+    feature = "android.hardware.vulkan.version"
+    sites = [q for q in scan["inventory"].get("feature_queries") or [] if q.get("feature") == feature]
+    if not sites:
+        return []
+    loader = "libvulkan.so" in (runtime_libraries or [])
+    claimed = feature in claims.get("claimed", [])
+    version = (claims.get("versions") or {}).get(feature)
+    if not claimed and not loader:
+        return []
+    if claimed and loader:
+        verdict, shim_class, effort = "supplied", "C0", "verify"
+        provider = (f"claimed at Vulkan {_vulkan_version(version) if version else '(version unread)'}; the "
+                    "runtime's libvulkan forwards to OH's loader with VK_KHR_android_surface")
+        shim = "none"
+    elif loader:
+        verdict, shim_class, effort = "contradicted", "C1", "XS"
+        provider = ("reported absent while the runtime's libvulkan answers: an engine that checks the feature "
+                    "in Java and probes Vulkan natively takes two paths")
+        shim = "claim android.hardware.vulkan.version at the board's Vulkan API version"
+    else:
+        verdict, shim_class, effort = "contradicted", "C5", "S"
+        provider = "claimed, but the runtime ships no libvulkan"
+        shim = "report android.hardware.vulkan.version absent until a Vulkan loader is staged"
+    return [_row(
+        "package-manager", f"feature:{feature}", "Vulkan feature against the runtime's Vulkan",
+        oh_touchpoint="OH's Vulkan loader (VK_OHOS_surface) and the board's ICD",
+        verdict=verdict, shim_class=shim_class, effort=effort, confidence=STATIC,
+        provider=provider, provider_source=claims.get("source"),
+        app_evidence=f"{len(sites)} call site{'s' if len(sites) != 1 else ''}, e.g. {_site(sites[0])}",
+        call_sites=len(sites),
+        seen_blocking=["duckrun, playmaker (Godot 4.5: OpenGL view, Vulkan engine, null native window)"],
+        shim=shim,
+    )]
+
+
 def symbol_version_rows(oh_missing: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Imports a library defines, but under another symbol version. OH's loader binds a versioned
     import to a versioned library only under the same version name, so the load fails as if the
@@ -2612,6 +2660,7 @@ def build_map(
             + symbol_version_rows(oh_missing)
             + task_root_rows(scan, contracts.activity_client_model(westlake_root))
             + feature_rows(scan, contracts.feature_claims_model(westlake_root), aosp_services, westlake_services)
+            + vulkan_feature_rows(scan, contracts.feature_claims_model(westlake_root), runtime_libraries)
             + window_metrics_rows(scan, contracts.window_metrics_model(westlake_root))
             + native_egl_window_rows(scan, contracts.native_egl_window_model(westlake_root))
             + native_loading_rows(facts, scan, launcher_extraction(manifest_root), board_paths,

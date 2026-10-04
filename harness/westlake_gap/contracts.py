@@ -168,17 +168,22 @@ def pm_adapter_model(westlake_root: Path) -> dict[str, Any]:
 
 
 def feature_claims_model(westlake_root: Path) -> dict[str, Any]:
-    """The features PackageManagerAdapter.hasSystemFeature reports present: each case label that
-    reaches `return true`, and those answered by a condition, with the condition."""
+    """The features PackageManagerAdapter.hasSystemFeature reports present, with their versions
+    where it declares them, and those answered by a condition, with the condition.
+
+    Two forms are read: case labels that reach `return true` (or a condition), and a table of
+    CLAIMED_FEATURES.put("name", version) entries, which also gives each claim's version."""
     path = westlake_root / "framework/package-manager/java/PackageManagerAdapter.java"
     text = path.read_text(errors="replace") if path.exists() else ""
     match = re.search(r"public boolean hasSystemFeature\(String \w+, int \w+\)\s*\{", text)
     if not match:
-        return {"claimed": [], "conditional": {}, "source": None}
+        return {"claimed": [], "conditional": {}, "versions": {}, "source": None}
     claimed: list[str] = []
     conditional: dict[str, str] = {}
+    versions: dict[str, int | None] = {}
     pending: list[str] = []
-    for line in _braced_block(text, match.start()).splitlines():
+    body = _braced_block(text, match.start())
+    for line in body.splitlines():
         stripped = line.strip()
         case = re.match(r'case "([^"]+)":', stripped)
         if case:
@@ -194,9 +199,44 @@ def feature_claims_model(westlake_root: Path) -> dict[str, Any]:
             pending = []
         elif stripped.startswith("default:"):
             pending = []
+    for name, value in re.findall(r'if \("([^"]+)"\.equals\(\w+\)\)\s*\{\s*return\s+([^;]+);', body):
+        if value.strip() == "true":
+            claimed.append(name)
+        elif value.strip() != "false":
+            conditional[name] = value.strip()
+    constants = {name: value for name, value in re.findall(r"static final int (\w+)\s*=\s*([^;]+);", text)}
+    for name, value in re.findall(r'CLAIMED_FEATURES\.put\("([^"]+)",\s*([^)]+)\);', text):
+        claimed.append(name)
+        versions[name] = _int_expression(value, constants)
     line = text.count("\n", 0, match.start()) + 1
-    return {"claimed": sorted(claimed), "conditional": conditional,
+    return {"claimed": sorted(set(claimed)), "conditional": conditional, "versions": versions,
             "source": f"{path.relative_to(westlake_root)}:{line}"}
+
+
+def _int_expression(text: str, constants: dict[str, str], depth: int = 0) -> int | None:
+    """A Java int expression of literals, named int constants, parentheses and + - * << >> | &,
+    or None when it is anything else."""
+    import ast
+    import operator
+    ops = {ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul, ast.LShift: operator.lshift,
+           ast.RShift: operator.rshift, ast.BitOr: operator.or_, ast.BitAnd: operator.and_}
+
+    def value(node: ast.AST) -> int | None:
+        if isinstance(node, ast.Constant) and isinstance(node.value, int):
+            return node.value
+        if isinstance(node, ast.Name) and node.id in constants and depth < 4:
+            return _int_expression(constants[node.id], constants, depth + 1)
+        if isinstance(node, ast.BinOp) and type(node.op) in ops:
+            left, right = value(node.left), value(node.right)
+            return None if left is None or right is None else ops[type(node.op)](left, right)
+        return None
+
+    source = re.sub(r"//.*", "", text).strip()
+    source = re.sub(r"\b(0[xX][0-9a-fA-F]+|\d+)[lL]\b", r"\1", source)
+    try:
+        return value(ast.parse(source, mode="eval").body)
+    except SyntaxError:
+        return None
 
 
 def _braced_block(text: str, start: int) -> str:
