@@ -417,6 +417,32 @@ def null_array_entries(raw: bytes) -> dict[str, int] | None:
     return out
 
 
+def packed_init_entries(raw: bytes) -> dict[str, int]:
+    """Init array entries of a library whose relocations come only in Android's packed format
+    (DT_ANDROID_REL or DT_ANDROID_RELA, no RELR): every slot such a table fills reads as zero in the
+    file. The runtime's init array sanitizer, which drops null entries before ART opens a library,
+    read all of libwaze.so's 2189 that way and dropped them. Empty when the library has none."""
+    if raw[:4] != b"\x7fELF" or raw[4] != 2 or raw[5] != 1:
+        return {}
+    u64 = lambda at: int.from_bytes(raw[at:at + 8], "little")
+    phoff, count = u64(0x20), int.from_bytes(raw[0x38:0x3A], "little")
+    tags: dict[int, int] = {}
+    for index in range(count):
+        header = phoff + index * 56
+        if int.from_bytes(raw[header:header + 4], "little") != 2:
+            continue
+        start, size = u64(header + 8), u64(header + 32)
+        for position in range(start, min(start + size, len(raw) - 15), 16):
+            tag = u64(position)
+            if tag == 0:
+                break
+            tags.setdefault(tag, u64(position + 8))
+    relr = {35, 36, 0x6FFFE000, 0x6FFFE001}
+    if not _PACKED_RELOCATION_TAGS & set(tags) or relr & set(tags) or tags.get(27, 0) < 8:
+        return {}
+    return {"packed_init_entries": tags[27] // 8}
+
+
 #: Bionic's PTHREAD_RECURSIVE_MUTEX_INITIALIZER and PTHREAD_ERRORCHECK_MUTEX_INITIALIZER: the type in
 #: bits 14-15 of the first of the mutex's ten words. musl keeps its type in the low bits and reads
 #: both as a normal mutex, so a recursive lock deadlocks on its own thread.
@@ -580,6 +606,7 @@ def read_elf(
             "needed": needed,
             "android_relocation_tags": _android_relocation_tags(text),
             "null_array_entries": null_array_entries(raw),
+            **packed_init_entries(raw),
             **art_internal_names(raw),
             **signal_lookups(raw, set(undefined) | set(undefined_weak)),
             **bionic_static_mutexes(raw),

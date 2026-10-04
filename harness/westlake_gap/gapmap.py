@@ -1805,7 +1805,10 @@ def bionic_loader_model(westlake_root: Path | None, manifest_root: Path | None =
             "apk_member_redirect": find("framework/webview-shim/webview_bionic_shim.c", 'strstr(filename, ".apk!/lib/")'),
             "open_by_name": find("framework/webview-shim/webview_bionic_shim.c", "westlake_open_lib_by_name("),
             "written_shares_packaged": find("framework/webview-shim/webview_bionic_shim.c",
-                                            "westlake_shared_with_default(")}
+                                            "westlake_shared_with_default("),
+            # art-build sits beside the westlake checkout; the runtime's init array sanitizer.
+            "sanitizer_knows_packed_rela": find("stubs/link_stubs_arm64.cc", "case 0x60000011:",
+                                                westlake_root.parent / "art-build")}
 
 
 def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_extracts: dict[str, Any],
@@ -1971,6 +1974,29 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
             app_evidence=f"{len(dependents)} libraries loaded through System.loadLibrary name packaged siblings in DT_NEEDED",
             seen_blocking=["econverter (Chaquopy: two copies of libpython3.11.so; a call through a null slot)"],
             shim="open app libraries by name where the name finds the same file, so a later DT_NEEDED matches them",
+        ))
+    # A Java-loaded library relocated only by Android's packed format, with constructors. The slots
+    # the packed table fills read as zero in the file; a sanitizer that does not recognize the format
+    # drops them all as null (libwaze.so: 2189, libsignal_jni.so: 2).
+    packed = sorted({(elf.get("soname") or Path(elf["name"]).name, elf["packed_init_entries"]) for elf in packaged
+                     if elf.get("packed_init_entries")
+                     and (elf.get("soname") or Path(elf["name"]).name) in java_loaded})
+    if packed:
+        known = loader.get("sanitizer_knows_packed_rela")
+        rows.append(_row(
+            "native-loading", "load:packed-init-array",
+            "Java-loaded libraries whose constructors packed relocations fill ("
+            + ", ".join(f"{name}: {count}" for name, count in packed[:4]) + (" ..." if len(packed) > 4 else "") + ")",
+            oh_touchpoint="none: the runtime's own init array sanitizer, before ART opens the library",
+            verdict="supplied" if known else "missing", shim_class="C3", effort="verify" if known else "XS",
+            confidence=STATIC,
+            provider=("the sanitizer leaves a library with DT_ANDROID_REL or DT_ANDROID_RELA as it is" if known else
+                      "the sanitizer does not recognize DT_ANDROID_RELA: it reads the slots as null and drops every "
+                      "constructor"),
+            provider_source=known,
+            app_evidence=f"{len(packed)} libraries System.loadLibrary names",
+            seen_blocking=["waze (all 2189 of libwaze.so's constructors dropped; an abort in its own code)"],
+            shim="leave libraries in Android's packed relocation format to the loader, which applies the table",
         ))
     # A library the app writes at run time that needs one it packages. The shim loads written
     # libraries in a namespace of its own; with no Android namespace ART's loader put the packaged

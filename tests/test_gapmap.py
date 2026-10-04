@@ -622,6 +622,41 @@ class AppStorageExec(unittest.TestCase):
         self.assertNotIn("load:needed-sibling", {r["id"] for r in gapmap.native_loading_rows(
             {"extract_native_libs": True}, scan, {"present": True}, [])})
 
+    def test_packed_relocation_constructors_need_a_sanitizer_that_knows_the_format(self) -> None:
+        """Waze: libwaze.so's packed relocations fill its 2189 init array slots; the runtime's sanitizer
+        did not recognize DT_ANDROID_RELA and dropped them all."""
+        import struct
+        from westlake_gap import scanner
+
+        def elf(tags: dict[int, int]) -> bytes:
+            dynamic = b"".join(struct.pack("<QQ", t, v) for t, v in tags.items()) + struct.pack("<QQ", 0, 0)
+            header = bytearray(64)
+            header[:6] = b"\x7fELF\x02\x01"
+            struct.pack_into("<Q", header, 0x20, 64)       # e_phoff
+            struct.pack_into("<H", header, 0x38, 1)        # e_phnum
+            phdr = struct.pack("<IIQQQQQQ", 2, 6, 120, 0, 0, len(dynamic), len(dynamic), 8)
+            return bytes(header) + phdr + dynamic
+
+        self.assertEqual(scanner.packed_init_entries(elf({0x60000011: 0x1000, 0x60000012: 64, 25: 0x2000, 27: 2189 * 8})),
+                         {"packed_init_entries": 2189})
+        self.assertEqual(scanner.packed_init_entries(elf({0x60000011: 0x1000, 35: 0x3000, 25: 0x2000, 27: 16})), {},
+                         "a library with RELR as well is left alone by the sanitizer")
+        self.assertEqual(scanner.packed_init_entries(elf({7: 0x1000, 25: 0x2000, 27: 16})), {})
+        base = {"abi": "arm64-v8a", "abi_matches_machine": True}
+        scan = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {
+            "elfs": [{**base, "name": "lib/arm64-v8a/libwaze.so", "soname": "libwaze.so", "packed_init_entries": 2189},
+                     {**base, "name": "lib/arm64-v8a/libdep.so", "soname": "libdep.so", "packed_init_entries": 3}],
+            "load_library_calls": [{"api": "loadLibrary", "owner": "Lcom/waze/NativeManager;", "value": "waze"}]}}
+        rows = {r["id"]: r for r in gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True}, [])}
+        row = rows["load:packed-init-array"]
+        self.assertEqual((row["verdict"], row["item"]),
+                         ("missing", "Java-loaded libraries whose constructors packed relocations fill (libwaze.so: 2189)"),
+                         "a dependency the loader brings in never passes through the sanitizer")
+        rows = {r["id"]: r for r in gapmap.native_loading_rows(
+            {"extract_native_libs": True}, scan, {"present": True}, [],
+            loader={"sanitizer_knows_packed_rela": "stubs/link_stubs_arm64.cc:1"})}
+        self.assertEqual(rows["load:packed-init-array"]["verdict"], "supplied")
+
     def test_written_libraries_that_need_packaged_ones(self) -> None:
         """econverter: Chaquopy's extension modules, written at run time, need libpython3.11.so; the
         written-library namespace loaded a second copy instead of the one ART had loaded."""
