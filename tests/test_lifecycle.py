@@ -91,6 +91,18 @@ class Evidence(unittest.TestCase):
         self.assertEqual((s.blocker_category, s.blocker),
                          ("stall", "main thread waiting on a monitor at com.example.Init.await(Init.java:3)"))
 
+    def test_the_main_thread_is_the_one_running_activity_thread_main(self) -> None:
+        """cclauncher: tid 1 was a WorkManager pool thread parked in its queue; the main looper ran as
+        "Thread-2" (appspawn-x starts the VM on a worker pthread) and was idle."""
+        from westlake_gap import evidence
+        dump = ('DALVIK THREADS (2):\n"Thread-2" prio=5 tid=9 Native\n  | state=S schedstat=( 1 2 3 )\n'
+                "  at android.os.MessageQueue.nativePollOnce(Native method)\n  at android.os.Looper.loop(Looper.java:1)\n"
+                "  at android.app.ActivityThread.main(ActivityThread.java:1)\n"
+                '"WM.task-1" prio=5 tid=1 Waiting\n  | state=S\n  at jdk.internal.misc.Unsafe.park(Native method)\n'
+                "  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:1)\n")
+        thread = evidence.main_thread(dump)
+        self.assertEqual((thread["name"], thread["waiting"]), ("Thread-2", "idle in its message loop"))
+
     DUMP = ("Build info:OpenHarmony 6.1.0.31\nPid:6719\nReason:Signal:SIGSEGV(SEGV_MAPERR)@000000000000000000 \n"
             "Fault thread info:\nTid:6808, Name:acceleratePlayH\n#00 pc 0000000000000000 Not mapped\n"
             "#01 pc 00000000000802e8 /system/lib/ld-musl-aarch64.so.1(do_init_fini+444)(a9d018197b852b7e)\n"

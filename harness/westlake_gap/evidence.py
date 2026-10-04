@@ -76,27 +76,34 @@ _WAITS = (
 
 
 def main_thread(stderr: str) -> dict | None:
-    """The Java main thread (tid=1) in the last ART thread dump of the log: its state, what it is
-    waiting in, and its top frames."""
+    """The app's main thread in the last ART thread dump of the log: its state, what it is waiting
+    in, and its top frames.
+
+    That is the thread running ActivityThread.main, not necessarily tid=1: appspawn-x starts the VM
+    on a worker pthread, and ART hands tid 1 on to a later thread once the first one detaches
+    (cclauncher: tid 1 was a WorkManager pool thread parked in its queue, while the main looper
+    ran as "Thread-2" and sat idle). Then a thread named "main", then tid 1."""
     dumps = list(_DUMP.finditer(stderr))
     if not dumps:
         return None
     body = stderr[dumps[-1].end():]
     heads = list(_THREAD_HEAD.finditer(body))
-    for i, head in enumerate(heads):
-        if head[2] != "1":
-            continue
-        end = heads[i + 1].start() if i + 1 < len(heads) else min(len(body), head.end() + 20000)
-        block = body[head.start():end]
-        state = _STATE.search(block)
-        frames = [f.strip() for f in _FRAME.findall(block)][:8]
-        top = "\n".join(frames[:4])
-        waiting = next((label for pattern, label in _WAITS if pattern.search(top)), "running")
-        app_frame = next((f for f in frames if not f.startswith(("java.", "android.", "dalvik.", "sun.", "jdk.",
-                                                                   "libcore.", "com.android."))), None)
-        return {"name": head[1], "java_state": head[3], "state": state[1] if state else None,
-                "waiting": waiting, "frames": frames, "first_app_frame": app_frame}
-    return None
+    blocks = [(head, body[head.start():heads[i + 1].start() if i + 1 < len(heads)
+                              else min(len(body), head.end() + 20000)]) for i, head in enumerate(heads)]
+    chosen = (next((hb for hb in blocks if "android.app.ActivityThread.main(" in hb[1]), None)
+              or next((hb for hb in blocks if hb[0][1] == "main"), None)
+              or next((hb for hb in blocks if hb[0][2] == "1"), None))
+    if chosen is None:
+        return None
+    head, block = chosen
+    state = _STATE.search(block)
+    frames = [f.strip() for f in _FRAME.findall(block)][:8]
+    top = "\n".join(frames[:4])
+    waiting = next((label for pattern, label in _WAITS if pattern.search(top)), "running")
+    app_frame = next((f for f in frames if not f.startswith(("java.", "android.", "dalvik.", "sun.", "jdk.",
+                                                               "libcore.", "com.android."))), None)
+    return {"name": head[1], "java_state": head[3], "state": state[1] if state else None,
+            "waiting": waiting, "frames": frames, "first_app_frame": app_frame}
 
 
 _CPP_REASON = re.compile(r"^Reason:Signal:(\w+)\((\w+)\)@(?:0x)?([0-9a-fA-F]+)", re.M)
