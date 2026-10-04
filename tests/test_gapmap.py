@@ -644,7 +644,8 @@ class AppStorageExec(unittest.TestCase):
         self.assertEqual(scanner.packed_init_entries(elf({7: 0x1000, 25: 0x2000, 27: 16})), {})
         base = {"abi": "arm64-v8a", "abi_matches_machine": True}
         scan = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {
-            "elfs": [{**base, "name": "lib/arm64-v8a/libwaze.so", "soname": "libwaze.so", "packed_init_entries": 2189},
+            "elfs": [{**base, "name": "lib/arm64-v8a/libwaze.so", "soname": "libwaze.so", "packed_init_entries": 2189,
+                      "needed": ["libdep.so"]},
                      {**base, "name": "lib/arm64-v8a/libdep.so", "soname": "libdep.so", "packed_init_entries": 3}],
             "load_library_calls": [{"api": "loadLibrary", "owner": "Lcom/waze/NativeManager;", "value": "waze"}]}}
         rows = {r["id"]: r for r in gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True}, [])}
@@ -656,13 +657,17 @@ class AppStorageExec(unittest.TestCase):
             {"extract_native_libs": True}, scan, {"present": True}, [],
             loader={"sanitizer_knows_packed_rela": "stubs/link_stubs_arm64.cc:1"})}
         self.assertEqual(rows["load:packed-init-array"]["verdict"], "supplied")
+        scan["inventory"]["load_library_calls"] = []
+        rows = {r["id"]: r for r in gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True}, [])}
+        self.assertIn("libwaze.so: 2189", rows["load:packed-init-array"]["item"],
+                      "a library nothing else needs is loaded from Java, by a name the scan may not see")
 
     def test_written_libraries_that_need_packaged_ones(self) -> None:
         """econverter: Chaquopy's extension modules, written at run time, need libpython3.11.so; the
         written-library namespace loaded a second copy instead of the one ART had loaded."""
         elf = {"abi": "arm64-v8a", "abi_matches_machine": True}
-        packaged = [{**elf, "name": "lib/arm64-v8a/libpython3.11.so", "soname": "libpython3.11.so"},
-                    {**elf, "name": "lib/arm64-v8a/libchaquopy_java.so", "soname": "libchaquopy_java.so",
+        packaged = [{**elf, "name": "lib/arm64-v8a/libpython3.11.so"},
+                    {**elf, "name": "lib/arm64-v8a/libchaquopy_java.so", "soname": "libchaquopy_java-3.11.so",
                      "needed": ["libpython3.11.so"]}]
         scan = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {"elfs": packaged}}
         rows = {r["id"]: r for r in gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True}, [])}

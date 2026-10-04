@@ -1978,9 +1978,13 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
     # A Java-loaded library relocated only by Android's packed format, with constructors. The slots
     # the packed table fills read as zero in the file; a sanitizer that does not recognize the format
     # drops them all as null (libwaze.so: 2189, libsignal_jni.so: 2).
+    # Java loads a library by a name the scan may not see (libsignal's loader computes it); a packaged
+    # library no other packaged library needs is loaded from Java too, since nothing else pulls it in.
+    needed_by_siblings = {name for elf in packaged for name in elf.get("needed") or []}
     packed = sorted({(elf.get("soname") or Path(elf["name"]).name, elf["packed_init_entries"]) for elf in packaged
                      if elf.get("packed_init_entries")
-                     and (elf.get("soname") or Path(elf["name"]).name) in java_loaded})
+                     and ((elf.get("soname") or Path(elf["name"]).name) in java_loaded
+                          or (elf.get("soname") or Path(elf["name"]).name) not in needed_by_siblings)})
     if packed:
         known = loader.get("sanitizer_knows_packed_rela")
         rows.append(_row(
@@ -2005,10 +2009,12 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
     # (econverter, werewolvesgame). Chaquopy is recognized by its packaged libraries even when no
     # run has harvested the modules it writes.
     written_needs = sorted({name for elf in unpacked for name in elf.get("needed") or [] if name in packaged_names})
-    chaquopy = "libchaquopy_java.so" in packaged_names and any(n.startswith("libpython") for n in packaged_names)
+    # By file name: libchaquopy_java.so's SONAME carries the Python version (libchaquopy_java-3.11.so).
+    files = {Path(elf["name"]).name for elf in packaged}
+    chaquopy = "libchaquopy_java.so" in files and any(n.startswith("libpython") for n in files)
     if written_needs or chaquopy:
         shared = loader.get("written_shares_packaged")
-        needs = written_needs or sorted(n for n in packaged_names if n.startswith("libpython"))
+        needs = written_needs or sorted(n for n in files if n.startswith("libpython"))
         rows.append(_row(
             "native-loading", "load:written-needs-packaged",
             f"Libraries written at run time that need packaged ones ({', '.join(needs[:4])}"
