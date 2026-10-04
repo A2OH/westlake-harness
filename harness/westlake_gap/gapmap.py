@@ -988,6 +988,30 @@ def window_metrics_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dic
     )]
 
 
+def native_egl_window_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """App code that creates its own EGL window surface. ANativeWindow_fromSurface gives it the
+    adapter's AOSP-shaped window, which OH's EGL rejects: Flutter's Skia renderer (apps that opt out
+    of Impeller) got no surface for its SurfaceView and never drew."""
+    libraries = sorted({elf.get("soname") or elf.get("name") for elf in scan["inventory"].get("elfs") or []
+                        if elf.get("abi_matches_machine", True)
+                        and "eglCreateWindowSurface" in (elf.get("undefined_symbols") or [])})
+    if not libraries:
+        return []
+    supplied = bool(model.get("unwraps"))
+    return [_row(
+        "window", "egl:native-window", "EGL window surfaces created from native code",
+        oh_touchpoint="graphic_2d (OHNativeWindow under OH's EGL)",
+        verdict="supplied" if supplied else "missing", shim_class="C0" if supplied else "C6",
+        effort="verify" if supplied else "S", confidence=STATIC,
+        provider=("the preloaded shim's eglCreateWindowSurface unwraps the adapter's window to its OHNativeWindow"
+                  if supplied else "the adapter's AOSP-shaped window reaches OH's EGL, which takes only an OHNativeWindow"),
+        provider_source=model.get("source"),
+        app_evidence=f"{', '.join(libraries[:4])} import{'s' if len(libraries) == 1 else ''} eglCreateWindowSurface",
+        seen_blocking=["cardswithcats, mousepounce, mobilev2 (Flutter, Skia: no surface for the SurfaceView)"],
+        shim="unwrap the adapter's window with oh_anw_get_oh before calling OH's eglCreateWindowSurface",
+    )]
+
+
 # Feature name prefix → the getSystemService name of the service that reaches the hardware.
 # Form factors (touchscreen, screen.*) and features no service backs are not listed.
 _FEATURE_SERVICES = (
@@ -1738,16 +1762,31 @@ def external_rows(facts: dict[str, Any], scan: dict[str, Any], refused: dict[str
 # Assembly, backtest, rendering
 # --------------------------------------------------------------------------------------------
 
+def bionic_shim_sources(westlake_root: Path) -> list[Path]:
+    """The C sources the shim's build compiles (tools/build_bionic_shim.sh), the main one first."""
+    directory = westlake_root / "framework/webview-shim"
+    build = westlake_root / "tools/build_bionic_shim.sh"
+    names = re.findall(r"\$W/(\w+\.c)\b", build.read_text(errors="replace")) if build.exists() else []
+    sources = [directory / "webview_bionic_shim.c"] + [directory / n for n in names if n != "webview_bionic_shim.c"]
+    return [path for path in sources if path.exists()]
+
+
 def bionic_shim_exports(westlake_root: Path) -> set[str]:
-    shim = westlake_root / "framework/webview-shim/webview_bionic_shim.c"
-    if not shim.exists():
-        return set()
-    text = shim.read_text(errors="replace")
-    names = set(re.findall(r"^(?:[A-Za-z_][\w \*]*?[\s\*])?([A-Za-z_]\w*)\s*\([^;]*\)\s*\{", text, re.M))
-    names |= set(re.findall(r"^[A-Za-z_][\w \*]*?\s\**(__sF|_ctype_)\b", text, re.M))
-    # Forwarders a macro defines: WESTLAKE_ALOOPER_FORWARD(ret, name, params, args).
-    names |= set(re.findall(r"^WESTLAKE_\w+_FORWARD\([^,]+,\s*(\w+)\s*,", text, re.M))
-    return {n for n in names if not n.startswith("westlake_") and n not in {"if", "for", "while", "switch", "return"}}
+    names: set[str] = set()
+    for source in bionic_shim_sources(westlake_root):
+        text = source.read_text(errors="replace")
+        # A definition's parameters hold at most one level of parentheses (a function pointer); an
+        # unbounded match ran from a macro call on one line into the next definition and took it.
+        names |= set(re.findall(r"^(?:[A-Za-z_][\w \*]*?[\s\*])?([A-Za-z_]\w*)\s*\((?:[^;(){}]|\([^;(){}]*\))*\)\s*\{",
+                                text, re.M))
+        names |= set(re.findall(r"^[A-Za-z_][\w \*]*?\s\**(__sF|_ctype_)\b", text, re.M))
+        # Forwarders a macro defines: WESTLAKE_ALOOPER_FORWARD(ret, name, params, args).
+        names |= set(re.findall(r"^WESTLAKE_\w+_FORWARD\([^,]+,\s*(\w+)\s*,", text, re.M))
+        # AConfiguration's getter/setter pairs: WL_CONFIG_FIELD(Name, field).
+        for field in re.findall(r"^WL_CONFIG_FIELD\((\w+)\s*,", text, re.M):
+            names |= {"AConfiguration_get" + field, "AConfiguration_set" + field}
+    return {n for n in names if not n.startswith(("westlake_", "wl_")) and not n.isupper()
+            and n not in {"if", "for", "while", "switch", "return", "__attribute__"}}
 
 
 def launcher_extraction(manifest_root: Path | None) -> dict[str, Any]:
@@ -2305,6 +2344,7 @@ def build_map(
             + task_root_rows(scan, contracts.activity_client_model(westlake_root))
             + feature_rows(scan, contracts.feature_claims_model(westlake_root), aosp_services, westlake_services)
             + window_metrics_rows(scan, contracts.window_metrics_model(westlake_root))
+            + native_egl_window_rows(scan, contracts.native_egl_window_model(westlake_root))
             + native_loading_rows(facts, scan, launcher_extraction(manifest_root), board_paths,
                                   launcher_namespace_option(manifest_root), runtime_libraries,
                                   bionic_loader_model(westlake_root, manifest_root))

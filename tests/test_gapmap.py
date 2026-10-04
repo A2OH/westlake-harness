@@ -1402,6 +1402,29 @@ class WindowMetrics(unittest.TestCase):
             self.assertEqual(gapmap.window_metrics_rows(scan, window_metrics_model(root))[0]["verdict"], "supplied")
         self.assertEqual(gapmap.window_metrics_rows({"inventory": {"platform_method_names": {}}}, {}), [])
 
+
+class NativeEglWindow(unittest.TestCase):
+    def test_a_native_window_surface_needs_the_oh_window(self) -> None:
+        """Cards with Cats: Flutter's Skia renderer passed ANativeWindow_fromSurface's wrapper to OH's EGL."""
+        from westlake_gap.contracts import native_egl_window_model
+        scan = {"inventory": {"elfs": [
+            {"name": "lib/arm64-v8a/libflutter.so", "soname": "libflutter.so", "abi_matches_machine": True,
+             "undefined_symbols": ["eglCreateWindowSurface", "eglQuerySurface"]},
+            {"name": "lib/x86_64/libflutter.so", "soname": "libflutter.so", "abi_matches_machine": False,
+             "undefined_symbols": ["eglCreateWindowSurface"]}]}}
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "framework/webview-shim/webview_bionic_shim.c"
+            _write(source, "unsigned eglTerminate(void *display)\n{\n    return 1;\n}\n")
+            model = native_egl_window_model(root)
+            self.assertEqual(gapmap.native_egl_window_rows(scan, model)[0]["verdict"], "missing")
+            _write(source, "void *eglCreateWindowSurface(void *display, void *config, void *window, const int *attribs)\n{\n"
+                           "    void *oh = wl_anw_get_oh != NULL ? wl_anw_get_oh(window) : NULL;\n    return oh;\n}\n")
+            row = gapmap.native_egl_window_rows(scan, native_egl_window_model(root))[0]
+            self.assertEqual(row["verdict"], "supplied")
+            self.assertEqual(row["app_evidence"], "libflutter.so imports eglCreateWindowSurface")
+        self.assertEqual(gapmap.native_egl_window_rows({"inventory": {"elfs": []}}, {"unwraps": True}), [])
+
 class SandboxAndBacktest(unittest.TestCase):
     def test_realm_fifo_is_predicted(self) -> None:
         policy = {"oh": {"domain": "u:r:normal_hap:s0", "app_data_type": "u:object_r:appdat:s0",
@@ -1507,3 +1530,22 @@ class AndroidNamespaceNdk(unittest.TestCase):
             shim.parent.mkdir(parents=True)
             shim.write_text("WESTLAKE_ALOOPER_FORWARD(int, AHardwareBuffer_unlock, (void *b, int *f), (b, f))\n")
             self.assertIn("AHardwareBuffer_unlock", gapmap.bionic_shim_exports(Path(tmp)))
+
+    def test_every_compiled_shim_source_counts(self) -> None:
+        """SDL2's AConfiguration and sensor imports are defined in a second shim source."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shim = root / "framework/webview-shim"
+            shim.mkdir(parents=True)
+            (shim / "webview_bionic_shim.c").write_text("int sigaction64(int s, const void *a, void *o) {\n    return 0;\n}\n")
+            (shim / "android_ndk_config.c").write_text(
+                "WL_CONFIG_FIELD(Density, density)\nint ASensorManager_getSensorList(void *m, void *l)\n{\n    return 0;\n}\n"
+                "static int wl_helper(void) { return 0; }\n")
+            (shim / "unbuilt.c").write_text("int ASensor_getType(void *s) {\n    return -1;\n}\n")
+            (root / "tools").mkdir()
+            (root / "tools/build_bionic_shim.sh").write_text("$CC -c $W/webview_bionic_shim.c -o s.o\n$CC -c $W/android_ndk_config.c -o nc.o\n")
+            exports = gapmap.bionic_shim_exports(root)
+            self.assertTrue({"sigaction64", "AConfiguration_getDensity", "AConfiguration_setDensity",
+                             "ASensorManager_getSensorList"} <= exports)
+            self.assertNotIn("ASensor_getType", exports, "a source the build does not compile defines nothing")
+            self.assertNotIn("wl_helper", exports)

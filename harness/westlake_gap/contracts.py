@@ -246,6 +246,22 @@ def window_metrics_model(westlake_root: Path) -> dict[str, Any]:
             "source": f"{path.relative_to(westlake_root)}:{line}" if match else None}
 
 
+def native_egl_window_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether an eglCreateWindowSurface from native code reaches OH's EGL with an OH window.
+
+    ANativeWindow_fromSurface hands an app the adapter's AOSP-shaped window (magic ANW1) around an
+    OHNativeWindow, and OH's EGL takes only the OHNativeWindow. The preloaded bionic shim answers the
+    call for app code; it must unwrap the window (oh_anw_get_oh) before passing it on.
+    """
+    path = westlake_root / "framework/webview-shim/webview_bionic_shim.c"
+    text = path.read_text(errors="replace") if path.exists() else ""
+    match = re.search(r"^\S[^\n;]*\beglCreateWindowSurface\([^;{]*\)\s*\{", text, re.M)
+    body = _braced_block(text, match.start()) if match else ""
+    line = text.count("\n", 0, match.start()) + 1 if match else None
+    return {"unwraps": "anw_get_oh" in body,
+            "source": f"{path.relative_to(westlake_root)}:{line}" if match else None}
+
+
 def activity_client_model(westlake_root: Path) -> dict[str, Any]:
     """Whether the in-process IActivityClientController answers the task queries, or returns a
     constant: getTaskForActivity backs Activity.isTaskRoot() and getTaskId()."""
