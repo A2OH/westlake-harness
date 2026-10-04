@@ -921,6 +921,25 @@ class AppFrameworkContracts(unittest.TestCase):
         rows = {r["id"]: r for r in gapmap.app_framework_rows(scan, answered, None, tasks)}
         self.assertEqual(rows["am:memory-info"]["verdict"], "supplied")
 
+    def test_launch_extras_and_thread_priority(self) -> None:
+        scan = {"inventory": {"platform_method_names": {
+            "Landroid/content/Intent;": ["getStringExtra", "getParcelableExtra"],
+            "Ljava/lang/Thread;": ["setPriority"]}}}
+        bare = self._model("")
+        rows = {r["id"]: r for r in gapmap.app_framework_rows(
+            scan, bare, None, None, {"original_intent": False, "source": None}, {"answer": 0, "source": "s.cc:1"})}
+        self.assertEqual((rows["am:launch-extras"]["verdict"], rows["am:launch-extras"]["open_symbols"]),
+                         ("missing", ["getParcelableExtra"]))
+        self.assertEqual(rows["rt:thread-priority"]["verdict"], "missing")
+        rows = {r["id"]: r for r in gapmap.app_framework_rows(
+            scan, bare, None, None, {"original_intent": True, "source": "a.java:1"}, {"answer": 5, "source": "s.cc:1"})}
+        self.assertEqual((rows["am:launch-extras"]["verdict"], rows["rt:thread-priority"]["verdict"]),
+                         ("supplied", "supplied"))
+        with tempfile.TemporaryDirectory(prefix="westlake-art-") as temp:
+            stub = Path(temp) / "stubs/link_stubs_arm64.cc"
+            _write(stub, "int PaletteSchedGetPriority(int, int* p) { if (p) *p = 0; return 0; }\n")
+            self.assertEqual(contracts.thread_priority_model(Path(temp))["answer"], 0)
+
     def test_window_semantics_from_source(self) -> None:
         with tempfile.TemporaryDirectory(prefix="westlake-wm-") as temp:
             root = Path(temp)

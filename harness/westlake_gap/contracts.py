@@ -258,6 +258,30 @@ def task_queries_model(westlake_root: Path) -> dict[str, Any]:
             "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, first.start()) + 1}" if first else None}
 
 
+def launch_intent_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether the app's own activities are launched with the Intent the app passed. The in-process
+    launch goes out through OH's Want and is rebuilt from its JSON, which keeps strings and numbers
+    but not Parcelable extras; the provider can hand the launch the caller's Intent instead."""
+    path = westlake_root / "framework/activity/java/AppSchedulerBridge.java"
+    text = _strip_java_comments(path.read_text(errors="replace")) if path.exists() else ""
+    match = re.search(r"PendingLaunchIntents\.take\(", text)
+    return {"original_intent": match is not None,
+            "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, match.start()) + 1}" if match else None}
+
+
+def thread_priority_model(art_build_root: Path | None) -> dict[str, Any]:
+    """The Java priority ART gives a thread it attaches: its palette's PaletteSchedGetPriority answer.
+    A constant 0 is outside Java's 1-10, and setPriority with a saved 0 throws."""
+    path = art_build_root / "stubs/link_stubs_arm64.cc" if art_build_root else None
+    if path is None or not path.exists():
+        return {"answer": None, "source": None}
+    text = path.read_text(errors="replace")
+    match = re.search(r"int\s+PaletteSchedGetPriority\s*\([^)]*\)\s*\{[^}]*\*p\s*=\s*(\d+)", text)
+    if not match:
+        return {"answer": None, "source": None}
+    return {"answer": int(match[1]), "source": f"art-build/stubs/link_stubs_arm64.cc:{text.count(chr(10), 0, match.start()) + 1}"}
+
+
 def window_metrics_model(westlake_root: Path) -> dict[str, Any]:
     """Whether activities are launched with their window's bounds in the configuration.
 

@@ -480,9 +480,43 @@ AM_PROCESS_TABLE = {"getRunningAppProcesses": "getRunningAppProcesses", "getRunn
 
 
 def app_framework_rows(scan: dict[str, Any], am: dict[str, Any], wm: dict[str, Any] | None = None,
-                       tasks: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+                       tasks: dict[str, Any] | None = None, launch: dict[str, Any] | None = None,
+                       priority: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     rows = []
     names = scan["inventory"].get("platform_method_names", {})
+    # Extras only an Intent object carries: a launch rebuilt from the Want's JSON drops them.
+    readers = sorted(set(names.get("Landroid/content/Intent;", [])) & {
+        "getParcelableExtra", "getParcelableArrayExtra", "getParcelableArrayListExtra",
+        "getSerializableExtra", "getBundleExtra"})
+    if readers and launch is not None:
+        kept = bool(launch.get("original_intent"))
+        rows.append(_row(
+            "app-framework", "am:launch-extras", "Parcelable, Serializable and Bundle extras of the app's own activity launches",
+            oh_touchpoint="none: the app's activities launch in its own process",
+            verdict="supplied" if kept else "missing", shim_class="C0" if kept else "C9",
+            effort="verify" if kept else "S", confidence=STATIC,
+            provider=("the launch takes the Intent the app passed to startActivity" if kept else
+                      "the launch Intent is rebuilt from OH's Want JSON: Parcelable extras are lost, an undotted "
+                      "action comes back under OH's prefix"),
+            provider_source=launch.get("source"), open_symbols=[] if kept else readers,
+            app_evidence="app calls Intent." + ", Intent.".join(readers),
+            seen_blocking=["k9 (its UpgradeDatabaseActivity lost the start intent it is handed and started null once its "
+                           "database service finished)"],
+            shim="hand an in-process launch the caller's Intent, copied when startActivity is called"))
+    if "setPriority" in names.get("Ljava/lang/Thread;", []) and priority is not None and priority.get("answer") is not None:
+        valid = 1 <= priority["answer"] <= 10
+        rows.append(_row(
+            "runtime", "rt:thread-priority", "Java priority of threads the runtime attaches",
+            oh_touchpoint="none (the thread's nice value)",
+            verdict="supplied" if valid else "missing", shim_class="C0" if valid else "C9",
+            effort="verify" if valid else "XS", confidence=STATIC,
+            provider=(f"the palette answers {priority['answer']}" if valid else
+                      f"the palette answers {priority['answer']}, outside Java's 1-10: a saved priority restored with "
+                      "Thread.setPriority throws \"Priority out of range\""),
+            provider_source=priority.get("source"),
+            app_evidence="app calls Thread.setPriority",
+            seen_blocking=["capcut (a thread pool restored priority 0: \"Priority out of range: 0\")"],
+            shim="map the thread's nice value as Android's palette does, or answer NORM_PRIORITY"))
     am_calls = set(names.get("Landroid/app/ActivityManager;", []))
     if "getMemoryInfo" in am_calls and am["proxy_stub"]:
         answered = "getMemoryInfo" in am["answered"]
@@ -2561,7 +2595,9 @@ def build_map(
     rows = (java + svc + package_manager_rows(scan, facts, pm, pm_null_consequences(aosp_root))
             + app_framework_rows(scan, contracts.direct_launch_am_model(westlake_root),
                                  contracts.window_adapter_model(westlake_root),
-                                 contracts.task_queries_model(westlake_root))
+                                 contracts.task_queries_model(westlake_root),
+                                 contracts.launch_intent_model(westlake_root),
+                                 contracts.thread_priority_model(westlake_root.parent / "art-build"))
             + engine_surface_rows(scan, surfaceview_model(westlake_root, manifest_root, runtime_libraries))
             + runtime_data_rows(scan)
             + android_path_rows(apk_path, scan, runtime_data, westlake_root)
