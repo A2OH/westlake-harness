@@ -232,6 +232,32 @@ def direct_launch_am_model(westlake_root: Path) -> dict[str, Any]:
             "source": f"{path.relative_to(westlake_root)}:{line}" if stub else None}
 
 
+#: ActivityManager's task queries -> the IActivityTaskManager method behind each.
+TASK_QUERIES = {"getRunningTasks": "getTasks", "getAppTasks": "getAppTasks", "getRecentTasks": "getRecentTasks"}
+
+
+def task_queries_model(westlake_root: Path) -> dict[str, Any]:
+    """Which IActivityTaskManager task queries the adapter answers with the app's own task, and which
+    with nothing: an empty list, or null (ActivityManager.getRecentTasks reads getList() off it)."""
+    path = westlake_root / "framework/activity/java/ActivityTaskManagerAdapter.java"
+    text = _strip_java_comments(path.read_text(errors="replace")) if path.exists() else ""
+    answered, empty, first = [], [], None
+    for method in sorted(set(TASK_QUERIES.values())):
+        match = re.search(rf"\bpublic\s+[\w.<>, ]+\s+{method}\s*\(", text)
+        if not match:
+            continue
+        first = first or match
+        body = _braced_block(text, match.start())
+        statements = [s.strip() for s in body.split(";") if s.strip() and not s.strip().startswith("logBridged")]
+        if statements and re.fullmatch(r"return\s+(null|Collections\.emptyList\(\)|new\s+\w+(<[^>]*>)?\(\))", statements[-1]) \
+                and len(statements) == 1:
+            empty.append(method)
+        else:
+            answered.append(method)
+    return {"answered": answered, "empty": empty,
+            "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, first.start()) + 1}" if first else None}
+
+
 def window_metrics_model(westlake_root: Path) -> dict[str, Any]:
     """Whether activities are launched with their window's bounds in the configuration.
 

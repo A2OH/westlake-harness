@@ -479,9 +479,37 @@ AM_PROCESS_TABLE = {"getRunningAppProcesses": "getRunningAppProcesses", "getRunn
                     "getProcessMemoryInfo": "getProcessMemoryInfo"}
 
 
-def app_framework_rows(scan: dict[str, Any], am: dict[str, Any], wm: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+def app_framework_rows(scan: dict[str, Any], am: dict[str, Any], wm: dict[str, Any] | None = None,
+                       tasks: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     rows = []
     names = scan["inventory"].get("platform_method_names", {})
+    am_calls = set(names.get("Landroid/app/ActivityManager;", []))
+    if "getMemoryInfo" in am_calls and am["proxy_stub"]:
+        answered = "getMemoryInfo" in am["answered"]
+        rows.append(_row(
+            "app-framework", "am:memory-info", "ActivityManager.getMemoryInfo (total, available, low-memory threshold)",
+            oh_touchpoint="none (/proc/meminfo, as ProcessList reads it)",
+            verdict="supplied" if answered else "hollow", shim_class="C0" if answered else "C9",
+            effort="verify" if answered else "XS", confidence=STATIC,
+            provider=("filled as ProcessList.getMemoryInfo does" if answered else
+                      "direct-launch IActivityManager proxy leaves the MemoryInfo untouched: totalMem, availMem and "
+                      "threshold read 0"),
+            provider_source=am["source"], app_evidence="app calls ActivityManager.getMemoryInfo",
+            shim="fill it from /proc/meminfo with ProcessList's levels: availMem MemFree + Cached, totalMem MemTotal"))
+    used = sorted(am_calls & set(contracts.TASK_QUERIES))
+    if used and tasks is not None:
+        open_ = [n for n in used if contracts.TASK_QUERIES[n] not in tasks.get("answered", [])]
+        rows.append(_row(
+            "app-framework", "am:own-task", "ActivityManager task queries (" + ", ".join(used) + ")",
+            oh_touchpoint="none: an app sees only its own task (since Android 5)",
+            verdict="hollow" if open_ else "supplied", shim_class="C9" if open_ else "C0",
+            effort="S" if open_ else "verify", confidence=STATIC,
+            provider=("answered with the app's task from the activity client controller" if not open_ else
+                      "answered with nothing (an empty list, or null for getRecentTasks): " + ", ".join(open_)),
+            provider_source=tasks.get("source"), open_symbols=open_,
+            app_evidence="app calls ActivityManager." + ", ActivityManager.".join(used),
+            shim="report the app's own task: its root and top activity, the activity count; an AppTask whose "
+                 "finishAndRemoveTask finishes the task's activities"))
     called = [name for name in AM_PROCESS_TABLE if name in names.get("Landroid/app/ActivityManager;", [])]
     if called:
         unanswered = [n for n in called if am["proxy_stub"] and AM_PROCESS_TABLE[n] not in am["answered"]]
@@ -2514,7 +2542,8 @@ def build_map(
     svc, dynamic = service_rows(scan, aosp_services, westlake_services)
     rows = (java + svc + package_manager_rows(scan, facts, pm, pm_null_consequences(aosp_root))
             + app_framework_rows(scan, contracts.direct_launch_am_model(westlake_root),
-                                 contracts.window_adapter_model(westlake_root))
+                                 contracts.window_adapter_model(westlake_root),
+                                 contracts.task_queries_model(westlake_root))
             + engine_surface_rows(scan, surfaceview_model(westlake_root, manifest_root, runtime_libraries))
             + runtime_data_rows(scan)
             + android_path_rows(apk_path, scan, runtime_data, westlake_root)

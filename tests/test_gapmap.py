@@ -13,7 +13,7 @@ import unittest
 from pathlib import Path
 
 from test_known_answers import _find_android_d8, _run, _write
-from westlake_gap import gapmap, services
+from westlake_gap import contracts, gapmap, services
 from westlake_gap.contracts import (direct_launch_am_model, feature_claims_model, keystore_model,
                                     libc_constant_model, pm_adapter_model, window_adapter_model)
 from westlake_gap.scanner import inventory_dex
@@ -890,6 +890,32 @@ class AppFrameworkContracts(unittest.TestCase):
         scan["apk"]["services"] = 0
         self.assertNotIn("am:in-app-services", {r["id"] for r in gapmap.app_framework_rows(scan, both)},
                          "an app with no services of its own starts other apps' services")
+
+    def test_memory_info_and_the_apps_own_task(self) -> None:
+        scan = {"inventory": {"platform_method_names": {
+            "Landroid/app/ActivityManager;": ["getMemoryInfo", "getRunningTasks", "getAppTasks"]}}}
+        bare = self._model("")
+        with tempfile.TemporaryDirectory(prefix="westlake-atm-") as temp:
+            root = Path(temp)
+            adapter = root / "framework/activity/java/ActivityTaskManagerAdapter.java"
+            _write(adapter, """class ActivityTaskManagerAdapter {
+                public List<RunningTaskInfo> getTasks(int maxNum, boolean a, boolean b, int d) {
+                    logBridged("getTasks", "x");
+                    return Collections.emptyList();
+                }
+                public List<IBinder> getAppTasks(String pkg) { return OwnTask.appTasks(); }
+            }""")
+            tasks = contracts.task_queries_model(root)
+        self.assertEqual((tasks["answered"], tasks["empty"]), (["getAppTasks"], ["getTasks"]))
+        rows = {r["id"]: r for r in gapmap.app_framework_rows(scan, bare, None, tasks)}
+        self.assertEqual(rows["am:memory-info"]["verdict"], "hollow")
+        self.assertEqual((rows["am:own-task"]["verdict"], rows["am:own-task"]["open_symbols"]),
+                         ("hollow", ["getRunningTasks"]))
+        answered = self._model("""if ("AdapterIAM-stub".equals(label)) {
+                        if ("getMemoryInfo".equals(name)) { CallerProcess.memoryInfo(args[0]); return null; }
+                    }""")
+        rows = {r["id"]: r for r in gapmap.app_framework_rows(scan, answered, None, tasks)}
+        self.assertEqual(rows["am:memory-info"]["verdict"], "supplied")
 
     def test_window_semantics_from_source(self) -> None:
         with tempfile.TemporaryDirectory(prefix="westlake-wm-") as temp:
