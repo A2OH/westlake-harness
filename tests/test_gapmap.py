@@ -799,6 +799,39 @@ class ProviderInitOrder(unittest.TestCase):
         self.assertNotIn("pm:provider-init-order", rows)
 
 
+class ProviderAuthority(unittest.TestCase):
+    """Quitter: a disabled provider holds the authority, and a later one for the same authority is
+    never installed on Android; its class was gone, and installing it failed the bind."""
+    FACTS = {"components": [
+        {"kind": "provider", "name": "androidx.work.impl.WorkManagerInitializer", "process": None, "enabled": "false",
+         "authorities": "a.workmanager-init", "meta_data": {}, "init_order": None, "direct_boot_aware": False},
+        {"kind": "provider", "name": "dev.fluttercommunity.workmanager.WorkmanagerInitializer", "process": None,
+         "enabled": None, "authorities": "a.workmanager-init", "meta_data": {}, "init_order": None,
+         "direct_boot_aware": False},
+        {"kind": "provider", "name": "androidx.startup.InitializationProvider", "process": None, "enabled": None,
+         "authorities": "a.androidx-startup;a.workmanager-init", "meta_data": {}, "init_order": None,
+         "direct_boot_aware": False}],
+        "splits": [], "processes": []}
+    SCAN = {"inventory": {"platform_method_names": {}}}
+
+    def model(self, claims: bool) -> dict:
+        return {"methods": {}, "semantics": {
+            "direct_boot_match_defaults": {"present": True, "source": "s"},
+            "split_paths_populated": {"present": True, "source": "s"},
+            "provider_authority_claims": {"present": claims, "source": "p:1" if claims else None}}}
+
+    def test_a_provider_whose_authority_is_held(self) -> None:
+        rows = {r["id"]: r for r in gapmap.package_manager_rows(self.SCAN, self.FACTS, self.model(False))}
+        row = rows["pm:provider-authority"]
+        self.assertEqual(row["verdict"], "missing")
+        self.assertEqual(row["item"], "Providers whose authority an earlier declaration holds (WorkmanagerInitializer)",
+                         "a provider keeping one of its authorities is installed under it")
+        rows = {r["id"]: r for r in gapmap.package_manager_rows(self.SCAN, self.FACTS, self.model(True))}
+        self.assertEqual(rows["pm:provider-authority"]["verdict"], "supplied")
+        facts = dict(self.FACTS, components=self.FACTS["components"][1:])
+        self.assertNotIn("pm:provider-authority", {r["id"] for r in gapmap.package_manager_rows(
+            self.SCAN, facts, self.model(False))})
+
 class AppFrameworkContracts(unittest.TestCase):
     _STUB = """class AppSpawnXInit {
         private static InvocationHandler makeStubHandler(final String label, final Set<String> hot) {

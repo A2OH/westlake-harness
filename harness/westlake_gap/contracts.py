@@ -159,6 +159,9 @@ def pm_adapter_model(westlake_root: Path) -> dict[str, Any]:
             "providers_sorted_by_init_order": _evidence(
                 bridge.read_text(errors="replace") if bridge.exists() else "",
                 r"[Pp]roviders\.sort\([^;]*initOrder", bridge, westlake_root),
+            # Each provider authority goes to its first declaration, enabled or not; a provider left
+            # with none is not installed (ComponentResolver.addProvidersLocked).
+            "provider_authority_claims": _evidence(text, r"claimed\.add\(authority\)", path, westlake_root),
         },
         "provenance": git_state(westlake_root),
     }

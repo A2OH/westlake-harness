@@ -309,6 +309,31 @@ def package_manager_rows(scan: dict[str, Any], facts: dict[str, Any], pm: dict[s
             shim="sort the bind's providers by descending initOrder, as PackageManager does: Citymapper's "
                  "androidx.startup ran before FirebaseInitProvider (initOrder 100) and died",
         ))
+    # Each authority goes to the first provider that declares it, enabled or not, and a provider left
+    # with none is never installed (ComponentResolver.addProvidersLocked). Quitter declares a disabled
+    # androidx WorkManagerInitializer, then a plugin's provider for the same authority whose class R8
+    # removed; installing the second failed the bind with ClassNotFoundException.
+    claimed: set[str] = set()
+    losers = []
+    for component in (c for c in facts["components"] if c["kind"] == "provider"):
+        names = [a for a in (component.get("authorities") or "").split(";") if a]
+        if names and all(a in claimed for a in names) and component.get("enabled") != "false":
+            losers.append(component)
+        claimed.update(names)
+    if losers:
+        check = semantics.get("provider_authority_claims", {"present": False, "source": None})
+        rows.append(_row(
+            "package-manager", "pm:provider-authority",
+            f"Providers whose authority an earlier declaration holds ({', '.join(c['name'].split('.')[-1] for c in losers[:4])})",
+            oh_touchpoint="none (Westlake's bind path)",
+            verdict="supplied" if check["present"] else "missing", shim_class="C0" if check["present"] else "C6",
+            effort="verify" if check["present"] else "XS", confidence=STATIC,
+            provider=("authorities claimed in manifest order; a provider left with none is not installed"
+                      if check["present"] else "every declared provider is installed"),
+            provider_source=check["source"],
+            app_evidence="; ".join(f"{c['name']} declares {c['authorities']}, already held" for c in losers[:3]),
+            shim="give each authority to its first declaration, enabled or not, and skip a provider left with none",
+        ))
     if facts["processes"]:
         rows.append(_row(
             "package-manager", "pm:multiprocess", f"Components in secondary processes: {', '.join(facts['processes'])}",
