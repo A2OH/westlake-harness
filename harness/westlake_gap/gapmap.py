@@ -20,6 +20,7 @@ from __future__ import annotations
 import bisect
 import json
 import re
+import sys
 import zipfile
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -174,6 +175,11 @@ def service_rows(scan: dict[str, Any], aosp: dict[str, Any], westlake: dict[str,
     casts: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for cast in inventory.get("nonnull_casts") or []:
         casts["L" + cast["type"].replace(".", "/") + ";"].append(cast)
+    # Requests whose result the app null-checks right away (R8's compiled Kotlin checks).
+    checked: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for request in requests:
+        if request.get("null_checked"):
+            checked[request.get("service") or request.get("manager_class") or ""].append(request)
     rows = []
     for entry in services.service_map(requests, aosp, westlake, calls):
         verdict = entry["verdict"]
@@ -202,12 +208,17 @@ def service_rows(scan: dict[str, Any], aosp: dict[str, Any], westlake: dict[str,
         basis = entry.get("westlake_basis") or {}
         # A null manager is survivable only where the caller checks. Kotlin's `as Manager` does
         # not: it throws, and inside a JS host function that is a JS exception.
-        throwing = casts.get(entry.get("manager", ""), []) if verdict in {services.NULL, services.UNRESOLVED} else []
+        # Unresolved means the binder could not be followed; the manager can still be null only
+        # where AOSP's fetcher can fail.
+        can_be_null = verdict == services.NULL or (verdict == services.UNRESOLVED and entry.get("fetcher_can_fail", True))
+        throwing = (casts.get(entry.get("manager", ""), []) + checked.get(entry["service"], [])
+                    + checked.get(entry.get("manager", ""), [])) if can_be_null else []
         evidence = None
         if throwing:
             owners = sorted({f"{c['owner'].strip('L;').replace('/', '.')}.{c['method']}" for c in throwing})
-            evidence = (f"{entry['site_count']} call sites; Kotlin casts it non-null in {len(owners)} methods "
-                        f"(e.g. {', '.join(owners[:3])}): a null answer throws there, it is not skipped")
+            evidence = (f"{entry['site_count']} call sites; the app requires it non-null in {len(owners)} methods, "
+                        f"by a Kotlin cast or a compiled null check (e.g. {', '.join(owners[:3])}): a null answer "
+                        f"throws there, it is not skipped")
         # A hollow binder answers null, and a manager that unwraps the answer (getList() on a
         # ParceledListSlice) throws inside the framework: no app code can catch it.
         unwrapping = entry.get("unwrapping_calls", []) if verdict == services.HOLLOW else []
@@ -227,6 +238,7 @@ def service_rows(scan: dict[str, Any], aosp: dict[str, Any], westlake: dict[str,
             app_calls=methods[:12], call_sites=entry["site_count"],
             example_site=_site(entry["sites"][0]) if entry.get("sites") else None,
             shim=shim, app_evidence=evidence, throws_if_null=len(throwing), throws_in_framework=unwrapping,
+            throwing_sites=sorted({f"{c['owner'].strip('L;').replace('/', '.')}.{c['method']}" for c in throwing})[:40],
         ))
     dynamic = sum(1 for r in requests if r.get("dynamic"))
     return rows, dynamic
@@ -297,6 +309,31 @@ def package_manager_rows(scan: dict[str, Any], facts: dict[str, Any], pm: dict[s
             app_evidence=", ".join(f"{c['name'].split('.')[-1]}@{c['init_order']}" for c in ordered[:4]),
             shim="sort the bind's providers by descending initOrder, as PackageManager does: Citymapper's "
                  "androidx.startup ran before FirebaseInitProvider (initOrder 100) and died",
+        ))
+    # Each authority goes to the first provider that declares it, enabled or not, and a provider left
+    # with none is never installed (ComponentResolver.addProvidersLocked). Quitter declares a disabled
+    # androidx WorkManagerInitializer, then a plugin's provider for the same authority whose class R8
+    # removed; installing the second failed the bind with ClassNotFoundException.
+    claimed: set[str] = set()
+    losers = []
+    for component in (c for c in facts["components"] if c["kind"] == "provider"):
+        names = [a for a in (component.get("authorities") or "").split(";") if a]
+        if names and all(a in claimed for a in names) and component.get("enabled") != "false":
+            losers.append(component)
+        claimed.update(names)
+    if losers:
+        check = semantics.get("provider_authority_claims", {"present": False, "source": None})
+        rows.append(_row(
+            "package-manager", "pm:provider-authority",
+            f"Providers whose authority an earlier declaration holds ({', '.join(c['name'].split('.')[-1] for c in losers[:4])})",
+            oh_touchpoint="none (Westlake's bind path)",
+            verdict="supplied" if check["present"] else "missing", shim_class="C0" if check["present"] else "C6",
+            effort="verify" if check["present"] else "XS", confidence=STATIC,
+            provider=("authorities claimed in manifest order; a provider left with none is not installed"
+                      if check["present"] else "every declared provider is installed"),
+            provider_source=check["source"],
+            app_evidence="; ".join(f"{c['name']} declares {c['authorities']}, already held" for c in losers[:3]),
+            shim="give each authority to its first declaration, enabled or not, and skip a provider left with none",
         ))
     if facts["processes"]:
         rows.append(_row(
@@ -442,9 +479,71 @@ AM_PROCESS_TABLE = {"getRunningAppProcesses": "getRunningAppProcesses", "getRunn
                     "getProcessMemoryInfo": "getProcessMemoryInfo"}
 
 
-def app_framework_rows(scan: dict[str, Any], am: dict[str, Any], wm: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+def app_framework_rows(scan: dict[str, Any], am: dict[str, Any], wm: dict[str, Any] | None = None,
+                       tasks: dict[str, Any] | None = None, launch: dict[str, Any] | None = None,
+                       priority: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     rows = []
     names = scan["inventory"].get("platform_method_names", {})
+    # Extras only an Intent object carries: a launch rebuilt from the Want's JSON drops them.
+    readers = sorted(set(names.get("Landroid/content/Intent;", [])) & {
+        "getParcelableExtra", "getParcelableArrayExtra", "getParcelableArrayListExtra",
+        "getSerializableExtra", "getBundleExtra"})
+    if readers and launch is not None:
+        kept = bool(launch.get("original_intent"))
+        rows.append(_row(
+            "app-framework", "am:launch-extras", "Parcelable, Serializable and Bundle extras of the app's own activity launches",
+            oh_touchpoint="none: the app's activities launch in its own process",
+            verdict="supplied" if kept else "missing", shim_class="C0" if kept else "C9",
+            effort="verify" if kept else "S", confidence=STATIC,
+            provider=("the launch takes the Intent the app passed to startActivity" if kept else
+                      "the launch Intent is rebuilt from OH's Want JSON: Parcelable extras are lost, an undotted "
+                      "action comes back under OH's prefix"),
+            provider_source=launch.get("source"), open_symbols=[] if kept else readers,
+            app_evidence="app calls Intent." + ", Intent.".join(readers),
+            seen_blocking=["k9 (its UpgradeDatabaseActivity lost the start intent it is handed and started null once its "
+                           "database service finished)"],
+            shim="hand an in-process launch the caller's Intent, copied when startActivity is called"))
+    if "setPriority" in names.get("Ljava/lang/Thread;", []) and priority is not None and priority.get("answer") is not None:
+        valid = 1 <= priority["answer"] <= 10
+        rows.append(_row(
+            "runtime", "rt:thread-priority", "Java priority of threads the runtime attaches",
+            oh_touchpoint="none (the thread's nice value)",
+            verdict="supplied" if valid else "missing", shim_class="C0" if valid else "C9",
+            effort="verify" if valid else "XS", confidence=STATIC,
+            provider=(f"the palette answers {priority['answer']}" if valid else
+                      f"the palette answers {priority['answer']}, outside Java's 1-10: a saved priority restored with "
+                      "Thread.setPriority throws \"Priority out of range\""),
+            provider_source=priority.get("source"),
+            app_evidence="app calls Thread.setPriority",
+            seen_blocking=["capcut (a thread pool restored priority 0: \"Priority out of range: 0\")"],
+            shim="map the thread's nice value as Android's palette does, or answer NORM_PRIORITY"))
+    am_calls = set(names.get("Landroid/app/ActivityManager;", []))
+    if "getMemoryInfo" in am_calls and am["proxy_stub"]:
+        answered = "getMemoryInfo" in am["answered"]
+        rows.append(_row(
+            "app-framework", "am:memory-info", "ActivityManager.getMemoryInfo (total, available, low-memory threshold)",
+            oh_touchpoint="none (/proc/meminfo, as ProcessList reads it)",
+            verdict="supplied" if answered else "hollow", shim_class="C0" if answered else "C9",
+            effort="verify" if answered else "XS", confidence=STATIC,
+            provider=("filled as ProcessList.getMemoryInfo does" if answered else
+                      "direct-launch IActivityManager proxy leaves the MemoryInfo untouched: totalMem, availMem and "
+                      "threshold read 0"),
+            provider_source=am["source"], app_evidence="app calls ActivityManager.getMemoryInfo",
+            shim="fill it from /proc/meminfo with ProcessList's levels: availMem MemFree + Cached, totalMem MemTotal"))
+    used = sorted(am_calls & set(contracts.TASK_QUERIES))
+    if used and tasks is not None:
+        open_ = [n for n in used if contracts.TASK_QUERIES[n] not in tasks.get("answered", [])]
+        rows.append(_row(
+            "app-framework", "am:own-task", "ActivityManager task queries (" + ", ".join(used) + ")",
+            oh_touchpoint="none: an app sees only its own task (since Android 5)",
+            verdict="hollow" if open_ else "supplied", shim_class="C9" if open_ else "C0",
+            effort="S" if open_ else "verify", confidence=STATIC,
+            provider=("answered with the app's task from the activity client controller" if not open_ else
+                      "answered with nothing (an empty list, or null for getRecentTasks): " + ", ".join(open_)),
+            provider_source=tasks.get("source"), open_symbols=open_,
+            app_evidence="app calls ActivityManager." + ", ActivityManager.".join(used),
+            shim="report the app's own task: its root and top activity, the activity count; an AppTask whose "
+                 "finishAndRemoveTask finishes the task's activities"))
     called = [name for name in AM_PROCESS_TABLE if name in names.get("Landroid/app/ActivityManager;", [])]
     if called:
         unanswered = [n for n in called if am["proxy_stub"] and AM_PROCESS_TABLE[n] not in am["answered"]]
@@ -457,6 +556,50 @@ def app_framework_rows(scan: dict[str, Any], am: dict[str, Any], wm: dict[str, A
                       if unanswered else "answered with the caller's own process"),
             provider_source=am["source"], app_evidence=f"app calls {', '.join(called)}",
             shim="answer with the caller's process: name, pid, uid, foreground importance, its package"))
+    # The app's own services, started or bound. With no system_server, the direct-launch proxy
+    # answers each IActivityManager call by name; one it does not answer returns null or 0, which
+    # ContextImpl reads as "no such service" (start) or "bind failed".
+    own_services = (scan.get("apk") or {}).get("services") or 0
+    own_services = own_services if isinstance(own_services, int) else len(own_services)
+    context_calls = set(names.get("Landroid/content/Context;", [])) | set(names.get("Landroid/content/ContextWrapper;", []))
+    started = sorted(context_calls & {"startService", "startForegroundService"})
+    bound = sorted(context_calls & {"bindService"})
+    if own_services and (started or bound) and am["proxy_stub"]:
+        needed = (["startService"] if started else []) + (["bindService"] if bound else [])
+        unanswered = [n for n in needed if n not in am["answered"]]
+        rows.append(_row(
+            "app-framework", "am:in-app-services",
+            f"The app's own services ({', '.join(started + bound)}; {own_services} declared)",
+            oh_touchpoint="none: the app's services run in its own process",
+            verdict="missing" if unanswered else "supplied", shim_class="C9" if unanswered else "C0",
+            effort="S" if unanswered else "verify", confidence=STATIC,
+            provider=(f"direct-launch IActivityManager proxy answers {', '.join(unanswered)} with a type default: "
+                      "the service is never created" if unanswered
+                      else "created in process; onStartCommand and onBind on the main thread"),
+            provider_source=am["source"], open_symbols=unanswered,
+            app_evidence=f"app calls Context.{', Context.'.join(started + bound)}",
+            seen_blocking=["drawanywhere (r84: it starts the service that shows its overlay and finishes its "
+                           "activity; the service never ran)"] if started else [],
+            shim="create the service in process once; onStartCommand per start with its start id, onBind per bind, "
+                 "onDestroy on stopService or stopSelf when nothing is bound"))
+    # Receivers the app registers and broadcasts it sends itself: answered by the proxy or dropped.
+    registers = sorted(context_calls & {"registerReceiver"})
+    sends = sorted(context_calls & {"sendBroadcast", "sendOrderedBroadcast"})
+    if (registers or sends) and am["proxy_stub"]:
+        needed = (["registerReceiverWithFeature"] if registers else []) + (["broadcastIntentWithFeature"] if sends else [])
+        unanswered = [n for n in needed if n not in am["answered"]]
+        rows.append(_row(
+            "app-framework", "am:broadcasts", f"The app's receivers and broadcasts ({', '.join(registers + sends)})",
+            oh_touchpoint="none for the app's own broadcasts (OH common events would carry the system's)",
+            verdict="missing" if unanswered else "supplied", shim_class="C9" if unanswered else "C0",
+            effort="S" if unanswered else "verify", confidence=STATIC,
+            provider=(f"direct-launch IActivityManager proxy answers {', '.join(unanswered)} with a type default: "
+                      "no sticky intent (registerReceiver(null, BATTERY_CHANGED) is null) and no delivery"
+                      if unanswered else "kept in process: the app's broadcasts reach its matching registrations"),
+            provider_source=am["source"], open_symbols=unanswered,
+            app_evidence=f"app calls Context.{', Context.'.join(registers + sends)}",
+            shim="keep registrations in process; deliver the app's broadcasts to the ones whose filter matches; "
+                 "answer sticky queries (BATTERY_CHANGED)"))
     if "show" in names.get("Landroid/app/Dialog;", []):
         wm = wm or {}
         stacking = wm.get("dialogs_above_base", {})
@@ -710,6 +853,80 @@ def native_load_short_circuit(art_build_root: Path | None) -> dict[str, Any]:
             "source": f"art-build/stubs/openjdk_stub.c:{text.count(chr(10), 0, body.start()) + 1}"}
 
 
+#: Public calls that end in a runtime native, by the native (class/name): what an app names when it
+#: reaches one. Only natives the runtime's openjdk stub registers with a constant body are looked up.
+STUB_NATIVE_CALLERS = {
+    "java/io/UnixFileSystem.getSpace0": ("Ljava/io/File;", ("getTotalSpace", "getFreeSpace", "getUsableSpace")),
+    "java/io/UnixFileSystem.setPermission0": ("Ljava/io/File;", ("setReadable", "setWritable", "setExecutable")),
+    "java/io/UnixFileSystem.setReadOnly0": ("Ljava/io/File;", ("setReadOnly",)),
+    "java/io/UnixFileSystem.setLastModifiedTime0": ("Ljava/io/File;", ("setLastModified",)),
+}
+
+
+def stub_native_model(art_build_root: Path | None, westlake_root: Path) -> dict[str, Any]:
+    """Natives the runtime's openjdk stub registers with a body that only returns a constant (0,
+    NULL, false), and whether libwl_missing_natives binds a real one over it. Registered, they never
+    fail: every caller gets the constant (File.getUsableSpace 0, File.setReadable false)."""
+    stubs: dict[str, str] = {}
+    path = art_build_root / "stubs/openjdk_stub.c" if art_build_root else None
+    if path and path.exists():
+        text = path.read_text(errors="replace")
+        constant = {m[1]: text.count(chr(10), 0, m.start()) + 1 for m in re.finditer(
+            r"^static\s+\w+\s+(\w+)\([^)]*\)\s*\{\s*return\s+(?:0|NULL|JNI_FALSE)\s*;\s*/\*\s*stub\s*\*/\s*\}",
+            text, re.M)}
+        owner = None
+        for m in re.finditer(r'FindOptionalClass\(env,\s*"([\w/$]+)"\)|\{\s*"(\w+)",\s*"[^"]*",\s*\(void\s*\*\)\s*(\w+)\s*\}',
+                             text):
+            if m[1]:
+                owner = m[1]
+            elif owner and m[3] in constant:
+                stubs[f"{owner}.{m[2]}"] = f"art-build/stubs/openjdk_stub.c:{constant[m[3]]}"
+    rebound: set[str] = set()
+    natives = westlake_root / "framework/javacore-shim/missing_natives.c"
+    if natives.exists():
+        text = natives.read_text(errors="replace")
+        tables = dict(re.findall(r'bind\(env,\s*"([\w/$]+)",\s*(\w+),', text))
+        for owner, table in tables.items():
+            body = re.search(rf"\b{table}\[\]\s*=\s*\{{(.*?)\n\}};", text, re.S)
+            for name in re.findall(r'\{\s*"(\w+)",', body[1] if body else ""):
+                rebound.add(f"{owner}.{name}")
+    return {"stubs": stubs, "rebound": sorted(rebound & set(stubs))}
+
+
+def stub_native_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """App calls that reach a runtime native registered as a constant answer (stub_native_model)."""
+    called = scan["inventory"].get("platform_method_names") or {}
+    reached: dict[str, list[str]] = {}
+    for native, (owner, methods) in STUB_NATIVE_CALLERS.items():
+        if native not in model["stubs"]:
+            continue
+        hits = [f"{owner[1:-1].rsplit('/', 1)[-1]}.{m}" for m in methods if m in called.get(owner, ())]
+        if hits:
+            reached[native] = hits
+    if not reached:
+        return []
+    open_ = sorted(n for n in reached if n not in model["rebound"])
+    evidence = "; ".join(f"{', '.join(calls)} ({native.rsplit('/', 1)[-1]}"
+                         + (", re-bound" if native in model["rebound"] else ", constant") + ")"
+                         for native, calls in sorted(reached.items()))
+    return [_row(
+        "java-api", "runtime:stub-natives",
+        "Runtime natives registered with a constant answer (" + ", ".join(
+            sorted({c for calls in reached.values() for c in calls})[:4]) + ")",
+        oh_touchpoint="none: the runtime's own openjdk stub registers the native",
+        verdict="hollow" if open_ else "supplied", shim_class="C9" if open_ else "C2",
+        effort="S" if open_ else "verify", confidence=STATIC,
+        provider=("a real implementation is bound over the stub" if not open_ else
+                  "registered as a constant: " + ", ".join(open_)),
+        provider_source=model["stubs"].get(open_[0] if open_ else sorted(reached)[0]),
+        open_symbols=open_, app_evidence=evidence,
+        seen_blocking=["cnn (r84: File.getUsableSpace answered 0 for /data; CnnApplication sized its OkHttp cache "
+                       "at half of it and died on \"maxSize <= 0\")"]
+        if "java/io/UnixFileSystem.getSpace0" in reached else [],
+        shim="bind libcore's implementation (UnixFileSystem_md.c) over the stub in libwl_missing_natives",
+    )]
+
+
 def _matches(names: list[str], libraries: list[str]) -> dict[str, list[str]]:
     hit: dict[str, list[str]] = defaultdict(list)
     for library in libraries:
@@ -880,6 +1097,212 @@ def apply_probe_results(gap_map: dict[str, Any], results: dict[str, Any]) -> Non
                 row["provider"] = result["finding"]
 
 
+def interposition_rows(scan: dict[str, Any], runtime: dict[str, Any] | None,
+                       rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """App libraries exporting symbols a runtime library also exports.
+
+    Android shows an app's code only the NDK's public libraries; Westlake's runtime libraries are
+    global in the default namespace, where System.loadLibrary puts the app's own. An app library's
+    calls to its own exported functions go through its PLT and bind to the first definition in the
+    global scope, so a runtime library carrying the same symbols takes them over. PPSSPP's own Vulkan
+    Memory Allocator calls ran in libhwui.so's copy and crashed in CalcAllocationParams. A copy of
+    HarfBuzz, FreeType or libpng in an app meets the runtime's libharfbuzz_ng, libft2 and libpng the
+    same way. A library routed to the Android namespace does not see them.
+    """
+    if not runtime:
+        return []
+    owners: dict[str, set[str]] = defaultdict(set)
+    for lib in runtime.get("bridge_libraries", []):
+        for symbol in lib.get("exported_symbols") or []:
+            owners[symbol].add(lib.get("soname") or lib.get("name") or "?")
+    routed = set()
+    for row in rows:
+        args = row.get("launch_args") or []
+        routed |= {value for flag, value in zip(args[0::2], args[1::2]) if flag == "--android-native-target"}
+    hits: dict[str, Counter] = {}
+    for elf in ohresolve.target_elfs(scan):
+        name = elf["name"].rsplit("/", 1)[-1]
+        counts = Counter(owner for symbol in elf.get("exported_symbols") or []
+                         if symbol not in ("JNI_OnLoad", "JNI_OnUnload") and not symbol.startswith("Java_")
+                         for owner in owners.get(symbol, ()))
+        if sum(counts.values()) >= 3:
+            hits[name] = counts
+    if not hits:
+        return []
+    exposed = sorted(name for name in hits if name not in routed)
+    evidence = "; ".join(f"{name}: " + ", ".join(f"{count} with {owner}" for owner, count in hits[name].most_common(2))
+                         for name in sorted(hits, key=lambda n: -sum(hits[n].values()))[:4])
+    return [_row(
+        "native-loading", "load:interposed-by-runtime",
+        f"App libraries whose own symbols a runtime library also exports ({', '.join(sorted(hits)[:4])}"
+        + (" ..." if len(hits) > 4 else "") + ")",
+        oh_touchpoint="the default namespace: Westlake's runtime libraries are global there, ahead of the app's",
+        verdict="missing" if exposed else "supplied", shim_class="C3", effort="S" if exposed else "verify",
+        confidence=STATIC, open_symbols=exposed[:12],
+        provider=("routed to the Android namespace, where the runtime's libraries are not global" if not exposed else
+                  f"{len(exposed)} of {len(hits)} load in the default namespace"),
+        app_evidence=evidence,
+        seen_blocking=["ppsspp (r83: its own VMA calls ran in libhwui.so's copy; SIGSEGV in CalcAllocationParams)"],
+        shim="route these libraries to the Android namespace (--android-native-target), or stop the runtime's "
+             "libraries exporting what Android keeps private to the platform",
+    )]
+
+
+def task_root_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """Activity.isTaskRoot() and getTaskId(), which ask the activity client controller for the
+    activity's task. A constant -1 makes every activity a non-root of no task: Instagram's launcher
+    activity finished itself ("is not the root. Finishing activity instead of launching")."""
+    called = set(scan["inventory"].get("platform_method_names", {}).get("Landroid/app/Activity;", []))
+    used = sorted(called & {"isTaskRoot", "getTaskId", "moveTaskToBack"})
+    if not used or model.get("task_for_activity") is None:
+        return []
+    answered = model["task_for_activity"] == "answered"
+    return [_row(
+        "app-framework", "am:task-root", "Activity task queries (" + ", ".join(used) + ")",
+        oh_touchpoint="none: the in-process activity client controller answers for the absent system_server",
+        verdict="supplied" if answered else "missing", shim_class="C9" if not answered else "C0",
+        effort="verify" if answered else "XS", confidence=STATIC,
+        provider=("the adapter keeps the app's one task and its root" if answered else
+                  "getTaskForActivity returns a constant -1: no activity is ever a task root"),
+        provider_source=model.get("source"),
+        app_evidence="the app calls Activity." + ", Activity.".join(used),
+        seen_blocking=["instagram (its launcher activity finished itself: \"is not the root\")"],
+        shim="answer getTaskForActivity with the process's task id, and the oldest live activity as its root",
+    )]
+
+
+def window_metrics_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """WindowMetrics read before the first relayout. aat derived its button count from the window
+    width in onCreate, got 0x0, and divided by zero."""
+    # Jetpack WindowManager's WindowMetricsCalculator calls these too, from inside the app's dex.
+    called = sorted(set(scan["inventory"].get("platform_method_names", {}).get("Landroid/view/WindowManager;", []))
+                    & {"getCurrentWindowMetrics", "getMaximumWindowMetrics"})
+    if not called:
+        return []
+    supplied = bool(model.get("bounds_at_bind"))
+    return [_row(
+        "app-framework", "wm:window-metrics", "Window metrics before the first layout",
+        oh_touchpoint="window_manager (the window's rect)",
+        verdict="supplied" if supplied else "missing", shim_class="C0" if supplied else "C9",
+        effort="verify" if supplied else "XS", confidence=STATIC,
+        provider=("activities are launched with the window bounds in their configuration" if supplied
+                  else "windowConfiguration bounds stay empty until the first relayout: metrics read in "
+                       "onCreate are 0x0"),
+        provider_source=model.get("source"), app_evidence="the app calls WindowManager." + ", WindowManager.".join(called),
+        seen_blocking=["aat (divide by zero on the button count it derived from the width)"],
+        shim="put the window bounds in the bind-time configuration's windowConfiguration",
+    )]
+
+
+def native_egl_window_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """App code that creates its own EGL window surface. ANativeWindow_fromSurface gives it the
+    adapter's AOSP-shaped window, which OH's EGL rejects: Flutter's Skia renderer (apps that opt out
+    of Impeller) got no surface for its SurfaceView and never drew."""
+    libraries = sorted({elf.get("soname") or elf.get("name") for elf in scan["inventory"].get("elfs") or []
+                        if elf.get("abi_matches_machine", True)
+                        and "eglCreateWindowSurface" in (elf.get("undefined_symbols") or [])})
+    if not libraries:
+        return []
+    supplied = bool(model.get("unwraps"))
+    return [_row(
+        "window", "egl:native-window", "EGL window surfaces created from native code",
+        oh_touchpoint="graphic_2d (OHNativeWindow under OH's EGL)",
+        verdict="supplied" if supplied else "missing", shim_class="C0" if supplied else "C6",
+        effort="verify" if supplied else "S", confidence=STATIC,
+        provider=("the preloaded shim's eglCreateWindowSurface unwraps the adapter's window to its OHNativeWindow"
+                  if supplied else "the adapter's AOSP-shaped window reaches OH's EGL, which takes only an OHNativeWindow"),
+        provider_source=model.get("source"),
+        app_evidence=f"{', '.join(libraries[:4])} import{'s' if len(libraries) == 1 else ''} eglCreateWindowSurface",
+        seen_blocking=["cardswithcats, mousepounce, mobilev2 (Flutter, Skia: no surface for the SurfaceView)"],
+        shim="unwrap the adapter's window with oh_anw_get_oh before calling OH's eglCreateWindowSurface",
+    )]
+
+
+# Feature name prefix → the getSystemService name of the service that reaches the hardware.
+# Form factors (touchscreen, screen.*) and features no service backs are not listed.
+_FEATURE_SERVICES = (
+    ("android.hardware.camera", "camera"),
+    ("android.hardware.bluetooth_le", "bluetooth"),
+    ("android.hardware.bluetooth", "bluetooth"),
+    ("android.hardware.wifi.direct", "wifip2p"),
+    ("android.hardware.wifi.aware", "wifiaware"),
+    ("android.hardware.wifi.rtt", "wifirtt"),
+    ("android.hardware.wifi", "wifi"),
+    ("android.hardware.telephony", "phone"),
+    ("android.hardware.nfc", "nfc"),
+    ("android.hardware.location", "location"),
+    ("android.hardware.fingerprint", "fingerprint"),
+    ("android.hardware.biometrics.face", "face"),
+    ("android.hardware.usb", "usb"),
+    ("android.hardware.consumerir", "consumer_ir"),
+    ("android.software.device_admin", "device_policy"),
+)
+
+
+def _feature_service(feature: str) -> str | None:
+    for prefix, service in _FEATURE_SERVICES:
+        if feature == prefix or feature.startswith(prefix + "."):
+            return service
+    return None
+
+
+def feature_rows(scan: dict[str, Any], claims: dict[str, Any], aosp: dict[str, Any],
+                 westlake: dict[str, Any]) -> list[dict[str, Any]]:
+    """Features the app asks about that Westlake reports present. A claim tells the app the
+    hardware is there and reachable through its Android service; claimed without that service, the
+    app takes its hardware path and finds nothing. CameraX checked its camera list against the
+    claimed back camera, listed none, and retried its init until it failed (FairScan)."""
+    queried: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for query in scan["inventory"].get("feature_queries") or []:
+        if query.get("feature") in claims.get("claimed", []):
+            queried[query["feature"]].append(query)
+    rows = []
+    for feature, sites in sorted(queried.items()):
+        service = _feature_service(feature)
+        if service is None:
+            continue
+        entries = services.service_map([{"service": service}], aosp, westlake)
+        verdict = entries[0]["verdict"] if entries else services.NULL
+        basis = (entries[0].get("westlake_basis") or {}) if entries else {}
+        backed = verdict == services.SUPPLIED
+        rows.append(_row(
+            "system-services", f"feature:{feature}", feature,
+            oh_touchpoint=services.OH_ANALOG.get(service) or "unmapped",
+            verdict="supplied" if backed else "contradicted", shim_class="C0" if backed else "C5",
+            effort="verify" if backed else "S", confidence=STATIC,
+            provider=(f"claimed by hasSystemFeature; the {service} service answers ({basis.get('detail', '')})"
+                      if backed else f"claimed by hasSystemFeature, but the {service} service is {verdict}: "
+                                     "the app is told the hardware exists and finds none"),
+            provider_source=claims.get("source"),
+            app_evidence=f"{len(sites)} call sites, e.g. {_site(sites[0])}",
+            call_sites=len(sites),
+            shim="none" if backed else f"report {feature} absent until the {service} service is provided",
+        ))
+    return rows
+
+
+def symbol_version_rows(oh_missing: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Imports a library defines, but under another symbol version. OH's loader binds a versioned
+    import to a versioned library only under the same version name, so the load fails as if the
+    symbol were absent: Messenger's libcore.so asked for __system_property_read_callback@LIBC_O, and
+    the bionic shim defined it under LIBC."""
+    mismatched = [item for item in oh_missing if item.get("version_mismatch")]
+    if not mismatched:
+        return []
+    return [_row(
+        "native-symbols", "abi:symbol-version",
+        "Imports defined under another symbol version (" + ", ".join(i["symbol"] for i in mismatched[:4])
+        + (" ..." if len(mismatched) > 4 else "") + ")",
+        oh_touchpoint="OH musl's loader: a versioned import matches a versioned library only by version name",
+        verdict="missing", shim_class="C1", effort="XS", confidence=STATIC,
+        open_symbols=[f"{i['symbol']}@{'/'.join(i['version_mismatch']['wanted'])} "
+                      f"(defined @{'/'.join(i['version_mismatch']['defined'])})" for i in mismatched][:12],
+        app_evidence="; ".join(f"{i['symbol']}: {', '.join(i['importing_libraries'][:3])}" for i in mismatched[:4]),
+        seen_blocking=["messenger (superpack libcore.so: __system_property_read_callback@LIBC_O)"],
+        shim="define the symbol under the version Bionic gives it (the bionic shim's version script)",
+    )]
+
+
 def native_symbol_rows(scan: dict[str, Any], oh_missing: list[dict[str, Any]], shim_exports: set[str]) -> list[dict[str, Any]]:
     importers: dict[str, list[str]] = defaultdict(list)
     for elf in ohresolve.target_elfs(scan):
@@ -920,7 +1343,12 @@ def libc_constant_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict
     if not importers:
         return []
     untranslated = sorted(set(importers) - set(model["translated"]))
-    covered = model["scope"] == "packaged-libraries" and not untranslated
+    callers = model.get("callers", {"packaged": model["scope"] == "packaged-libraries", "written": False})
+    written = sorted({elf.get("soname") or elf["name"].rsplit("/", 1)[-1] for elf in ohresolve.target_elfs(scan)
+                      if elf.get("origin") == "unpacked"
+                      and contracts.LIBC_CONSTANT_NAMESPACE_CALLS & set(elf.get("undefined_symbols", []))})
+    covered = (model["scope"] == "packaged-libraries" and not untranslated and callers.get("packaged")
+               and (callers.get("written") or not written))
     return [_row(
         "native-symbols", "libc:constant-namespace",
         "libc calls carrying a constant each libc numbers differently (" + ", ".join(sorted(importers)) + ")",
@@ -928,7 +1356,10 @@ def libc_constant_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict
         verdict="supplied" if covered else "missing", shim_class="C0" if covered else "C2",
         effort="verify" if covered else "S", confidence=STATIC,
         provider=("the bionic shim translates them by name for the app's packaged libraries"
+                  + (" and the ones it writes" if written else "")
                   if covered else
+                  f"the shim translates them for packaged libraries, not the {len(written)} the app writes "
+                  f"({', '.join(written[:3])})" if written and callers.get("packaged") else
                   f"the shim translates {', '.join(model['translated'])} for {model['scope'].replace('-', ' ')}"
                   if model["translated"] else "nothing translates them: musl answers a different limit"),
         provider_source=model["source"],
@@ -936,6 +1367,84 @@ def libc_constant_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict
                                for symbol, names in sorted(importers.items())),
         shim="translate the selector by name at the libc boundary for every library built against bionic; "
              "the call resolves and returns a plausible number either way, so nothing fails at load time",
+    )]
+
+
+def signal_abi_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """Signal calls made with bionic's structures. Passed to musl as they are, a sigaction installs
+    bionic's flags word as the handler (0x18000804 in TikTok's and CapCut's chains) and writes a
+    152-byte old action into a 32-byte one; sigemptyset writes 128 bytes into 8."""
+    names = contracts.SIGNAL_ABI_CALLS | contracts.SIGNAL_ABI_CALLS_64
+    importers: dict[str, list[str]] = defaultdict(list)
+    written: set[str] = set()
+    lookups: dict[str, list[str]] = {}
+    for elf in ohresolve.target_elfs(scan):
+        name = elf.get("soname") or elf["name"].rsplit("/", 1)[-1]
+        used = names & {s.split("@")[0] for s in elf.get("undefined_symbols", []) + elf.get("undefined_weak_symbols", [])}
+        for symbol in used:
+            importers[symbol].append(name)
+        if used and elf.get("origin") == "unpacked":
+            written.add(name)
+        if elf.get("signal_lookups"):
+            lookups[name] = elf["signal_lookups"]
+    if not importers and not lookups:
+        return []
+    scope = model["scope"]
+    untranslated = sorted(set(importers) - set(model["translated"]))
+    open_ = (untranslated + ([] if scope.get("packaged") else ["packaged callers"])
+             + (["libraries written at run time"] if written and not scope.get("written") else [])
+             + (["lookups by name"] if lookups and not model.get("dlsym") else []))
+    return [_row(
+        "native-symbols", "abi:signal",
+        "Signal calls with bionic's structures (" + ", ".join(sorted(importers) or sorted({n for v in lookups.values() for n in v})) + ")",
+        oh_touchpoint="OH musl: struct sigaction 152 bytes, handler first; sigset_t 128 bytes (bionic: 32, flags first; 8)",
+        verdict="supplied" if not open_ else "missing", shim_class="C2", effort="verify" if not open_ else "S",
+        confidence=STATIC, provider=("the bionic shim translates them for every bionic-built caller" if not open_ else
+                                     "not translated for: " + ", ".join(open_)),
+        provider_source=model.get("source"), open_symbols=open_[:12],
+        app_evidence="; ".join([f"{symbol}: {len(libs)} libraries, e.g. {', '.join(sorted(libs)[:3])}"
+                                for symbol, libs in sorted(importers.items())][:4]
+                               + ([f"looked up by name in {', '.join(sorted(lookups)[:4])}"] if lookups else [])
+                               + ([f"{len(written)} of the importers written at run time"] if written else [])),
+        seen_blocking=["whatsapp (a rerun of r83: its Breakpad setup, running from a wl-exec copy, got a 152-byte old action in a "
+                       "32-byte struct and freed the std::string it clobbered, 4 s in)"],
+        suspected_blocking=["capcut, tiktok (a SIGSEGV handler of 0x18000804, bionic flags in musl's handler slot; "
+                            "heap faults in musl's allocator)"],
+        shim="translate for every bionic-built caller, the libraries the app writes included, and answer a dlsym of "
+             "these names from such a caller with the translating version",
+    )]
+
+
+def static_mutex_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """Mutexes a library initializes with Bionic's static recursive or error-checking initializer and
+    then locks (scanner.bionic_static_mutexes). musl reads the type from the low bits of the word
+    Bionic put it in bits 14-15 of, so both are normal mutexes to it: a recursive relock deadlocks
+    on its own thread, an error-checking one no longer reports EDEADLK."""
+    found: dict[str, dict[str, int]] = {}
+    for elf in ohresolve.target_elfs(scan):
+        if elf.get("bionic_static_mutexes"):
+            found[elf.get("soname") or elf["name"].rsplit("/", 1)[-1]] = elf["bionic_static_mutexes"]
+    if not found:
+        return []
+    open_ = [name for name in contracts.STATIC_MUTEX_LOCKS if name not in model.get("adopted", [])]
+    kinds = sorted({kind for counts in found.values() for kind in counts})
+    return [_row(
+        "native-symbols", "abi:static-mutex-init",
+        f"Bionic static {' and '.join(kinds)} mutex initializers ({', '.join(sorted(found)[:4])})",
+        oh_touchpoint="OH musl: the mutex type is the low bits of the first word (Bionic: bits 14-15, 0x4000 recursive, "
+                      "0x8000 error-checking); musl locks either as a normal mutex",
+        verdict="supplied" if not open_ else "missing", shim_class="C2", effort="verify" if not open_ else "S",
+        confidence=STATIC,
+        provider=("the bionic shim's lock calls convert an unlocked mutex holding Bionic's type word to musl's "
+                  "type before musl locks it" if not open_ else "not converted in: " + ", ".join(open_)),
+        provider_source=model.get("source"), open_symbols=open_,
+        app_evidence="; ".join(f"{name}: " + ", ".join(f"{count} {kind}" for kind, count in sorted(counts.items()))
+                               + " locked as initialized" for name, counts in sorted(found.items())[:6]),
+        seen_blocking=["discord (r84: sentry-native's sentry_init holds its options lock and takes it again in "
+                       "sentry_close; the crash-reporting thread never left initSentryNative and the main thread "
+                       "waited out two 30 s application-initialization timeouts, first frame at 62.9 s)"],
+        shim="convert the type word of an unlocked mutex holding Bionic's static initializer to musl's recursive or "
+             "error-checking type before musl's lock sees it; a held mutex is left alone",
     )]
 
 
@@ -1047,7 +1556,8 @@ def shadowed_libraries(scan: dict[str, Any], board_paths: list[str]) -> tuple[di
         if path.startswith(_SEARCHED_BEFORE_APP):
             board.setdefault(path.rsplit("/", 1)[-1], path)
     needed: dict[str, set[str]] = {}
-    for elf in ohresolve.target_elfs(scan):
+    # Packaged only: a library the app writes at run time loads in the Android namespace already.
+    for elf in ohresolve.packaged_elfs(scan):
         name = elf.get("soname") or elf["name"].rsplit("/", 1)[-1]
         needed.setdefault(name, set()).update(elf.get("needed", []))
     shadowed = {name: board[name] for name in needed if name in board}
@@ -1088,7 +1598,8 @@ def bionic_loader_model(westlake_root: Path | None, manifest_root: Path | None =
     code_cache_copy: the bionic shim loads a library app storage may not map executable from a copy
     in code_cache. android_relr_launcher: the launcher stages the APK's libraries with
     DT_ANDROID_RELR renumbered to DT_RELR; android_relr_shim: the shim does the same for libraries
-    an app writes at run time. funopen_unbuffered: the shim's funopen avoids OH's buffered
+    an app writes at run time. null_entries_launcher: the launcher drops null init/fini array entries
+    from the libraries it stages. funopen_unbuffered: the shim's funopen avoids OH's buffered
     fopencookie refill, which overwrites what it has just read.
     """
     def find(relative: str, marker: str, root: Path | None = westlake_root) -> str | None:
@@ -1101,8 +1612,11 @@ def bionic_loader_model(westlake_root: Path | None, manifest_root: Path | None =
 
     return {"code_cache_copy": find("framework/webview-shim/webview_bionic_shim.c", "westlake_load_from_code_cache("),
             "android_relr_launcher": find("tools/probe_source_app.py", "def android_relr_retagged(", manifest_root),
-            "android_relr_shim": find("framework/webview-shim/android_relocs.c", "write_retagged_copy("),
-            "funopen_unbuffered": find("framework/webview-shim/webview_bionic_shim.c", "setvbuf(file, NULL, _IONBF, 0)")}
+            "android_relr_shim": find("framework/webview-shim/android_relocs.c", "wl_write_loadable_copy("),
+            "null_entries_launcher": find("tools/probe_source_app.py", "def init_array_sanitized(", manifest_root),
+            "funopen_unbuffered": find("framework/webview-shim/webview_bionic_shim.c", "setvbuf(file, NULL, _IONBF, 0)"),
+            "apk_member_redirect": find("framework/webview-shim/webview_bionic_shim.c", 'strstr(filename, ".apk!/lib/")'),
+            "open_by_name": find("framework/webview-shim/webview_bionic_shim.c", "westlake_open_lib_by_name(")}
 
 
 def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_extracts: dict[str, Any],
@@ -1111,12 +1625,14 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
                         loader: dict[str, str | None] | None = None) -> list[dict[str, Any]]:
     rows = []
     elfs = ohresolve.target_elfs(scan)
+    packaged = ohresolve.packaged_elfs(scan)
+    unpacked = [elf for elf in elfs if elf.get("origin") == "unpacked"]
     shadowed, targets = shadowed_libraries(scan, board_paths or [])
     # The graph is by DT_NEEDED name (the SONAME), but the launcher routes files by name, and a name it
     # cannot find stops the launch: TikTok's libeffect_plugin.so is libeffect.so, and r77 and r82
     # never launched it ("Android namespace target is not a pinned APK DSO").
     files: dict[str, str] = {}
-    for elf in elfs:
+    for elf in packaged:
         base = elf["name"].rsplit("/", 1)[-1]
         files.setdefault(elf.get("soname") or base, base)
     if shadowed:
@@ -1155,7 +1671,9 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
                 seen_blocking=["nori, rushhour, marlin, mobile, siftrecipes (React Native: Unable to load script)"],
                 shim="ship the companion in the parent namespace and let the Android namespace inherit it",
             ))
-    resolvers = sorted({elf.get("soname") or Path(elf["name"]).name for elf in elfs
+    # Packaged only: the launcher names a library to translate by file, and one the app writes at run
+    # time is covered by --android-native-net-app-libraries (load:app-storage-exec below).
+    resolvers = sorted({elf.get("soname") or Path(elf["name"]).name for elf in packaged
                         if NETWORK_ABI_IMPORTS & {name.split("@")[0] for name in
                                                   elf.get("undefined_symbols", []) + elf.get("undefined_weak_symbols", [])}})
     if resolvers:
@@ -1198,9 +1716,9 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
             seen_blocking=["facebook, instagram, messenger (superpack: could not extract file from archive)"],
             shim="keep funopen FILEs unbuffered on OH, buffering inside the cookie",
         ))
-    if not facts["extract_native_libs"] and elfs:
+    if not facts["extract_native_libs"] and packaged:
         rows.append(_row(
-            "native-loading", "load:in-apk", f"Libraries mapped straight out of the APK ({len(elfs)} .so, extractNativeLibs=false)",
+            "native-loading", "load:in-apk", f"Libraries mapped straight out of the APK ({len(packaged)} .so, extractNativeLibs=false)",
             oh_touchpoint="OH dynamic linker (cannot map zip!/ members: board test 2026-09-18)",
             verdict="supplied" if launcher_extracts["present"] else "missing",
             shim_class="C0" if launcher_extracts["present"] else "C3",
@@ -1218,7 +1736,54 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
     loaders = sorted({m.get("owner", "").split("/")[2] for m in inventory.get("declared_native_methods", [])
                       if m.get("owner", "").startswith("Lcom/facebook/soloader/")})
     path_loads = [c for c in inventory.get("load_library_calls", []) if c.get("api") == "load"]
-    if loaders or path_loads:
+    # A library loaded from inside an APK (<apk>!/lib/<abi>/<name>): OH's loader maps the stored member
+    # itself and so gets the APK's bytes, without the fixes the launcher applies to the copy it
+    # stages. SoLoader does this with a split APK: Threads' libc++_shared.so kept DT_ANDROID_RELR.
+    unfixed = sorted({elf.get("soname") or Path(elf["name"]).name for elf in packaged
+                      if elf.get("split_apk") and (elf.get("android_relocation_tags")
+                                                   or (elf.get("null_array_entries") or {}).get("init"))})
+    if loaders and unfixed:
+        redirect = loader.get("apk_member_redirect")
+        rows.append(_row(
+            "native-loading", "load:apk-member",
+            f"Split-APK libraries SoLoader may load in place ({', '.join(unfixed[:4])}" + (" ..." if len(unfixed) > 4 else "") + ")",
+            oh_touchpoint="OH musl dlopen: maps a stored zip member (<apk>!/lib/<abi>/<name>) itself",
+            verdict="supplied" if redirect else "missing", shim_class="C3", effort="verify" if redirect else "S",
+            confidence=STATIC, provider=("the bionic shim loads the launcher's staged copy for such a path" if redirect else
+                                         "none: the in-place load bypasses the staged, fixed copy"),
+            provider_source=redirect,
+            app_evidence=f"SoLoader is in the app; {len(unfixed)} split-APK libraries need a staging fix",
+            seen_blocking=["threads (r83 and a rerun: libc++_shared.so from split_config.arm64_v8a.apk, constructor "
+                           "at its link-time address)"],
+            shim="answer an APK-member path with the staged copy of the same library",
+        ))
+    # A library Java loads that names a packaged sibling in DT_NEEDED. OH's loader matches DT_NEEDED
+    # against short names only, and a library opened by path has none: a sibling loaded by path first
+    # (ART opens app libraries by path) is loaded again for its dependent. Chaquopy loads
+    # libpython3.11.so, then libchaquopy_java.so, and econverter ran two Python runtimes.
+    java_loaded = {"lib" + call["value"] + ".so" for call in inventory.get("load_library_calls", [])
+                   if call.get("api") == "loadLibrary" and call.get("value")}
+    packaged_names = {elf.get("soname") or Path(elf["name"]).name for elf in packaged}
+    dependents = sorted({name for elf in packaged
+                         for name in [elf.get("soname") or Path(elf["name"]).name]
+                         if name in java_loaded and set(elf.get("needed") or []) & (packaged_names - {name})})
+    if dependents:
+        by_name = loader.get("open_by_name")
+        rows.append(_row(
+            "native-loading", "load:needed-sibling",
+            f"Java-loaded libraries that need a packaged sibling ({', '.join(dependents[:4])}"
+            + (" ..." if len(dependents) > 4 else "") + ")",
+            oh_touchpoint="OH musl: DT_NEEDED is matched against short names; a library opened by path has none",
+            verdict="supplied" if by_name else "missing", shim_class="C3", effort="verify" if by_name else "S",
+            confidence=STATIC,
+            provider=("the bionic shim opens an app library by name where the name finds the same file"
+                      if by_name else "none: a sibling ART loaded by path is loaded a second time for its dependent"),
+            provider_source=by_name,
+            app_evidence=f"{len(dependents)} libraries loaded through System.loadLibrary name packaged siblings in DT_NEEDED",
+            seen_blocking=["econverter (Chaquopy: two copies of libpython3.11.so; a call through a null slot)"],
+            shim="open app libraries by name where the name finds the same file, so a later DT_NEEDED matches them",
+        ))
+    if loaders or path_loads or unpacked:
         copy = loader.get("code_cache_copy")
         rows.append(_row(
             "native-loading", "load:app-storage-exec",
@@ -1230,7 +1795,9 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
                       if copy else "none"),
             provider_source=copy,
             app_evidence=(("SoLoader unpacks and loads libraries from app storage; " if loaders else "")
-                          + (f"System.load with a path from {len(path_loads)} call sites" if path_loads else "")).strip("; "),
+                          + (f"System.load with a path from {len(path_loads)} call sites; " if path_loads else "")
+                          + (f"{len(unpacked)} libraries harvested from its data directory after a run"
+                             if unpacked else "")).strip("; "),
             seen_blocking=["whatsapp, capcut (top-apps batch: failed to map library errno=13)"],
             shim="load such libraries from a location OH lets the app map executable (copy there first), "
                  "or allow app_data_file execute mapping for Westlake apps",
@@ -1238,12 +1805,52 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
             # addrinfo translation too (Messenger's superpack-unpacked liger).
             launch_args=["--android-native-net-app-libraries"],
         ))
+    # Null init array entries (scanner.null_array_entries): bionic skips them, musl calls them. ART's
+    # OpenNativeLibrary drops them from the library it loads, not from that library's dependencies.
+    null_init = sorted({elf.get("soname") or Path(elf["name"]).name for elf in elfs
+                        if (elf.get("null_array_entries") or {}).get("init")})
+    if null_init:
+        written = sorted({elf.get("soname") or Path(elf["name"]).name for elf in unpacked
+                          if (elf.get("null_array_entries") or {}).get("init")})
+        fixed = loader.get("null_entries_launcher")
+        supplied = bool(fixed) and not written
+        rows.append(_row(
+            "native-loading", "load:null-constructors",
+            f"Libraries whose init array holds null entries ({', '.join(null_init[:4])}"
+            + (" ..." if len(null_init) > 4 else "") + ")",
+            oh_touchpoint="OH musl do_init_fini: calls every init array entry; bionic skips 0 and -1",
+            verdict="supplied" if supplied else "missing", shim_class="C3",
+            effort="verify" if supplied else "XS" if not written else "S", confidence=STATIC,
+            provider=(("the launcher drops them from every library it stages" if fixed else
+                       "ART drops them only from a library System.loadLibrary names, not its dependencies")
+                      + (f"; nothing drops them from the {len(written)} written at run time" if written else "")),
+            provider_source=fixed,
+            app_evidence=f"{len(null_init)} libraries", open_symbols=written[:12],
+            seen_blocking=["tiktok (r83, t138: pc 0 from do_init_fini; libttffmpeg.so, a dependency of "
+                           "libttmverify.so)", "toutiao (libEncryptor.so)"],
+            shim="drop null and -1 entries (compacting the rest, relocations included) before the loader sees the library",
+        ))
     # DT_ANDROID_RELR (scanner.ANDROID_RELOCATION_TAGS): musl skips it, so a constructor pointer
     # keeps its link-time value and the load dies calling it.
     android_relocated = sorted({elf.get("soname") or Path(elf["name"]).name for elf in elfs
                                 if elf.get("android_relocation_tags")})
     if android_relocated:
-        applied = loader.get("android_relr_launcher")
+        # The launcher renumbers what it stages; a library written at run time needs the shim to.
+        written = sorted({elf.get("soname") or Path(elf["name"]).name for elf in unpacked
+                          if elf.get("android_relocation_tags")})
+        staged = len(written) < len(android_relocated)
+        launcher_fix, shim_fix = loader.get("android_relr_launcher"), loader.get("android_relr_shim")
+        applied = (launcher_fix or not staged) and (shim_fix or not written)
+        if applied:
+            provider = ("the launcher stages them with the tags renumbered to DT_RELR, which musl applies"
+                        if staged else "")
+            if shim_fix:
+                provider += ("; " if provider else "") + "the bionic shim does the same for libraries the app writes at run time"
+        elif launcher_fix and staged:
+            provider = (f"the launcher renumbers only what it stages; nothing renumbers the {len(written)} "
+                        "written at run time: their pointers keep link-time values")
+        else:
+            provider = "none: pointers the table covers keep their link-time values"
         tags = sorted({t for elf in elfs for t in elf.get("android_relocation_tags") or ()})
         rows.append(_row(
             "native-loading", "load:android-relocations",
@@ -1251,13 +1858,10 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
             + (" ..." if len(android_relocated) > 4 else "") + ")",
             oh_touchpoint="OH musl dynamic linker: skips " + ", ".join(tags) + " (applies standard DT_RELR)",
             verdict="supplied" if applied else "missing", shim_class="C3", effort="verify" if applied else "S",
-            confidence=STATIC,
-            provider=("the launcher stages them with the tags renumbered to DT_RELR, which musl applies"
-                      + ("; the bionic shim does the same for libraries the app writes at run time"
-                         if loader.get("android_relr_shim") else "")
-                      if applied else "none: pointers the table covers keep their link-time values"),
-            provider_source=applied,
-            app_evidence=f"{len(android_relocated)} APK libraries carry {', '.join(tags)}",
+            confidence=STATIC, provider=provider,
+            provider_source=(launcher_fix if staged else shim_fix) or None,
+            app_evidence=f"{len(android_relocated)} APK libraries carry {', '.join(tags)}"
+                         + (f", {len(written)} of them written at run time ({', '.join(written[:3])})" if written else ""),
             seen_blocking=["facebook, messenger, instagram (SIGSEGV with pc == fault addr == the library's "
                            "unrelocated INIT_ARRAY entry)"],
             shim="renumber DT_ANDROID_RELR/RELRSZ/RELRENT to DT_RELR/RELRSZ/RELRENT (same encoding); "
@@ -1268,6 +1872,37 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
 
 # Always present: the bionic names OH's musl loader answers for itself.
 _LOADER_PROVIDED = {"libc.so", "libm.so", "libdl.so", "ld-android.so"}
+
+
+# The SDK level Westlake reports (android_os_SystemProperties.cpp's table, mirrored by the bionic
+# shim) and the ART its runtime is built from.
+REPORTED_SDK, ART_SOURCE = 34, "AOSP 15 (API 35)"
+
+
+def art_internal_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
+    """Libraries that reach into ART through its C++ symbols. They find them (Westlake's libart.so
+    exports every symbol; on Android they read its symbol table) and patch heap, GC, JIT and thread
+    state at offsets chosen by the SDK level the device reports. Westlake reports 34 and runs an
+    AOSP 15 ART, so what they write lands by Android 14's layout in Android 15's structures."""
+    users = sorted(((elf.get("soname") or Path(elf["name"]).name, elf["art_internal_symbols"],
+                     elf.get("art_internal_sample", []))
+                    for elf in ohresolve.target_elfs(scan) if elf.get("art_internal_symbols", 0) >= 3),
+                   key=lambda item: -item[1])
+    if not users:
+        return []
+    return [_row(
+        "native-symbols", "art:internals",
+        f"Libraries that patch ART internals ({', '.join(name for name, _, _ in users[:4])}"
+        + (" ..." if len(users) > 4 else "") + ")",
+        oh_touchpoint=f"Westlake's ART: built from {ART_SOURCE}, reported as SDK {REPORTED_SDK}",
+        verdict="unverified", shim_class="C2", effort="L", confidence=STATIC,
+        provider="none: nothing keeps the runtime's layout to the one the reported SDK level implies",
+        app_evidence="; ".join(f"{name} names {count} ({', '.join(sample[:2])})" for name, count, sample in users[:6]),
+        suspected_blocking=["capcut (r83 and a rerun: musl's allocator faults about 10 s in, after libjato, "
+                            "libsysoptimizer and libgodzilla-sysopt load; unconfirmed)"],
+        shim="report the SDK level the runtime's ART is built from, or make these libraries' version check "
+             "fail closed (most disable themselves on an unknown layout)",
+    )]
 
 
 def needed_library_rows(scan: dict[str, Any], board_paths: list[str] | None,
@@ -1393,16 +2028,31 @@ def external_rows(facts: dict[str, Any], scan: dict[str, Any], refused: dict[str
 # Assembly, backtest, rendering
 # --------------------------------------------------------------------------------------------
 
+def bionic_shim_sources(westlake_root: Path) -> list[Path]:
+    """The C sources the shim's build compiles (tools/build_bionic_shim.sh), the main one first."""
+    directory = westlake_root / "framework/webview-shim"
+    build = westlake_root / "tools/build_bionic_shim.sh"
+    names = re.findall(r"\$W/(\w+\.c)\b", build.read_text(errors="replace")) if build.exists() else []
+    sources = [directory / "webview_bionic_shim.c"] + [directory / n for n in names if n != "webview_bionic_shim.c"]
+    return [path for path in sources if path.exists()]
+
+
 def bionic_shim_exports(westlake_root: Path) -> set[str]:
-    shim = westlake_root / "framework/webview-shim/webview_bionic_shim.c"
-    if not shim.exists():
-        return set()
-    text = shim.read_text(errors="replace")
-    names = set(re.findall(r"^(?:[A-Za-z_][\w \*]*?[\s\*])?([A-Za-z_]\w*)\s*\([^;]*\)\s*\{", text, re.M))
-    names |= set(re.findall(r"^[A-Za-z_][\w \*]*?\s\**(__sF|_ctype_)\b", text, re.M))
-    # Forwarders a macro defines: WESTLAKE_ALOOPER_FORWARD(ret, name, params, args).
-    names |= set(re.findall(r"^WESTLAKE_\w+_FORWARD\([^,]+,\s*(\w+)\s*,", text, re.M))
-    return {n for n in names if not n.startswith("westlake_") and n not in {"if", "for", "while", "switch", "return"}}
+    names: set[str] = set()
+    for source in bionic_shim_sources(westlake_root):
+        text = source.read_text(errors="replace")
+        # A definition's parameters hold at most one level of parentheses (a function pointer); an
+        # unbounded match ran from a macro call on one line into the next definition and took it.
+        names |= set(re.findall(r"^(?:[A-Za-z_][\w \*]*?[\s\*])?([A-Za-z_]\w*)\s*\((?:[^;(){}]|\([^;(){}]*\))*\)\s*\{",
+                                text, re.M))
+        names |= set(re.findall(r"^[A-Za-z_][\w \*]*?\s\**(__sF|_ctype_)\b", text, re.M))
+        # Forwarders a macro defines: WESTLAKE_ALOOPER_FORWARD(ret, name, params, args).
+        names |= set(re.findall(r"^WESTLAKE_\w+_FORWARD\([^,]+,\s*(\w+)\s*,", text, re.M))
+        # AConfiguration's getter/setter pairs: WL_CONFIG_FIELD(Name, field).
+        for field in re.findall(r"^WL_CONFIG_FIELD\((\w+)\s*,", text, re.M):
+            names |= {"AConfiguration_get" + field, "AConfiguration_set" + field}
+    return {n for n in names if not n.startswith(("westlake_", "wl_")) and not n.isupper()
+            and n not in {"if", "for", "while", "switch", "return", "__attribute__"}}
 
 
 def launcher_extraction(manifest_root: Path | None) -> dict[str, Any]:
@@ -1597,6 +2247,14 @@ _NIO_IMPLEMENTATIONS = {
     "Ljava/nio/channels/Selector;": ("Lsun/nio/ch/PollArrayWrapper;", "Lsun/nio/ch/IOUtil;"),
     "Ljava/nio/channels/spi/SelectorProvider;": ("Lsun/nio/ch/Net;", "Lsun/nio/ch/PollArrayWrapper;", "Lsun/nio/ch/IOUtil;"),
 }
+# Public NIO buffer classes whose typed bulk gets and puts reach libcore.io.Memory's natives through
+# the heap or direct implementation (HeapByteBuffer -> Memory.unsafeBulkGet, a direct buffer ->
+# Memory.peekIntArray ...), behind virtual dispatch the native-call index does not follow. Instagram
+# died on unsafeBulkGet; Mindustry and Unciv on pokeFloatArray and pokeShortArray.
+_BUFFER_IMPLEMENTATIONS = {
+    "Ljava/nio/" + name + ";": ("Llibcore/io/Memory;",)
+    for name in ("ByteBuffer", "CharBuffer", "ShortBuffer", "IntBuffer", "LongBuffer", "FloatBuffer", "DoubleBuffer")
+}
 # Declared native in libcore but registered by AOSP itself neither (ojluni's Net.c has no entry for
 # them): no Android app can depend on them.
 _AOSP_UNIMPLEMENTED = {
@@ -1679,12 +2337,14 @@ def framework_native_rows(scan: dict[str, Any], runtime: dict[str, Any] | None,
                     wrapper = f"{owner[1:-1].rsplit('/', 1)[-1]}.{method[:method.index('(')]}"
                     via[target_owner].setdefault(native, wrapper)
     if core_indexed:
-        for public, implementations in _NIO_IMPLEMENTATIONS.items():
-            if public not in app_calls:
-                continue
-            for implementation in implementations:
-                for native in unbound_of(implementation):
-                    via[implementation].setdefault(native, public[1:-1].rsplit("/", 1)[-1] + " (its SelectorProvider implementation)")
+        for table, how in ((_NIO_IMPLEMENTATIONS, "its SelectorProvider implementation"),
+                           (_BUFFER_IMPLEMENTATIONS, "its heap or direct buffer implementation")):
+            for public, implementations in table.items():
+                if public not in app_calls:
+                    continue
+                for implementation in implementations:
+                    for native in unbound_of(implementation):
+                        via[implementation].setdefault(native, public[1:-1].rsplit("/", 1)[-1] + f" ({how})")
     rows = []
     for owner in sorted(set(app_calls) | set(via)):
         natives = [m for m in (classes.get(owner) or {}).get("native_methods") or [] if "$ravenwood" not in m]
@@ -1820,6 +2480,7 @@ def android_namespace_rows(scan: dict[str, Any], rows: list[dict[str, Any]],
         args = row.get("launch_args") or []
         targets |= {value for flag, value in zip(args[0::2], args[1::2]) if flag == "--android-native-target"}
     app_written = any(row["id"] == "load:app-storage-exec" for row in rows)
+    written = {elf["name"] for elf in ohresolve.target_elfs(scan) if elf.get("origin") == "unpacked"}
     if not targets and not app_written:
         return []
     bridge = {lib.get("soname") or lib["name"]: lib for lib in runtime.get("bridge_libraries", [])}
@@ -1848,7 +2509,7 @@ def android_namespace_rows(scan: dict[str, Any], rows: list[dict[str, Any]],
             continue
         unreachable = (runtime_closure(name) & declared.get(name, set())) - set(lib.get("exported_symbols", [])) - packaged
         importers: dict[str, set[str]] = defaultdict(set)
-        routed = False
+        routed = harvested = False
         for elf in elfs:
             if name not in elf.get("needed", []):
                 continue
@@ -1859,6 +2520,7 @@ def android_namespace_rows(scan: dict[str, Any], rows: list[dict[str, Any]],
             routed |= in_targets
             for symbol in set(elf.get("undefined_symbols", [])) & unreachable:
                 importers[symbol].add(elf_name)
+                harvested |= elf["name"] in written
         if not importers:
             continue
         names = sorted(importers)
@@ -1873,10 +2535,24 @@ def android_namespace_rows(scan: dict[str, Any], rows: list[dict[str, Any]],
             provider=f"{len(names) - len(open_)} of {len(names)} forwarded by the Westlake bionic shim",
             open_symbols=open_[:20], covered_symbols=[n for n in names if n in shim_exports][:20],
             app_evidence=("imported by libraries the launcher routes to the Android namespace" if routed else
+                          "imported by libraries the app wrote at run time (harvested after a run), which load "
+                          "in the Android namespace" if harvested else
                           "the app writes and loads libraries at run time, which load in the Android namespace; "
                           "its packaged libraries import these, so the ones it writes likely do too"),
             shim="forward each from the bionic shim to the runtime's own library, as it does ALooper_*"))
     return out
+
+
+_LIBRARY_TARGET_FLAGS = ("--android-native-target", "--android-native-net-target")
+
+
+def unpackaged_launch_targets(args: list[str], scan: dict[str, Any]) -> list[str]:
+    """Library targets in launch args that name no packaged file. The launcher routes files by name and
+    refuses such a target, so the app never starts: TikTok's maps once named libeffect.so, the SONAME
+    of its libeffect_plugin.so, and TikTok did not launch in two whole-corpus runs."""
+    files = {elf["name"].rsplit("/", 1)[-1] for elf in ohresolve.packaged_elfs(scan)}
+    return sorted({value for flag, value in zip(args[0::2], args[1::2])
+                   if flag in _LIBRARY_TARGET_FLAGS and value not in files})
 
 
 def launch_args(rows: list[dict[str, Any]]) -> list[str]:
@@ -1918,7 +2594,10 @@ def build_map(
     svc, dynamic = service_rows(scan, aosp_services, westlake_services)
     rows = (java + svc + package_manager_rows(scan, facts, pm, pm_null_consequences(aosp_root))
             + app_framework_rows(scan, contracts.direct_launch_am_model(westlake_root),
-                                 contracts.window_adapter_model(westlake_root))
+                                 contracts.window_adapter_model(westlake_root),
+                                 contracts.task_queries_model(westlake_root),
+                                 contracts.launch_intent_model(westlake_root),
+                                 contracts.thread_priority_model(westlake_root.parent / "art-build"))
             + engine_surface_rows(scan, surfaceview_model(westlake_root, manifest_root, runtime_libraries))
             + runtime_data_rows(scan)
             + android_path_rows(apk_path, scan, runtime_data, westlake_root)
@@ -1926,24 +2605,36 @@ def build_map(
             + framework_native_rows(scan, runtime_index, runtime_class_paths)
             + lifecycle_native_rows(runtime_index, runtime_class_paths)
             + native_upcall_rows(scan)
-            + (ndk_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root), ndk_cov) if ndk_cov
-               else native_symbol_rows(scan, oh_missing, bionic_shim_exports(westlake_root)))
+            + (ndk_symbol_rows(scan, [m for m in oh_missing if not m.get("version_mismatch")],
+                               bionic_shim_exports(westlake_root), ndk_cov) if ndk_cov
+               else native_symbol_rows(scan, [m for m in oh_missing if not m.get("version_mismatch")],
+                                       bionic_shim_exports(westlake_root)))
+            + symbol_version_rows(oh_missing)
+            + task_root_rows(scan, contracts.activity_client_model(westlake_root))
+            + feature_rows(scan, contracts.feature_claims_model(westlake_root), aosp_services, westlake_services)
+            + window_metrics_rows(scan, contracts.window_metrics_model(westlake_root))
+            + native_egl_window_rows(scan, contracts.native_egl_window_model(westlake_root))
             + native_loading_rows(facts, scan, launcher_extraction(manifest_root), board_paths,
                                   launcher_namespace_option(manifest_root), runtime_libraries,
                                   bionic_loader_model(westlake_root, manifest_root))
             + nio_rows(scan, runtime_class_paths)
+            + art_internal_rows(scan)
             + needed_library_rows(scan, board_paths, runtime_libraries)
             + libc_constant_rows(scan, contracts.libc_constant_model(westlake_root))
+            + signal_abi_rows(scan, contracts.signal_abi_model(westlake_root))
+            + static_mutex_rows(scan, contracts.static_mutex_model(westlake_root))
             + security_rows(scan, contracts.keystore_model(westlake_root))
             + webview_rows(scan, webview_process_model(aosp_root, westlake_root))
             # art-build sits beside the westlake checkout in the same workspace; absent, the row
             # is simply not claimed.
             + silent_load_rows(scan, native_load_short_circuit(westlake_root.parent / "art-build"),
                                runtime_libraries)
+            + stub_native_rows(scan, stub_native_model(westlake_root.parent / "art-build", westlake_root))
             + runtime_resolved_rows(scan, ndk_cov)
             + sandbox_rows(scan, policy) + external_rows(facts, scan, refused_libraries(westlake_root)))
     rows += android_namespace_rows(scan, rows, android_namespace_libs, runtime_index,
                                    bionic_shim_exports(westlake_root), ndk_cov)
+    rows += interposition_rows(scan, runtime_index, rows)
     if ledger:
         apply_ledger(rows, ledger)
     gap_map = {
@@ -1957,6 +2648,10 @@ def build_map(
         # launcher can close is closed on the app's first launch.
         "launch_args": launch_args(rows),
     }
+    bad_targets = unpackaged_launch_targets(gap_map["launch_args"], scan)
+    if bad_targets:
+        gap_map["checks"] = {"unpackaged_launch_targets": bad_targets}
+        print("gap-map: launch targets name no packaged file: " + " ".join(bad_targets), file=sys.stderr)
     if probe_results:
         apply_probe_results(gap_map, probe_results)
     if observed:

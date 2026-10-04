@@ -159,9 +159,44 @@ def pm_adapter_model(westlake_root: Path) -> dict[str, Any]:
             "providers_sorted_by_init_order": _evidence(
                 bridge.read_text(errors="replace") if bridge.exists() else "",
                 r"[Pp]roviders\.sort\([^;]*initOrder", bridge, westlake_root),
+            # Each provider authority goes to its first declaration, enabled or not; a provider left
+            # with none is not installed (ComponentResolver.addProvidersLocked).
+            "provider_authority_claims": _evidence(text, r"claimed\.add\(authority\)", path, westlake_root),
         },
         "provenance": git_state(westlake_root),
     }
+
+
+def feature_claims_model(westlake_root: Path) -> dict[str, Any]:
+    """The features PackageManagerAdapter.hasSystemFeature reports present: each case label that
+    reaches `return true`, and those answered by a condition, with the condition."""
+    path = westlake_root / "framework/package-manager/java/PackageManagerAdapter.java"
+    text = path.read_text(errors="replace") if path.exists() else ""
+    match = re.search(r"public boolean hasSystemFeature\(String \w+, int \w+\)\s*\{", text)
+    if not match:
+        return {"claimed": [], "conditional": {}, "source": None}
+    claimed: list[str] = []
+    conditional: dict[str, str] = {}
+    pending: list[str] = []
+    for line in _braced_block(text, match.start()).splitlines():
+        stripped = line.strip()
+        case = re.match(r'case "([^"]+)":', stripped)
+        if case:
+            pending.append(case.group(1))
+            continue
+        answer = re.match(r"return\s+([^;]+);", stripped)
+        if answer and pending:
+            value = answer.group(1).strip()
+            if value == "true":
+                claimed += pending
+            elif value != "false":
+                conditional.update({name: value for name in pending})
+            pending = []
+        elif stripped.startswith("default:"):
+            pending = []
+    line = text.count("\n", 0, match.start()) + 1
+    return {"claimed": sorted(claimed), "conditional": conditional,
+            "source": f"{path.relative_to(westlake_root)}:{line}"}
 
 
 def _braced_block(text: str, start: int) -> str:
@@ -195,6 +230,104 @@ def direct_launch_am_model(westlake_root: Path) -> dict[str, Any]:
     line = text.count("\n", 0, stub.start()) + 1 if stub else None
     return {"proxy_stub": stub is not None, "answered": answered,
             "source": f"{path.relative_to(westlake_root)}:{line}" if stub else None}
+
+
+#: ActivityManager's task queries -> the IActivityTaskManager method behind each.
+TASK_QUERIES = {"getRunningTasks": "getTasks", "getAppTasks": "getAppTasks", "getRecentTasks": "getRecentTasks"}
+
+
+def task_queries_model(westlake_root: Path) -> dict[str, Any]:
+    """Which IActivityTaskManager task queries the adapter answers with the app's own task, and which
+    with nothing: an empty list, or null (ActivityManager.getRecentTasks reads getList() off it)."""
+    path = westlake_root / "framework/activity/java/ActivityTaskManagerAdapter.java"
+    text = _strip_java_comments(path.read_text(errors="replace")) if path.exists() else ""
+    answered, empty, first = [], [], None
+    for method in sorted(set(TASK_QUERIES.values())):
+        match = re.search(rf"\bpublic\s+[\w.<>, ]+\s+{method}\s*\(", text)
+        if not match:
+            continue
+        first = first or match
+        body = _braced_block(text, match.start())
+        statements = [s.strip() for s in body.split(";") if s.strip() and not s.strip().startswith("logBridged")]
+        if statements and re.fullmatch(r"return\s+(null|Collections\.emptyList\(\)|new\s+\w+(<[^>]*>)?\(\))", statements[-1]) \
+                and len(statements) == 1:
+            empty.append(method)
+        else:
+            answered.append(method)
+    return {"answered": answered, "empty": empty,
+            "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, first.start()) + 1}" if first else None}
+
+
+def launch_intent_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether the app's own activities are launched with the Intent the app passed. The in-process
+    launch goes out through OH's Want and is rebuilt from its JSON, which keeps strings and numbers
+    but not Parcelable extras; the provider can hand the launch the caller's Intent instead."""
+    path = westlake_root / "framework/activity/java/AppSchedulerBridge.java"
+    text = _strip_java_comments(path.read_text(errors="replace")) if path.exists() else ""
+    match = re.search(r"PendingLaunchIntents\.take\(", text)
+    return {"original_intent": match is not None,
+            "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, match.start()) + 1}" if match else None}
+
+
+def thread_priority_model(art_build_root: Path | None) -> dict[str, Any]:
+    """The Java priority ART gives a thread it attaches: its palette's PaletteSchedGetPriority answer.
+    A constant 0 is outside Java's 1-10, and setPriority with a saved 0 throws."""
+    path = art_build_root / "stubs/link_stubs_arm64.cc" if art_build_root else None
+    if path is None or not path.exists():
+        return {"answer": None, "source": None}
+    text = path.read_text(errors="replace")
+    match = re.search(r"int\s+PaletteSchedGetPriority\s*\([^)]*\)\s*\{[^}]*\*p\s*=\s*(\d+)", text)
+    if not match:
+        return {"answer": None, "source": None}
+    return {"answer": int(match[1]), "source": f"art-build/stubs/link_stubs_arm64.cc:{text.count(chr(10), 0, match.start()) + 1}"}
+
+
+def window_metrics_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether activities are launched with their window's bounds in the configuration.
+
+    WindowManager.getCurrentWindowMetrics() and getMaximumWindowMetrics() answer from the
+    configuration's windowConfiguration bounds. The relayout fills them later; an activity that
+    measures itself in onCreate sees only what the bind-time configuration carried.
+    """
+    path = westlake_root / "framework/activity/java/AppSchedulerBridge.java"
+    text = path.read_text(errors="replace") if path.exists() else ""
+    match = re.search(r"Configuration buildConfiguration\(", text)
+    body = _braced_block(text, match.start()) if match else ""
+    bounds = re.search(r"windowConfiguration\.setBounds\(", body)
+    line = text.count("\n", 0, match.start()) + 1 if match else None
+    return {"bounds_at_bind": bounds is not None,
+            "source": f"{path.relative_to(westlake_root)}:{line}" if match else None}
+
+
+def native_egl_window_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether an eglCreateWindowSurface from native code reaches OH's EGL with an OH window.
+
+    ANativeWindow_fromSurface hands an app the adapter's AOSP-shaped window (magic ANW1) around an
+    OHNativeWindow, and OH's EGL takes only the OHNativeWindow. The preloaded bionic shim answers the
+    call for app code; it must unwrap the window (oh_anw_get_oh) before passing it on.
+    """
+    path = westlake_root / "framework/webview-shim/webview_bionic_shim.c"
+    text = path.read_text(errors="replace") if path.exists() else ""
+    match = re.search(r"^\S[^\n;]*\beglCreateWindowSurface\([^;{]*\)\s*\{", text, re.M)
+    body = _braced_block(text, match.start()) if match else ""
+    line = text.count("\n", 0, match.start()) + 1 if match else None
+    return {"unwraps": "anw_get_oh" in body,
+            "source": f"{path.relative_to(westlake_root)}:{line}" if match else None}
+
+
+def activity_client_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether the in-process IActivityClientController answers the task queries, or returns a
+    constant: getTaskForActivity backs Activity.isTaskRoot() and getTaskId()."""
+    path = westlake_root / "framework/activity/java/ActivityClientControllerAdapter.java"
+    text = path.read_text(errors="replace") if path.exists() else ""
+    match = re.search(r"public int getTaskForActivity\([^)]*\)\s*\{", text)
+    if not match:
+        return {"task_for_activity": None, "source": None}
+    body = _braced_block(text, match.start())
+    hollow = re.fullmatch(r"\s*return\s+-?\d+;\s*", body) is not None
+    line = text.count("\n", 0, match.start()) + 1
+    return {"task_for_activity": "constant" if hollow else "answered",
+            "source": f"{path.relative_to(westlake_root)}:{line}"}
 
 
 def window_adapter_model(westlake_root: Path) -> dict[str, Any]:
@@ -281,6 +414,73 @@ def _strip_java_comments(text: str) -> str:
 LIBC_CONSTANT_NAMESPACE_CALLS = {"sysconf", "pathconf", "fpathconf", "confstr"}
 
 
+def android_caller_scope(text: str) -> dict[str, bool]:
+    """Which callers the bionic shim's caller_is_android_dso counts as built against bionic: the
+    app's packaged libraries (/data/local/tmp/asx/lib/), and the ones it writes and loads from its
+    own storage (/data/data/..., the code_cache/wl-exec copies)."""
+    if "caller_is_android_dso(void" not in text:
+        # The test is used but not defined here: it has always covered the packaged libraries.
+        return {"packaged": "caller_is_android_dso(" in text, "written": False}
+    body = _braced_block(text, text.index("caller_is_android_dso(void"))
+    return {"packaged": "/data/local/tmp/asx/lib/" in body, "written": '"/data/data/"' in body}
+
+
+# Signal calls whose structures bionic and OH musl lay out differently on arm64: struct sigaction is
+# 32 bytes in bionic and 152 in musl (flags first in one, the handler first in the other), sigset_t
+# 8 bytes and 128.
+SIGNAL_ABI_CALLS = {"sigaction", "sigemptyset", "sigfillset", "sigaddset", "sigdelset", "sigismember",
+                    "sigprocmask", "pthread_sigmask"}
+SIGNAL_ABI_CALLS_64 = {name + "64" for name in SIGNAL_ABI_CALLS}
+
+
+def signal_abi_model(westlake_root: Path) -> dict[str, Any]:
+    """Which signal calls the bionic shim translates, for which callers, and whether a lookup by
+    name (dlsym) reaches the translation too."""
+    path = westlake_root / "framework/webview-shim/webview_bionic_shim.c"
+    if not path.exists():
+        return {"translated": [], "scope": {"packaged": False, "written": False}, "dlsym": None, "source": None}
+    raw = path.read_text(errors="replace")
+    text = _strip_java_comments(raw)
+    translated = sorted(name for name in SIGNAL_ABI_CALLS | SIGNAL_ABI_CALLS_64
+                        if re.search(rf"^\s*int\s+{name}\s*\(", text, re.M))
+    # A lookup by name reaches the translation through a dlsym interposer, or because an Android
+    # caller's dlopen("libc.so") gets this library's own handle (searched before musl's).
+    dlsym = (re.search(r"^\s*void\s*\*\s*dlsym\s*\(", text, re.M)
+             or re.search(r'strcmp\(basename, "libc\.so"\) == 0 && caller_is_android_dso', text))
+    first = re.search(r"^\s*int\s+sigaction\s*\(", text, re.M)
+    return {"translated": translated, "scope": android_caller_scope(text),
+            "dlsym": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, dlsym.start()) + 1}" if dlsym else None,
+            "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, first.start()) + 1}" if first else None}
+
+
+#: The lock calls that must see a Bionic static mutex initializer converted to musl's type first.
+STATIC_MUTEX_LOCKS = ("pthread_mutex_lock", "pthread_mutex_trylock")
+
+
+def static_mutex_model(westlake_root: Path) -> dict[str, Any]:
+    """Which lock calls the bionic shim defines that convert Bionic's static recursive and
+    error-checking initializers (0x4000, 0x8000 in the type word) to musl's types before musl locks
+    the mutex. Defined in the preloaded shim, they are every caller's."""
+    path = westlake_root / "framework/webview-shim/webview_bionic_shim.c"
+    if not path.exists():
+        return {"adopted": [], "source": None}
+    text = _strip_java_comments(path.read_text(errors="replace"))
+    adopted, first = [], None
+    for name in STATIC_MUTEX_LOCKS:
+        match = re.search(rf"^\s*int\s+{name}\s*\(", text, re.M)
+        if not match or "0x4000" not in text:
+            continue
+        body = _braced_block(text, match.start())
+        callee = re.search(r"(\w+)\(\s*mutex\s*\)\s*;", body)
+        # The conversion is called first thing, or lives in a helper called there that tests 0x4000.
+        helper = callee and re.search(rf"\b{callee[1]}\s*\([^;{{]*\)\s*\{{", text)
+        if helper and "0x4000" in _braced_block(text, helper.start()):
+            adopted.append(name)
+            first = first or match
+    return {"adopted": adopted,
+            "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, first.start()) + 1}" if first else None}
+
+
 def libc_constant_model(westlake_root: Path) -> dict[str, Any]:
     """Whether the bionic shim translates those constants, and for which callers.
 
@@ -303,7 +503,7 @@ def libc_constant_model(westlake_root: Path) -> dict[str, Any]:
         else:
             scope = "all-callers"
     line = text.count(chr(10), 0, text.index(f"{translated[0]}(")) + 1 if translated else None
-    return {"translated": translated, "scope": scope,
+    return {"translated": translated, "scope": scope, "callers": android_caller_scope(text),
             "source": f"{path.relative_to(westlake_root)}:{line}" if translated else None}
 
 

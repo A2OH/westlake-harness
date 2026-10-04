@@ -13,9 +13,9 @@ import unittest
 from pathlib import Path
 
 from test_known_answers import _find_android_d8, _run, _write
-from westlake_gap import gapmap, services
-from westlake_gap.contracts import (direct_launch_am_model, keystore_model, libc_constant_model,
-                                    pm_adapter_model, window_adapter_model)
+from westlake_gap import contracts, gapmap, services
+from westlake_gap.contracts import (direct_launch_am_model, feature_claims_model, keystore_model,
+                                    libc_constant_model, pm_adapter_model, window_adapter_model)
 from westlake_gap.scanner import inventory_dex
 
 
@@ -56,6 +56,68 @@ class ServiceRequestCapture(unittest.TestCase):
             self.assertEqual(by_method["direct"]["service"], "location")
             self.assertTrue(by_method["direct"]["binder_direct"])
             self.assertTrue(by_method["computed"]["dynamic"], "a computed name must be reported, not guessed")
+
+    def test_a_null_checked_service_result_is_marked(self) -> None:
+        """clauncher: R8 compiles Kotlin's non-null check to getClass() on the manager, so a null
+        getSystemService("device_policy") threw in HomeFragment; no cast message marks it."""
+        javac, d8 = shutil.which("javac"), _find_android_d8()
+        if not javac or not d8:
+            self.skipTest("javac and d8 are required for the executable fixture")
+        with tempfile.TemporaryDirectory(prefix="westlake-nullcheck-") as temp:
+            root = Path(temp)
+            _write(root / "api/android/content/Context.java", """package android.content;
+                public abstract class Context { public abstract Object getSystemService(String name); }""")
+            _write(root / "app/fixture/ChecksServices.java", """package fixture;
+                import android.content.Context;
+                public class ChecksServices {
+                    static Object compiledCheck(Context c) { Object m = c.getSystemService("device_policy"); m.getClass(); return m; }
+                    static Object required(Context c) { return java.util.Objects.requireNonNull(c.getSystemService("uimode")); }
+                    static Object unchecked(Context c) { Object m = c.getSystemService("alarm"); return m; }
+                    static void discarded(Context c, Object other) { c.getSystemService("power"); other.getClass(); }
+                }""")
+            api, app, dex = root / "api-classes", root / "app-classes", root / "dex"
+            for directory in (api, app, dex):
+                directory.mkdir()
+            _run(javac, "--release", "8", "-d", str(api), *map(str, (root / "api").rglob("*.java")))
+            _run(javac, "--release", "8", "-cp", str(api), "-d", str(app), str(root / "app/fixture/ChecksServices.java"))
+            _run(d8, "--min-api", "21", "--output", str(dex), str(app / "fixture/ChecksServices.class"))
+
+            by_method = {r["method"]: r for r in inventory_dex(dex / "classes.dex").service_requests}
+            self.assertTrue(by_method["compiledCheck"].get("null_checked"))
+            self.assertTrue(by_method["required"].get("null_checked"))
+            self.assertFalse(by_method["unchecked"].get("null_checked"))
+            self.assertFalse(by_method["discarded"].get("null_checked"), "a discarded result is not the value checked")
+
+    def test_feature_queries_name_the_feature(self) -> None:
+        javac, d8 = shutil.which("javac"), _find_android_d8()
+        if not javac or not d8:
+            self.skipTest("javac and d8 are required for the executable fixture")
+        with tempfile.TemporaryDirectory(prefix="westlake-features-") as temp:
+            root = Path(temp)
+            _write(root / "api/android/content/pm/PackageManager.java", """package android.content.pm;
+                public abstract class PackageManager {
+                    public static final String FEATURE_CAMERA = "android.hardware.camera";
+                    public abstract boolean hasSystemFeature(String name);
+                    public abstract boolean hasSystemFeature(String name, int version);
+                }""")
+            _write(root / "app/fixture/AsksFeatures.java", """package fixture;
+                import android.content.pm.PackageManager;
+                public class AsksFeatures {
+                    static boolean camera(PackageManager pm) { return pm.hasSystemFeature(PackageManager.FEATURE_CAMERA); }
+                    static boolean versioned(PackageManager pm) { return pm.hasSystemFeature("android.hardware.vulkan.level", 1); }
+                    static boolean computed(PackageManager pm, String name) { return pm.hasSystemFeature(name); }
+                }""")
+            api, app, dex = root / "api-classes", root / "app-classes", root / "dex"
+            for directory in (api, app, dex):
+                directory.mkdir()
+            _run(javac, "--release", "8", "-d", str(api), *map(str, (root / "api").rglob("*.java")))
+            _run(javac, "--release", "8", "-cp", str(api), "-d", str(app), str(root / "app/fixture/AsksFeatures.java"))
+            _run(d8, "--min-api", "21", "--output", str(dex), str(app / "fixture/AsksFeatures.class"))
+
+            by_method = {q["method"]: q for q in inventory_dex(dex / "classes.dex").feature_queries}
+            self.assertEqual(by_method["camera"]["feature"], "android.hardware.camera", "the constant is inlined at the call")
+            self.assertEqual(by_method["versioned"]["feature"], "android.hardware.vulkan.level")
+            self.assertIsNone(by_method["computed"]["feature"], "a computed name must be reported, not guessed")
 
 
 class ServiceVerdicts(unittest.TestCase):
@@ -164,6 +226,48 @@ class ServiceVerdicts(unittest.TestCase):
         self.assertEqual(verdict["accessibility"], services.INERT)
         self.assertEqual(verdict["layout_inflater"], services.SUPPLIED)
         self.assertEqual(verdict["camera"], services.UNRESOLVED, "no binder found must not read as supplied")
+
+    def test_a_claimed_feature_needs_its_service(self) -> None:
+        """FairScan: hasSystemFeature claimed a back camera that no Android camera service listed;
+        CameraX expected it, found no camera, and retried its init until it failed."""
+        _write(self.root / "westlake/framework/package-manager/java/PackageManagerAdapter.java", """class PackageManagerAdapter {
+            @Override
+            public boolean hasSystemFeature(String name, int version) {
+                switch (name) {
+                    case "android.software.webview":
+                        return getSideloadedWebViewPackageInfo() != null;
+                    // a comment between the labels
+                    case "android.hardware.touchscreen":
+                    case "android.hardware.camera":
+                    case "android.hardware.location.gps":
+                        return true;
+                    case "android.hardware.nfc":
+                        return false;
+                    default:
+                        return false;
+                }
+            }
+        }""")
+        claims = feature_claims_model(self.root / "westlake")
+        self.assertEqual(claims["claimed"], ["android.hardware.camera", "android.hardware.location.gps",
+                                             "android.hardware.touchscreen"])
+        self.assertEqual(claims["conditional"], {"android.software.webview": "getSideloadedWebViewPackageInfo() != null"})
+        aosp_root = self.root / "aosp"
+        table = services.aosp_service_table(
+            aosp_root / "frameworks-base/core/java/android/app/SystemServiceRegistry.java",
+            aosp_root / "frameworks-base/core/java/android/content/Context.java",
+            [aosp_root / "frameworks-base", aosp_root / "modules-scheduling"],
+        )
+        site = {"owner": "Lx/A;", "method": "m", "offset": 4}
+        scan = {"inventory": {"feature_queries": [
+            {**site, "feature": "android.hardware.camera"}, {**site, "feature": "android.hardware.location.gps"},
+            {**site, "feature": "android.hardware.touchscreen"}, {**site, "feature": "android.hardware.nfc"},
+            {**site, "feature": None}]}}
+        rows = {r["id"]: r for r in gapmap.feature_rows(scan, claims, table, services.westlake_service_model(self.root / "westlake"))}
+        self.assertEqual(rows["feature:android.hardware.camera"]["verdict"], "contradicted")
+        self.assertEqual(rows["feature:android.hardware.location.gps"]["verdict"], "supplied")
+        self.assertNotIn("feature:android.hardware.touchscreen", rows, "no service backs a form factor")
+        self.assertNotIn("feature:android.hardware.nfc", rows, "a feature reported absent promises nothing")
 
     def test_a_proxy_that_throws_is_strict_not_hollow(self) -> None:
         """Burger King: WebView's policy provider called UserManager.getApplicationRestrictions; the
@@ -318,6 +422,19 @@ class LifecycleNatives(unittest.TestCase):
             "getApplication()Landroid/app/Application;": ["Landroid/os/Binder;->getCallingUid()I"]}},
         "Landroid/database/sqlite/SQLiteGlobal;": {"native_methods": ["nativeReleaseMemory()I"]}}}
 
+    def test_buffer_classes_reach_libcore_memory(self) -> None:
+        """Instagram: CharBuffer.get(char[]) on a view over a byte[] reaches HeapByteBuffer and then
+        Memory.unsafeBulkGet, behind virtual dispatch the native-call index does not follow."""
+        runtime = {"bridge_libraries": [{"name": "libart.so", "jni_registration_entries": [
+                       {"name": "peekIntArray", "signature": "(J[IIIZ)V"}]}],
+                   "classes": {"Llibcore/io/Memory;": {"native_methods": [
+                       "peekIntArray(J[IIIZ)V", "unsafeBulkGet(Ljava/lang/Object;II[BIIZ)V"]}}}
+        scan = {"inventory": {"platform_method_names": {"Ljava/nio/CharBuffer;": ["get"]}}}
+        rows = {r["id"]: r for r in gapmap.framework_native_rows(scan, runtime)}
+        row = rows["jni:libcore.io.Memory"]
+        self.assertEqual(row["open_symbols"], ["unsafeBulkGet(Ljava/lang/Object;II[BIIZ)V"])
+        self.assertIn("CharBuffer (its heap or direct buffer implementation)", row["app_evidence"])
+
     def test_natives_the_framework_reaches_are_flagged_for_every_app(self) -> None:
         strings = {"android/database/sqlite/SQLiteGlobal", "#nativeReleaseMemory", "android/app/ActivityThread"}
         rows = {r["id"]: r for r in gapmap.lifecycle_native_rows(self.RUNTIME, strings)}
@@ -420,6 +537,27 @@ class AppStorageExec(unittest.TestCase):
             loader={"code_cache_copy": "framework/webview-shim/webview_bionic_shim.c:1"})}
         self.assertEqual(rows["load:app-storage-exec"]["verdict"], "supplied")
         self.assertEqual(rows["load:app-storage-exec"]["launch_args"], ["--android-native-net-app-libraries"])
+
+    def test_a_java_loaded_library_needing_a_sibling(self) -> None:
+        """econverter: Chaquopy loads libpython3.11.so by path, then libchaquopy_java.so, whose
+        DT_NEEDED found no short name to match and loaded Python a second time."""
+        elf = {"abi": "arm64-v8a", "abi_matches_machine": True}
+        scan = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {
+            "elfs": [{**elf, "name": "lib/arm64-v8a/libpython3.11.so", "soname": "libpython3.11.so", "needed": ["libc.so"]},
+                     {**elf, "name": "lib/arm64-v8a/libchaquopy_java.so", "soname": "libchaquopy_java.so",
+                      "needed": ["libpython3.11.so", "libc.so"]},
+                     {**elf, "name": "lib/arm64-v8a/libother.so", "soname": "libother.so", "needed": ["libpython3.11.so"]}],
+            "load_library_calls": [{"api": "loadLibrary", "owner": "Lcom/chaquo/python/GenericPlatform;", "value": "chaquopy_java"}]}}
+        rows = {r["id"]: r for r in gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True}, [])}
+        row = rows["load:needed-sibling"]
+        self.assertEqual((row["verdict"], row["item"]), ("missing", "Java-loaded libraries that need a packaged sibling (libchaquopy_java.so)"))
+        rows = {r["id"]: r for r in gapmap.native_loading_rows(
+            {"extract_native_libs": True}, scan, {"present": True}, [],
+            loader={"open_by_name": "framework/webview-shim/webview_bionic_shim.c:1"})}
+        self.assertEqual(rows["load:needed-sibling"]["verdict"], "supplied")
+        scan["inventory"]["load_library_calls"] = []
+        self.assertNotIn("load:needed-sibling", {r["id"] for r in gapmap.native_loading_rows(
+            {"extract_native_libs": True}, scan, {"present": True}, [])})
 
 
 class AndroidRelocations(unittest.TestCase):
@@ -661,6 +799,39 @@ class ProviderInitOrder(unittest.TestCase):
         self.assertNotIn("pm:provider-init-order", rows)
 
 
+class ProviderAuthority(unittest.TestCase):
+    """Quitter: a disabled provider holds the authority, and a later one for the same authority is
+    never installed on Android; its class was gone, and installing it failed the bind."""
+    FACTS = {"components": [
+        {"kind": "provider", "name": "androidx.work.impl.WorkManagerInitializer", "process": None, "enabled": "false",
+         "authorities": "a.workmanager-init", "meta_data": {}, "init_order": None, "direct_boot_aware": False},
+        {"kind": "provider", "name": "dev.fluttercommunity.workmanager.WorkmanagerInitializer", "process": None,
+         "enabled": None, "authorities": "a.workmanager-init", "meta_data": {}, "init_order": None,
+         "direct_boot_aware": False},
+        {"kind": "provider", "name": "androidx.startup.InitializationProvider", "process": None, "enabled": None,
+         "authorities": "a.androidx-startup;a.workmanager-init", "meta_data": {}, "init_order": None,
+         "direct_boot_aware": False}],
+        "splits": [], "processes": []}
+    SCAN = {"inventory": {"platform_method_names": {}}}
+
+    def model(self, claims: bool) -> dict:
+        return {"methods": {}, "semantics": {
+            "direct_boot_match_defaults": {"present": True, "source": "s"},
+            "split_paths_populated": {"present": True, "source": "s"},
+            "provider_authority_claims": {"present": claims, "source": "p:1" if claims else None}}}
+
+    def test_a_provider_whose_authority_is_held(self) -> None:
+        rows = {r["id"]: r for r in gapmap.package_manager_rows(self.SCAN, self.FACTS, self.model(False))}
+        row = rows["pm:provider-authority"]
+        self.assertEqual(row["verdict"], "missing")
+        self.assertEqual(row["item"], "Providers whose authority an earlier declaration holds (WorkmanagerInitializer)",
+                         "a provider keeping one of its authorities is installed under it")
+        rows = {r["id"]: r for r in gapmap.package_manager_rows(self.SCAN, self.FACTS, self.model(True))}
+        self.assertEqual(rows["pm:provider-authority"]["verdict"], "supplied")
+        facts = dict(self.FACTS, components=self.FACTS["components"][1:])
+        self.assertNotIn("pm:provider-authority", {r["id"] for r in gapmap.package_manager_rows(
+            self.SCAN, facts, self.model(False))})
+
 class AppFrameworkContracts(unittest.TestCase):
     _STUB = """class AppSpawnXInit {
         private static InvocationHandler makeStubHandler(final String label, final Set<String> hot) {
@@ -701,6 +872,73 @@ class AppFrameworkContracts(unittest.TestCase):
         self.assertEqual(answered["answered"], ["getRunningAppProcesses", "getServices"])
         rows = {r["id"]: r for r in gapmap.app_framework_rows(scan, answered)}
         self.assertEqual(rows["am:process-table"]["verdict"], "supplied")
+
+    def test_the_apps_own_services_need_start_and_bind_answers(self) -> None:
+        scan = {"apk": {"services": 2}, "inventory": {"platform_method_names": {
+            "Landroid/content/Context;": ["startForegroundService", "bindService", "getString"]}}}
+        bound_only = self._model("""if ("AdapterIAM-stub".equals(label)) {
+                        if ("bindService".equals(name)) return 1;
+                    }""")
+        row = {r["id"]: r for r in gapmap.app_framework_rows(scan, bound_only)}["am:in-app-services"]
+        self.assertEqual((row["verdict"], row["open_symbols"]), ("missing", ["startService"]))
+        both = self._model("""if ("AdapterIAM-stub".equals(label)) {
+                        if ("bindService".equals(name)) return 1;
+                        if ("startService".equals(name)) return start(args[1]);
+                    }""")
+        row = {r["id"]: r for r in gapmap.app_framework_rows(scan, both)}["am:in-app-services"]
+        self.assertEqual(row["verdict"], "supplied")
+        scan["apk"]["services"] = 0
+        self.assertNotIn("am:in-app-services", {r["id"] for r in gapmap.app_framework_rows(scan, both)},
+                         "an app with no services of its own starts other apps' services")
+        scan["inventory"]["platform_method_names"]["Landroid/content/Context;"] = ["registerReceiver", "sendBroadcast"]
+        row = {r["id"]: r for r in gapmap.app_framework_rows(scan, both)}["am:broadcasts"]
+        self.assertEqual((row["verdict"], row["open_symbols"]),
+                         ("missing", ["registerReceiverWithFeature", "broadcastIntentWithFeature"]))
+
+    def test_memory_info_and_the_apps_own_task(self) -> None:
+        scan = {"inventory": {"platform_method_names": {
+            "Landroid/app/ActivityManager;": ["getMemoryInfo", "getRunningTasks", "getAppTasks"]}}}
+        bare = self._model("")
+        with tempfile.TemporaryDirectory(prefix="westlake-atm-") as temp:
+            root = Path(temp)
+            adapter = root / "framework/activity/java/ActivityTaskManagerAdapter.java"
+            _write(adapter, """class ActivityTaskManagerAdapter {
+                public List<RunningTaskInfo> getTasks(int maxNum, boolean a, boolean b, int d) {
+                    logBridged("getTasks", "x");
+                    return Collections.emptyList();
+                }
+                public List<IBinder> getAppTasks(String pkg) { return OwnTask.appTasks(); }
+            }""")
+            tasks = contracts.task_queries_model(root)
+        self.assertEqual((tasks["answered"], tasks["empty"]), (["getAppTasks"], ["getTasks"]))
+        rows = {r["id"]: r for r in gapmap.app_framework_rows(scan, bare, None, tasks)}
+        self.assertEqual(rows["am:memory-info"]["verdict"], "hollow")
+        self.assertEqual((rows["am:own-task"]["verdict"], rows["am:own-task"]["open_symbols"]),
+                         ("hollow", ["getRunningTasks"]))
+        answered = self._model("""if ("AdapterIAM-stub".equals(label)) {
+                        if ("getMemoryInfo".equals(name)) { CallerProcess.memoryInfo(args[0]); return null; }
+                    }""")
+        rows = {r["id"]: r for r in gapmap.app_framework_rows(scan, answered, None, tasks)}
+        self.assertEqual(rows["am:memory-info"]["verdict"], "supplied")
+
+    def test_launch_extras_and_thread_priority(self) -> None:
+        scan = {"inventory": {"platform_method_names": {
+            "Landroid/content/Intent;": ["getStringExtra", "getParcelableExtra"],
+            "Ljava/lang/Thread;": ["setPriority"]}}}
+        bare = self._model("")
+        rows = {r["id"]: r for r in gapmap.app_framework_rows(
+            scan, bare, None, None, {"original_intent": False, "source": None}, {"answer": 0, "source": "s.cc:1"})}
+        self.assertEqual((rows["am:launch-extras"]["verdict"], rows["am:launch-extras"]["open_symbols"]),
+                         ("missing", ["getParcelableExtra"]))
+        self.assertEqual(rows["rt:thread-priority"]["verdict"], "missing")
+        rows = {r["id"]: r for r in gapmap.app_framework_rows(
+            scan, bare, None, None, {"original_intent": True, "source": "a.java:1"}, {"answer": 5, "source": "s.cc:1"})}
+        self.assertEqual((rows["am:launch-extras"]["verdict"], rows["rt:thread-priority"]["verdict"]),
+                         ("supplied", "supplied"))
+        with tempfile.TemporaryDirectory(prefix="westlake-art-") as temp:
+            stub = Path(temp) / "stubs/link_stubs_arm64.cc"
+            _write(stub, "int PaletteSchedGetPriority(int, int* p) { if (p) *p = 0; return 0; }\n")
+            self.assertEqual(contracts.thread_priority_model(Path(temp))["answer"], 0)
 
     def test_window_semantics_from_source(self) -> None:
         with tempfile.TemporaryDirectory(prefix="westlake-wm-") as temp:
@@ -1050,6 +1288,360 @@ static jstring Runtime_nativeLoad(JNIEnv* env, jclass clazz, jstring filename,
         self.assertEqual(targets, ["libc++_shared.so", "libeffect_plugin.so"])
 
 
+class LaunchArgsCheck(unittest.TestCase):
+    def test_a_target_naming_no_packaged_file_is_reported(self) -> None:
+        scan = {"inventory": {"elfs": [{"name": "lib/arm64-v8a/libeffect_plugin.so", "soname": "libeffect.so"}]}}
+        args = ["--android-native-target", "libeffect_plugin.so", "--android-native-target", "libeffect.so",
+                "--android-native-net-target", "libgone.so", "--app-oat-dir", "/x"]
+        self.assertEqual(gapmap.unpackaged_launch_targets(args, scan), ["libeffect.so", "libgone.so"])
+
+
+class UnpackedLibraries(unittest.TestCase):
+    """Libraries the app wrote at run time (scan --unpacked-libs) count as code the process loads,
+    never as files the launcher can name."""
+    SCAN = {"inventory": {"elfs": [
+        {"name": "lib/arm64-v8a/libc++_shared.so", "soname": "libc++_shared.so", "needed": []},
+        {"name": "lib/arm64-v8a/libsuperpack-jni.so", "soname": "libsuperpack-jni.so", "needed": ["libc++_shared.so"],
+         "undefined_symbols": ["funopen"]},
+        {"name": "/data/data/com.whatsapp/files/decompressed/libs.spo/libessential.so", "soname": "libessential.so",
+         "needed": ["libc++_shared.so"], "undefined_symbols": ["getaddrinfo"], "origin": "unpacked",
+         "android_relocation_tags": ["DT_ANDROID_RELR"]},
+    ], "declared_native_methods": [], "load_library_calls": []}}
+
+    def test_a_target_naming_a_written_library_is_reported(self) -> None:
+        args = ["--android-native-target", "libsuperpack-jni.so", "--android-native-target", "libessential.so"]
+        self.assertEqual(gapmap.unpackaged_launch_targets(args, self.SCAN), ["libessential.so"])
+
+    def test_written_libraries_are_never_launch_targets(self) -> None:
+        shadowed, targets = gapmap.shadowed_libraries(self.SCAN, ["/system/lib64/libc++_shared.so"])
+        self.assertEqual(targets, ["libc++_shared.so", "libsuperpack-jni.so"])
+        rows = gapmap.native_loading_rows({"extract_native_libs": True}, self.SCAN, {"present": True},
+                                          ["/system/lib64/libc++_shared.so"],
+                                          {"present": True, "source": "x", "net": {"present": True, "source": "y"}},
+                                          loader={"android_relr_launcher": "launcher", "code_cache_copy": "shim"})
+        by_id = {row["id"]: row for row in rows}
+        self.assertNotIn("libessential.so", by_id["load:shadowed-by-board"]["launch_args"])
+        # Its getaddrinfo is translated by the app-libraries switch, not by name.
+        self.assertNotIn("abi:addrinfo", by_id)
+        self.assertEqual(by_id["load:app-storage-exec"]["launch_args"], ["--android-native-net-app-libraries"])
+        self.assertIn("1 libraries harvested", by_id["load:app-storage-exec"]["app_evidence"])
+        # The launcher renumbers what it stages; a written library needs the shim to.
+        self.assertEqual(by_id["load:android-relocations"]["verdict"], "missing")
+        rows = gapmap.native_loading_rows({"extract_native_libs": True}, self.SCAN, {"present": True}, [], None,
+                                          loader={"android_relr_launcher": "launcher", "android_relr_shim": "shim"})
+        self.assertEqual({row["id"]: row for row in rows}["load:android-relocations"]["verdict"], "supplied")
+
+    def test_harvest_inventory_skips_copies_and_non_elf_files(self) -> None:
+        import hashlib
+        import json
+        import sys
+        from westlake_gap.scanner import unpacked_elf_inventory
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            elf = Path(sys.executable).resolve().read_bytes()
+            (root / "pkg/lib").mkdir(parents=True)
+            (root / "pkg/lib/libwritten.so").write_bytes(elf)
+            (root / "pkg/lib/libcopy.so").write_bytes(b"copy")
+            (root / "pkg/lib/libpartial.so").write_bytes(b"\x00partial")
+            entries = [{"file": "pkg/lib/" + name, "device_path": "/data/data/pkg/lib/" + name,
+                        "sha256": hashlib.sha256((root / "pkg/lib" / name).read_bytes()).hexdigest(), "elf": is_elf}
+                       for name, is_elf in (("libwritten.so", True), ("libcopy.so", True), ("libpartial.so", False))]
+            (root / "harvest.json").write_text(json.dumps({"libraries": entries}))
+            packaged = [{"name": "lib/arm64-v8a/libcopy.so", "sha256": entries[1]["sha256"]}]
+            records = unpacked_elf_inventory(root, packaged)
+        self.assertEqual([r["name"] for r in records], ["/data/data/pkg/lib/libwritten.so"])
+        self.assertEqual(records[0]["origin"], "unpacked")
+
+
+def _elf_with_init_array(values: list[int], relocated: list[int]) -> bytes:
+    """A minimal ELF64 shared object: one PT_LOAD over the file, a PT_DYNAMIC naming a RELA table and
+    an init array of ``values``, with an R_AARCH64_RELATIVE relocation for each slot in ``relocated``."""
+    import struct
+    dyn, rela, array = 0x100, 0x200, 0x300
+    size = array + 8 * len(values)
+    data = bytearray(size)
+    data[:16] = b"\x7fELF\x02\x01\x01" + bytes(9)
+    struct.pack_into("<HHIQQQIHHHHHH", data, 16, 3, 183, 1, 0, 64, 0, 0, 64, 56, 2, 64, 0, 0)
+    struct.pack_into("<IIQQQQQQ", data, 64, 1, 5, 0, 0, 0, size, size, 0x1000)
+    struct.pack_into("<IIQQQQQQ", data, 120, 2, 6, dyn, dyn, dyn, 96, 96, 8)
+    for i, (tag, value) in enumerate([(7, rela), (8, 24 * len(relocated)), (9, 24), (25, array),
+                                      (27, 8 * len(values)), (0, 0)]):
+        struct.pack_into("<QQ", data, dyn + 16 * i, tag, value)
+    for i, slot in enumerate(relocated):
+        struct.pack_into("<QQq", data, rela + 24 * i, array + 8 * slot, 1027, 0x1234)
+    for i, value in enumerate(values):
+        struct.pack_into("<Q", data, array + 8 * i, value)
+    return bytes(data)
+
+
+class NullConstructors(unittest.TestCase):
+    def test_unrelocated_null_and_minus_one_entries_are_counted(self) -> None:
+        from westlake_gap.scanner import null_array_entries
+        # A RELA-relocated slot reads 0 in the file; only unrelocated 0 and -1 are null.
+        self.assertEqual(null_array_entries(_elf_with_init_array([0, 0, 2 ** 64 - 1, 0], [0, 3])), {"init": 2})
+        self.assertEqual(null_array_entries(_elf_with_init_array([0], [0])), {})
+
+    def test_the_launcher_fix_supplies_packaged_libraries_only(self) -> None:
+        scan = {"inventory": {"elfs": [
+            {"name": "lib/arm64-v8a/libttffmpeg.so", "null_array_entries": {"init": 1}},
+            {"name": "lib/arm64-v8a/libplain.so", "null_array_entries": {}},
+        ], "declared_native_methods": [], "load_library_calls": []}}
+        loader = {"null_entries_launcher": "tools/probe_source_app.py:30"}
+        rows = {r["id"]: r for r in gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True},
+                                                                [], None, loader=loader)}
+        self.assertEqual(rows["load:null-constructors"]["verdict"], "supplied")
+        self.assertIn("libttffmpeg.so", rows["load:null-constructors"]["item"])
+        scan["inventory"]["elfs"].append({"name": "/data/data/pkg/lib/libwritten.so", "origin": "unpacked",
+                                          "null_array_entries": {"init": 1}})
+        rows = {r["id"]: r for r in gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True},
+                                                                [], None, loader=loader)}
+        self.assertEqual((rows["load:null-constructors"]["verdict"], rows["load:null-constructors"]["open_symbols"]),
+                         ("missing", ["libwritten.so"]))
+        rows = {r["id"]: r for r in gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True},
+                                                                [], None, loader={})}
+        self.assertIn("not its dependencies", rows["load:null-constructors"]["provider"])
+
+
+class ArtInternals(unittest.TestCase):
+    def test_libraries_naming_art_internals_are_a_row(self) -> None:
+        from westlake_gap.scanner import art_internal_names
+        raw = b"\x00_ZN3art2gc4Heap18GrowForUtilizationEPNS0_9collector16GarbageCollectorEm\x00_ZN3art7Runtime5StartEv\x00"
+        found = art_internal_names(raw)
+        self.assertEqual(found["art_internal_symbols"], 2)
+        self.assertEqual(art_internal_names(b"\x00plain\x00"), {})
+        scan = {"inventory": {"elfs": [
+            {"name": "lib/arm64-v8a/libjato.so", "art_internal_symbols": 174, "art_internal_sample": ["_ZN3art10ArtRuntime"]},
+            {"name": "lib/arm64-v8a/libone.so", "art_internal_symbols": 1},
+        ]}}
+        rows = gapmap.art_internal_rows(scan)
+        self.assertEqual([r["id"] for r in rows], ["art:internals"])
+        self.assertIn("libjato.so names 174", rows[0]["app_evidence"])
+        self.assertNotIn("libone.so", rows[0]["item"])
+
+
+class SignalAbi(unittest.TestCase):
+    MODEL = {"translated": ["sigaction", "sigemptyset"], "scope": {"packaged": True, "written": False},
+             "dlsym": None, "source": "webview_bionic_shim.c:426"}
+
+    def test_lookups_by_name_are_found(self) -> None:
+        from westlake_gap.scanner import signal_lookups
+        raw = b"\x00libc.so\x00sigaction64\x00sigaction\x00"
+        self.assertEqual(signal_lookups(raw, set()), {"signal_lookups": ["sigaction", "sigaction64"]})
+        self.assertEqual(signal_lookups(raw, {"sigaction", "sigaction64"}), {})
+
+    def test_coverage_follows_the_callers_the_shim_counts(self) -> None:
+        packaged = {"name": "lib/arm64-v8a/libcrash.so", "undefined_symbols": ["sigaction", "sigemptyset"]}
+        rows = gapmap.signal_abi_rows({"inventory": {"elfs": [packaged]}}, self.MODEL)
+        self.assertEqual(rows[0]["verdict"], "supplied")
+        written = {"name": "/data/data/com.whatsapp/files/decompressed/libs.spo/libessential.so",
+                   "undefined_symbols": ["sigaction"], "origin": "unpacked"}
+        rows = gapmap.signal_abi_rows({"inventory": {"elfs": [packaged, written]}}, self.MODEL)
+        self.assertEqual((rows[0]["verdict"], rows[0]["open_symbols"]), ("missing", ["libraries written at run time"]))
+        hook = {"name": "lib/arm64-v8a/libshadowhook.so", "signal_lookups": ["sigaction", "sigaction64"]}
+        model = dict(self.MODEL, scope={"packaged": True, "written": True})
+        rows = gapmap.signal_abi_rows({"inventory": {"elfs": [packaged, hook]}}, model)
+        self.assertEqual(rows[0]["open_symbols"], ["lookups by name"])
+        self.assertIn("looked up by name in libshadowhook.so", rows[0]["app_evidence"])
+
+
+def _adrp(rd: int, pc: int, target: int) -> int:
+    pages = ((target & ~0xFFF) - (pc & ~0xFFF)) >> 12
+    return 0x90000000 | ((pages & 3) << 29) | (((pages >> 2) & 0x7FFFF) << 5) | rd
+
+
+def _add(rd: int, rn: int, imm: int) -> int:
+    return 0x91000000 | (imm << 10) | (rn << 5) | rd
+
+
+class StaticMutexes(unittest.TestCase):
+    MODEL = {"adopted": ["pthread_mutex_lock", "pthread_mutex_trylock"], "source": "webview_bionic_shim.c:613"}
+
+    def test_the_address_handed_to_a_lock_is_followed_back(self) -> None:
+        from westlake_gap.scanner import x0_address_before
+        base, mutex = 0x10000, 0x2B80CC
+        words = [_adrp(8, base, mutex), 0xD503201F, _add(0, 8, mutex & 0xFFF), 0x94000000]   # adrp x8; nop; add x0, x8
+        self.assertEqual(x0_address_before(words, 3, base), mutex)
+        words = [_adrp(19, base, mutex), _add(19, 19, mutex & 0xFFF), 0xAA1303E0, 0x94000000]  # mov x0, x19
+        self.assertEqual(x0_address_before(words, 3, base), mutex)
+        # Through the GOT: adrp x0, slot page; ldr x0, [x0, #slot]; the slot holds the mutex's address.
+        slot = 0x2A0010
+        words = [_adrp(0, base, slot), 0xF9400000 | (((slot & 0xFFF) // 8) << 10), 0x94000000]
+        self.assertEqual(x0_address_before(words, 2, base, {slot: mutex}), mutex)
+        self.assertIsNone(x0_address_before(words, 2, base, {}))
+        # A call in between leaves x0 to its return value.
+        words = [_adrp(0, base, mutex), _add(0, 0, mutex & 0xFFF), 0x94000010, 0x94000000]
+        self.assertIsNone(x0_address_before(words, 3, base))
+
+    def test_only_locked_initializers_are_a_row_and_the_shim_converts_them(self) -> None:
+        sentry = {"name": "lib/arm64-v8a/libsentry.so", "bionic_static_mutexes": {"recursive": 1}}
+        plain = {"name": "lib/arm64-v8a/libplain.so"}
+        rows = gapmap.static_mutex_rows({"inventory": {"elfs": [sentry, plain]}}, self.MODEL)
+        self.assertEqual((rows[0]["id"], rows[0]["verdict"]), ("abi:static-mutex-init", "supplied"))
+        self.assertIn("libsentry.so: 1 recursive locked as initialized", rows[0]["app_evidence"])
+        rows = gapmap.static_mutex_rows({"inventory": {"elfs": [sentry]}}, {"adopted": [], "source": None})
+        self.assertEqual((rows[0]["verdict"], rows[0]["open_symbols"]),
+                         ("missing", ["pthread_mutex_lock", "pthread_mutex_trylock"]))
+        self.assertEqual(gapmap.static_mutex_rows({"inventory": {"elfs": [plain]}}, self.MODEL), [])
+
+    def test_the_model_reads_the_shims_lock_calls(self) -> None:
+        import tempfile
+        from westlake_gap import contracts
+        with tempfile.TemporaryDirectory() as tmp:
+            shim = Path(tmp) / "framework/webview-shim/webview_bionic_shim.c"
+            shim.parent.mkdir(parents=True)
+            shim.write_text("static void adopt(pthread_mutex_t *mutex)\n{\n    if (*(int *) mutex == 0x4000) {}\n}\n"
+                            "int pthread_mutex_lock(pthread_mutex_t *mutex)\n{\n    adopt(mutex);\n"
+                            "    return pthread_mutex_timedlock(mutex, NULL);\n}\n")
+            model = contracts.static_mutex_model(Path(tmp))
+        self.assertEqual(model["adopted"], ["pthread_mutex_lock"])
+        self.assertTrue(model["source"].endswith(":5"))
+
+
+class StubNatives(unittest.TestCase):
+    STUB = """
+static jlong UnixFileSystem_getSpace0(JNIEnv* env, jobject thiz, jobject file, jint t) {
+    return 0; /* stub */
+}
+static jboolean UnixFileSystem_delete0(JNIEnv* env, jobject thiz, jobject file) {
+    return unlink("x") == 0;
+}
+void register(JNIEnv* env) {
+    jclass cls = FindOptionalClass(env, "java/io/UnixFileSystem");
+    JNINativeMethod methods[] = {
+        {"getSpace0", "(Ljava/io/File;I)J", (void*)UnixFileSystem_getSpace0},
+        {"delete0", "(Ljava/io/File;)Z", (void*)UnixFileSystem_delete0},
+    };
+}
+"""
+
+    def model(self, rebind: bool) -> dict:
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "art-build/stubs").mkdir(parents=True)
+            (root / "art-build/stubs/openjdk_stub.c").write_text(self.STUB)
+            natives = root / "westlake/framework/javacore-shim/missing_natives.c"
+            natives.parent.mkdir(parents=True)
+            table = '    { "getSpace0", "(Ljava/io/File;I)J", (void*) wl_getSpace0 },\n' if rebind else ""
+            natives.write_text("static const JNINativeMethod kUnixFileSystem[] = {\n" + table + "};\n"
+                               'int fs = bind(env, "java/io/UnixFileSystem", kUnixFileSystem, 1);\n')
+            return gapmap.stub_native_model(root / "art-build", root / "westlake")
+
+    def test_a_constant_native_the_app_reaches_is_hollow_until_rebound(self) -> None:
+        model = self.model(rebind=False)
+        self.assertEqual(list(model["stubs"]), ["java/io/UnixFileSystem.getSpace0"])
+        scan = {"inventory": {"platform_method_names": {"Ljava/io/File;": ["exists", "getUsableSpace"]}}}
+        row = gapmap.stub_native_rows(scan, model)[0]
+        self.assertEqual((row["id"], row["verdict"], row["open_symbols"]),
+                         ("runtime:stub-natives", "hollow", ["java/io/UnixFileSystem.getSpace0"]))
+        self.assertIn("File.getUsableSpace (UnixFileSystem.getSpace0, constant)", row["app_evidence"])
+        self.assertEqual(gapmap.stub_native_rows(scan, self.model(rebind=True))[0]["verdict"], "supplied")
+        self.assertEqual(gapmap.stub_native_rows({"inventory": {"platform_method_names": {
+            "Ljava/io/File;": ["exists"]}}}, model), [])
+
+
+class ApkMemberLoads(unittest.TestCase):
+    def test_soloader_with_unfixed_split_libraries_is_a_row(self) -> None:
+        scan = {"inventory": {"elfs": [
+            {"name": "split_config.arm64_v8a.apk!lib/arm64-v8a/libc++_shared.so", "split_apk": "split_config.arm64_v8a.apk",
+             "android_relocation_tags": ["ANDROID_RELR"]},
+        ], "declared_native_methods": [{"owner": "Lcom/facebook/soloader/SoLoader;", "name": "x"}],
+            "load_library_calls": []}}
+        rows = {r["id"]: r for r in gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True},
+                                                                [], None, loader={})}
+        self.assertEqual(rows["load:apk-member"]["verdict"], "missing")
+        rows = {r["id"]: r for r in gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True},
+                                                                [], None, loader={"apk_member_redirect": "shim.c:1"})}
+        self.assertEqual(rows["load:apk-member"]["verdict"], "supplied")
+
+
+class SymbolVersions(unittest.TestCase):
+    def test_version_mismatches_are_their_own_row(self) -> None:
+        missing = [{"symbol": "__system_property_read_callback", "importers": 1, "importing_libraries": ["libcore.so"],
+                    "surface": "libc", "version_mismatch": {"wanted": ["LIBC_O"], "defined": ["LIBC"]}}]
+        rows = gapmap.symbol_version_rows(missing)
+        self.assertEqual(rows[0]["open_symbols"], ["__system_property_read_callback@LIBC_O (defined @LIBC)"])
+        self.assertEqual(gapmap.symbol_version_rows([{"symbol": "x", "importing_libraries": []}]), [])
+
+
+class Interposition(unittest.TestCase):
+    RUNTIME = {"bridge_libraries": [{"name": "libhwui.so", "exported_symbols": [
+        "vmaCreateAllocator", "vmaCreateBuffer", "vmaDestroyBuffer", "JNI_OnLoad", "SkCanvas_draw"]}]}
+
+    def test_an_app_library_sharing_the_runtimes_symbols_is_flagged_unless_routed(self) -> None:
+        scan = {"inventory": {"elfs": [
+            {"name": "lib/arm64-v8a/libppsspp_jni.so",
+             "exported_symbols": ["vmaCreateAllocator", "vmaCreateBuffer", "vmaDestroyBuffer", "JNI_OnLoad"]},
+            {"name": "lib/arm64-v8a/libplain.so", "exported_symbols": ["JNI_OnLoad", "Java_a_b_c"]}]}}
+        row = gapmap.interposition_rows(scan, self.RUNTIME, [])[0]
+        self.assertEqual((row["verdict"], row["open_symbols"]), ("missing", ["libppsspp_jni.so"]))
+        self.assertIn("libppsspp_jni.so: 3 with libhwui.so", row["app_evidence"])
+        routed = [{"launch_args": ["--android-native-target", "libppsspp_jni.so"]}]
+        self.assertEqual(gapmap.interposition_rows(scan, self.RUNTIME, routed)[0]["verdict"], "supplied")
+        self.assertEqual(gapmap.interposition_rows({"inventory": {"elfs": [scan["inventory"]["elfs"][1]]}},
+                                                   self.RUNTIME, []), [])
+
+
+class TaskRoot(unittest.TestCase):
+    def test_a_constant_task_answer_is_a_gap_for_apps_that_ask(self) -> None:
+        from westlake_gap.contracts import activity_client_model
+        scan = {"inventory": {"platform_method_names": {"Landroid/app/Activity;": ["isTaskRoot", "finish"]}}}
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "framework/activity/java/ActivityClientControllerAdapter.java"
+            _write(source, "class A { @Override\n    public int getTaskForActivity(IBinder token, boolean onlyRoot) { return -1; } }")
+            model = activity_client_model(root)
+            self.assertEqual(model["task_for_activity"], "constant")
+            self.assertEqual(gapmap.task_root_rows(scan, model)[0]["verdict"], "missing")
+            _write(source, "class A { public int getTaskForActivity(IBinder token, boolean onlyRoot) {\n"
+                           "        int position = taskPosition(token);\n        return position == 0 ? 1 : -1;\n    } }")
+            self.assertEqual(gapmap.task_root_rows(scan, activity_client_model(root))[0]["verdict"], "supplied")
+        self.assertEqual(gapmap.task_root_rows({"inventory": {"platform_method_names": {}}}, {"task_for_activity": "constant"}), [])
+
+
+
+class WindowMetrics(unittest.TestCase):
+    def test_metrics_in_oncreate_need_the_bounds_at_bind(self) -> None:
+        """aat: getCurrentWindowMetrics() in onCreate answered 0x0, and it divided by zero."""
+        from westlake_gap.contracts import window_metrics_model
+        scan = {"inventory": {"platform_method_names": {"Landroid/view/WindowManager;": ["getCurrentWindowMetrics"]}}}
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "framework/activity/java/AppSchedulerBridge.java"
+            _write(source, "class B {\n    private static android.content.res.Configuration buildConfiguration(\n"
+                           "            String[] kv, DisplaySnapshot disp) {\n        cfg.densityDpi = disp.densityDpi;\n    }\n"
+                           "    void relayout() { config.windowConfiguration.setBounds(winBounds); }\n}")
+            model = window_metrics_model(root)
+            self.assertFalse(model["bounds_at_bind"], "bounds set at relayout do not count")
+            self.assertEqual(gapmap.window_metrics_rows(scan, model)[0]["verdict"], "missing")
+            _write(source, "class B {\n    private static android.content.res.Configuration buildConfiguration(\n"
+                           "            String[] kv, DisplaySnapshot disp) {\n        cfg.windowConfiguration.setBounds(bounds);\n    }\n}")
+            self.assertEqual(gapmap.window_metrics_rows(scan, window_metrics_model(root))[0]["verdict"], "supplied")
+        self.assertEqual(gapmap.window_metrics_rows({"inventory": {"platform_method_names": {}}}, {}), [])
+
+
+class NativeEglWindow(unittest.TestCase):
+    def test_a_native_window_surface_needs_the_oh_window(self) -> None:
+        """Cards with Cats: Flutter's Skia renderer passed ANativeWindow_fromSurface's wrapper to OH's EGL."""
+        from westlake_gap.contracts import native_egl_window_model
+        scan = {"inventory": {"elfs": [
+            {"name": "lib/arm64-v8a/libflutter.so", "soname": "libflutter.so", "abi_matches_machine": True,
+             "undefined_symbols": ["eglCreateWindowSurface", "eglQuerySurface"]},
+            {"name": "lib/x86_64/libflutter.so", "soname": "libflutter.so", "abi_matches_machine": False,
+             "undefined_symbols": ["eglCreateWindowSurface"]}]}}
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "framework/webview-shim/webview_bionic_shim.c"
+            _write(source, "unsigned eglTerminate(void *display)\n{\n    return 1;\n}\n")
+            model = native_egl_window_model(root)
+            self.assertEqual(gapmap.native_egl_window_rows(scan, model)[0]["verdict"], "missing")
+            _write(source, "void *eglCreateWindowSurface(void *display, void *config, void *window, const int *attribs)\n{\n"
+                           "    void *oh = wl_anw_get_oh != NULL ? wl_anw_get_oh(window) : NULL;\n    return oh;\n}\n")
+            row = gapmap.native_egl_window_rows(scan, native_egl_window_model(root))[0]
+            self.assertEqual(row["verdict"], "supplied")
+            self.assertEqual(row["app_evidence"], "libflutter.so imports eglCreateWindowSurface")
+        self.assertEqual(gapmap.native_egl_window_rows({"inventory": {"elfs": []}}, {"unwraps": True}), [])
+
 class SandboxAndBacktest(unittest.TestCase):
     def test_realm_fifo_is_predicted(self) -> None:
         policy = {"oh": {"domain": "u:r:normal_hap:s0", "app_data_type": "u:object_r:appdat:s0",
@@ -1155,3 +1747,22 @@ class AndroidNamespaceNdk(unittest.TestCase):
             shim.parent.mkdir(parents=True)
             shim.write_text("WESTLAKE_ALOOPER_FORWARD(int, AHardwareBuffer_unlock, (void *b, int *f), (b, f))\n")
             self.assertIn("AHardwareBuffer_unlock", gapmap.bionic_shim_exports(Path(tmp)))
+
+    def test_every_compiled_shim_source_counts(self) -> None:
+        """SDL2's AConfiguration and sensor imports are defined in a second shim source."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shim = root / "framework/webview-shim"
+            shim.mkdir(parents=True)
+            (shim / "webview_bionic_shim.c").write_text("int sigaction64(int s, const void *a, void *o) {\n    return 0;\n}\n")
+            (shim / "android_ndk_config.c").write_text(
+                "WL_CONFIG_FIELD(Density, density)\nint ASensorManager_getSensorList(void *m, void *l)\n{\n    return 0;\n}\n"
+                "static int wl_helper(void) { return 0; }\n")
+            (shim / "unbuilt.c").write_text("int ASensor_getType(void *s) {\n    return -1;\n}\n")
+            (root / "tools").mkdir()
+            (root / "tools/build_bionic_shim.sh").write_text("$CC -c $W/webview_bionic_shim.c -o s.o\n$CC -c $W/android_ndk_config.c -o nc.o\n")
+            exports = gapmap.bionic_shim_exports(root)
+            self.assertTrue({"sigaction64", "AConfiguration_getDensity", "AConfiguration_setDensity",
+                             "ASensorManager_getSensorList"} <= exports)
+            self.assertNotIn("ASensor_getType", exports, "a source the build does not compile defines nothing")
+            self.assertNotIn("wl_helper", exports)

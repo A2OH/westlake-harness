@@ -84,9 +84,9 @@ _BLOCKERS = (
      "native-symbols", "{0}"),
     (re.compile(r"Couldn't load shared library '(\w+)'"),
      "native-loading", "library '{0}'"),
-    (re.compile(r"Unable to instantiate activity ComponentInfo\{[^}]*\}: [\w.]*?(\w+(?:Exception|Error)): ([^\n]{0,60})"),
+    (re.compile(r"Unable to instantiate activity ComponentInfo\{[^}]*\}: [\w.]*?(\w*(?:Exception|Error)): ([^\n]{0,60})"),
      "app-framework", "instantiate activity: {0}: {1}"),
-    (re.compile(r"Unable to start activity ComponentInfo\{[^}]*\}: [\w.]*?(\w+(?:Exception|Error))"),
+    (re.compile(r"Unable to start activity ComponentInfo\{[^}]*\}: [\w.]*?(\w*(?:Exception|Error))"),
      "app-framework", "start activity: {0}"),
     (re.compile(r"RuntimeException: (bindService\(\) failed)"),
      "system-services", "{0}"),
@@ -98,11 +98,16 @@ _BLOCKERS = (
      "native-crash", "abort: {0}"),
     (re.compile(r"java\.lang\.UnsatisfiedLinkError: ([^\n]{0,100})"),
      "native-loading", "{0}"),
-    (re.compile(r"\[INITCHILD-FAIL\]\s+caused by: [\w.$]*?(\w+(?:Exception|Error)): ?([^\n]{0,80})"),
+    (re.compile(r"\[INITCHILD-FAIL\]\s+caused by: [\w.$]*?(\w*(?:Exception|Error)): ?([^\n]{0,80})"),
      "app-framework", "process init: {0}: {1}"),
-    (re.compile(r"ensureBindApplication FAILED phase=\S+ cause\[[1-9]\]=[\w.$]*?(\w+(?:Exception|Error)): ?([^\n]{0,80})"),
+    (re.compile(r"ensureBindApplication FAILED phase=\S+ cause\[[1-9]\]=[\w.$]*?(\w*(?:Exception|Error)): ?([^\n]{0,80})"),
      "app-framework", "bind: {0}: {1}"),
-    (re.compile(r"\[UNCAUGHT\] thread='([^':]*)[^']*' [\w.$]*?(\w+(?:Exception|Error)): ?([^\n]{0,80})"),
+    # A library that failed to load, reported by the app's own loader as an exception it does not
+    # catch: Fennec's GeckoLoader ("Error loading Gecko libraries: Error loading shared library
+    # libmediandk.so"). Listed before the general uncaught pattern, which matches the same line.
+    (re.compile(r"\[UNCAUGHT\] thread='([^':]*)[^']*' [^\n]*?Error loading shared library ([\w.+-]+)"),
+     "native-loading", "uncaught on {0}: library {1} not loaded"),
+    (re.compile(r"\[UNCAUGHT\] thread='([^':]*)[^']*' [\w.$]*?(\w*(?:Exception|Error)): ?([^\n]{0,80})"),
      "app-framework", "uncaught on {0}: {1}: {2}"),
     (re.compile(r"Fatal signal (\d+) \((\w+)\)[^\n]*\n(?:[^\n]*\n){0,4}?Thread: \d+ \"([^\"]*)\""),
      "native-crash", "{1} on thread {2}"),
@@ -134,10 +139,58 @@ class Score:
     markers: dict = field(default_factory=dict)
     anomaly: str | None = None
     screen: str | None = None
+    crash_site: dict | None = None
+    main_thread: dict | None = None
+    crash_dump: dict | None = None
+    hilog_signal: dict | None = None
+    startup: dict | None = None
+    root_cause: dict | None = None
+    self_finish: dict | None = None
 
     def as_dict(self) -> dict:
         return {k: v for k, v in self.__dict__.items()
                 if v is not None and not (k == "blocker_category" and self.blocker is None)}
+
+
+_FATAL_START = re.compile(r"J_invokeStaticMain_main_threw|ensureBindApplication FAILED|\[UNCAUGHT\]|\[DIRECT-LAUNCH\] FAILED")
+_CAUSE = re.compile(r"(?:Caused by: |caused by: |cause\[\d+\]=)([\w.$]+?)(?:: ([^\n]*))?$")
+_THROWN = re.compile(r"(?:^|[:= ])((?:[a-z]\w*\.)+[A-Z]\w*(?:Exception|Error))(?:: ([^\n]*))?$")
+_FRAME = re.compile(r"\bat ([\w$]+(?:\.[\w$]+)*)\.([\w$<>-]+)\(")
+_PLATFORM_FRAME = ("android.", "java.", "javax.", "com.android.", "dalvik.", "sun.", "libcore.", "jdk.", "adapter.")
+
+
+def root_cause(text: str) -> dict | None:
+    """The deepest cause of the first fatal exception, its whole message and the first app frame
+    under it. The blocker line keeps only the outermost exception, cut short: otgmaster's read
+    "start activity: NullPointerException", where its cause said which manager was null."""
+    start = _FATAL_START.search(text)
+    if start is None:
+        return None
+    lines = text[start.start():].split("\n", 400)[:400]
+    cause, at = None, 0
+    for index, line in enumerate(lines):
+        # The same chain again, or the launch failure that followed from it.
+        if index > 0 and cause is not None and (line.startswith("[INITCHILD-FAIL]") or "[DIRECT-LAUNCH] FAILED" in line
+                                                or "cause[0]=" in line):
+            break
+        match = _CAUSE.search(line)
+        if match:
+            cause, at = (match.group(1), match.group(2)), index
+    if cause is None:
+        match = _THROWN.search(lines[0])
+        if match is None:
+            return None
+        cause = (match.group(1), match.group(2))
+    frame = None
+    for line in lines[at + 1:at + 40]:
+        found = _FRAME.search(line)
+        if found and not found.group(1).startswith(_PLATFORM_FRAME):
+            frame = found.group(1) + "." + found.group(2)
+            break
+    out = {"exception": cause[0].rsplit(".", 1)[-1], "message": (cause[1] or "")[:240]}
+    if frame:
+        out["frame"] = frame
+    return out
 
 
 def first_blocker(text: str) -> tuple[str, str] | tuple[None, None]:
@@ -204,7 +257,7 @@ def score(app: str, text: str) -> Score:
     return Score(app=app, rung=rung, rung_name=RUNGS[rung], lines=lines,
                  fatal=len(_FATAL.findall(text)), relayouts=relayouts, held_back=held,
                  blocker_category=category, blocker=blocker, blocking=blocking,
-                 markers=counts, anomaly=anomaly)
+                 markers=counts, anomaly=anomaly, root_cause=root_cause(text))
 
 
 _HOST_SCREEN = Path(__file__).parent / "data" / "host-screen.png"
@@ -231,15 +284,101 @@ def screen_state(image: Path) -> str | None:
     return "host" if sum(abs(x - y) for x, y in zip(a, b)) / len(a) < 2.0 else "app"
 
 
+def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str | None = None,
+                 hilog_text: str | None = None) -> None:
+    """What a run left beside the log (see evidence.py): OH's crash dump of the process, a native
+    crash placed in a library by the process map sampled during the run, and, for an app that is not
+    drawing and names no blocker, what its Java main thread was doing in the last thread dump."""
+    from . import evidence
+    dump = evidence.cppcrash(cppcrash_text) if cppcrash_text else None
+    if dump:
+        s.crash_dump = dump
+        s.fatal = max(s.fatal, 1)
+        # The dump outranks a log that names nothing, a stall or a non-blocking event: the process
+        # died there. A blocker the log names stays first; the dump is kept beside it.
+        if s.blocker is None or s.blocker_category == "stall" or not s.blocking:
+            s.blocker_category, s.blocking = "native-crash", True
+            s.blocker = "%s on thread %s: %s" % (dump["signal"], dump.get("thread", "?"), dump["summary"])
+        elif s.blocker_category == "native-crash" and dump["signal"] in s.blocker and ":" not in s.blocker:
+            # The log saw the signal and thread; the dump says what happened.
+            s.blocker += ": " + dump["summary"]
+    startup = evidence.startup_times(hilog_text) if hilog_text else None
+    if startup:
+        s.startup = startup
+        # The adapter's first-frame marker in the app's own hilog proves its activity drew, whatever
+        # the child log reached: a Go runtime (gomobile) sends the process's stderr to hilog, so
+        # Rethink's log stopped at "bound" while its welcome screen was up. On screen, it is drawing;
+        # on the host screen, it drew and left, as for a log that reached drawing.
+        if "first_frame" in startup and s.rung < RUNGS.index("drawing"):
+            on_screen = s.screen == "app"
+            target = RUNGS.index("drawing") if on_screen else RUNGS.index("view")
+            if s.rung < target:
+                s.rung, s.rung_name = target, RUNGS[target]
+                s.blocking = not on_screen
+                if on_screen and s.blocker_category == "stall":
+                    s.blocker_category, s.blocker = None, None
+                if on_screen and s.anomaly is None:
+                    s.anomaly = ("the log stops before the activity drew; its hilog shows the first frame "
+                                 "%.1f s after start" % startup["first_frame"])
+        if "first_frame" in startup and s.screen == "host" and s.anomaly is None:
+            s.anomaly = ("its activity drew a first frame %.1f s after start, but the screenshot shows the "
+                         "host screen: the window went away" % startup["first_frame"])
+    signal = evidence.hilog_signal(hilog_text) if hilog_text and not dump else None
+    if signal:
+        s.hilog_signal = signal
+        s.fatal = max(s.fatal, 1)
+        # The shim's witness saw the same signal on the same thread: where it was raised.
+        witness = next((w for w in reversed(evidence.signal_witnesses(text, maps_text))
+                        if w["signal"] == signal["signal"] and w["tid"] == signal["tid"]), None)
+        if witness:
+            signal["witness"] = witness
+        if s.blocker is None or s.blocker_category == "stall" or not s.blocking:
+            s.blocker_category, s.blocking = "native-crash", True
+            where = ""
+            if witness and "library" in witness["pc"]:
+                where = " at %s+%s" % (witness["pc"]["library"], witness["pc"]["offset"])
+                if "library" in witness["caller"]:
+                    where += " (from %s+%s)" % (witness["caller"]["library"], witness["caller"]["offset"])
+            s.blocker = "%s on %s%s (hilog only, no crash dump)%s" % (
+                signal["signal"], "thread " + (witness or signal).get("thread", "") if (witness or signal).get("thread")
+                else "tid %d" % signal["tid"], where,
+                ", right after: " + signal["after"] if "after" in signal else "")
+    if maps_text and s.fatal:
+        s.crash_site = evidence.crash_site(text, maps_text)
+        if s.crash_site and s.blocker_category == "native-crash":
+            pc = s.crash_site["pc"]
+            s.blocker += " in %s+%s" % (pc["library"], pc["offset"])
+    thread = evidence.main_thread(text)
+    if thread:
+        s.main_thread = thread
+        if s.blocker is None and s.rung_name != "drawing":
+            frame = thread["first_app_frame"] or (thread["frames"][0] if thread["frames"] else "?")
+            s.blocker_category, s.blocker = "stall", "main thread %s at %s" % (thread["waiting"], frame)
+    # Off screen with an idle main thread, the app may simply have closed its own activity: that is
+    # what it did, and what to explain (a task-root check, absent hardware, a trampoline elsewhere).
+    finished = evidence.self_finish(hilog_text) if hilog_text and s.screen == "host" and not dump and not signal else None
+    if finished:
+        s.self_finish = finished
+        if s.blocker is None or s.blocker_category == "stall" or not s.blocking:
+            s.blocker_category, s.blocking = "self-finish", True
+            s.blocker = "its last activity finished itself%s after resuming, and nothing replaced it" % (
+                " %d ms" % finished["after_ms"] if "after_ms" in finished else "")
+
+
 def score_paths(paths: list[Path]) -> list[Score]:
     scores = []
     for path in sorted(paths):
-        s = score(path.stem, path.read_text(errors="replace"))
+        text = path.read_text(errors="replace")
+        s = score(path.stem, text)
         s.screen = screen_state(path.with_suffix(".jpeg"))
         if s.screen == "host" and s.rung_name == "drawing":
             # The screenshot decides: it drew, and is no longer on screen.
             s.rung, s.rung_name, s.blocking = RUNGS.index("view"), "view", True
             s.anomaly = "drew, but the screenshot shows the host screen: the app left or died"
+        maps, dump, hilog = path.with_suffix(".maps"), path.with_suffix(".cppcrash"), path.with_suffix(".hilog")
+        add_evidence(s, text, maps.read_text(errors="replace") if maps.exists() else None,
+                     dump.read_text(errors="replace") if dump.exists() else None,
+                     hilog.read_text(errors="replace") if hilog.exists() else None)
         scores.append(s)
     return scores
 

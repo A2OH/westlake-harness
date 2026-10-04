@@ -12,6 +12,21 @@ from westlake_gap import ohresolve
 
 
 class Resolve(unittest.TestCase):
+    def test_a_versioned_import_needs_the_same_version_or_an_unversioned_definition(self) -> None:
+        """Messenger: libcore.so asks for __system_property_read_callback@LIBC_O; the shim had it under LIBC."""
+        scan = {"inventory": {"elfs": [{"name": "libcore.so", "undefined_symbols": [
+            "__system_property_read_callback", "getrandom", "__system_property_get"],
+            "import_versions": {"__system_property_read_callback": "LIBC_O", "getrandom": "LIBC_P",
+                                "__system_property_get": "LIBC"}}]}}
+        provided = {"__system_property_read_callback", "getrandom", "__system_property_get"}
+        versions = {"__system_property_read_callback": {"LIBC"}, "getrandom": {None}, "__system_property_get": {"LIBC"}}
+        result = ohresolve.resolve(scan, provided, {}, versions)
+        self.assertEqual([m["symbol"] for m in result["missing"]], ["__system_property_read_callback"])
+        self.assertEqual(result["missing"][0]["version_mismatch"], {"wanted": ["LIBC_O"], "defined": ["LIBC"]})
+        versions["__system_property_read_callback"] = {"LIBC_O"}
+        self.assertEqual(ohresolve.resolve(scan, provided, {}, versions)["missing"], [])
+        self.assertEqual(ohresolve.resolve(scan, provided, {})["missing"], [], "no versions known: names only")
+
     def test_own_exports_index_and_weak_imports(self) -> None:
         cc = shutil.which("cc") or shutil.which("gcc")
         if not cc:

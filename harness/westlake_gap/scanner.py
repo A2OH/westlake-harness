@@ -12,6 +12,7 @@ import io
 import json
 import os
 import re
+import struct
 import gc
 import subprocess
 import tempfile
@@ -334,6 +335,202 @@ def _android_relocation_tags(readelf_text: str) -> list[str]:
     return sorted(name for tag, name in ANDROID_RELOCATION_TAGS.items() if tag in found)
 
 
+_VERSIONED_IMPORT = re.compile(r"\sUND\s+([A-Za-z_][\w.$]*)@([A-Za-z_]\w*)")
+
+
+def import_versions(readelf_text: str) -> dict[str, Any]:
+    """Imports that ask for a symbol version (Bionic's libc: __system_property_read_callback@LIBC_O),
+    from readelf's dynamic symbol table."""
+    found = {match[1]: match[2] for match in _VERSIONED_IMPORT.finditer(readelf_text)}
+    return {"import_versions": found} if found else {}
+
+
+_SIGNAL_NAMES = ("sigaction", "sigaction64", "sigprocmask", "sigprocmask64", "pthread_sigmask", "pthread_sigmask64")
+
+
+def signal_lookups(raw: bytes, imported: set[str]) -> dict[str, Any]:
+    """Signal calls a library names as a string without importing them: it looks them up with dlsym,
+    usually in libc's own handle, past any interposer (ByteDance's bytesig in shadowhook and
+    bytehook takes sigaction64 or sigaction that way to put its handler first)."""
+    names = sorted(name for name in _SIGNAL_NAMES
+                   if name not in imported and b"\x00" + name.encode() + b"\x00" in raw)
+    return {"signal_lookups": names} if names else {}
+
+
+_ART_INTERNAL = re.compile(rb"_ZN3art[A-Za-z0-9_]{4,}")
+
+
+def art_internal_names(raw: bytes) -> dict[str, Any]:
+    """ART's own C++ symbols a library names: performance and crash libraries (ByteDance's jato,
+    sysoptimizer, godzilla; npth) look them up in libart.so and patch the runtime through them, at
+    offsets they choose by the device's SDK level. Empty for an ordinary library."""
+    names = sorted({m.decode() for m in _ART_INTERNAL.findall(raw)})
+    return {"art_internal_symbols": len(names), "art_internal_sample": names[:6]} if names else {}
+
+
+_PACKED_RELOCATION_TAGS = {0x6000000F, 0x60000010, 0x60000011, 0x60000012}  # DT_ANDROID_REL{,SZ}, RELA{,SZ}
+
+
+def null_array_entries(raw: bytes) -> dict[str, int] | None:
+    """Null or -1 entries in the init and fini arrays that no relocation fills: bionic skips them
+    (soinfo::call_array), OH's musl calls them and jumps to address 0 (TikTok's libttffmpeg.so).
+    None when the library's relocations are in Android's packed format, which is not decoded here."""
+    if raw[:4] != b"\x7fELF" or raw[4] != 2 or raw[5] != 1:
+        return None
+    u64 = lambda at: int.from_bytes(raw[at:at + 8], "little")
+    phoff, count = u64(0x20), int.from_bytes(raw[0x38:0x3A], "little")
+    loads, dynamic = [], None
+    for index in range(count):
+        header = phoff + index * 56
+        kind = int.from_bytes(raw[header:header + 4], "little")
+        if kind == 1:
+            loads.append((u64(header + 16), u64(header + 8), u64(header + 32)))
+        elif kind == 2:
+            dynamic = (u64(header + 8), u64(header + 32))
+    if dynamic is None:
+        return {}
+
+    def offset_of(vaddr: int) -> int | None:
+        return next((offset + vaddr - start for start, offset, size in loads if start <= vaddr < start + size), None)
+
+    tags: dict[int, int] = {}
+    for position in range(dynamic[0], min(dynamic[0] + dynamic[1], len(raw) - 15), 16):
+        tag = u64(position)
+        if tag == 0:
+            break
+        tags.setdefault(tag, u64(position + 8))
+    if _PACKED_RELOCATION_TAGS & set(tags):
+        return None
+    targets: set[int] = set()
+    if 7 in tags and 8 in tags and offset_of(tags[7]) is not None:
+        start, entry = offset_of(tags[7]), tags.get(9, 24) or 24
+        targets = {u64(at) for at in range(start, min(start + tags[8], len(raw) - 7), entry)}
+    out = {}
+    for name, array, size in (("init", 25, 27), ("fini", 26, 28)):
+        if array not in tags or size not in tags or offset_of(tags[array]) is None:
+            continue
+        start = offset_of(tags[array])
+        nulls = sum(1 for i in range(tags[size] // 8)
+                    if u64(start + 8 * i) in (0, 0xFFFFFFFFFFFFFFFF) and tags[array] + 8 * i not in targets)
+        if nulls:
+            out[name] = nulls
+    return out
+
+
+#: Bionic's PTHREAD_RECURSIVE_MUTEX_INITIALIZER and PTHREAD_ERRORCHECK_MUTEX_INITIALIZER: the type in
+#: bits 14-15 of the first of the mutex's ten words. musl keeps its type in the low bits and reads
+#: both as a normal mutex, so a recursive lock deadlocks on its own thread.
+_BIONIC_MUTEX_TYPES = {0x4000: "recursive", 0x8000: "errorcheck"}
+_MUTEX_LOCKS = ("pthread_mutex_lock", "pthread_mutex_trylock", "pthread_mutex_timedlock")
+
+
+def _sext(value: int, bits: int) -> int:
+    return value - (1 << bits) if value & (1 << (bits - 1)) else value
+
+
+def x0_address_before(words: list[int], index: int, base: int, got: dict[int, int] | None = None) -> int | None:
+    """The address the call at ``words[index]`` passes in x0, when the instructions just before it
+    build it: adrp then add, through movs, or a GOT load (adrp then ldr). None for anything else: a
+    call, branch or other write in between, or a value from memory the GOT does not explain."""
+    # Walking back from the call: ``want`` is the register x0's value comes from, ``offset`` what
+    # adds put on top of it. A GOT load (ldr) moves the offset so far onto the loaded pointer.
+    want, offset, slot, after_load = 0, 0, None, 0
+    for j in range(index - 1, max(index - 24, -1), -1):
+        insn = words[j]
+        if (insn & 0x7C000000) == 0x14000000 or (insn & 0xFFFFFC1F) in (0xD63F0000, 0xD65F0000, 0xD61F0000):
+            return None                                   # b, bl, blr, ret, br: x0 is not built here
+        if (insn & 0x1F) != want:
+            continue
+        if (insn & 0xFF800000) == 0x91000000:             # add xd, xn, #imm{, lsl 12}
+            offset += ((insn >> 10) & 0xFFF) << (12 * ((insn >> 22) & 1))
+            want = (insn >> 5) & 0x1F
+        elif (insn & 0xFFE0FFE0) == 0xAA0003E0:           # mov xd, xm
+            want = (insn >> 16) & 0x1F
+        elif (insn & 0xFFC00000) == 0xF9400000 and slot is None and got is not None:
+            slot, after_load, offset = ((insn >> 10) & 0xFFF) * 8, offset, 0   # ldr xd, [xn, #imm]
+            want = (insn >> 5) & 0x1F
+        elif (insn & 0x9F000000) == 0x90000000:           # adrp xd, page
+            page = ((base + 4 * j) & ~0xFFF) + (_sext((((insn >> 5) & 0x7FFFF) << 2) | ((insn >> 29) & 3), 21) << 12)
+            if slot is None:
+                return page + offset
+            target = (got or {}).get(page + offset + slot)
+            return None if target is None else target + after_load
+        else:
+            return None
+    return None
+
+
+def bionic_static_mutexes(data: bytes) -> dict[str, Any]:
+    """Mutexes initialized with Bionic's recursive or error-checking static initializer that the
+    library's code locks: one whose address is built right before a call to pthread_mutex_lock (or
+    trylock, timedlock). A ten-word object in .data that only looks like one, and is never passed to
+    a lock, is not counted; one locked through a pointer kept elsewhere is missed."""
+    try:
+        from elftools.elf.elffile import ELFFile
+        from elftools.elf.relocation import RelocationSection
+
+        elf = ELFFile(io.BytesIO(data))
+        if elf["e_machine"] != "EM_AARCH64":
+            return {}
+        section = elf.get_section_by_name(".data")
+        if section is None or section["sh_type"] == "SHT_NOBITS":
+            return {}
+        contents, start = section.data(), section["sh_addr"]
+        candidates = {}
+        for at in range((-start) % 4, len(contents) - 39, 4):
+            first = int.from_bytes(contents[at:at + 4], "little")
+            if first in _BIONIC_MUTEX_TYPES and not any(contents[at + 4:at + 40]):
+                candidates[start + at] = _BIONIC_MUTEX_TYPES[first]
+        if not candidates:
+            return {}
+        jump_slots, got = {}, {}
+        for relocations in elf.iter_sections():
+            if not isinstance(relocations, RelocationSection) or not relocations.is_RELA():
+                continue
+            symbols = elf.get_section(relocations["sh_link"])
+            for relocation in relocations.iter_relocations():
+                kind, index = relocation["r_info_type"], relocation["r_info_sym"]
+                if kind == 1026 and index:                # R_AARCH64_JUMP_SLOT
+                    jump_slots[relocation["r_offset"]] = symbols.get_symbol(index).name
+                elif kind == 1027:                        # R_AARCH64_RELATIVE
+                    got[relocation["r_offset"]] = relocation["r_addend"]
+                elif kind == 1025 and index:              # R_AARCH64_GLOB_DAT
+                    symbol = symbols.get_symbol(index)
+                    if symbol["st_shndx"] != "SHN_UNDEF":
+                        got[relocation["r_offset"]] = symbol["st_value"] + relocation["r_addend"]
+        stubs = set()
+        plt = elf.get_section_by_name(".plt")
+        if plt is not None:
+            code, base = plt.data(), plt["sh_addr"]
+            words = [int.from_bytes(code[i:i + 4], "little") for i in range(0, len(code) - 3, 4)]
+            for i in range(len(words) - 1):
+                adrp, load = words[i], words[i + 1]
+                if (adrp & 0x9F00001F) != 0x90000010 or (load & 0xFFC003FF) != 0xF9400211:
+                    continue                              # adrp x16, page; ldr x17, [x16, #slot]
+                page = ((base + 4 * i) & ~0xFFF) + (_sext((((adrp >> 5) & 0x7FFFF) << 2) | ((adrp >> 29) & 3), 21) << 12)
+                if jump_slots.get(page + ((load >> 10) & 0xFFF) * 8) in _MUTEX_LOCKS:
+                    stubs.add(base + 4 * i)
+                    if i and words[i - 1] == 0xD503245F:  # bti c opens the entry
+                        stubs.add(base + 4 * (i - 1))
+        text = elf.get_section_by_name(".text")
+        if not stubs or text is None:
+            return {}
+        code, base = text.data(), text["sh_addr"]
+        words = [w for (w,) in struct.iter_unpack("<I", code[:len(code) - len(code) % 4])]
+        locked = {}
+        for index, insn in enumerate(words):
+            if (insn & 0xFC000000) == 0x94000000 and base + 4 * index + _sext(insn & 0x3FFFFFF, 26) * 4 in stubs:
+                address = x0_address_before(words, index, base, got)
+                if address in candidates:
+                    locked[address] = candidates[address]
+        if not locked:
+            return {}
+        counts = Counter(locked.values())
+        return {"bionic_static_mutexes": dict(sorted(counts.items()))}
+    except Exception:
+        return {}
+
+
 def read_elf(
     path: Path | None = None,
     data: bytes | None = None,
@@ -382,6 +579,11 @@ def read_elf(
             "build_id": build_id,
             "needed": needed,
             "android_relocation_tags": _android_relocation_tags(text),
+            "null_array_entries": null_array_entries(raw),
+            **art_internal_names(raw),
+            **signal_lookups(raw, set(undefined) | set(undefined_weak)),
+            **bionic_static_mutexes(raw),
+            **import_versions(text),
             "exported_symbols": sorted(exports),
             "undefined_symbols": sorted(undefined),
             "undefined_weak_symbols": sorted(undefined_weak),
@@ -582,6 +784,7 @@ class DexInventory:
     load_libraries: list[dict[str, Any]] = field(default_factory=list)
     service_requests: list[dict[str, Any]] = field(default_factory=list)
     jca_requests: list[dict[str, Any]] = field(default_factory=list)
+    feature_queries: list[dict[str, Any]] = field(default_factory=list)
     nonnull_casts: list[dict[str, Any]] = field(default_factory=list)
     native_methods: list[dict[str, Any]] = field(default_factory=list)
     superclasses: dict[str, str] = field(default_factory=dict)
@@ -668,6 +871,11 @@ def _inventory_defined_methods(
 def _inventory_instructions(dex: DEX, method: Any, caller: dict[str, Any], out: DexInventory) -> None:
     string_regs: dict[int, str] = {}
     class_regs: dict[int, str] = {}
+    # A service request whose result is about to be null-checked: R8 compiles Kotlin's non-null
+    # checks to Object.getClass() on the value (or keeps Intrinsics.checkNotNull*), so a null
+    # manager throws a few instructions after the call. clauncher's HomeFragment does that to
+    # getSystemService("device_policy").
+    pending: dict[str, Any] | None = None
     for offset, instruction in method.get_instructions_idx():
         name = instruction.get_name()
         try:
@@ -675,6 +883,21 @@ def _inventory_instructions(dex: DEX, method: Any, caller: dict[str, Any], out: 
         except Exception:
             operands = []
         registers = [int(op[1]) for op in operands if int(op[0]) == 0]
+        if pending is not None:
+            if pending["register"] is None:
+                # The result is taken right after the call, or discarded.
+                if name == "move-result-object" and registers:
+                    pending["register"] = registers[0]
+                else:
+                    pending = None
+            elif registers and registers[0] == pending["register"] \
+                    and name.startswith("invoke-") and _is_null_check(dex, instruction):
+                pending["request"]["null_checked"] = True
+                pending = None
+            if pending is not None:
+                pending["left"] -= 1
+                if pending["left"] <= 0:
+                    pending = None
 
         if name in {"const-string", "const-string/jumbo"} and registers:
             string_regs[registers[0]] = str(instruction.get_string())
@@ -724,8 +947,12 @@ def _inventory_instructions(dex: DEX, method: Any, caller: dict[str, Any], out: 
                     if len(out.method_sites[key]) < 8:
                         out.method_sites[key].append({**caller, "offset": offset, "opcode": name})
                 _detect_string_call(key, registers, string_regs, caller, offset, out)
+                requested = len(out.service_requests)
                 _detect_service_call(key, registers, string_regs, class_regs, caller, offset, out)
+                if len(out.service_requests) > requested:
+                    pending = {"request": out.service_requests[-1], "register": None, "left": 6}
                 _detect_jca_call(key, registers, string_regs, caller, offset, out)
+                _detect_feature_query(key, registers, string_regs, caller, offset, out)
             except (IndexError, TypeError, ValueError):
                 pass
         elif (
@@ -838,6 +1065,41 @@ def _detect_service_call(
         return
     request["dynamic"] = request.get("service") is None and request.get("manager_class") is None
     out.service_requests.append({**caller, "offset": offset, "call_owner": owner, **request})
+
+
+_NULL_CHECKS = {
+    ("Ljava/lang/Object;", "getClass"),
+    ("Ljava/util/Objects;", "requireNonNull"),
+    ("Lkotlin/jvm/internal/Intrinsics;", "checkNotNull"),
+    ("Lkotlin/jvm/internal/Intrinsics;", "checkNotNullExpressionValue"),
+    ("Lkotlin/jvm/internal/Intrinsics;", "checkNotNullParameter"),
+}
+
+
+def _is_null_check(dex: DEX, instruction: Any) -> bool:
+    """An invoke that throws when its first argument is null and is there only to check it."""
+    try:
+        owner, target, _ = dex.get_cm_method(int(instruction.get_ref_kind()))
+    except Exception:
+        return False
+    return (str(owner), str(target)) in _NULL_CHECKS
+
+
+def _detect_feature_query(
+    key: tuple[str, str, str],
+    registers: list[int],
+    string_regs: dict[int, str],
+    caller: dict[str, Any],
+    offset: int,
+    out: DexInventory,
+) -> None:
+    """PackageManager.hasSystemFeature(name[, version]). The FEATURE_* names are compile-time
+    constants, so the name is in a register at the call (None where it is computed)."""
+    owner, name, descriptor = key
+    if name != "hasSystemFeature" or len(registers) < 2 or not descriptor.startswith("(Ljava/lang/String;"):
+        return
+    out.feature_queries.append({**caller, "offset": offset, "call_owner": owner,
+                                "feature": string_regs.get(registers[1])})
 
 
 KOTLIN_NONNULL_CAST = "null cannot be cast to non-null type "
@@ -1052,6 +1314,39 @@ def apk_elf_inventory(path: Path) -> list[dict[str, Any]]:
     return records
 
 
+def unpacked_elf_inventory(directory: Path, packaged: Iterable[dict[str, Any]] = ()) -> list[dict[str, Any]]:
+    """The libraries an app wrote under its data directory at run time, harvested from a run.
+
+    A superpack unpacked by SoLoader (WhatsApp's files/decompressed/libs.spo/, Instagram's
+    lib-compressed/), Chaquopy's extracted modules or a downloaded plugin is code the APK does not
+    package as lib/<abi>/*.so, so no scan of the APK sees its imports. ``directory`` holds the files as
+    <pkg>/<path> with a harvest.json listing each one's device path (inputs run4.sh). A file with the
+    hash of a packaged library is that library extracted again and is left out; a file that is not
+    an ELF file (an archive or a partial write under a .so name) is skipped.
+    """
+    manifest = json.loads((directory / "harvest.json").read_text())
+    seen = {record.get("sha256") for record in packaged}
+    records: list[dict[str, Any]] = []
+    for entry in manifest.get("libraries", []):
+        if not entry.get("elf") or entry.get("sha256") in seen:
+            continue
+        seen.add(entry.get("sha256"))
+        path = directory / entry["file"]
+        try:
+            record = read_elf(path=path, label=entry["device_path"])
+        except (OSError, subprocess.SubprocessError) as exc:
+            record = {"name": entry["device_path"], "error": str(exc)}
+        record["origin"] = "unpacked"
+        record["harvest_file"] = str(path)
+        records.append(record)
+    return records
+
+
+def is_unpacked(record: dict[str, Any]) -> bool:
+    """A library the app wrote at run time: the launcher cannot name it, only what the APK packages."""
+    return record.get("origin") == "unpacked"
+
+
 def _append_elf_records(
     archive: zipfile.ZipFile, prefix: str, records: list[dict[str, Any]]
 ) -> None:
@@ -1092,7 +1387,13 @@ def _append_elf_records(
 
 
 def _read_archive_member(path: Path, record: dict[str, Any]) -> bytes | None:
-    """Read one packaged ELF back out of the APK, including from a nested split archive."""
+    """Read one packaged ELF back out of the APK, including from a nested split archive, or a
+    harvested one from its file."""
+    if record.get("harvest_file"):
+        try:
+            return Path(record["harvest_file"]).read_bytes()
+        except OSError:
+            return None
     entry = record.get("archive_entry")
     if not entry:
         return None
@@ -1201,11 +1502,14 @@ def scan_apk(
     target_abi: str | None = None,
     native_reach: bool = False,
     platform_members: dict[str, Any] | None = None,
+    unpacked_libs: Path | None = None,
 ) -> dict[str, Any]:
     inventory = inventory_dex(path)
     resolver = RuntimeResolver(runtime)
     identity = apk_metadata(path)
     elf_records = apk_elf_inventory(path) if include_elf else []
+    if include_elf and unpacked_libs is not None:
+        elf_records += unpacked_elf_inventory(unpacked_libs, elf_records)
     target_abi = target_abi or runtime.get("target_abi") or _single_elf_abi(runtime.get("bridge_libraries", []))
     available_abis = sorted({record["abi"] for record in elf_records if record.get("abi")})
     if target_abi:
@@ -1520,6 +1824,7 @@ def scan_apk(
             "load_library_calls": inventory.load_libraries,
             "service_requests": inventory.service_requests,
             "jca_requests": inventory.jca_requests,
+            "feature_queries": inventory.feature_queries,
             "nonnull_casts": inventory.nonnull_casts,
             "native_upcalls": native_upcalls if platform_members is not None else None,
             "platform_method_names": _method_names_by_owner(inventory.method_refs),
@@ -1534,8 +1839,9 @@ def scan_apk(
                 "abi_mismatch_elf_count": sum(
                     not record.get("abi_matches_machine", True) for record in elf_records
                 ),
-                "packaged_elf_count": len(elf_records),
-                "selected_packaged_elf_count": len(selected_elfs),
+                "packaged_elf_count": sum(not is_unpacked(record) for record in elf_records),
+                "unpacked_elf_count": sum(is_unpacked(record) for record in elf_records),
+                "selected_packaged_elf_count": sum(not is_unpacked(record) for record in selected_elfs),
                 "selected_runtime_elf_count": len(selected_runtime_elfs),
                 "recovered_registration_entry_count": sum(
                     len(elf.get("jni_registration_entries", [])) for elf in selected_elfs
