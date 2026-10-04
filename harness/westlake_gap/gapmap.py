@@ -479,6 +479,58 @@ AM_PROCESS_TABLE = {"getRunningAppProcesses": "getRunningAppProcesses", "getRunn
                     "getProcessMemoryInfo": "getProcessMemoryInfo"}
 
 
+_PRIMITIVES = {"boolean", "int", "long", "float", "double", "byte", "char", "short"}
+
+# Out-parameter methods whose untouched argument is the right answer for the app itself:
+# a new RunningAppProcessInfo already reads IMPORTANCE_FOREGROUND, the calling app's own state.
+_AM_OUT_DEFAULTS_RIGHT = {"getMyMemoryState"}
+
+
+def am_default_rows(scan: dict[str, Any], am: dict[str, Any], census: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+    """Every other ActivityManager call the app makes whose binder method the direct-launch proxy
+    does not answer: a census of type defaults. The curated rows above (memory info, task queries,
+    process table) are left out. A default that reaches the app as null, or leaves an `out`
+    parameter as the app made it, is open; a false or 0, or a null ActivityManager turns into an
+    empty answer, is noted but not open."""
+    if not am.get("proxy_stub") or not census:
+        return []
+    curated = {"getMemoryInfo"} | set(contracts.TASK_QUERIES) | set(AM_PROCESS_TABLE)
+    called = sorted(set(scan["inventory"].get("platform_method_names", {}).get("Landroid/app/ActivityManager;", [])) - curated)
+    open_, quiet = [], []
+    for method in called:
+        for call in census.get(method, []):
+            if call["binder"] in am.get("answered", []):
+                continue
+            returns = call["returns"]
+            if returns == "void" and call["out"] and call["binder"] in _AM_OUT_DEFAULTS_RIGHT:
+                quiet.append(f"{method} ({call['binder']}: its out parameter as made, already the app's own answer)")
+            elif returns == "void" and call["out"]:
+                open_.append(f"{method} ({call['binder']}: its out parameter is left as the app made it)")
+            elif returns == "void":
+                continue
+            elif returns in _PRIMITIVES:
+                quiet.append(f"{method} ({call['binder']}: {'false' if returns == 'boolean' else '0'})")
+            elif call["null_checked"]:
+                quiet.append(f"{method} ({call['binder']}: null, which ActivityManager turns into an empty answer)")
+            elif call.get("null_documented"):
+                quiet.append(f"{method} ({call['binder']}: null, an answer its documentation names)")
+            else:
+                open_.append(f"{method} ({call['binder']}: null, handed to the app)")
+    if not open_:
+        return []
+    return [_row(
+        "app-framework", "am:type-defaults",
+        f"Other ActivityManager calls answered with a type default ({len(open_)} open)",
+        oh_touchpoint="none: in direct launch IActivityManager is a proxy with no system_server behind it",
+        verdict="hollow", shim_class="C9", effort="S", confidence=STATIC,
+        provider="the direct-launch IActivityManager proxy answers methods it does not name with null, 0 or false",
+        provider_source=am.get("source"), open_symbols=open_[:16],
+        app_evidence="app calls ActivityManager." + ", ActivityManager.".join(sorted({o.split(" ")[0] for o in open_}))
+                     + (f"; answered harmlessly: {'; '.join(quiet[:4])}" if quiet else ""),
+        shim="answer each method in the proxy as ActivityManagerService answers an app about itself",
+    )]
+
+
 def app_framework_rows(scan: dict[str, Any], am: dict[str, Any], wm: dict[str, Any] | None = None,
                        tasks: dict[str, Any] | None = None, launch: dict[str, Any] | None = None,
                        priority: dict[str, Any] | None = None) -> list[dict[str, Any]]:
@@ -796,6 +848,60 @@ def pm_null_consequences(aosp_root: Path | None) -> dict[str, str]:
             elif re.search(rf"\b{variable}\.getList\(\)", after) and not re.search(rf"{variable}\s*[!=]=\s*null", after):
                 out.setdefault(binder, "dereferences the null (ParceledListSlice.getList)")
     return out
+
+
+def _aidl_methods(path: Path) -> dict[str, dict[str, Any]]:
+    """Method name -> its return type and whether it takes an `out` parameter, from an AIDL file."""
+    text = re.sub(r"/\*.*?\*/|//[^\n]*", " ", path.read_text(errors="replace"), flags=re.S)
+    text = re.sub(r"@[\w.]+(?:\([^)]*\))?", " ", text)
+    methods: dict[str, dict[str, Any]] = {}
+    # The delimiter is looked behind, not consumed: one declaration's ';' starts the next.
+    for match in re.finditer(r"(?:(?<=[;{}])|\A)\s*(oneway\s+)?([\w.<>\[\], ]+?)\s+(\w+)\s*\(([^)]*)\)\s*;", text):
+        returns, name, params = " ".join(match.group(2).split()), match.group(3), match.group(4)
+        if returns in ("import", "package", "interface"):
+            continue
+        methods.setdefault(name, {"returns": returns, "out": bool(re.search(r"\b(?:in)?out\s", params))})
+    return methods
+
+
+def am_default_census(aosp_root: Path | None) -> dict[str, list[dict[str, Any]]]:
+    """Public ActivityManager method -> the IActivityManager calls its body makes, each with the
+    binder method's return type, whether it fills an `out` parameter, and whether ActivityManager
+    checks the answer for null before handing it on.
+
+    With no system_server the direct-launch proxy answers a method it does not name with a type
+    default, and what the app sees depends on the wrapper: getHistoricalProcessExitReasons turns
+    null into an empty list, getMyMemoryState leaves the caller's RunningAppProcessInfo as it was
+    made (importance 0, not foreground)."""
+    if aosp_root is None:
+        return {}
+    am_path = aosp_root / "frameworks-base/core/java/android/app/ActivityManager.java"
+    aidl_path = aosp_root / "frameworks-base/core/java/android/app/IActivityManager.aidl"
+    if not am_path.exists() or not aidl_path.exists():
+        return {}
+    binder = _aidl_methods(aidl_path)
+    original = am_path.read_text(errors="replace")
+    text = contracts._strip_java_comments(original)
+    census: dict[str, list[dict[str, Any]]] = {}
+    for head in re.finditer(r"\bpublic\s+(?:static\s+|final\s+|synchronized\s+)*[\w.<>\[\], ?]+?\s+(\w+)\s*\(", text):
+        body = contracts._braced_block(text, head.end())
+        if not body:
+            continue
+        # The method's javadoc: a null it documents (getProcessesInErrorState: "or null if there are no
+        # processes in error") is an answer, not a default the app is unready for.
+        doc, doc_end = "", original.rfind("*/", 0, head.start())
+        if doc_end >= 0 and re.fullmatch(r"\*/\s*(?:@[\w.]+(?:\([^)]*\))?\s*)*", original[doc_end:head.start()]):
+            doc = original[original.rfind("/**", 0, doc_end):doc_end]
+        for call in re.finditer(r"(?<![\w.])getService\(\)\s*\.\s*(\w+)\s*\(", body):
+            info = binder.get(call.group(1))
+            if info is None:
+                continue
+            entry = {"binder": call.group(1), **info, "null_checked": bool(re.search(r"[!=]=\s*null", body)),
+                     "null_documented": bool(re.search(r"\bnull\b", doc))}
+            calls = census.setdefault(head.group(1), [])
+            if entry not in calls:
+                calls.append(entry)
+    return census
 
 
 def webview_process_model(aosp_root: Path | None, westlake_root: Path) -> dict[str, Any]:
@@ -2703,6 +2809,7 @@ def build_map(
     java, java_excluded = java_api_rows(scan, api_levels)
     svc, dynamic = service_rows(scan, aosp_services, westlake_services)
     rows = (java + svc + package_manager_rows(scan, facts, pm, pm_null_consequences(aosp_root))
+            + am_default_rows(scan, contracts.direct_launch_am_model(westlake_root), am_default_census(aosp_root))
             + app_framework_rows(scan, contracts.direct_launch_am_model(westlake_root),
                                  contracts.window_adapter_model(westlake_root),
                                  contracts.task_queries_model(westlake_root),

@@ -918,6 +918,58 @@ class ProviderAuthority(unittest.TestCase):
         self.assertNotIn("pm:provider-authority", {r["id"] for r in gapmap.package_manager_rows(
             self.SCAN, facts, self.model(False))})
 
+class ActivityManagerDefaults(unittest.TestCase):
+    """The census of ActivityManager calls the direct-launch proxy answers with a type default."""
+
+    def setUp(self) -> None:
+        self.root = Path(tempfile.mkdtemp(prefix="westlake-am-census-"))
+        app = self.root / "aosp/frameworks-base/core/java/android/app"
+        _write(app / "IActivityManager.aidl", """interface IActivityManager {
+            @UnsupportedAppUsage
+            List<ActivityManager.RunningServiceInfo> getServices(int maxNum, int flags);
+            List<ActivityManager.ProcessErrorStateInfo> getProcessesInErrorState();
+            void getMyMemoryState(out ActivityManager.RunningAppProcessInfo outInfo);
+            void getWidgetState(out Bundle state);
+            ParceledListSlice<ApplicationExitInfo> getHistoricalProcessExitReasons(String packageName, int pid);
+            boolean isUserAMonkey();
+            IBinder getOddToken();
+        }""")
+        _write(app / "ActivityManager.java", """public class ActivityManager {
+            /** @return the processes in error, or null if there are none. */
+            public List<ProcessErrorStateInfo> getProcessesInErrorState() {
+                return getService().getProcessesInErrorState();
+            }
+            public static void getMyMemoryState(RunningAppProcessInfo outState) { getService().getMyMemoryState(outState); }
+            public void getWidgetState(Bundle out) { getService().getWidgetState(out); }
+            public List<ApplicationExitInfo> getHistoricalProcessExitReasons(String p, int pid) {
+                ParceledListSlice<ApplicationExitInfo> r = getService().getHistoricalProcessExitReasons(p, pid);
+                return r == null ? Collections.emptyList() : r.getList();
+            }
+            @SuppressWarnings("x")
+            public static boolean isUserAMonkey() { return getService().isUserAMonkey(); }
+            public IBinder getOddToken() { return getService().getOddToken(); }
+        }""")
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.root, ignore_errors=True)
+
+    def test_open_defaults_are_nulls_handed_on_and_untouched_out_parameters(self) -> None:
+        census = gapmap.am_default_census(self.root / "aosp")
+        self.assertTrue(census["getProcessesInErrorState"][0]["null_documented"])
+        self.assertTrue(census["getHistoricalProcessExitReasons"][0]["null_checked"])
+        scan = {"inventory": {"platform_method_names": {"Landroid/app/ActivityManager;": [
+            "getProcessesInErrorState", "getMyMemoryState", "getWidgetState", "getHistoricalProcessExitReasons",
+            "isUserAMonkey", "getOddToken", "getRunningServices"]}}}
+        am = {"proxy_stub": True, "answered": [], "source": "AppSpawnXInit.java:1"}
+        row = gapmap.am_default_rows(scan, am, census)[0]
+        self.assertEqual(row["id"], "am:type-defaults")
+        self.assertEqual(sorted(o.split(" ")[0] for o in row["open_symbols"]), ["getOddToken", "getWidgetState"],
+                         "a documented null, a checked one, a primitive and an out parameter already right are answers; "
+                         "the process table belongs to its own row")
+        self.assertEqual(gapmap.am_default_rows(scan, dict(am, answered=["getOddToken", "getWidgetState"]), census), [])
+        self.assertEqual(gapmap.am_default_rows(scan, dict(am, proxy_stub=False), census), [])
+
+
 class AppFrameworkContracts(unittest.TestCase):
     _STUB = """class AppSpawnXInit {
         private static InvocationHandler makeStubHandler(final String label, final Set<String> hot) {
