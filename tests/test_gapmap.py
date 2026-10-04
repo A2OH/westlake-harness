@@ -1382,6 +1382,26 @@ class TaskRoot(unittest.TestCase):
         self.assertEqual(gapmap.task_root_rows({"inventory": {"platform_method_names": {}}}, {"task_for_activity": "constant"}), [])
 
 
+
+class WindowMetrics(unittest.TestCase):
+    def test_metrics_in_oncreate_need_the_bounds_at_bind(self) -> None:
+        """aat: getCurrentWindowMetrics() in onCreate answered 0x0, and it divided by zero."""
+        from westlake_gap.contracts import window_metrics_model
+        scan = {"inventory": {"platform_method_names": {"Landroid/view/WindowManager;": ["getCurrentWindowMetrics"]}}}
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "framework/activity/java/AppSchedulerBridge.java"
+            _write(source, "class B {\n    private static android.content.res.Configuration buildConfiguration(\n"
+                           "            String[] kv, DisplaySnapshot disp) {\n        cfg.densityDpi = disp.densityDpi;\n    }\n"
+                           "    void relayout() { config.windowConfiguration.setBounds(winBounds); }\n}")
+            model = window_metrics_model(root)
+            self.assertFalse(model["bounds_at_bind"], "bounds set at relayout do not count")
+            self.assertEqual(gapmap.window_metrics_rows(scan, model)[0]["verdict"], "missing")
+            _write(source, "class B {\n    private static android.content.res.Configuration buildConfiguration(\n"
+                           "            String[] kv, DisplaySnapshot disp) {\n        cfg.windowConfiguration.setBounds(bounds);\n    }\n}")
+            self.assertEqual(gapmap.window_metrics_rows(scan, window_metrics_model(root))[0]["verdict"], "supplied")
+        self.assertEqual(gapmap.window_metrics_rows({"inventory": {"platform_method_names": {}}}, {}), [])
+
 class SandboxAndBacktest(unittest.TestCase):
     def test_realm_fifo_is_predicted(self) -> None:
         policy = {"oh": {"domain": "u:r:normal_hap:s0", "app_data_type": "u:object_r:appdat:s0",

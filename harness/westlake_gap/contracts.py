@@ -229,6 +229,23 @@ def direct_launch_am_model(westlake_root: Path) -> dict[str, Any]:
             "source": f"{path.relative_to(westlake_root)}:{line}" if stub else None}
 
 
+def window_metrics_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether activities are launched with their window's bounds in the configuration.
+
+    WindowManager.getCurrentWindowMetrics() and getMaximumWindowMetrics() answer from the
+    configuration's windowConfiguration bounds. The relayout fills them later; an activity that
+    measures itself in onCreate sees only what the bind-time configuration carried.
+    """
+    path = westlake_root / "framework/activity/java/AppSchedulerBridge.java"
+    text = path.read_text(errors="replace") if path.exists() else ""
+    match = re.search(r"Configuration buildConfiguration\(", text)
+    body = _braced_block(text, match.start()) if match else ""
+    bounds = re.search(r"windowConfiguration\.setBounds\(", body)
+    line = text.count("\n", 0, match.start()) + 1 if match else None
+    return {"bounds_at_bind": bounds is not None,
+            "source": f"{path.relative_to(westlake_root)}:{line}" if match else None}
+
+
 def activity_client_model(westlake_root: Path) -> dict[str, Any]:
     """Whether the in-process IActivityClientController answers the task queries, or returns a
     constant: getTaskForActivity backs Activity.isTaskRoot() and getTaskId()."""

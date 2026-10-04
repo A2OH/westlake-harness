@@ -962,6 +962,29 @@ def task_root_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str
     )]
 
 
+def window_metrics_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """WindowMetrics read before the first relayout. aat derived its button count from the window
+    width in onCreate, got 0x0, and divided by zero."""
+    # Jetpack WindowManager's WindowMetricsCalculator calls these too, from inside the app's dex.
+    called = sorted(set(scan["inventory"].get("platform_method_names", {}).get("Landroid/view/WindowManager;", []))
+                    & {"getCurrentWindowMetrics", "getMaximumWindowMetrics"})
+    if not called:
+        return []
+    supplied = bool(model.get("bounds_at_bind"))
+    return [_row(
+        "app-framework", "wm:window-metrics", "Window metrics before the first layout",
+        oh_touchpoint="window_manager (the window's rect)",
+        verdict="supplied" if supplied else "missing", shim_class="C0" if supplied else "C9",
+        effort="verify" if supplied else "XS", confidence=STATIC,
+        provider=("activities are launched with the window bounds in their configuration" if supplied
+                  else "windowConfiguration bounds stay empty until the first relayout: metrics read in "
+                       "onCreate are 0x0"),
+        provider_source=model.get("source"), app_evidence="the app calls WindowManager." + ", WindowManager.".join(called),
+        seen_blocking=["aat (divide by zero on the button count it derived from the width)"],
+        shim="put the window bounds in the bind-time configuration's windowConfiguration",
+    )]
+
+
 # Feature name prefix → the getSystemService name of the service that reaches the hardware.
 # Form factors (touchscreen, screen.*) and features no service backs are not listed.
 _FEATURE_SERVICES = (
@@ -2278,6 +2301,7 @@ def build_map(
             + symbol_version_rows(oh_missing)
             + task_root_rows(scan, contracts.activity_client_model(westlake_root))
             + feature_rows(scan, contracts.feature_claims_model(westlake_root), aosp_services, westlake_services)
+            + window_metrics_rows(scan, contracts.window_metrics_model(westlake_root))
             + native_loading_rows(facts, scan, launcher_extraction(manifest_root), board_paths,
                                   launcher_namespace_option(manifest_root), runtime_libraries,
                                   bionic_loader_model(westlake_root, manifest_root))
