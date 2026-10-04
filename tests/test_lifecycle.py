@@ -43,6 +43,18 @@ class FirstBlocker(unittest.TestCase):
             "[UNCAUGHT] thread='main' java.lang.IllegalStateException: Required value was null.\n"),
             ("app-framework", "uncaught on main: IllegalStateException: Required value was null."))
 
+    def test_an_activity_that_closed_itself_off_screen(self) -> None:
+        from westlake_gap import evidence
+        resumed = ("10-04 04:24:13.864 1 2 I C00f00/OH_ACCAdapter: activityResumed: OnDrawListener attached, FG "
+                   "deferred to first frame (token=android.os.Binder@%s)\n")
+        finished = ("10-04 04:24:13.%s 1 2 I C00f00/OH_ACCAdapter: finishActivity: no OH ability; local destroy "
+                    "scheduled for android.os.Binder@%s\n")
+        self.assertEqual(evidence.self_finish(resumed % "bad9da3" + finished % ("900", "bad9da3")),
+                         {"token": "android.os.Binder@bad9da3", "after_ms": 36})
+        # A trampoline: the first activity finished after another one resumed.
+        self.assertIsNone(evidence.self_finish(resumed % "a1" + resumed % "b2" + finished % ("950", "a1")))
+        self.assertIsNone(evidence.self_finish(resumed % "a1"))
+
     def test_trampoline_window_held_back_then_a_frame_is_drawing(self) -> None:
         from westlake_gap import lifecycle
         held = ("kRegJNI loop done\nsBindAppDone=true\nDecorView\n[OH_WSA-relayout] held back 1139x1920: "

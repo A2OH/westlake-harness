@@ -18,6 +18,8 @@ The blocker text is reduced to a key: a missing symbol needs a row mentioning it
 load:shadowed-by-board); an unbound platform native a jni:<class> row; a missing library a load:
 or ndk: row naming it; a null system service its svc:<name> row. A graphics abort or a window
 the platform never surfaced is a platform gap no row type covers yet, so it counts as not named.
+An activity that finished itself on start (lifecycle's self-finish) needs the row for what it asked
+first: am:task-root, or svc:bluetooth.
 
 Usage: score_first_blockers.py <lifecycle.json> <map-root> [<map-root> ...] [--out report.json]
 """
@@ -62,6 +64,8 @@ def platform_key(category, blocker):
         return "service", {"telephony": "phone"}.get(service, service)
     if category in ("graphics", "package-manager") or blocker.startswith("no surface"):
         return "platform", blocker
+    if category == "self-finish":
+        return "exit", blocker
     return None  # a native crash or an app exception: a symptom no row type names
 
 
@@ -101,6 +105,10 @@ def candidate_rows(category, blocker, rows, cause=None):
         return [r for r in rows if r["id"].startswith(("load:", "ndk:")) and value in text(r)]
     if kind == "service":
         return [r for r in rows if r["id"] == "svc:" + value]
+    if kind == "exit":
+        # An activity that closes itself on start asked something first: whether it is its task's
+        # root, or for hardware the device does not have.
+        return [r for r in rows if r["id"] in ("am:task-root", "svc:bluetooth")]
     return []  # a platform behaviour no row type covers yet
 
 

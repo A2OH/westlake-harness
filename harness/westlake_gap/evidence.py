@@ -238,6 +238,36 @@ def startup_times(hilog: str) -> dict | None:
     return found or None
 
 
+_RESUMED = re.compile(r"activityResumed: OnDrawListener attached[^\n]*\(token=(\S+?)\)")
+_FINISHED = re.compile(r"finishActivity: [^\n]*? for (\S+)")
+
+
+def self_finish(hilog: str) -> dict | None:
+    """The app's last resumed activity finishing itself, with no activity resuming after it: from
+    the adapter's activityResumed and finishActivity lines in the app's hilog. On Android an app that
+    does this has left the screen by its own choice -- a launcher activity that is not the task root
+    (Activity.isTaskRoot was false for every activity before the task model), a Bluetooth app on a
+    device without Bluetooth, a trampoline into another app. None when another activity took over."""
+    resumed: list[tuple[float | None, str]] = []
+    finished: dict[str, float | None] = {}
+    for line in hilog.splitlines():
+        match = _RESUMED.search(line)
+        if match:
+            resumed.append((_seconds(line), match.group(1)))
+            continue
+        match = _FINISHED.search(line)
+        if match and match.group(1) not in finished:
+            finished[match.group(1)] = _seconds(line)
+    if not resumed or resumed[-1][1] not in finished:
+        return None
+    at, token = resumed[-1]
+    gone = finished[token]
+    out = {"token": token}
+    if at is not None and gone is not None:
+        out["after_ms"] = max(0, round((gone - at) * 1000))
+    return out
+
+
 _WITNESS = re.compile(r"\[WESTLAKE-SIGNAL-WITNESS\] signal=(0x[0-9a-f]+) code=(0x[0-9a-f]+) tid=(0x[0-9a-f]+) "
                       r"thread=(.*?) pc=(0x[0-9a-f]+) x30=(0x[0-9a-f]+)")
 

@@ -145,6 +145,7 @@ class Score:
     hilog_signal: dict | None = None
     startup: dict | None = None
     root_cause: dict | None = None
+    self_finish: dict | None = None
 
     def as_dict(self) -> dict:
         return {k: v for k, v in self.__dict__.items()
@@ -353,6 +354,15 @@ def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str 
         if s.blocker is None and s.rung_name != "drawing":
             frame = thread["first_app_frame"] or (thread["frames"][0] if thread["frames"] else "?")
             s.blocker_category, s.blocker = "stall", "main thread %s at %s" % (thread["waiting"], frame)
+    # Off screen with an idle main thread, the app may simply have closed its own activity: that is
+    # what it did, and what to explain (a task-root check, absent hardware, a trampoline elsewhere).
+    finished = evidence.self_finish(hilog_text) if hilog_text and s.screen == "host" and not dump and not signal else None
+    if finished:
+        s.self_finish = finished
+        if s.blocker is None or s.blocker_category == "stall" or not s.blocking:
+            s.blocker_category, s.blocking = "self-finish", True
+            s.blocker = "its last activity finished itself%s after resuming, and nothing replaced it" % (
+                " %d ms" % finished["after_ms"] if "after_ms" in finished else "")
 
 
 def score_paths(paths: list[Path]) -> list[Score]:

@@ -35,5 +35,13 @@ class RootCauseScoring(unittest.TestCase):
         self.assertIsNone(score.candidate_rows("app-framework", "start activity: ArithmeticException", ROWS, cause))
 
 
+class SelfFinishScoring(unittest.TestCase):
+    def test_an_activity_closing_itself_needs_the_row_for_what_it_asked(self) -> None:
+        rows = ROWS + [{"id": "am:task-root", "verdict": "missing"}]
+        blocker = "its last activity finished itself 0 ms after resuming, and nothing replaced it"
+        self.assertEqual([r["id"] for r in score.candidate_rows("self-finish", blocker, rows)], ["am:task-root"])
+        self.assertEqual(score.candidate_rows("self-finish", blocker, ROWS), [], "no such row: a blind spot")
+
+
 if __name__ == "__main__":
     unittest.main()
