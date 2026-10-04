@@ -31,6 +31,18 @@ class FirstBlocker(unittest.TestCase):
                          ("native-upcalls", "android.os.Process.readProcFile"))
 
 
+    def test_uncaught_plain_exceptions_and_library_loads_are_blockers(self) -> None:
+        from westlake_gap import lifecycle
+        gecko = ("[UNCAUGHT] thread='Gecko' java.lang.Exception: Error loading Gecko libraries: Error loading "
+                 "shared library libmediandk.so: (needed by /data/local/tmp/asx/lib/arm64-v8a/libxul.so)\n")
+        self.assertEqual(lifecycle.first_blocker(gecko),
+                         ("native-loading", "uncaught on Gecko: library libmediandk.so not loaded"))
+        self.assertEqual(lifecycle.first_blocker("[UNCAUGHT] thread='main' java.lang.Error: boom\n"),
+                         ("app-framework", "uncaught on main: Error: boom"))
+        self.assertEqual(lifecycle.first_blocker(
+            "[UNCAUGHT] thread='main' java.lang.IllegalStateException: Required value was null.\n"),
+            ("app-framework", "uncaught on main: IllegalStateException: Required value was null."))
+
     def test_trampoline_window_held_back_then_a_frame_is_drawing(self) -> None:
         from westlake_gap import lifecycle
         held = ("kRegJNI loop done\nsBindAppDone=true\nDecorView\n[OH_WSA-relayout] held back 1139x1920: "
