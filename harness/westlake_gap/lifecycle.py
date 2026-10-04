@@ -257,6 +257,21 @@ def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str 
     startup = evidence.startup_times(hilog_text) if hilog_text else None
     if startup:
         s.startup = startup
+        # The adapter's first-frame marker in the app's own hilog proves its activity drew, whatever
+        # the child log reached: a Go runtime (gomobile) sends the process's stderr to hilog, so
+        # Rethink's log stopped at "bound" while its welcome screen was up. On screen, it is drawing;
+        # on the host screen, it drew and left, as for a log that reached drawing.
+        if "first_frame" in startup and s.rung < RUNGS.index("drawing"):
+            on_screen = s.screen == "app"
+            target = RUNGS.index("drawing") if on_screen else RUNGS.index("view")
+            if s.rung < target:
+                s.rung, s.rung_name = target, RUNGS[target]
+                s.blocking = not on_screen
+                if on_screen and s.blocker_category == "stall":
+                    s.blocker_category, s.blocker = None, None
+                if on_screen and s.anomaly is None:
+                    s.anomaly = ("the log stops before the activity drew; its hilog shows the first frame "
+                                 "%.1f s after start" % startup["first_frame"])
         if "first_frame" in startup and s.screen == "host" and s.anomaly is None:
             s.anomaly = ("its activity drew a first frame %.1f s after start, but the screenshot shows the "
                          "host screen: the window went away" % startup["first_frame"])

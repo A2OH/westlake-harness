@@ -136,6 +136,24 @@ class Evidence(unittest.TestCase):
         self.assertEqual(evidence.startup_times(hilog), {"resumed": 2.26, "first_frame": 2.79})
         self.assertIsNone(evidence.startup_times("10-03 11:25:25.346 1 1 I C00f00/X: other\n"))
 
+    def test_a_first_frame_the_log_never_reached(self) -> None:
+        """Rethink: the Go runtime sends stderr to hilog, so the child log stopped at "bound" while
+        the hilog showed the first frame and the screenshot the app's welcome screen."""
+        from westlake_gap import lifecycle
+        hilog = ("10-03 11:25:25.346 22245 22245 I C00f00/AppSpawnX: Child process started, pid=1\n"
+                 "10-03 11:25:27.606 22245 22262 I C00f00/OH_ACCAdapter: activityResumed: OnDrawListener attached\n"
+                 "10-03 11:25:28.131 22245 22262 W C00f00/OH_ACCAdapter: activityResumed (first-frame): no OH token mapping\n")
+        text = "kRegJNI loop done\n[DIRECT-LAUNCH] bind done sBindAppDone=true\n"
+        for screen, rung in (("app", "drawing"), ("host", "view"), (None, "view")):
+            s = lifecycle.score("rethink", text)
+            s.screen = screen
+            lifecycle.add_evidence(s, text, None, None, hilog)
+            self.assertEqual(s.rung_name, rung, screen)
+        s = lifecycle.score("rethink", text)
+        s.screen = "app"
+        lifecycle.add_evidence(s, text, None, None, "10-03 11:25:25.346 1 1 I C00f00/X: other\n")
+        self.assertEqual(s.rung_name, "bound", "no first-frame marker: the log decides")
+
     def test_the_shim_witness_places_a_signal_without_a_dump(self) -> None:
         from westlake_gap import evidence, lifecycle
         log = ("kRegJNI loop done\n[WESTLAKE-SIGNAL-WITNESS] signal=0x4 code=0x1 tid=0x1d79 thread=MnsNetworking "
