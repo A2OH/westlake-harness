@@ -189,6 +189,10 @@ def aosp_service_table(registry_java: Path, context_java: Path, source_roots: It
             "binders": binders,
             "source": f"{registry_java.name}:{_line_of(text, match.start())}",
             "registration": "SystemServiceRegistry",
+            # getSystemService answers null only when the fetcher throws ServiceNotFoundException
+            # or returns null; a fetcher that builds its manager unconditionally never does
+            # (SystemVibratorManager, InputManager), whatever the manager reaches later.
+            "fetcher_can_fail": bool(re.search(r"getServiceOrThrow|throw new ServiceNotFoundException|\breturn null;", block)),
         })
 
     for root in source_roots:
@@ -209,6 +213,9 @@ def aosp_service_table(registry_java: Path, context_java: Path, source_roots: It
                     "binders": [{"name": name, "required": True}] if with_binder else [],
                     "source": f"{path.name}:{_line_of(body, match.start())}",
                     "registration": f"{path.stem}.register{kind}",
+                    # The registry's wrapper fetches a binder-taking initializer's binder with
+                    # getServiceOrThrow, so only those can answer null.
+                    "fetcher_can_fail": with_binder,
                 }
 
     sources = _manager_sources(source_roots)
@@ -423,6 +430,7 @@ def service_map(
         calls = sorted((manager_calls or {}).get(contract["manager"], set()))
         rows.append({
             "service": name,
+            "fetcher_can_fail": contract.get("fetcher_can_fail", True),
             "manager": contract["manager"],
             "binders": contract["binders"],
             "aosp_source": contract["source"],

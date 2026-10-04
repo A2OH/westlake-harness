@@ -208,8 +208,11 @@ def service_rows(scan: dict[str, Any], aosp: dict[str, Any], westlake: dict[str,
         basis = entry.get("westlake_basis") or {}
         # A null manager is survivable only where the caller checks. Kotlin's `as Manager` does
         # not: it throws, and inside a JS host function that is a JS exception.
+        # Unresolved means the binder could not be followed; the manager can still be null only
+        # where AOSP's fetcher can fail.
+        can_be_null = verdict == services.NULL or (verdict == services.UNRESOLVED and entry.get("fetcher_can_fail", True))
         throwing = (casts.get(entry.get("manager", ""), []) + checked.get(entry["service"], [])
-                    + checked.get(entry.get("manager", ""), [])) if verdict in {services.NULL, services.UNRESOLVED} else []
+                    + checked.get(entry.get("manager", ""), [])) if can_be_null else []
         evidence = None
         if throwing:
             owners = sorted({f"{c['owner'].strip('L;').replace('/', '.')}.{c['method']}" for c in throwing})
