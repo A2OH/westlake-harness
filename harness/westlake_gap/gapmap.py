@@ -548,6 +548,24 @@ def app_framework_rows(scan: dict[str, Any], am: dict[str, Any], wm: dict[str, A
                            "activity; the service never ran)"] if started else [],
             shim="create the service in process once; onStartCommand per start with its start id, onBind per bind, "
                  "onDestroy on stopService or stopSelf when nothing is bound"))
+    # Receivers the app registers and broadcasts it sends itself: answered by the proxy or dropped.
+    registers = sorted(context_calls & {"registerReceiver"})
+    sends = sorted(context_calls & {"sendBroadcast", "sendOrderedBroadcast"})
+    if (registers or sends) and am["proxy_stub"]:
+        needed = (["registerReceiverWithFeature"] if registers else []) + (["broadcastIntentWithFeature"] if sends else [])
+        unanswered = [n for n in needed if n not in am["answered"]]
+        rows.append(_row(
+            "app-framework", "am:broadcasts", f"The app's receivers and broadcasts ({', '.join(registers + sends)})",
+            oh_touchpoint="none for the app's own broadcasts (OH common events would carry the system's)",
+            verdict="missing" if unanswered else "supplied", shim_class="C9" if unanswered else "C0",
+            effort="S" if unanswered else "verify", confidence=STATIC,
+            provider=(f"direct-launch IActivityManager proxy answers {', '.join(unanswered)} with a type default: "
+                      "no sticky intent (registerReceiver(null, BATTERY_CHANGED) is null) and no delivery"
+                      if unanswered else "kept in process: the app's broadcasts reach its matching registrations"),
+            provider_source=am["source"], open_symbols=unanswered,
+            app_evidence=f"app calls Context.{', Context.'.join(registers + sends)}",
+            shim="keep registrations in process; deliver the app's broadcasts to the ones whose filter matches; "
+                 "answer sticky queries (BATTERY_CHANGED)"))
     if "show" in names.get("Landroid/app/Dialog;", []):
         wm = wm or {}
         stacking = wm.get("dialogs_above_base", {})

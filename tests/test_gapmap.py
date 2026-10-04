@@ -890,6 +890,10 @@ class AppFrameworkContracts(unittest.TestCase):
         scan["apk"]["services"] = 0
         self.assertNotIn("am:in-app-services", {r["id"] for r in gapmap.app_framework_rows(scan, both)},
                          "an app with no services of its own starts other apps' services")
+        scan["inventory"]["platform_method_names"]["Landroid/content/Context;"] = ["registerReceiver", "sendBroadcast"]
+        row = {r["id"]: r for r in gapmap.app_framework_rows(scan, both)}["am:broadcasts"]
+        self.assertEqual((row["verdict"], row["open_symbols"]),
+                         ("missing", ["registerReceiverWithFeature", "broadcastIntentWithFeature"]))
 
     def test_memory_info_and_the_apps_own_task(self) -> None:
         scan = {"inventory": {"platform_method_names": {
