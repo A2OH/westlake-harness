@@ -139,10 +139,52 @@ class Score:
     crash_dump: dict | None = None
     hilog_signal: dict | None = None
     startup: dict | None = None
+    root_cause: dict | None = None
 
     def as_dict(self) -> dict:
         return {k: v for k, v in self.__dict__.items()
                 if v is not None and not (k == "blocker_category" and self.blocker is None)}
+
+
+_FATAL_START = re.compile(r"J_invokeStaticMain_main_threw|ensureBindApplication FAILED|\[UNCAUGHT\]|\[DIRECT-LAUNCH\] FAILED")
+_CAUSE = re.compile(r"(?:Caused by: |caused by: |cause\[\d+\]=)([\w.$]+?)(?:: ([^\n]*))?$")
+_THROWN = re.compile(r"(?:^|[:= ])((?:[a-z]\w*\.)+[A-Z]\w*(?:Exception|Error))(?:: ([^\n]*))?$")
+_FRAME = re.compile(r"\bat ([\w$]+(?:\.[\w$]+)*)\.([\w$<>-]+)\(")
+_PLATFORM_FRAME = ("android.", "java.", "javax.", "com.android.", "dalvik.", "sun.", "libcore.", "jdk.", "adapter.")
+
+
+def root_cause(text: str) -> dict | None:
+    """The deepest cause of the first fatal exception, its whole message and the first app frame
+    under it. The blocker line keeps only the outermost exception, cut short: otgmaster's read
+    "start activity: NullPointerException", where its cause said which manager was null."""
+    start = _FATAL_START.search(text)
+    if start is None:
+        return None
+    lines = text[start.start():].split("\n", 400)[:400]
+    cause, at = None, 0
+    for index, line in enumerate(lines):
+        # The same chain again, or the launch failure that followed from it.
+        if index > 0 and cause is not None and (line.startswith("[INITCHILD-FAIL]") or "[DIRECT-LAUNCH] FAILED" in line
+                                                or "cause[0]=" in line):
+            break
+        match = _CAUSE.search(line)
+        if match:
+            cause, at = (match.group(1), match.group(2)), index
+    if cause is None:
+        match = _THROWN.search(lines[0])
+        if match is None:
+            return None
+        cause = (match.group(1), match.group(2))
+    frame = None
+    for line in lines[at + 1:at + 40]:
+        found = _FRAME.search(line)
+        if found and not found.group(1).startswith(_PLATFORM_FRAME):
+            frame = found.group(1) + "." + found.group(2)
+            break
+    out = {"exception": cause[0].rsplit(".", 1)[-1], "message": (cause[1] or "")[:240]}
+    if frame:
+        out["frame"] = frame
+    return out
 
 
 def first_blocker(text: str) -> tuple[str, str] | tuple[None, None]:
@@ -209,7 +251,7 @@ def score(app: str, text: str) -> Score:
     return Score(app=app, rung=rung, rung_name=RUNGS[rung], lines=lines,
                  fatal=len(_FATAL.findall(text)), relayouts=relayouts, held_back=held,
                  blocker_category=category, blocker=blocker, blocking=blocking,
-                 markers=counts, anomaly=anomaly)
+                 markers=counts, anomaly=anomaly, root_cause=root_cause(text) if blocking else None)
 
 
 _HOST_SCREEN = Path(__file__).parent / "data" / "host-screen.png"

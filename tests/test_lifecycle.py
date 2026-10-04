@@ -136,6 +136,31 @@ class Evidence(unittest.TestCase):
         self.assertEqual(evidence.startup_times(hilog), {"resumed": 2.26, "first_frame": 2.79})
         self.assertIsNone(evidence.startup_times("10-03 11:25:25.346 1 1 I C00f00/X: other\n"))
 
+    def test_root_cause_is_the_deepest_cause_with_its_app_frame(self) -> None:
+        """otgmaster's blocker read "start activity: NullPointerException"; its cause named the
+        manager, and the first app frame where the null was used."""
+        from westlake_gap import lifecycle
+        log = ("[CHILD_CK] J_invokeStaticMain_main_threw: java.lang.RuntimeException: Unable to start activity x\n"
+               "java.lang.RuntimeException: Unable to start activity x\n"
+               "\tat android.app.ActivityThread.performLaunchActivity(Unknown Source:629)\n"
+               "Caused by: java.lang.NullPointerException: null cannot be cast to non-null type android.hardware.usb.UsbManager\n"
+               "\tat android.app.Activity.getSystemService(Unknown Source:1)\n"
+               "\tat app.fayaz.otgmaster.MainActivity.onCreate(MainActivity.kt:270)\n"
+               "[INITCHILD-FAIL] java.lang.reflect.InvocationTargetException: null\n"
+               "[INITCHILD-FAIL]   caused by: java.lang.RuntimeException: later\n")
+        self.assertEqual(lifecycle.root_cause(log), {
+            "exception": "NullPointerException",
+            "message": "null cannot be cast to non-null type android.hardware.usb.UsbManager",
+            "frame": "app.fayaz.otgmaster.MainActivity.onCreate"})
+        bind = ("x ensureBindApplication FAILED phase=handleBindApplication cause[1]=java.lang.RuntimeException: Unable to create\n"
+                "x ensureBindApplication FAILED phase=handleBindApplication cause[2]=java.lang.IllegalArgumentException: maxSize <= 0\n"
+                "x ensureBindApplication FAILED phase=handleBindApplication at cha.a(r8:3)\n"
+                "x [DIRECT-LAUNCH] FAILED cause[0]=java.lang.IllegalStateException: Application binding failed\n")
+        self.assertEqual(lifecycle.root_cause(bind),
+                         {"exception": "IllegalArgumentException", "message": "maxSize <= 0", "frame": "cha.a"},
+                         "the launch failure that follows the bind's is not its cause")
+        self.assertIsNone(lifecycle.root_cause("kRegJNI loop done\n"))
+
     def test_a_first_frame_the_log_never_reached(self) -> None:
         """Rethink: the Go runtime sends stderr to hilog, so the child log stopped at "bound" while
         the hilog showed the first frame and the screenshot the app's welcome screen."""

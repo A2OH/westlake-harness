@@ -238,6 +238,7 @@ def service_rows(scan: dict[str, Any], aosp: dict[str, Any], westlake: dict[str,
             app_calls=methods[:12], call_sites=entry["site_count"],
             example_site=_site(entry["sites"][0]) if entry.get("sites") else None,
             shim=shim, app_evidence=evidence, throws_if_null=len(throwing), throws_in_framework=unwrapping,
+            throwing_sites=sorted({f"{c['owner'].strip('L;').replace('/', '.')}.{c['method']}" for c in throwing})[:40],
         ))
     dynamic = sum(1 for r in requests if r.get("dynamic"))
     return rows, dynamic

@@ -10,6 +10,10 @@ first blocker (harness.westlake_gap.lifecycle --json) is looked up in the app's 
   unscorable no blocker was recognized in the log, or it is a symptom no row type names: a native
              crash, an app exception with no platform symbol, an app's own native class
 
+An app exception counts when its root cause (lifecycle's root_cause) names a service: a Kotlin cast
+of a null manager by the manager's class, a compiled null check by its frame among a service row's
+throwing sites.
+
 The blocker text is reduced to a key: a missing symbol needs a row mentioning it (a std::__ndk1 one:
 load:shadowed-by-board); an unbound platform native a jni:<class> row; a missing library a load:
 or ndk: row naming it; a null system service its svc:<name> row. A graphics abort or a window
@@ -61,11 +65,29 @@ def platform_key(category, blocker):
     return None  # a native crash or an app exception: a symptom no row type names
 
 
-def candidate_rows(category, blocker, rows):
+_NONNULL_CAST = re.compile(r"null cannot be cast to non-null type (android\.[\w.$]+)")
+
+
+def root_cause_rows(cause, rows):
+    """Service rows that name an app exception's root cause, or None if it names none: a Kotlin cast
+    of a null manager names the manager's class; a compiled null check (getClass() on null) names
+    no type, but its frame is one of the throwing sites a service row lists."""
+    message = cause.get("message") or ""
+    cast = _NONNULL_CAST.search(message)
+    if cast:
+        manager = "L" + cast.group(1).replace(".", "/") + ";"
+        return [r for r in rows if r["id"].startswith("svc:") and (r.get("aosp_contract") or "").startswith(manager)]
+    frame = cause.get("frame")
+    if cause.get("exception") == "NullPointerException" and "getClass()" in message and frame:
+        return [r for r in rows if r["id"].startswith("svc:") and frame in (r.get("throwing_sites") or [])]
+    return None
+
+
+def candidate_rows(category, blocker, rows, cause=None):
     """Rows that would name this blocker; None if it is not one a gap map could name."""
     key = platform_key(category, blocker)
     if key is None:
-        return None
+        return root_cause_rows(cause, rows) if cause else None
     kind, value = key
     text = lambda row: json.dumps(row)
     if kind == "symbol":
@@ -99,7 +121,7 @@ def main():
         elif not blocker:
             outcome, rows = "unscorable", []
         else:
-            rows = candidate_rows(category, blocker, gap["rows"])
+            rows = candidate_rows(category, blocker, gap["rows"], entry.get("root_cause"))
             if rows is None:
                 outcome, rows = "unscorable", []
             elif not rows:
