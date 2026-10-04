@@ -1,5 +1,7 @@
 # D600 fleet plan
 
+*[中文版](D600-FLEET-PLAN.zh-CN.md)*
+
 Ten D600 boards on an isolated WiFi network, one IP-switched outlet per board, and one Linux host
 that schedules launches across all of them. The point is more validation rounds for the gap map: a
 full 329-app round in under an hour instead of 12 hours on one board.
