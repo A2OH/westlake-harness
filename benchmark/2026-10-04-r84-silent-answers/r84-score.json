@@ -1,0 +1,453 @@
+{
+ "counts": {
+  "named": 17,
+  "unscorable": 31,
+  "not-named": 3
+ },
+ "results": [
+  {
+   "app": "aaaaxy",
+   "stage": "bound",
+   "category": "native-loading",
+   "blocker": "Error relocating /data/local/tmp/asx/lib/arm64-v8a/libgojni.so: AConfiguration_delete: symbol not fo",
+   "outcome": "named",
+   "rows": [
+    "ndk:package=missing"
+   ]
+  },
+  {
+   "app": "aat",
+   "stage": "activity",
+   "category": "app-framework",
+   "blocker": "start activity: ArithmeticException",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "andstatus",
+   "stage": "view",
+   "category": "self-finish",
+   "blocker": "its last activity finished itself 4291 ms after resuming, and nothing replaced it",
+   "outcome": "not-named",
+   "rows": []
+  },
+  {
+   "app": "beatbridge",
+   "stage": "view",
+   "category": "self-finish",
+   "blocker": "its last activity finished itself 0 ms after resuming, and nothing replaced it",
+   "outcome": "named",
+   "rows": [
+    "svc:bluetooth=unresolved"
+   ]
+  },
+  {
+   "app": "capcut",
+   "stage": "view",
+   "category": "self-finish",
+   "blocker": "its last activity finished itself 49 ms after resuming, and nothing replaced it",
+   "outcome": "named",
+   "rows": [
+    "am:task-root=missing"
+   ]
+  },
+  {
+   "app": "cardswithcats",
+   "stage": "view",
+   "category": "stall",
+   "blocker": "main thread idle in its message loop at android.os.MessageQueue.nativePollOnce(Native method)",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "cclauncher",
+   "stage": "view",
+   "category": "stall",
+   "blocker": "main thread idle in its message loop at android.os.MessageQueue.nativePollOnce(Native method)",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "clauncher",
+   "stage": "activity",
+   "category": "app-framework",
+   "blocker": "start activity: InflateException",
+   "outcome": "named",
+   "rows": [
+    "svc:device_policy=null"
+   ]
+  },
+  {
+   "app": "cnn",
+   "stage": "runtime-init",
+   "category": "app-framework",
+   "blocker": "bind: RuntimeException: Unable to create application com.cnn.mobile.android.phone.CnnApplication: java.l",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "diesimu",
+   "stage": "view",
+   "category": "native-upcalls",
+   "blocker": "org.libsdl.app.SDLActivity.nativeSetenv",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "discord",
+   "stage": "view",
+   "category": "stall",
+   "blocker": "main thread running at android.os.Parcel.nativeWriteString8(Native method)",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "drawanywhere",
+   "stage": "view",
+   "category": "self-finish",
+   "blocker": "its last activity finished itself 0 ms after resuming, and nothing replaced it",
+   "outcome": "not-named",
+   "rows": []
+  },
+  {
+   "app": "duckrun",
+   "stage": "bound",
+   "category": "native-loading",
+   "blocker": "Error loading shared library libcamera2ndk.so: (needed by /data/local/tmp/asx/lib/arm64-v8a/libgodot",
+   "outcome": "named",
+   "rows": [
+    "load:needed-missing=missing"
+   ]
+  },
+  {
+   "app": "econverter",
+   "stage": "bound",
+   "category": "native-crash",
+   "blocker": "SIGSEGV on thread com.econverter.: a null function pointer called from libpython3.11.so+0x499ba4",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "elementx",
+   "stage": "runtime-init",
+   "category": "native-crash",
+   "blocker": "SIGSEGV on thread io.element.andr: in libmatrix_sdk_ffi.so+0x29746e4f00",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "emacs",
+   "stage": "runtime-init",
+   "category": "app-framework",
+   "blocker": "bind: UnsatisfiedLinkError: Error relocating /data/local/tmp/asx/lib/arm64-v8a/libselinux_emacs.so: fts_open",
+   "outcome": "named",
+   "rows": [
+    "ndk:libc-abi=missing"
+   ]
+  },
+  {
+   "app": "facebooknotifica",
+   "stage": "activity",
+   "category": "app-framework",
+   "blocker": "start activity: InflateException",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "fennec",
+   "stage": "runtime-init",
+   "category": "native-loading",
+   "blocker": "uncaught on Gecko: library libmediandk.so not loaded",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "flipboard",
+   "stage": "runtime-init",
+   "category": "app-framework",
+   "blocker": "bind: RuntimeException: Unable to get provider androidx.startup.InitializationProvider: eqb: java.lang.U",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "fmessages",
+   "stage": "view",
+   "category": "self-finish",
+   "blocker": "its last activity finished itself 0 ms after resuming, and nothing replaced it",
+   "outcome": "named",
+   "rows": [
+    "am:task-root=missing"
+   ]
+  },
+  {
+   "app": "fvoicerec",
+   "stage": "view",
+   "category": "app-framework",
+   "blocker": "process init: IllegalStateException: null",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "insigno",
+   "stage": "bound",
+   "category": "native-crash",
+   "blocker": "SIGABRT on thread mali-cmar-backe: aborted from libGLES_mali.z.so",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "instagram",
+   "stage": "view",
+   "category": "self-finish",
+   "blocker": "its last activity finished itself 0 ms after resuming, and nothing replaced it",
+   "outcome": "named",
+   "rows": [
+    "svc:bluetooth=unresolved",
+    "am:task-root=missing"
+   ]
+  },
+  {
+   "app": "internetradio",
+   "stage": "bound",
+   "category": "app-framework",
+   "blocker": "process init: NullPointerException: Attempt to invoke InvokeType(2) method 'java.lang.Class java.lang.Object.getClas",
+   "outcome": "named",
+   "rows": [
+    "svc:servicediscovery=null"
+   ]
+  },
+  {
+   "app": "libretube",
+   "stage": "runtime-init",
+   "category": "app-framework",
+   "blocker": "bind: RuntimeException: Unable to create application com.github.libretube.LibreTubeApp: java.lang.Illega",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "linphone",
+   "stage": "bound",
+   "category": "system-services",
+   "blocker": "UsageStatsManager.getAppStandbyBucket on null service",
+   "outcome": "named",
+   "rows": [
+    "svc:usagestats=null"
+   ]
+  },
+  {
+   "app": "mobilev2",
+   "stage": "view",
+   "category": "stall",
+   "blocker": "main thread idle in its message loop at android.os.MessageQueue.nativePollOnce(Native method)",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "mousepounce",
+   "stage": "view",
+   "category": "stall",
+   "blocker": "main thread idle in its message loop at android.os.MessageQueue.nativePollOnce(Native method)",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "musekit",
+   "stage": "view",
+   "category": "app-framework",
+   "blocker": "process init: IllegalStateException: startRecording() called on an uninitialized AudioRecord.",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "nounours",
+   "stage": "bound",
+   "category": "app-framework",
+   "blocker": "uncaught on Thread-3: IllegalStateException: null",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "nytimes",
+   "stage": "activity",
+   "category": "app-framework",
+   "blocker": "start activity: RuntimeException",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "onloc",
+   "stage": "view",
+   "category": "app-framework",
+   "blocker": "process init: NullPointerException: Attempt to invoke InvokeType(2) method 'java.lang.Class java.lang.Object.getClas",
+   "outcome": "named",
+   "rows": [
+    "svc:servicediscovery=null"
+   ]
+  },
+  {
+   "app": "opencamera",
+   "stage": "bound",
+   "category": "native-upcalls",
+   "blocker": "android.hardware.Camera._getCameraInfo",
+   "outcome": "named",
+   "rows": [
+    "jni:android.hardware.Camera=missing"
+   ]
+  },
+  {
+   "app": "opflashcontrol",
+   "stage": "view",
+   "category": "app-framework",
+   "blocker": "process init: IllegalStateException: Slider value(80.0) must be greater or equal to valueFrom(0.0), and lower or equa",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "otgmaster",
+   "stage": "activity",
+   "category": "app-framework",
+   "blocker": "start activity: NullPointerException",
+   "outcome": "named",
+   "rows": [
+    "svc:usb=null"
+   ]
+  },
+  {
+   "app": "playmaker",
+   "stage": "bound",
+   "category": "native-loading",
+   "blocker": "Error loading shared library libcamera2ndk.so: (needed by /data/local/tmp/asx/lib/arm64-v8a/libgodot",
+   "outcome": "named",
+   "rows": [
+    "load:needed-missing=missing"
+   ]
+  },
+  {
+   "app": "ppsspp",
+   "stage": "bound",
+   "category": "native-crash",
+   "blocker": "SIGSEGV on thread androidInit: in libhwui.so+0x6ba160",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "quitter",
+   "stage": "runtime-init",
+   "category": "app-framework",
+   "blocker": "bind: RuntimeException: Unable to get provider dev.fluttercommunity.workmanager.WorkmanagerInitializer: ",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "reddit",
+   "stage": "view",
+   "category": "stall",
+   "blocker": "main thread parked at d2d.run(r8-map-id-e4e655e765068a8c70045c41b4b5e161b533bf667294b9020883beeee11f7871:248)",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "redreader",
+   "stage": "view",
+   "category": "self-finish",
+   "blocker": "its last activity finished itself 0 ms after resuming, and nothing replaced it",
+   "outcome": "named",
+   "rows": [
+    "am:task-root=missing"
+   ]
+  },
+  {
+   "app": "scrambledexif",
+   "stage": "bound",
+   "category": "app-framework",
+   "blocker": "process init: RuntimeException: Unable to resume activity {com.jarsilio.android.scrambledeggsif/com.jarsilio.and",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "shazam",
+   "stage": "view",
+   "category": "self-finish",
+   "blocker": "its last activity finished itself 1 ms after resuming, and nothing replaced it",
+   "outcome": "named",
+   "rows": [
+    "am:task-root=missing"
+   ]
+  },
+  {
+   "app": "shortcut",
+   "stage": "view",
+   "category": "self-finish",
+   "blocker": "its last activity finished itself 0 ms after resuming, and nothing replaced it",
+   "outcome": "not-named",
+   "rows": []
+  },
+  {
+   "app": "spotify",
+   "stage": "activity",
+   "category": "app-framework",
+   "blocker": "start activity: IllegalArgumentException",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "tiktok",
+   "stage": "runtime-init",
+   "category": "native-crash",
+   "blocker": "SIGSEGV on thread tp-io-6: in ld-musl-aarch64.so.1+0xd5e1c",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "translator",
+   "stage": "runtime-init",
+   "category": "app-framework",
+   "blocker": "bind: UnsatisfiedLinkError: Unable to load library 'bindings':",
+   "outcome": "named",
+   "rows": [
+    "load:shadowed-by-board=missing",
+    "load:needed-sibling=missing"
+   ]
+  },
+  {
+   "app": "usp",
+   "stage": "view",
+   "category": "native-crash",
+   "blocker": "abort: drawRenderNode called on a context with no surface!",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "waze",
+   "stage": "view",
+   "category": "native-crash",
+   "blocker": "SIGABRT on thread Native Thread: aborted from libwaze.so",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "werewolvesgame",
+   "stage": "bound",
+   "category": null,
+   "blocker": null,
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "wormhole",
+   "stage": "bound",
+   "category": "stall",
+   "blocker": "main thread running at java.lang.Throwable.nativeFillInStackTrace(Native method)",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "wormhole2",
+   "stage": "view",
+   "category": "stall",
+   "blocker": "main thread idle in its message loop at android.os.MessageQueue.nativePollOnce(Native method)",
+   "outcome": "unscorable",
+   "rows": []
+  }
+ ]
+}
