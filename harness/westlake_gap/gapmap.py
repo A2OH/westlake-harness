@@ -747,6 +747,80 @@ def native_load_short_circuit(art_build_root: Path | None) -> dict[str, Any]:
             "source": f"art-build/stubs/openjdk_stub.c:{text.count(chr(10), 0, body.start()) + 1}"}
 
 
+#: Public calls that end in a runtime native, by the native (class/name): what an app names when it
+#: reaches one. Only natives the runtime's openjdk stub registers with a constant body are looked up.
+STUB_NATIVE_CALLERS = {
+    "java/io/UnixFileSystem.getSpace0": ("Ljava/io/File;", ("getTotalSpace", "getFreeSpace", "getUsableSpace")),
+    "java/io/UnixFileSystem.setPermission0": ("Ljava/io/File;", ("setReadable", "setWritable", "setExecutable")),
+    "java/io/UnixFileSystem.setReadOnly0": ("Ljava/io/File;", ("setReadOnly",)),
+    "java/io/UnixFileSystem.setLastModifiedTime0": ("Ljava/io/File;", ("setLastModified",)),
+}
+
+
+def stub_native_model(art_build_root: Path | None, westlake_root: Path) -> dict[str, Any]:
+    """Natives the runtime's openjdk stub registers with a body that only returns a constant (0,
+    NULL, false), and whether libwl_missing_natives binds a real one over it. Registered, they never
+    fail: every caller gets the constant (File.getUsableSpace 0, File.setReadable false)."""
+    stubs: dict[str, str] = {}
+    path = art_build_root / "stubs/openjdk_stub.c" if art_build_root else None
+    if path and path.exists():
+        text = path.read_text(errors="replace")
+        constant = {m[1]: text.count(chr(10), 0, m.start()) + 1 for m in re.finditer(
+            r"^static\s+\w+\s+(\w+)\([^)]*\)\s*\{\s*return\s+(?:0|NULL|JNI_FALSE)\s*;\s*/\*\s*stub\s*\*/\s*\}",
+            text, re.M)}
+        owner = None
+        for m in re.finditer(r'FindOptionalClass\(env,\s*"([\w/$]+)"\)|\{\s*"(\w+)",\s*"[^"]*",\s*\(void\s*\*\)\s*(\w+)\s*\}',
+                             text):
+            if m[1]:
+                owner = m[1]
+            elif owner and m[3] in constant:
+                stubs[f"{owner}.{m[2]}"] = f"art-build/stubs/openjdk_stub.c:{constant[m[3]]}"
+    rebound: set[str] = set()
+    natives = westlake_root / "framework/javacore-shim/missing_natives.c"
+    if natives.exists():
+        text = natives.read_text(errors="replace")
+        tables = dict(re.findall(r'bind\(env,\s*"([\w/$]+)",\s*(\w+),', text))
+        for owner, table in tables.items():
+            body = re.search(rf"\b{table}\[\]\s*=\s*\{{(.*?)\n\}};", text, re.S)
+            for name in re.findall(r'\{\s*"(\w+)",', body[1] if body else ""):
+                rebound.add(f"{owner}.{name}")
+    return {"stubs": stubs, "rebound": sorted(rebound & set(stubs))}
+
+
+def stub_native_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """App calls that reach a runtime native registered as a constant answer (stub_native_model)."""
+    called = scan["inventory"].get("platform_method_names") or {}
+    reached: dict[str, list[str]] = {}
+    for native, (owner, methods) in STUB_NATIVE_CALLERS.items():
+        if native not in model["stubs"]:
+            continue
+        hits = [f"{owner[1:-1].rsplit('/', 1)[-1]}.{m}" for m in methods if m in called.get(owner, ())]
+        if hits:
+            reached[native] = hits
+    if not reached:
+        return []
+    open_ = sorted(n for n in reached if n not in model["rebound"])
+    evidence = "; ".join(f"{', '.join(calls)} ({native.rsplit('/', 1)[-1]}"
+                         + (", re-bound" if native in model["rebound"] else ", constant") + ")"
+                         for native, calls in sorted(reached.items()))
+    return [_row(
+        "java-api", "runtime:stub-natives",
+        "Runtime natives registered with a constant answer (" + ", ".join(
+            sorted({c for calls in reached.values() for c in calls})[:4]) + ")",
+        oh_touchpoint="none: the runtime's own openjdk stub registers the native",
+        verdict="hollow" if open_ else "supplied", shim_class="C9" if open_ else "C2",
+        effort="S" if open_ else "verify", confidence=STATIC,
+        provider=("a real implementation is bound over the stub" if not open_ else
+                  "registered as a constant: " + ", ".join(open_)),
+        provider_source=model["stubs"].get(open_[0] if open_ else sorted(reached)[0]),
+        open_symbols=open_, app_evidence=evidence,
+        seen_blocking=["cnn (r84: File.getUsableSpace answered 0 for /data; CnnApplication sized its OkHttp cache "
+                       "at half of it and died on \"maxSize <= 0\")"]
+        if "java/io/UnixFileSystem.getSpace0" in reached else [],
+        shim="bind libcore's implementation (UnixFileSystem_md.c) over the stub in libwl_missing_natives",
+    )]
+
+
 def _matches(names: list[str], libraries: list[str]) -> dict[str, list[str]]:
     hit: dict[str, list[str]] = defaultdict(list)
     for library in libraries:
@@ -2446,6 +2520,7 @@ def build_map(
             # is simply not claimed.
             + silent_load_rows(scan, native_load_short_circuit(westlake_root.parent / "art-build"),
                                runtime_libraries)
+            + stub_native_rows(scan, stub_native_model(westlake_root.parent / "art-build", westlake_root))
             + runtime_resolved_rows(scan, ndk_cov)
             + sandbox_rows(scan, policy) + external_rows(facts, scan, refused_libraries(westlake_root)))
     rows += android_namespace_rows(scan, rows, android_namespace_libs, runtime_index,

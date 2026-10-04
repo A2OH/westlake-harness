@@ -1430,6 +1430,49 @@ class StaticMutexes(unittest.TestCase):
         self.assertTrue(model["source"].endswith(":5"))
 
 
+class StubNatives(unittest.TestCase):
+    STUB = """
+static jlong UnixFileSystem_getSpace0(JNIEnv* env, jobject thiz, jobject file, jint t) {
+    return 0; /* stub */
+}
+static jboolean UnixFileSystem_delete0(JNIEnv* env, jobject thiz, jobject file) {
+    return unlink("x") == 0;
+}
+void register(JNIEnv* env) {
+    jclass cls = FindOptionalClass(env, "java/io/UnixFileSystem");
+    JNINativeMethod methods[] = {
+        {"getSpace0", "(Ljava/io/File;I)J", (void*)UnixFileSystem_getSpace0},
+        {"delete0", "(Ljava/io/File;)Z", (void*)UnixFileSystem_delete0},
+    };
+}
+"""
+
+    def model(self, rebind: bool) -> dict:
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "art-build/stubs").mkdir(parents=True)
+            (root / "art-build/stubs/openjdk_stub.c").write_text(self.STUB)
+            natives = root / "westlake/framework/javacore-shim/missing_natives.c"
+            natives.parent.mkdir(parents=True)
+            table = '    { "getSpace0", "(Ljava/io/File;I)J", (void*) wl_getSpace0 },\n' if rebind else ""
+            natives.write_text("static const JNINativeMethod kUnixFileSystem[] = {\n" + table + "};\n"
+                               'int fs = bind(env, "java/io/UnixFileSystem", kUnixFileSystem, 1);\n')
+            return gapmap.stub_native_model(root / "art-build", root / "westlake")
+
+    def test_a_constant_native_the_app_reaches_is_hollow_until_rebound(self) -> None:
+        model = self.model(rebind=False)
+        self.assertEqual(list(model["stubs"]), ["java/io/UnixFileSystem.getSpace0"])
+        scan = {"inventory": {"platform_method_names": {"Ljava/io/File;": ["exists", "getUsableSpace"]}}}
+        row = gapmap.stub_native_rows(scan, model)[0]
+        self.assertEqual((row["id"], row["verdict"], row["open_symbols"]),
+                         ("runtime:stub-natives", "hollow", ["java/io/UnixFileSystem.getSpace0"]))
+        self.assertIn("File.getUsableSpace (UnixFileSystem.getSpace0, constant)", row["app_evidence"])
+        self.assertEqual(gapmap.stub_native_rows(scan, self.model(rebind=True))[0]["verdict"], "supplied")
+        self.assertEqual(gapmap.stub_native_rows({"inventory": {"platform_method_names": {
+            "Ljava/io/File;": ["exists"]}}}, model), [])
+
+
 class ApkMemberLoads(unittest.TestCase):
     def test_soloader_with_unfixed_split_libraries_is_a_row(self) -> None:
         scan = {"inventory": {"elfs": [
