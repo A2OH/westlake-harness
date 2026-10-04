@@ -668,6 +668,7 @@ class DexInventory:
     load_libraries: list[dict[str, Any]] = field(default_factory=list)
     service_requests: list[dict[str, Any]] = field(default_factory=list)
     jca_requests: list[dict[str, Any]] = field(default_factory=list)
+    feature_queries: list[dict[str, Any]] = field(default_factory=list)
     nonnull_casts: list[dict[str, Any]] = field(default_factory=list)
     native_methods: list[dict[str, Any]] = field(default_factory=list)
     superclasses: dict[str, str] = field(default_factory=dict)
@@ -812,6 +813,7 @@ def _inventory_instructions(dex: DEX, method: Any, caller: dict[str, Any], out: 
                 _detect_string_call(key, registers, string_regs, caller, offset, out)
                 _detect_service_call(key, registers, string_regs, class_regs, caller, offset, out)
                 _detect_jca_call(key, registers, string_regs, caller, offset, out)
+                _detect_feature_query(key, registers, string_regs, caller, offset, out)
             except (IndexError, TypeError, ValueError):
                 pass
         elif (
@@ -924,6 +926,23 @@ def _detect_service_call(
         return
     request["dynamic"] = request.get("service") is None and request.get("manager_class") is None
     out.service_requests.append({**caller, "offset": offset, "call_owner": owner, **request})
+
+
+def _detect_feature_query(
+    key: tuple[str, str, str],
+    registers: list[int],
+    string_regs: dict[int, str],
+    caller: dict[str, Any],
+    offset: int,
+    out: DexInventory,
+) -> None:
+    """PackageManager.hasSystemFeature(name[, version]). The FEATURE_* names are compile-time
+    constants, so the name is in a register at the call (None where it is computed)."""
+    owner, name, descriptor = key
+    if name != "hasSystemFeature" or len(registers) < 2 or not descriptor.startswith("(Ljava/lang/String;"):
+        return
+    out.feature_queries.append({**caller, "offset": offset, "call_owner": owner,
+                                "feature": string_regs.get(registers[1])})
 
 
 KOTLIN_NONNULL_CAST = "null cannot be cast to non-null type "
@@ -1648,6 +1667,7 @@ def scan_apk(
             "load_library_calls": inventory.load_libraries,
             "service_requests": inventory.service_requests,
             "jca_requests": inventory.jca_requests,
+            "feature_queries": inventory.feature_queries,
             "nonnull_casts": inventory.nonnull_casts,
             "native_upcalls": native_upcalls if platform_members is not None else None,
             "platform_method_names": _method_names_by_owner(inventory.method_refs),

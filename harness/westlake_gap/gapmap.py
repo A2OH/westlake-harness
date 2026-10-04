@@ -955,6 +955,69 @@ def task_root_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str
     )]
 
 
+# Feature name prefix → the getSystemService name of the service that reaches the hardware.
+# Form factors (touchscreen, screen.*) and features no service backs are not listed.
+_FEATURE_SERVICES = (
+    ("android.hardware.camera", "camera"),
+    ("android.hardware.bluetooth_le", "bluetooth"),
+    ("android.hardware.bluetooth", "bluetooth"),
+    ("android.hardware.wifi.direct", "wifip2p"),
+    ("android.hardware.wifi.aware", "wifiaware"),
+    ("android.hardware.wifi.rtt", "wifirtt"),
+    ("android.hardware.wifi", "wifi"),
+    ("android.hardware.telephony", "phone"),
+    ("android.hardware.nfc", "nfc"),
+    ("android.hardware.location", "location"),
+    ("android.hardware.fingerprint", "fingerprint"),
+    ("android.hardware.biometrics.face", "face"),
+    ("android.hardware.usb", "usb"),
+    ("android.hardware.consumerir", "consumer_ir"),
+    ("android.software.device_admin", "device_policy"),
+)
+
+
+def _feature_service(feature: str) -> str | None:
+    for prefix, service in _FEATURE_SERVICES:
+        if feature == prefix or feature.startswith(prefix + "."):
+            return service
+    return None
+
+
+def feature_rows(scan: dict[str, Any], claims: dict[str, Any], aosp: dict[str, Any],
+                 westlake: dict[str, Any]) -> list[dict[str, Any]]:
+    """Features the app asks about that Westlake reports present. A claim tells the app the
+    hardware is there and reachable through its Android service; claimed without that service, the
+    app takes its hardware path and finds nothing. CameraX checked its camera list against the
+    claimed back camera, listed none, and retried its init until it failed (FairScan)."""
+    queried: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for query in scan["inventory"].get("feature_queries") or []:
+        if query.get("feature") in claims.get("claimed", []):
+            queried[query["feature"]].append(query)
+    rows = []
+    for feature, sites in sorted(queried.items()):
+        service = _feature_service(feature)
+        if service is None:
+            continue
+        entries = services.service_map([{"service": service}], aosp, westlake)
+        verdict = entries[0]["verdict"] if entries else services.NULL
+        basis = (entries[0].get("westlake_basis") or {}) if entries else {}
+        backed = verdict == services.SUPPLIED
+        rows.append(_row(
+            "system-services", f"feature:{feature}", feature,
+            oh_touchpoint=services.OH_ANALOG.get(service) or "unmapped",
+            verdict="supplied" if backed else "contradicted", shim_class="C0" if backed else "C5",
+            effort="verify" if backed else "S", confidence=STATIC,
+            provider=(f"claimed by hasSystemFeature; the {service} service answers ({basis.get('detail', '')})"
+                      if backed else f"claimed by hasSystemFeature, but the {service} service is {verdict}: "
+                                     "the app is told the hardware exists and finds none"),
+            provider_source=claims.get("source"),
+            app_evidence=f"{len(sites)} call sites, e.g. {_site(sites[0])}",
+            call_sites=len(sites),
+            shim="none" if backed else f"report {feature} absent until the {service} service is provided",
+        ))
+    return rows
+
+
 def symbol_version_rows(oh_missing: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Imports a library defines, but under another symbol version. OH's loader binds a versioned
     import to a versioned library only under the same version name, so the load fails as if the
@@ -2207,6 +2270,7 @@ def build_map(
                                        bionic_shim_exports(westlake_root)))
             + symbol_version_rows(oh_missing)
             + task_root_rows(scan, contracts.activity_client_model(westlake_root))
+            + feature_rows(scan, contracts.feature_claims_model(westlake_root), aosp_services, westlake_services)
             + native_loading_rows(facts, scan, launcher_extraction(manifest_root), board_paths,
                                   launcher_namespace_option(manifest_root), runtime_libraries,
                                   bionic_loader_model(westlake_root, manifest_root))

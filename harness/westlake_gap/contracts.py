@@ -164,6 +164,38 @@ def pm_adapter_model(westlake_root: Path) -> dict[str, Any]:
     }
 
 
+def feature_claims_model(westlake_root: Path) -> dict[str, Any]:
+    """The features PackageManagerAdapter.hasSystemFeature reports present: each case label that
+    reaches `return true`, and those answered by a condition, with the condition."""
+    path = westlake_root / "framework/package-manager/java/PackageManagerAdapter.java"
+    text = path.read_text(errors="replace") if path.exists() else ""
+    match = re.search(r"public boolean hasSystemFeature\(String \w+, int \w+\)\s*\{", text)
+    if not match:
+        return {"claimed": [], "conditional": {}, "source": None}
+    claimed: list[str] = []
+    conditional: dict[str, str] = {}
+    pending: list[str] = []
+    for line in _braced_block(text, match.start()).splitlines():
+        stripped = line.strip()
+        case = re.match(r'case "([^"]+)":', stripped)
+        if case:
+            pending.append(case.group(1))
+            continue
+        answer = re.match(r"return\s+([^;]+);", stripped)
+        if answer and pending:
+            value = answer.group(1).strip()
+            if value == "true":
+                claimed += pending
+            elif value != "false":
+                conditional.update({name: value for name in pending})
+            pending = []
+        elif stripped.startswith("default:"):
+            pending = []
+    line = text.count("\n", 0, match.start()) + 1
+    return {"claimed": sorted(claimed), "conditional": conditional,
+            "source": f"{path.relative_to(westlake_root)}:{line}"}
+
+
 def _braced_block(text: str, start: int) -> str:
     """The body of the first {...} block at or after start, braces balanced."""
     open_at = text.find("{", start)

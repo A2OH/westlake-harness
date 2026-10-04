@@ -14,8 +14,8 @@ from pathlib import Path
 
 from test_known_answers import _find_android_d8, _run, _write
 from westlake_gap import gapmap, services
-from westlake_gap.contracts import (direct_launch_am_model, keystore_model, libc_constant_model,
-                                    pm_adapter_model, window_adapter_model)
+from westlake_gap.contracts import (direct_launch_am_model, feature_claims_model, keystore_model,
+                                    libc_constant_model, pm_adapter_model, window_adapter_model)
 from westlake_gap.scanner import inventory_dex
 
 
@@ -56,6 +56,37 @@ class ServiceRequestCapture(unittest.TestCase):
             self.assertEqual(by_method["direct"]["service"], "location")
             self.assertTrue(by_method["direct"]["binder_direct"])
             self.assertTrue(by_method["computed"]["dynamic"], "a computed name must be reported, not guessed")
+
+    def test_feature_queries_name_the_feature(self) -> None:
+        javac, d8 = shutil.which("javac"), _find_android_d8()
+        if not javac or not d8:
+            self.skipTest("javac and d8 are required for the executable fixture")
+        with tempfile.TemporaryDirectory(prefix="westlake-features-") as temp:
+            root = Path(temp)
+            _write(root / "api/android/content/pm/PackageManager.java", """package android.content.pm;
+                public abstract class PackageManager {
+                    public static final String FEATURE_CAMERA = "android.hardware.camera";
+                    public abstract boolean hasSystemFeature(String name);
+                    public abstract boolean hasSystemFeature(String name, int version);
+                }""")
+            _write(root / "app/fixture/AsksFeatures.java", """package fixture;
+                import android.content.pm.PackageManager;
+                public class AsksFeatures {
+                    static boolean camera(PackageManager pm) { return pm.hasSystemFeature(PackageManager.FEATURE_CAMERA); }
+                    static boolean versioned(PackageManager pm) { return pm.hasSystemFeature("android.hardware.vulkan.level", 1); }
+                    static boolean computed(PackageManager pm, String name) { return pm.hasSystemFeature(name); }
+                }""")
+            api, app, dex = root / "api-classes", root / "app-classes", root / "dex"
+            for directory in (api, app, dex):
+                directory.mkdir()
+            _run(javac, "--release", "8", "-d", str(api), *map(str, (root / "api").rglob("*.java")))
+            _run(javac, "--release", "8", "-cp", str(api), "-d", str(app), str(root / "app/fixture/AsksFeatures.java"))
+            _run(d8, "--min-api", "21", "--output", str(dex), str(app / "fixture/AsksFeatures.class"))
+
+            by_method = {q["method"]: q for q in inventory_dex(dex / "classes.dex").feature_queries}
+            self.assertEqual(by_method["camera"]["feature"], "android.hardware.camera", "the constant is inlined at the call")
+            self.assertEqual(by_method["versioned"]["feature"], "android.hardware.vulkan.level")
+            self.assertIsNone(by_method["computed"]["feature"], "a computed name must be reported, not guessed")
 
 
 class ServiceVerdicts(unittest.TestCase):
@@ -164,6 +195,48 @@ class ServiceVerdicts(unittest.TestCase):
         self.assertEqual(verdict["accessibility"], services.INERT)
         self.assertEqual(verdict["layout_inflater"], services.SUPPLIED)
         self.assertEqual(verdict["camera"], services.UNRESOLVED, "no binder found must not read as supplied")
+
+    def test_a_claimed_feature_needs_its_service(self) -> None:
+        """FairScan: hasSystemFeature claimed a back camera that no Android camera service listed;
+        CameraX expected it, found no camera, and retried its init until it failed."""
+        _write(self.root / "westlake/framework/package-manager/java/PackageManagerAdapter.java", """class PackageManagerAdapter {
+            @Override
+            public boolean hasSystemFeature(String name, int version) {
+                switch (name) {
+                    case "android.software.webview":
+                        return getSideloadedWebViewPackageInfo() != null;
+                    // a comment between the labels
+                    case "android.hardware.touchscreen":
+                    case "android.hardware.camera":
+                    case "android.hardware.location.gps":
+                        return true;
+                    case "android.hardware.nfc":
+                        return false;
+                    default:
+                        return false;
+                }
+            }
+        }""")
+        claims = feature_claims_model(self.root / "westlake")
+        self.assertEqual(claims["claimed"], ["android.hardware.camera", "android.hardware.location.gps",
+                                             "android.hardware.touchscreen"])
+        self.assertEqual(claims["conditional"], {"android.software.webview": "getSideloadedWebViewPackageInfo() != null"})
+        aosp_root = self.root / "aosp"
+        table = services.aosp_service_table(
+            aosp_root / "frameworks-base/core/java/android/app/SystemServiceRegistry.java",
+            aosp_root / "frameworks-base/core/java/android/content/Context.java",
+            [aosp_root / "frameworks-base", aosp_root / "modules-scheduling"],
+        )
+        site = {"owner": "Lx/A;", "method": "m", "offset": 4}
+        scan = {"inventory": {"feature_queries": [
+            {**site, "feature": "android.hardware.camera"}, {**site, "feature": "android.hardware.location.gps"},
+            {**site, "feature": "android.hardware.touchscreen"}, {**site, "feature": "android.hardware.nfc"},
+            {**site, "feature": None}]}}
+        rows = {r["id"]: r for r in gapmap.feature_rows(scan, claims, table, services.westlake_service_model(self.root / "westlake"))}
+        self.assertEqual(rows["feature:android.hardware.camera"]["verdict"], "contradicted")
+        self.assertEqual(rows["feature:android.hardware.location.gps"]["verdict"], "supplied")
+        self.assertNotIn("feature:android.hardware.touchscreen", rows, "no service backs a form factor")
+        self.assertNotIn("feature:android.hardware.nfc", rows, "a feature reported absent promises nothing")
 
     def test_a_proxy_that_throws_is_strict_not_hollow(self) -> None:
         """Burger King: WebView's policy provider called UserManager.getApplicationRestrictions; the
