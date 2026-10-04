@@ -311,6 +311,27 @@ class ServiceVerdicts(unittest.TestCase):
         self.assertEqual(gapmap.vulkan_feature_rows(scan, unclaimed, []), [], "absent and unclaimed agree")
         self.assertEqual(gapmap.vulkan_feature_rows({"inventory": {}}, unclaimed, ["libvulkan.so"]), [])
 
+    def test_versioned_import_clash_is_supplied_by_a_shim_version_node(self) -> None:
+        """Fennec: free@libmozglue.so bound to musl's free; the shim's non-default libmozglue.so
+        forwarders restore libmozglue's own."""
+        clashes = [{"symbol": "free", "version": "libmozglue", "importing_libraries": ["libxul.so"],
+                    "versioned_clash": True},
+                   {"symbol": "malloc", "version": "libmozglue", "importing_libraries": ["libxul.so", "libnss3.so"],
+                    "versioned_clash": True}]
+        row = gapmap.versioned_clash_rows(clashes, {"LIBC", "LIBC_N"})[0]
+        self.assertEqual((row["id"], row["verdict"]), ("abi:versioned-import-clash", "missing"))
+        self.assertEqual(row["open_symbols"], ["free@libmozglue", "malloc@libmozglue"])
+        self.assertEqual(gapmap.versioned_clash_rows(clashes, {"LIBC", "libmozglue.so"})[0]["verdict"], "supplied")
+        mixed = clashes + [{"symbol": "sqlite3_open", "version": "libnss3", "importing_libraries": ["libxul.so"],
+                            "versioned_clash": True}]
+        row = gapmap.versioned_clash_rows(mixed, {"libmozglue.so"})[0]
+        self.assertEqual((row["verdict"], row["open_symbols"]), ("missing", ["sqlite3_open@libnss3"]),
+                         "a version the shim covers is not listed as open")
+        self.assertEqual(gapmap.versioned_clash_rows([], {"LIBC"}), [])
+        _write(self.root / "westlake/framework/webview-shim/webview_bionic_shim.map",
+               "/* comment {not a node} */\nLIBC_N {\n global: x;\n};\nlibmozglue.so {\n};\nLIBC {\n global: *;\n} LIBC_N;\n")
+        self.assertEqual(contracts.shim_version_nodes(self.root / "westlake"), {"LIBC_N", "libmozglue.so", "LIBC"})
+
     def test_a_proxy_that_throws_is_strict_not_hollow(self) -> None:
         """Burger King: WebView's policy provider called UserManager.getApplicationRestrictions; the
         runtime-published user proxy threw, Chromium aborted. The static model had read the native

@@ -105,4 +105,25 @@ def resolve(scan: dict[str, Any], provided: set[str], declared: dict[str, str],
         missing.append({"symbol": symbol, "importers": len(names), "importing_libraries": sorted(names),
                         "surface": declared.get(symbol, "bionic-private (not in the NDK)")})
     missing.sort(key=lambda m: (-m["importers"], m["symbol"]))
-    return {"symbols": len(importers), "resolved": len(importers) - len(missing), "missing": missing}
+    return {"symbols": len(importers), "resolved": len(importers) - len(missing), "missing": missing,
+            "versioned_clash": versioned_clashes(elfs, versions)}
+
+
+def versioned_clashes(elfs: list[dict[str, Any]], versions: dict[str, set[str | None]] | None) -> list[dict[str, Any]]:
+    """Imports versioned against another of the app's own libraries, under a name a library without
+    symbol versions on the board also defines. OH's loader takes that unversioned definition for an
+    import that names its version by hash, and libc is searched before the app's libraries, so the
+    import binds to the board's copy; Android's linker binds it only to the versioned one. Firefox's
+    libraries import malloc and free as name@libmozglue.so: libxul freed with musl's free what
+    libmozglue's mozjemalloc had allocated."""
+    if not versions:
+        return []
+    own = {(elf.get("soname") or elf.get("name", "").rsplit("/", 1)[-1]).removesuffix(".so") for elf in elfs}
+    by_import: dict[tuple[str, str], set[str]] = {}
+    for elf in elfs:
+        name = elf.get("soname") or elf.get("name")
+        for symbol, version in (elf.get("import_versions") or {}).items():
+            if version and version.removesuffix(".so") in own and None in versions.get(symbol, set()):
+                by_import.setdefault((symbol, version.removesuffix(".so")), set()).add(name)
+    return [{"symbol": symbol, "version": version, "importing_libraries": sorted(names)}
+            for (symbol, version), names in sorted(by_import.items())]

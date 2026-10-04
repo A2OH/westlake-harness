@@ -213,6 +213,14 @@ def feature_claims_model(westlake_root: Path) -> dict[str, Any]:
             "source": f"{path.relative_to(westlake_root)}:{line}"}
 
 
+def shim_version_nodes(westlake_root: Path) -> set[str]:
+    """The version nodes the bionic shim's version script defines (LIBC, LIBC_O, libmozglue.so, ...)."""
+    path = westlake_root / "framework/webview-shim/webview_bionic_shim.map"
+    text = path.read_text(errors="replace") if path.exists() else ""
+    text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
+    return set(re.findall(r"^\s*([A-Za-z_][\w.]*)\s*\{", text, flags=re.M))
+
+
 def _int_expression(text: str, constants: dict[str, str], depth: int = 0) -> int | None:
     """A Java int expression of literals, named int constants, parentheses and + - * << >> | &,
     or None when it is anything else."""

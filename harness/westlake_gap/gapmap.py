@@ -1351,6 +1351,39 @@ def symbol_version_rows(oh_missing: list[dict[str, Any]]) -> list[dict[str, Any]
     )]
 
 
+def versioned_clash_rows(clashes: list[dict[str, Any]], shim_versions: set[str]) -> list[dict[str, Any]]:
+    """Imports versioned against the app's own library that a board library without symbol versions
+    also defines (ohresolve.versioned_clashes). OH's loader binds them to the board's copy, searched
+    first; the bionic shim restores Android's binding for a version it defines forwarders under,
+    as non-default versions that call the app library's own definitions."""
+    if not clashes:
+        return []
+    versions = sorted({c["version"] for c in clashes})
+    supplied = [v for v in versions if v in shim_versions or v + ".so" in shim_versions]
+    open_ = [c for c in clashes if c["version"] not in supplied]
+    shown = open_ or clashes
+    provider = []
+    if supplied:
+        provider.append("the bionic shim defines non-default " + "/".join(v + ".so" for v in supplied)
+                        + " forwarders that call the app library's own definitions")
+    if open_:
+        provider.append("nothing under " + "/".join(sorted({c["version"] + ".so" for c in open_}))
+                        + " precedes the board's unversioned copy, so the import binds to it")
+    return [_row(
+        "native-symbols", "abi:versioned-import-clash",
+        "Imports versioned against the app's own libraries, also defined unversioned on the board ("
+        + ", ".join(f"{c['symbol']}@{c['version']}" for c in shown[:4]) + (" ..." if len(shown) > 4 else "") + ")",
+        oh_touchpoint="OH musl's check_verinfo: an import naming its version by hash matches a library without versions",
+        verdict="missing" if open_ else "supplied", shim_class="C1", effort="S" if open_ else "verify",
+        confidence=STATIC, provider="; ".join(provider),
+        open_symbols=[f"{c['symbol']}@{c['version']}" for c in shown][:16],
+        app_evidence="; ".join(f"{c['symbol']}: {', '.join(c['importing_libraries'][:3])}" for c in shown[:4]),
+        seen_blocking=["fennec (libxul freed with musl's free what libmozglue's mozjemalloc allocated)"],
+        shim="none" if not open_ else "define the open names under their version in the bionic shim, forwarding to "
+                                      "the app library's definitions",
+    )]
+
+
 def native_symbol_rows(scan: dict[str, Any], oh_missing: list[dict[str, Any]], shim_exports: set[str]) -> list[dict[str, Any]]:
     importers: dict[str, list[str]] = defaultdict(list)
     for elf in ohresolve.target_elfs(scan):
@@ -2653,11 +2686,15 @@ def build_map(
             + framework_native_rows(scan, runtime_index, runtime_class_paths)
             + lifecycle_native_rows(runtime_index, runtime_class_paths)
             + native_upcall_rows(scan)
-            + (ndk_symbol_rows(scan, [m for m in oh_missing if not m.get("version_mismatch")],
+            + (ndk_symbol_rows(scan, [m for m in oh_missing if not m.get("version_mismatch")
+                                      and not m.get("versioned_clash")],
                                bionic_shim_exports(westlake_root), ndk_cov) if ndk_cov
-               else native_symbol_rows(scan, [m for m in oh_missing if not m.get("version_mismatch")],
+               else native_symbol_rows(scan, [m for m in oh_missing if not m.get("version_mismatch")
+                                                and not m.get("versioned_clash")],
                                        bionic_shim_exports(westlake_root)))
             + symbol_version_rows(oh_missing)
+            + versioned_clash_rows([m for m in oh_missing if m.get("versioned_clash")],
+                                   contracts.shim_version_nodes(westlake_root))
             + task_root_rows(scan, contracts.activity_client_model(westlake_root))
             + feature_rows(scan, contracts.feature_claims_model(westlake_root), aosp_services, westlake_services)
             + vulkan_feature_rows(scan, contracts.feature_claims_model(westlake_root), runtime_libraries)
