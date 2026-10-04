@@ -538,6 +538,27 @@ class AppStorageExec(unittest.TestCase):
         self.assertEqual(rows["load:app-storage-exec"]["verdict"], "supplied")
         self.assertEqual(rows["load:app-storage-exec"]["launch_args"], ["--android-native-net-app-libraries"])
 
+    def test_a_java_loaded_library_needing_a_sibling(self) -> None:
+        """econverter: Chaquopy loads libpython3.11.so by path, then libchaquopy_java.so, whose
+        DT_NEEDED found no short name to match and loaded Python a second time."""
+        elf = {"abi": "arm64-v8a", "abi_matches_machine": True}
+        scan = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {
+            "elfs": [{**elf, "name": "lib/arm64-v8a/libpython3.11.so", "soname": "libpython3.11.so", "needed": ["libc.so"]},
+                     {**elf, "name": "lib/arm64-v8a/libchaquopy_java.so", "soname": "libchaquopy_java.so",
+                      "needed": ["libpython3.11.so", "libc.so"]},
+                     {**elf, "name": "lib/arm64-v8a/libother.so", "soname": "libother.so", "needed": ["libpython3.11.so"]}],
+            "load_library_calls": [{"api": "loadLibrary", "owner": "Lcom/chaquo/python/GenericPlatform;", "value": "chaquopy_java"}]}}
+        rows = {r["id"]: r for r in gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True}, [])}
+        row = rows["load:needed-sibling"]
+        self.assertEqual((row["verdict"], row["item"]), ("missing", "Java-loaded libraries that need a packaged sibling (libchaquopy_java.so)"))
+        rows = {r["id"]: r for r in gapmap.native_loading_rows(
+            {"extract_native_libs": True}, scan, {"present": True}, [],
+            loader={"open_by_name": "framework/webview-shim/webview_bionic_shim.c:1"})}
+        self.assertEqual(rows["load:needed-sibling"]["verdict"], "supplied")
+        scan["inventory"]["load_library_calls"] = []
+        self.assertNotIn("load:needed-sibling", {r["id"] for r in gapmap.native_loading_rows(
+            {"extract_native_libs": True}, scan, {"present": True}, [])})
+
 
 class AndroidRelocations(unittest.TestCase):
     ELFS = [{"soname": "libc++_shared.so", "name": "lib/arm64-v8a/libc++_shared.so", "abi": "arm64-v8a",

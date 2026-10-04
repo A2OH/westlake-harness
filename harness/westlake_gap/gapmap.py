@@ -1376,7 +1376,8 @@ def bionic_loader_model(westlake_root: Path | None, manifest_root: Path | None =
             "android_relr_shim": find("framework/webview-shim/android_relocs.c", "wl_write_loadable_copy("),
             "null_entries_launcher": find("tools/probe_source_app.py", "def init_array_sanitized(", manifest_root),
             "funopen_unbuffered": find("framework/webview-shim/webview_bionic_shim.c", "setvbuf(file, NULL, _IONBF, 0)"),
-            "apk_member_redirect": find("framework/webview-shim/webview_bionic_shim.c", 'strstr(filename, ".apk!/lib/")')}
+            "apk_member_redirect": find("framework/webview-shim/webview_bionic_shim.c", 'strstr(filename, ".apk!/lib/")'),
+            "open_by_name": find("framework/webview-shim/webview_bionic_shim.c", "westlake_open_lib_by_name(")}
 
 
 def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_extracts: dict[str, Any],
@@ -1516,6 +1517,32 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
             seen_blocking=["threads (r83 and a rerun: libc++_shared.so from split_config.arm64_v8a.apk, constructor "
                            "at its link-time address)"],
             shim="answer an APK-member path with the staged copy of the same library",
+        ))
+    # A library Java loads that names a packaged sibling in DT_NEEDED. OH's loader matches DT_NEEDED
+    # against short names only, and a library opened by path has none: a sibling loaded by path first
+    # (ART opens app libraries by path) is loaded again for its dependent. Chaquopy loads
+    # libpython3.11.so, then libchaquopy_java.so, and econverter ran two Python runtimes.
+    java_loaded = {"lib" + call["value"] + ".so" for call in inventory.get("load_library_calls", [])
+                   if call.get("api") == "loadLibrary" and call.get("value")}
+    packaged_names = {elf.get("soname") or Path(elf["name"]).name for elf in packaged}
+    dependents = sorted({name for elf in packaged
+                         for name in [elf.get("soname") or Path(elf["name"]).name]
+                         if name in java_loaded and set(elf.get("needed") or []) & (packaged_names - {name})})
+    if dependents:
+        by_name = loader.get("open_by_name")
+        rows.append(_row(
+            "native-loading", "load:needed-sibling",
+            f"Java-loaded libraries that need a packaged sibling ({', '.join(dependents[:4])}"
+            + (" ..." if len(dependents) > 4 else "") + ")",
+            oh_touchpoint="OH musl: DT_NEEDED is matched against short names; a library opened by path has none",
+            verdict="supplied" if by_name else "missing", shim_class="C3", effort="verify" if by_name else "S",
+            confidence=STATIC,
+            provider=("the bionic shim opens an app library by name where the name finds the same file"
+                      if by_name else "none: a sibling ART loaded by path is loaded a second time for its dependent"),
+            provider_source=by_name,
+            app_evidence=f"{len(dependents)} libraries loaded through System.loadLibrary name packaged siblings in DT_NEEDED",
+            seen_blocking=["econverter (Chaquopy: two copies of libpython3.11.so; a call through a null slot)"],
+            shim="open app libraries by name where the name finds the same file, so a later DT_NEEDED matches them",
         ))
     if loaders or path_loads or unpacked:
         copy = loader.get("code_cache_copy")
