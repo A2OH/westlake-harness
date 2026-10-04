@@ -622,6 +622,29 @@ class AppStorageExec(unittest.TestCase):
         self.assertNotIn("load:needed-sibling", {r["id"] for r in gapmap.native_loading_rows(
             {"extract_native_libs": True}, scan, {"present": True}, [])})
 
+    def test_written_libraries_that_need_packaged_ones(self) -> None:
+        """econverter: Chaquopy's extension modules, written at run time, need libpython3.11.so; the
+        written-library namespace loaded a second copy instead of the one ART had loaded."""
+        elf = {"abi": "arm64-v8a", "abi_matches_machine": True}
+        packaged = [{**elf, "name": "lib/arm64-v8a/libpython3.11.so", "soname": "libpython3.11.so"},
+                    {**elf, "name": "lib/arm64-v8a/libchaquopy_java.so", "soname": "libchaquopy_java.so",
+                     "needed": ["libpython3.11.so"]}]
+        scan = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {"elfs": packaged}}
+        rows = {r["id"]: r for r in gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True}, [])}
+        self.assertEqual(rows["load:written-needs-packaged"]["verdict"], "missing", "Chaquopy, before any harvest")
+        harvested = {**elf, "name": "files/zlib.so", "soname": "zlib.so", "origin": "unpacked",
+                     "needed": ["libpython3.11.so", "libc.so"]}
+        scan = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {"elfs": [packaged[0], harvested]}}
+        rows = {r["id"]: r for r in gapmap.native_loading_rows(
+            {"extract_native_libs": True}, scan, {"present": True}, [],
+            loader={"written_shares_packaged": "framework/webview-shim/webview_bionic_shim.c:1"})}
+        row = rows["load:written-needs-packaged"]
+        self.assertEqual((row["verdict"], row["item"]),
+                         ("supplied", "Libraries written at run time that need packaged ones (libpython3.11.so)"))
+        scan = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {"elfs": [packaged[0]]}}
+        self.assertNotIn("load:written-needs-packaged", {r["id"] for r in gapmap.native_loading_rows(
+            {"extract_native_libs": True}, scan, {"present": True}, [])})
+
 
 class AndroidRelocations(unittest.TestCase):
     ELFS = [{"soname": "libc++_shared.so", "name": "lib/arm64-v8a/libc++_shared.so", "abi": "arm64-v8a",

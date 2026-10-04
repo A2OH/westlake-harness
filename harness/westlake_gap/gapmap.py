@@ -1697,7 +1697,9 @@ def bionic_loader_model(westlake_root: Path | None, manifest_root: Path | None =
             "null_entries_launcher": find("tools/probe_source_app.py", "def init_array_sanitized(", manifest_root),
             "funopen_unbuffered": find("framework/webview-shim/webview_bionic_shim.c", "setvbuf(file, NULL, _IONBF, 0)"),
             "apk_member_redirect": find("framework/webview-shim/webview_bionic_shim.c", 'strstr(filename, ".apk!/lib/")'),
-            "open_by_name": find("framework/webview-shim/webview_bionic_shim.c", "westlake_open_lib_by_name(")}
+            "open_by_name": find("framework/webview-shim/webview_bionic_shim.c", "westlake_open_lib_by_name("),
+            "written_shares_packaged": find("framework/webview-shim/webview_bionic_shim.c",
+                                            "westlake_shared_with_default(")}
 
 
 def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_extracts: dict[str, Any],
@@ -1863,6 +1865,33 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
             app_evidence=f"{len(dependents)} libraries loaded through System.loadLibrary name packaged siblings in DT_NEEDED",
             seen_blocking=["econverter (Chaquopy: two copies of libpython3.11.so; a call through a null slot)"],
             shim="open app libraries by name where the name finds the same file, so a later DT_NEEDED matches them",
+        ))
+    # A library the app writes at run time that needs one it packages. The shim loads written
+    # libraries in a namespace of its own; with no Android namespace ART's loader put the packaged
+    # ones in the default namespace, and a written library found its packaged dependency again on
+    # its own path: Chaquopy's extension modules loaded a second, uninitialized libpython3.11.so
+    # (econverter, werewolvesgame). Chaquopy is recognized by its packaged libraries even when no
+    # run has harvested the modules it writes.
+    written_needs = sorted({name for elf in unpacked for name in elf.get("needed") or [] if name in packaged_names})
+    chaquopy = "libchaquopy_java.so" in packaged_names and any(n.startswith("libpython") for n in packaged_names)
+    if written_needs or chaquopy:
+        shared = loader.get("written_shares_packaged")
+        needs = written_needs or sorted(n for n in packaged_names if n.startswith("libpython"))
+        rows.append(_row(
+            "native-loading", "load:written-needs-packaged",
+            f"Libraries written at run time that need packaged ones ({', '.join(needs[:4])}"
+            + (" ..." if len(needs) > 4 else "") + ")",
+            oh_touchpoint="OH musl namespaces: a library is shared across namespaces only by an inherit list",
+            verdict="supplied" if shared else "missing", shim_class="C3", effort="verify" if shared else "S",
+            confidence=STATIC,
+            provider=("the written-library namespace shares the APK's packaged libraries with the default namespace"
+                      if shared else "none: the written library's namespace loads its packaged dependency again"),
+            provider_source=shared,
+            app_evidence=(f"{len(written_needs)} packaged libraries needed by harvested ones" if written_needs
+                          else "Chaquopy (libchaquopy_java.so and libpython): its extension modules are written at run time"),
+            seen_blocking=["econverter, werewolvesgame (Chaquopy: a second libpython3.11.so; a call through a PLT slot "
+                           "never relocated)"],
+            shim="share the packaged libraries with the namespace written libraries load in",
         ))
     if loaders or path_loads or unpacked:
         copy = loader.get("code_cache_copy")
