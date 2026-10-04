@@ -494,6 +494,32 @@ def app_framework_rows(scan: dict[str, Any], am: dict[str, Any], wm: dict[str, A
                       if unanswered else "answered with the caller's own process"),
             provider_source=am["source"], app_evidence=f"app calls {', '.join(called)}",
             shim="answer with the caller's process: name, pid, uid, foreground importance, its package"))
+    # The app's own services, started or bound. With no system_server, the direct-launch proxy
+    # answers each IActivityManager call by name; one it does not answer returns null or 0, which
+    # ContextImpl reads as "no such service" (start) or "bind failed".
+    own_services = (scan.get("apk") or {}).get("services") or 0
+    own_services = own_services if isinstance(own_services, int) else len(own_services)
+    context_calls = set(names.get("Landroid/content/Context;", [])) | set(names.get("Landroid/content/ContextWrapper;", []))
+    started = sorted(context_calls & {"startService", "startForegroundService"})
+    bound = sorted(context_calls & {"bindService"})
+    if own_services and (started or bound) and am["proxy_stub"]:
+        needed = (["startService"] if started else []) + (["bindService"] if bound else [])
+        unanswered = [n for n in needed if n not in am["answered"]]
+        rows.append(_row(
+            "app-framework", "am:in-app-services",
+            f"The app's own services ({', '.join(started + bound)}; {own_services} declared)",
+            oh_touchpoint="none: the app's services run in its own process",
+            verdict="missing" if unanswered else "supplied", shim_class="C9" if unanswered else "C0",
+            effort="S" if unanswered else "verify", confidence=STATIC,
+            provider=(f"direct-launch IActivityManager proxy answers {', '.join(unanswered)} with a type default: "
+                      "the service is never created" if unanswered
+                      else "created in process; onStartCommand and onBind on the main thread"),
+            provider_source=am["source"], open_symbols=unanswered,
+            app_evidence=f"app calls Context.{', Context.'.join(started + bound)}",
+            seen_blocking=["drawanywhere (r84: it starts the service that shows its overlay and finishes its "
+                           "activity; the service never ran)"] if started else [],
+            shim="create the service in process once; onStartCommand per start with its start id, onBind per bind, "
+                 "onDestroy on stopService or stopSelf when nothing is bound"))
     if "show" in names.get("Landroid/app/Dialog;", []):
         wm = wm or {}
         stacking = wm.get("dialogs_above_base", {})

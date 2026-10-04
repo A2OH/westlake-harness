@@ -873,6 +873,24 @@ class AppFrameworkContracts(unittest.TestCase):
         rows = {r["id"]: r for r in gapmap.app_framework_rows(scan, answered)}
         self.assertEqual(rows["am:process-table"]["verdict"], "supplied")
 
+    def test_the_apps_own_services_need_start_and_bind_answers(self) -> None:
+        scan = {"apk": {"services": 2}, "inventory": {"platform_method_names": {
+            "Landroid/content/Context;": ["startForegroundService", "bindService", "getString"]}}}
+        bound_only = self._model("""if ("AdapterIAM-stub".equals(label)) {
+                        if ("bindService".equals(name)) return 1;
+                    }""")
+        row = {r["id"]: r for r in gapmap.app_framework_rows(scan, bound_only)}["am:in-app-services"]
+        self.assertEqual((row["verdict"], row["open_symbols"]), ("missing", ["startService"]))
+        both = self._model("""if ("AdapterIAM-stub".equals(label)) {
+                        if ("bindService".equals(name)) return 1;
+                        if ("startService".equals(name)) return start(args[1]);
+                    }""")
+        row = {r["id"]: r for r in gapmap.app_framework_rows(scan, both)}["am:in-app-services"]
+        self.assertEqual(row["verdict"], "supplied")
+        scan["apk"]["services"] = 0
+        self.assertNotIn("am:in-app-services", {r["id"] for r in gapmap.app_framework_rows(scan, both)},
+                         "an app with no services of its own starts other apps' services")
+
     def test_window_semantics_from_source(self) -> None:
         with tempfile.TemporaryDirectory(prefix="westlake-wm-") as temp:
             root = Path(temp)
