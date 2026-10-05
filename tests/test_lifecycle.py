@@ -20,6 +20,12 @@ class ScreenshotDecides(unittest.TestCase):
             app = Path(temp) / "app.jpeg"
             Image.new("RGB", (1200, 1920), (20, 90, 200)).save(app)
             self.assertEqual(lifecycle.screen_state(app), "app")
+            # An overlay toolbar over the host screen (Draw Anywhere): a band, the rest the host.
+            over = Path(temp) / "overlay.jpeg"
+            shot = full.resize((1200, 1920)).convert("RGB")
+            shot.paste((150, 150, 150), (40, 140, 560, 200))
+            shot.save(over, quality=95)
+            self.assertEqual(lifecycle.screen_state(over), "partial")
 
 
 class FirstBlocker(unittest.TestCase):
