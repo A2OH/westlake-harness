@@ -55,6 +55,13 @@ class FirstBlocker(unittest.TestCase):
         self.assertIsNone(evidence.self_finish(resumed % "a1" + resumed % "b2" + finished % ("950", "a1")))
         self.assertIsNone(evidence.self_finish(resumed % "a1"))
 
+    def test_the_in_process_services_an_app_called(self) -> None:
+        from westlake_gap import evidence
+        stderr = ("[WESTLAKE-LOCAL-SERVICE] role bound in process\n[WESTLAKE-LOCAL-SERVICE] role.isRoleAvailableAsUser\n"
+                  "[WESTLAKE-LOCAL-SERVICE] notification.enqueueTextToast\n[WESTLAKE-LOCAL-SERVICE] role.isRoleHeld\n"
+                  "[WESTLAKE-LOCAL-SERVICE] telephony.registry.listenWithEventList\n")
+        self.assertEqual(evidence.local_service_calls(stderr), ["role", "notification", "telephony.registry"])
+
     def test_trampoline_window_held_back_then_a_frame_is_drawing(self) -> None:
         from westlake_gap import lifecycle
         held = ("kRegJNI loop done\nsBindAppDone=true\nDecorView\n[OH_WSA-relayout] held back 1139x1920: "

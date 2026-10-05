@@ -899,6 +899,23 @@ class DexInventory:
     nonnull_casts: list[dict[str, Any]] = field(default_factory=list)
     native_methods: list[dict[str, Any]] = field(default_factory=list)
     superclasses: dict[str, str] = field(default_factory=dict)
+    own_intent_names: set[str] = field(default_factory=set)
+
+
+def named_filter_targets(strings: Iterable[str], targets: dict[str, list[str]]) -> set[str]:
+    """Which of the app's own filter schemes and actions (activity_filter_targets) its code names:
+    a scheme as a string of its own (Uri.Builder().scheme(...)) or opening a URI, an action whole.
+    Such a string is how the app reaches its own activities by implicit intent."""
+    schemes, actions = set(targets.get("schemes") or ()), set(targets.get("actions") or ())
+    if not schemes and not actions:
+        return set()
+    found = set()
+    for text in strings:
+        if text in schemes or text in actions:
+            found.add(text)
+        elif ":" in text and text.split(":", 1)[0] in schemes:
+            found.add(text.split(":", 1)[0])
+    return found
 
 
 def _activity_chains(activities: list[str], superclasses: dict[str, str]) -> dict[str, list[str]]:
@@ -912,13 +929,18 @@ def _activity_chains(activities: list[str], superclasses: dict[str, str]) -> dic
     return chains
 
 
-def inventory_dex(path: Path) -> DexInventory:
+def inventory_dex(path: Path, filter_targets: dict[str, list[str]] | None = None) -> DexInventory:
     quiet_androguard()
     result = DexInventory()
     for dex_name, blob in dex_blobs(path):
         dex = DEX(blob)
         dex_sha256 = sha256_bytes(blob)
         result.dex_entries.append({"name": dex_name, "sha256": dex_sha256, "bytes": len(blob)})
+        if filter_targets:
+            try:
+                result.own_intent_names |= named_filter_targets(map(str, dex.get_strings()), filter_targets)
+            except Exception:
+                pass
         for c in dex.get_classes():
             result.defined_classes.add(str(c.get_name()))
             # Kept for the activity hierarchy: which engine base class a launch activity extends.
@@ -944,12 +966,31 @@ def inventory_dex(path: Path) -> DexInventory:
     return result
 
 
+def _class_outlines(dex: DEX) -> dict[tuple[str, str, str], str]:
+    """Static methods whose whole body returns one class constant. R8 outlines a const-class of a
+    platform class newer than the app's minSdk into such a method, so the caller's own code never
+    names the class: Fossify Messages asks getSystemService(k7.i()) for its RoleManager."""
+    found: dict[tuple[str, str, str], str] = {}
+    for class_def in dex.get_classes():
+        for method in class_def.get_methods():
+            if compact_descriptor(method.get_descriptor()) != "()Ljava/lang/Class;" or method.get_code() is None:
+                continue
+            try:
+                body = list(method.get_instructions())
+                if [i.get_name() for i in body] == ["const-class", "return-object"]:
+                    found[method_tuple(method)] = str(dex.get_cm_type(int(body[0].get_ref_kind())))
+            except Exception:
+                continue
+    return found
+
+
 def _inventory_defined_methods(
     dex: DEX,
     dex_name: str,
     dex_sha256: str,
     out: DexInventory,
 ) -> None:
+    outlines = _class_outlines(dex)
     for class_def in dex.get_classes():
         for method in class_def.get_methods():
             flags = set(str(method.get_access_flags_string()).split())
@@ -976,12 +1017,15 @@ def _inventory_defined_methods(
                 "method": str(method.get_name()),
                 "descriptor": compact_descriptor(method.get_descriptor()),
             }
-            _inventory_instructions(dex, method, caller, out)
+            _inventory_instructions(dex, method, caller, out, outlines)
 
 
-def _inventory_instructions(dex: DEX, method: Any, caller: dict[str, Any], out: DexInventory) -> None:
+def _inventory_instructions(dex: DEX, method: Any, caller: dict[str, Any], out: DexInventory,
+                            outlines: dict[tuple[str, str, str], str] | None = None) -> None:
     string_regs: dict[int, str] = {}
     class_regs: dict[int, str] = {}
+    # The class an outline (see _class_outlines) just returned, for the move-result right after it.
+    outlined: str | None = None
     # A service request whose result is about to be null-checked: R8 compiles Kotlin's non-null
     # checks to Object.getClass() on the value (or keeps Intrinsics.checkNotNull*), so a null
     # manager throws a few instructions after the call. clauncher's HomeFragment does that to
@@ -1009,6 +1053,13 @@ def _inventory_instructions(dex: DEX, method: Any, caller: dict[str, Any], out: 
                 pending["left"] -= 1
                 if pending["left"] <= 0:
                     pending = None
+        if outlined is not None:
+            if name == "move-result-object" and registers:
+                class_regs[registers[0]] = outlined
+                string_regs.pop(registers[0], None)
+                outlined = None
+                continue
+            outlined = None
 
         if name in {"const-string", "const-string/jumbo"} and registers:
             string_regs[registers[0]] = str(instruction.get_string())
@@ -1052,6 +1103,8 @@ def _inventory_instructions(dex: DEX, method: Any, caller: dict[str, Any], out: 
                 owner, target, proto = dex.get_cm_method(ref_kind)
                 descriptor = compact_descriptor(proto)
                 key = (str(owner), str(target), descriptor)
+                if outlines and name.startswith("invoke-static") and key in outlines:
+                    outlined = outlines[key]
                 out.callable_owners.add(str(owner))
                 if is_platform_type(str(owner)):
                     out.method_refs[key] += 1
@@ -1339,6 +1392,51 @@ def _launch_targets(apk: Any) -> list[str]:
         pass
     return sorted({targets.get(name, name) for name in (apk.get_main_activities() or [])})
 
+#: Schemes an app's filters share with everyone: the web, files, content and the platform's own
+#: handlers. Any other scheme an activity's filter declares names the app's own deep links.
+_SHARED_SCHEMES = {"http", "https", "file", "content", "geo", "tel", "mailto", "sms", "smsto", "mms", "mmsto",
+                   "market", "intent", "android-app", "data", "ftp", "rtsp", "about", "javascript", "package",
+                   "ws", "wss", "magnet", "otpauth", "webcal", "voicemail", "sip"}
+
+
+def activity_filter_targets(apk: Any) -> dict[str, list[str]]:
+    """The schemes and actions the app's own activity filters declare that no platform handler
+    shares: its deep-link schemes (Shazam's shazam_activity) and its own actions. A string resource
+    in the manifest is resolved, as Android's parser resolves it."""
+    ns = "{http://schemas.android.com/apk/res/android}"
+    resources = None
+
+    def value(text: str | None) -> str | None:
+        nonlocal resources
+        if not text or not text.startswith("@"):
+            return text
+        try:
+            resources = resources or apk.get_android_resources()
+            configs = resources.get_resolved_res_configs(int(text[1:], 16))
+            return str(configs[0][1]) if configs else None
+        except Exception:
+            return None
+
+    schemes, actions = set(), set()
+    try:
+        manifest = apk.get_android_manifest_xml()
+        for activity in manifest.iter():
+            if activity.tag not in ("activity", "activity-alias"):
+                continue
+            for element in activity.iter():
+                if element.tag == "data":
+                    scheme = value(element.get(ns + "scheme"))
+                    if scheme and scheme.lower() not in _SHARED_SCHEMES:
+                        schemes.add(scheme)
+                elif element.tag == "action":
+                    action = value(element.get(ns + "name"))
+                    if action and not action.startswith(("android.", "com.android.", "com.google.android.")):
+                        actions.add(action)
+    except Exception:
+        pass
+    return {"schemes": sorted(schemes), "actions": sorted(actions)}
+
+
 def apk_metadata(path: Path) -> dict[str, Any]:
     quiet_androguard()
     base = {
@@ -1396,6 +1494,7 @@ def apk_metadata(path: Path) -> dict[str, Any]:
             # A launcher entry may be an <activity-alias>: no class has its name, and what
             # starts is its targetActivity (Organic Maps, Element, Gallery, Fennec).
             "main_activities": _launch_targets(apk),
+            "activity_filter_targets": activity_filter_targets(apk),
             "activities": len(apk.get_activities() or []),
             "services": len(apk.get_services() or []),
             "receivers": len(apk.get_receivers() or []),
@@ -1615,9 +1714,9 @@ def scan_apk(
     platform_members: dict[str, Any] | None = None,
     unpacked_libs: Path | None = None,
 ) -> dict[str, Any]:
-    inventory = inventory_dex(path)
-    resolver = RuntimeResolver(runtime)
     identity = apk_metadata(path)
+    inventory = inventory_dex(path, identity.get("activity_filter_targets"))
+    resolver = RuntimeResolver(runtime)
     elf_records = apk_elf_inventory(path) if include_elf else []
     if include_elf and unpacked_libs is not None:
         elf_records += unpacked_elf_inventory(unpacked_libs, elf_records)
@@ -1937,6 +2036,7 @@ def scan_apk(
             "jca_requests": inventory.jca_requests,
             "feature_queries": inventory.feature_queries,
             "nonnull_casts": inventory.nonnull_casts,
+            "own_intent_names": sorted(inventory.own_intent_names),
             "native_upcalls": native_upcalls if platform_members is not None else None,
             "platform_method_names": _method_names_by_owner(inventory.method_refs),
             "declared_native_methods": native_findings,

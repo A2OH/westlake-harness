@@ -1731,6 +1731,91 @@ class ThreadHandles(unittest.TestCase):
             self.assertFalse(contracts.thread_start_model(Path(tmp))["ordered"], "a start routine that never waits")
 
 
+class OwnImplicitIntents(unittest.TestCase):
+    def test_a_row_when_the_code_names_its_own_filters(self) -> None:
+        scan = {"inventory": {"own_intent_names": ["shazam_activity", "shazam"]}}
+        model = {"resolved": True, "started": True, "source": "SourcePackageRegistry.java:198"}
+        rows = gapmap.own_intent_rows(scan, model)
+        self.assertEqual((rows[0]["id"], rows[0]["verdict"]), ("am:own-implicit-intents", "supplied"))
+        rows = gapmap.own_intent_rows(scan, dict(model, started=False))
+        self.assertEqual((rows[0]["verdict"], rows[0]["open_symbols"]), ("missing", ["startActivity"]))
+        self.assertEqual(gapmap.own_intent_rows({"inventory": {}}, model), [])
+
+    def test_the_model_needs_the_registry_the_query_and_the_start(self) -> None:
+        import tempfile
+        from westlake_gap import contracts
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            files = {
+                "framework/package-manager/java/SourcePackageRegistry.java":
+                    "class R {\n    public static synchronized List<ResolveInfo> queryActivities(Intent i, String t, long f) {\n"
+                    "        return null;\n    }\n}\n",
+                "framework/package-manager/java/PackageManagerAdapter.java":
+                    "class P {\n    public ParceledListSlice<ResolveInfo> queryIntentActivities(Intent i, String t, long f, int u) {\n"
+                    "        return wrap(SourcePackageRegistry.queryActivities(i, t, f));\n    }\n}\n",
+                "framework/activity/java/ActivityTaskManagerAdapter.java":
+                    "class A {\n    public int startActivity(Intent intent, String type) {\n        intent = own(intent, type);\n"
+                    "        return 0;\n    }\n    private static Intent own(Intent intent, String type) {\n"
+                    "        return SourcePackageRegistry.queryActivities(intent, type, 0).isEmpty() ? intent : intent;\n"
+                    "    }\n}\n"}
+            for name, text in files.items():
+                (root / name).parent.mkdir(parents=True, exist_ok=True)
+                (root / name).write_text(text)
+            self.assertEqual(contracts.own_intent_model(root),
+                             {"resolved": True, "started": True,
+                              "source": "framework/package-manager/java/SourcePackageRegistry.java:2"})
+            (root / "framework/activity/java/ActivityTaskManagerAdapter.java").write_text(
+                "class A {\n    public int startActivity(Intent intent, String type) {\n        return 0;\n    }\n}\n")
+            self.assertFalse(contracts.own_intent_model(root)["started"])
+
+
+class DeviceAnswers(unittest.TestCase):
+    SOURCE = """
+            switch (name) {
+                case "role":
+                    binder = proxy(name, "android.app.role.IRoleManager", LocalServiceBinders::role);
+                    break;
+                case "audio":
+                    binder = proxy(name, "android.media.IAudioService", LocalServiceBinders::audio);
+                    break;
+                case "alarm":
+                    binder = proxy(name, "android.app.IAlarmManager", LocalServiceBinders::alarm);
+                    break;
+                // No USB device or accessory attached: the device list is empty.
+                case "usb":
+                    binder = proxy(name, "android.hardware.usb.IUsbManager", (method, args) -> DEFAULT);
+                    break;
+            }
+
+    /**
+     * Roles on a board with no telephony: no role is available (so none is offered to the user)
+     * and none is held. An SMS app sees that it is not the default.
+     */
+    private static Object role(String method, Object[] args) {
+        return DEFAULT;   // isRoleAvailable/isRoleHeld false
+    }
+
+    /** Every player registers itself with the audio service's player registry. */
+    private static Object audio(String method, Object[] args) {
+        return DEFAULT;
+    }
+
+    /** No alarms are kept. */
+    private static Object alarm(String method, Object[] args) {
+        if ("set".equals(method)) return null;
+        return DEFAULT;
+    }
+"""
+
+    def test_handlers_that_answer_an_absence_with_defaults(self) -> None:
+        from westlake_gap import services
+        found = {name: detail for name, (detail, _) in services.device_answers(self.SOURCE).items()}
+        self.assertEqual(found, {
+            "role": "Roles on a board with no telephony: no role is available (so none is offered to the user) "
+                    "and none is held.",
+            "usb": "No USB device or accessory attached: the device list is empty."})
+
+
 class StubNatives(unittest.TestCase):
     STUB = """
 static jlong UnixFileSystem_getSpace0(JNIEnv* env, jobject thiz, jobject file, jint t) {

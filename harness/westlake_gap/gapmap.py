@@ -231,7 +231,9 @@ def service_rows(scan: dict[str, Any], aosp: dict[str, Any], westlake: dict[str,
             "system-services", f"svc:{entry['service']}", entry["service"],
             oh_touchpoint=analog or "none",
             verdict=verdict, shim_class=entry.get("shim_class", "C5"), effort=effort, confidence=STATIC,
-            provider=basis.get("detail") or ("no Westlake provision: getSystemService returns null" if verdict == services.NULL else ""),
+            provider=(f"answered as a device without it: {entry['device_answer']}" if entry.get("device_answer")
+                      else basis.get("detail") or ("no Westlake provision: getSystemService returns null"
+                                                   if verdict == services.NULL else "")),
             provider_source=basis.get("source"),
             aosp_contract=f"{entry.get('manager')} needs binder(s) {[b['name'] for b in entry.get('binders', [])]} ({entry.get('aosp_source')})"
                 if entry.get("manager") else None,
@@ -239,6 +241,7 @@ def service_rows(scan: dict[str, Any], aosp: dict[str, Any], westlake: dict[str,
             example_site=_site(entry["sites"][0]) if entry.get("sites") else None,
             shim=shim, app_evidence=evidence, throws_if_null=len(throwing), throws_in_framework=unwrapping,
             throwing_sites=sorted({f"{c['owner'].strip('L;').replace('/', '.')}.{c['method']}" for c in throwing})[:40],
+            device_answer=entry.get("device_answer"),
         ))
     dynamic = sum(1 for r in requests if r.get("dynamic"))
     return rows, dynamic
@@ -1274,6 +1277,34 @@ def task_root_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str
         app_evidence="the app calls Activity." + ", Activity.".join(used),
         seen_blocking=["instagram (its launcher activity finished itself: \"is not the root\")"],
         shim="answer getTaskForActivity with the process's task id, and the oldest live activity as its root",
+    )]
+
+
+def own_intent_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """The app's own activities reached by implicit intent: its code names a scheme or action that
+    only its own activity filters declare (scanner.named_filter_targets). Android resolves such an
+    intent through the package manager; OH's bundle manager knows only OH's abilities."""
+    named = scan["inventory"].get("own_intent_names") or []
+    if not named:
+        return []
+    resolved, started = model.get("resolved", False), model.get("started", False)
+    supplied = resolved and started
+    open_ = [part for part, done in (("queryIntentActivities/resolveIntent", resolved),
+                                     ("startActivity", started)) if not done]
+    return [_row(
+        "app-framework", "am:own-implicit-intents",
+        "Implicit intents for the app's own activities (" + ", ".join(named[:4]) + ")",
+        oh_touchpoint="bundle manager QueryAbilityInfos and StartAbility: OH's abilities only",
+        verdict="supplied" if supplied else "missing", shim_class="C0" if supplied else "C9",
+        effort="verify" if supplied else "S", confidence=STATIC,
+        provider=("the app's own activities are matched against their manifest filters, and an implicit start "
+                  "is made explicit" if supplied else "not resolved in process: " + ", ".join(open_)),
+        provider_source=model.get("source"), open_symbols=open_,
+        app_evidence="the app's code names " + ", ".join(named[:6]) + ", declared only by its own activity filters",
+        seen_blocking=["shazam (r85: its splash resolved VIEW shazam_activity://configuration in its own package, "
+                       "got nothing, started nothing and finished)"],
+        shim="answer queryIntentActivities and resolveIntent for the app's own package from its parsed manifest "
+             "filters (MATCH_DEFAULT_ONLY needs CATEGORY_DEFAULT), and resolve an implicit startActivity the same way",
     )]
 
 
@@ -2917,6 +2948,7 @@ def build_map(
             + versioned_clash_rows([m for m in oh_missing if m.get("versioned_clash")],
                                    contracts.shim_version_nodes(westlake_root))
             + task_root_rows(scan, contracts.activity_client_model(westlake_root))
+            + own_intent_rows(scan, contracts.own_intent_model(westlake_root))
             + feature_rows(scan, contracts.feature_claims_model(westlake_root), aosp_services, westlake_services)
             + vulkan_feature_rows(scan, contracts.feature_claims_model(westlake_root), runtime_libraries)
             + window_metrics_rows(scan, contracts.window_metrics_model(westlake_root))

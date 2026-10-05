@@ -42,6 +42,20 @@ class SelfFinishScoring(unittest.TestCase):
         self.assertEqual([r["id"] for r in score.candidate_rows("self-finish", blocker, rows)], ["am:task-root"])
         self.assertEqual(score.candidate_rows("self-finish", blocker, ROWS), [], "no such row: a blind spot")
 
+    def test_a_device_answer_counts_for_a_service_the_app_called_before_it_left(self) -> None:
+        """Fossify Messages: no SMS role on a board with no telephony, a toast, and the activity closes."""
+        role = {"id": "svc:role", "verdict": "supplied", "device_answer": "Roles on a board with no telephony."}
+        rows = [{"id": "am:task-root", "verdict": "supplied"}, role]
+        blocker = "its last activity finished itself 326 ms after resuming, and nothing replaced it"
+        found = score.candidate_rows("self-finish", blocker, rows, finished={"local_services": ["role", "notification"]})
+        self.assertEqual([r["id"] for r in found], ["am:task-root", "svc:role"])
+        self.assertEqual(score.outcome_of(found), "device")
+        found = score.candidate_rows("self-finish", blocker, rows, finished={"local_services": ["notification"]})
+        self.assertEqual((score.outcome_of(found), [r["id"] for r in found]), ("supplied", ["am:task-root"]),
+                         "a device answer the app never asked for is not its reason")
+        own = {"id": "am:own-implicit-intents", "verdict": "missing"}
+        self.assertEqual(score.outcome_of(score.candidate_rows("self-finish", blocker, rows + [own])), "named")
+
 
 if __name__ == "__main__":
     unittest.main()

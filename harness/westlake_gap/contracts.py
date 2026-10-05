@@ -382,6 +382,32 @@ def activity_client_model(westlake_root: Path) -> dict[str, Any]:
             "source": f"{path.relative_to(westlake_root)}:{line}"}
 
 
+def own_intent_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether an implicit intent reaches the app's own activities: the source package's registry
+    matches them against their manifest filters, the package manager's queryIntentActivities asks
+    it, and startActivity makes such an intent explicit before it becomes a Want."""
+    registry = westlake_root / "framework/package-manager/java/SourcePackageRegistry.java"
+    manager = westlake_root / "framework/package-manager/java/PackageManagerAdapter.java"
+    tasks = westlake_root / "framework/activity/java/ActivityTaskManagerAdapter.java"
+    read = lambda path: _strip_java_comments(path.read_text(errors="replace")) if path.exists() else ""
+    registry_text, manager_text, tasks_text = read(registry), read(manager), read(tasks)
+    defined = re.search(r"\bstatic\b[^;{]*\bqueryActivities\s*\(", registry_text)
+    query = re.search(r"public\s+\S+\s+queryIntentActivities\s*\(", manager_text)
+    start = re.search(r"public\s+int\s+startActivity\s*\(", tasks_text)
+    queried = bool(query and "SourcePackageRegistry.queryActivities(" in _braced_block(manager_text, query.start()))
+    # startActivity resolves through a helper of its own that asks the registry.
+    started = False
+    if start:
+        for name in set(re.findall(r"\b(\w+)\s*\(", _braced_block(tasks_text, start.start()))):
+            helper = re.search(rf"\b{name}\s*\([^;{{]*\)\s*\{{", tasks_text)
+            if helper and ".queryActivities(" in _braced_block(tasks_text, helper.start()):
+                started = True
+                break
+    return {"resolved": bool(defined and queried), "started": started,
+            "source": f"{registry.relative_to(westlake_root)}:{registry_text.count(chr(10), 0, defined.start()) + 1}"
+                      if defined else None}
+
+
 def window_adapter_model(westlake_root: Path) -> dict[str, Any]:
     """Window-manager semantics the in-process IWindowSession must reproduce, checked in source."""
     path = westlake_root / "framework/window/java/WindowSessionAdapter.java"

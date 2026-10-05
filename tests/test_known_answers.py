@@ -124,6 +124,47 @@ class KnownAnswerFixture(unittest.TestCase):
             self.assertNotIn("Surface vtable", serialized)
 
 
+class OutlinedRequests(unittest.TestCase):
+    """What R8 moves out of the caller: a class constant in a method of its own (API outlining)."""
+
+    def test_an_outlined_manager_class_and_the_apps_own_scheme(self) -> None:
+        from westlake_gap.scanner import inventory_dex, named_filter_targets
+        javac = shutil.which("javac")
+        d8 = _find_android_d8()
+        if not javac or not d8:
+            self.skipTest("javac and d8 are required for the executable fixture")
+        with tempfile.TemporaryDirectory(prefix="westlake-outlined-") as temp:
+            root = Path(temp)
+            api, app = root / "api-src", root / "app-src"
+            _write(api / "android/content/Context.java",
+                   "package android.content;\npublic abstract class Context {\n"
+                   "    public Object getSystemService(Class<?> type) { return null; }\n}\n")
+            _write(api / "android/app/role/RoleManager.java",
+                   "package android.app.role;\npublic final class RoleManager {\n"
+                   "    public boolean isRoleAvailable(String role) { return false; }\n}\n")
+            # Fossify Messages, after R8: getSystemService(k7.i()), where k7.i() returns RoleManager.class.
+            _write(app / "fixture/Outlined.java",
+                   "package fixture;\nimport android.app.role.RoleManager;\nimport android.content.Context;\n"
+                   "public class Outlined {\n"
+                   "    static Class<?> roleClass() { return RoleManager.class; }\n"
+                   "    public static Object role(Context context) { return context.getSystemService(roleClass()); }\n"
+                   "    public static String home() { return \"fixture_activity://home\"; }\n}\n")
+            api_classes, app_classes, app_dex = root / "api-classes", root / "app-classes", root / "app-dex"
+            for output in (api_classes, app_classes, app_dex):
+                output.mkdir()
+            _run(javac, "--release", "8", "-d", str(api_classes), str(api / "android/content/Context.java"),
+                 str(api / "android/app/role/RoleManager.java"))
+            _run(javac, "--release", "8", "-cp", str(api_classes), "-d", str(app_classes), str(app / "fixture/Outlined.java"))
+            _run(d8, "--min-api", "21", "--output", str(app_dex), str(app_classes / "fixture/Outlined.class"))
+            targets = {"schemes": ["fixture_activity", "other_scheme"], "actions": ["fixture.action.OPEN"]}
+            inventory = inventory_dex(app_dex / "classes.dex", targets)
+            requests = [r for r in inventory.service_requests if r["api"] == "getSystemService(Class)"]
+            self.assertEqual([r.get("manager_class") for r in requests], ["Landroid/app/role/RoleManager;"])
+            self.assertEqual(inventory.own_intent_names, {"fixture_activity"}, "a URI string opens with the scheme")
+        self.assertEqual(named_filter_targets(["fixture.action.OPEN", "other_scheme", "http://x"], targets),
+                         {"fixture.action.OPEN", "other_scheme"})
+
+
 def _write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")

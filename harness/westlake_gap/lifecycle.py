@@ -358,6 +358,8 @@ def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str 
     # what it did, and what to explain (a task-root check, absent hardware, a trampoline elsewhere).
     finished = evidence.self_finish(hilog_text) if hilog_text and s.screen == "host" and not dump and not signal else None
     if finished:
+        # What it asked the in-process services before it left: a device's answer may be the reason.
+        finished["local_services"] = evidence.local_service_calls(text)
         s.self_finish = finished
         if s.blocker is None or s.blocker_category == "stall" or not s.blocking:
             s.blocker_category, s.blocking = "self-finish", True

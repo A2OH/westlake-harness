@@ -275,6 +275,19 @@ def self_finish(hilog: str) -> dict | None:
     return out
 
 
+_LOCAL_SERVICE = re.compile(r"^\[WESTLAKE-LOCAL-SERVICE\] ([\w.]+)\.(\w+)$", re.M)
+
+
+def local_service_calls(stderr: str) -> list[str]:
+    """The in-process services the app called, in the order of their first call: LocalServiceBinders
+    logs each service and method once ("[WESTLAKE-LOCAL-SERVICE] role.isRoleAvailableAsUser")."""
+    seen: list[str] = []
+    for match in _LOCAL_SERVICE.finditer(stderr):
+        if match.group(1) not in seen:
+            seen.append(match.group(1))
+    return seen
+
+
 _WITNESS = re.compile(r"\[WESTLAKE-SIGNAL-WITNESS\] signal=(0x[0-9a-f]+) code=(0x[0-9a-f]+) tid=(0x[0-9a-f]+) "
                       r"thread=(.*?) pc=(0x[0-9a-f]+) x30=(0x[0-9a-f]+)")
 
