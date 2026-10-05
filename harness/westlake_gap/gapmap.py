@@ -2682,8 +2682,9 @@ def surfaceview_focus_rows(scan: dict[str, Any], libraries: set[str], model: dic
         provider_source=model.get("focus_group"),
         app_evidence=", ".join(engines) + " stops rendering when its activity loses focus",
         engine_libraries=sorted(lib for lib in libraries if lib in FOCUS_GATED_ENGINES),
-        seen_blocking=["anarchre, diesimu (SDL: OH moved focus to their SurfaceView's window, the activity's window saw "
-                       "only the loss, and nothing showed)"],
+        # With the focus kept, anarchre and diesimu still showed nothing: this row is not their whole story.
+        seen_blocking=["anarchre, diesimu (SDL: OH moved focus to their SurfaceView's window and the activity's window "
+                       "saw only the loss)"],
         shim="count the SurfaceView window's OH focus as its activity window's",
     )]
 
