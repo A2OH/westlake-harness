@@ -549,6 +549,12 @@ class EngineSurface(unittest.TestCase):
         plain = {"inventory": {"elfs": [{"soname": "libsqlite.so"}],
                                "launch_activity_chains": {"a.M": ["Landroidx/appcompat/app/AppCompatActivity;"]}}}
         self.assertEqual(gapmap.engine_surface_rows(plain), [])
+        # usp: a GL renderer of its own in a GLSurfaceView, no engine library.
+        renderer = {"inventory": {"elfs": [{"soname": "libusp.so"}], "launch_activity_chains": {},
+                                  "platform_method_names": {"Landroid/opengl/GLSurfaceView;": ["setRenderer", "onPause"]}}}
+        rows = gapmap.engine_surface_rows(renderer)
+        self.assertEqual(([r["id"] for r in rows], rows[0]["app_evidence"]),
+                         (["window:engine-surface"], "sets a GLSurfaceView renderer"))
 
 
 class ObservedPath(unittest.TestCase):
@@ -2150,6 +2156,84 @@ class NativeEglWindow(unittest.TestCase):
             _write(source, "static void *westlake_egl_by_handle(const char *name)\n{\n    return 0;\n}\n")
             rows = gapmap.native_egl_window_rows(scan, native_egl_window_model(root))
             self.assertEqual([(r["id"], r["verdict"]) for r in rows], [("egl:by-handle", "supplied")])
+
+    def test_buffers_geometry_needs_androids_terms(self) -> None:
+        """anarchre, diesimu: SDL's (0, 0, visual) reached OH as a 0x0 buffer size and CLUT1."""
+        from westlake_gap.contracts import native_egl_window_model
+        scan = {"inventory": {"elfs": [{"name": "lib/arm64-v8a/libSDL2.so", "soname": "libSDL2.so",
+                                        "abi_matches_machine": True,
+                                        "undefined_symbols": ["ANativeWindow_setBuffersGeometry"]}]}}
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "framework/webview-shim/webview_bionic_shim.c"
+            # Passing the arguments through is no answer.
+            _write(source, "int32_t ANativeWindow_setBuffersGeometry(void *w, int32_t width, int32_t height, int32_t f)\n{\n"
+                           "    return next(w, width, height, f);\n}\n")
+            rows = gapmap.native_egl_window_rows(scan, native_egl_window_model(root))
+            self.assertEqual([(r["id"], r["verdict"], r["shim_class"]) for r in rows],
+                             [("window:buffers-geometry", "missing", "C2")])
+            _write(source, "int32_t ANativeWindow_setBuffersGeometry(void *w, int32_t width, int32_t height, int32_t f)\n{\n"
+                           "    int32_t host = wl_host_window_format(f);\n    if (width != 0) set(w, width, height);\n"
+                           "    return host;\n}\n")
+            row = gapmap.native_egl_window_rows(scan, native_egl_window_model(root))[0]
+            self.assertEqual((row["verdict"], row["provider_source"]),
+                             ("supplied", "framework/webview-shim/webview_bionic_shim.c:1"))
+            self.assertEqual(row["app_evidence"], "libSDL2.so imports ANativeWindow_setBuffersGeometry")
+
+class SoftwareCanvas(unittest.TestCase):
+    def test_a_window_drawn_in_software_needs_a_buffer(self) -> None:
+        """nounours: its SurfaceView, drawn with lockCanvas, was a transparent hole."""
+        from westlake_gap.contracts import software_canvas_model
+        scan = {"inventory": {"platform_method_names": {"Landroid/view/SurfaceHolder;": ["lockCanvas", "addCallback"]},
+                              "elfs": [{"name": "lib/arm64-v8a/libvlc.so", "soname": "libvlc.so",
+                                        "abi_matches_machine": True, "undefined_symbols": ["ANativeWindow_lock"]}]}}
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            shim = root / "framework/webview-shim/webview_bionic_shim.c"
+            _write(shim, "int ANativeWindow_lock(void *window, void *out, void *dirty)\n{\n    errno = ENODEV;\n"
+                         "    return -ENODEV;\n}\n")
+            row = gapmap.software_canvas_rows(scan, software_canvas_model(root))[0]
+            self.assertEqual((row["id"], row["verdict"], row["shim_class"]), ("window:software-canvas", "missing", "C9"))
+            self.assertEqual(row["app_evidence"], "the app calls SurfaceHolder.lockCanvas; libvlc.so imports ANativeWindow_lock")
+            _write(shim, "int ANativeWindow_lock(void *window, void *out, void *dirty)\n{\n"
+                         "    RequestFn request = wl_native_window_symbol(\"OH_NativeWindow_NativeWindowRequestBuffer\");\n"
+                         "    return request(oh, &buffer, &fence);\n}\n")
+            model = software_canvas_model(root)
+            self.assertEqual(model["native"], "framework/webview-shim/webview_bionic_shim.c:1")
+            self.assertEqual(gapmap.software_canvas_rows(scan, model)[0]["verdict"], "missing", "lockCanvas is not wrapped")
+            _write(root / "framework/javacore-shim/canvas_natives.c", "int wl_register_surface_canvas(JNIEnv* env)\n{\n}\n")
+            _write(root / "framework/javacore-shim/missing_natives.c", "    int cv = wl_register_surface_canvas(env);\n")
+            _write(root / "tools/build_missing_natives.sh", "for f in missing_natives canvas_natives; do\n")
+            self.assertEqual(gapmap.software_canvas_rows(scan, software_canvas_model(root))[0]["verdict"], "supplied")
+        self.assertEqual(gapmap.software_canvas_rows({"inventory": {}}, {}), [])
+
+
+class SqliteCollations(unittest.TestCase):
+    def test_sql_naming_androids_collations_needs_them_registered(self) -> None:
+        """fnotes: "ORDER BY title COLLATE UNICODE" failed, no such collation sequence."""
+        from westlake_gap import scanner
+        from westlake_gap.contracts import sqlite_collations_model
+        self.assertEqual(scanner.sql_collations(["SELECT * FROM notes ORDER BY title COLLATE UNICODE",
+                                                 "name collate localized", "COLLATE NOCASE", "collateral"]),
+                         {"UNICODE", "LOCALIZED"})
+        scan = {"inventory": {"sql_collations": ["UNICODE"]}}
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            row = gapmap.sqlite_collation_rows(scan, sqlite_collations_model(root))[0]
+            self.assertEqual((row["id"], row["verdict"], row["app_evidence"]),
+                             ("db:sqlite-collations", "missing", "the app's SQL names COLLATE UNICODE"))
+            _write(root / "framework/javacore-shim/sqlite_natives.c",
+                   'int wl_register_sqlite_collations(JNIEnv* env)\n{\n}\n'
+                   'static void f(void) { wl_register_collation(db, "UNICODE", NULL, 0); }\n')
+            _write(root / "framework/javacore-shim/missing_natives.c", "    int sc = wl_register_sqlite_collations(env);\n")
+            self.assertEqual(gapmap.sqlite_collation_rows(scan, sqlite_collations_model(root))[0]["verdict"], "missing",
+                             "registered nowhere until the build compiles it")
+            _write(root / "tools/build_missing_natives.sh", "for f in missing_natives sqlite_natives; do\n")
+            self.assertEqual(gapmap.sqlite_collation_rows(scan, sqlite_collations_model(root))[0]["verdict"], "supplied")
+            self.assertEqual(gapmap.sqlite_collation_rows({"inventory": {"sql_collations": ["UNICODE", "PHONEBOOK"]}},
+                                                          sqlite_collations_model(root))[0]["verdict"], "missing")
+        self.assertEqual(gapmap.sqlite_collation_rows({"inventory": {}}, {}), [])
+
 
 class SandboxAndBacktest(unittest.TestCase):
     def test_realm_fifo_is_predicted(self) -> None:

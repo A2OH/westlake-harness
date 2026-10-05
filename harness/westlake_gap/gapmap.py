@@ -1465,6 +1465,30 @@ def native_egl_window_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[
             seen_blocking=["anarchre (SDL: eglCreateWindowSurface refused, then hwui aborted with EGL_NOT_INITIALIZED)"],
             shim="answer dlopen(libEGL.so) with the runtime's EGL and dlsym of the shim's EGL overrides with its own",
         ))
+    # ANativeWindow_setBuffersGeometry(window, 0, 0, format): the window's own size, on Android. SDL
+    # sets its EGL config's visual that way before creating its surface, as the NDK documents.
+    sized = sorted({elf.get("soname") or elf.get("name") for elf in elfs
+                    if "ANativeWindow_setBuffersGeometry" in (elf.get("undefined_symbols") or [])})
+    if sized:
+        translated = bool(model.get("geometry"))
+        rows.append(_row(
+            "window", "window:buffers-geometry",
+            "ANativeWindow_setBuffersGeometry from native code (" + ", ".join(sized[:4]) + ")",
+            oh_touchpoint="graphic_2d (OHNativeWindow SET_BUFFER_GEOMETRY and SET_FORMAT)",
+            verdict="supplied" if translated else "missing", shim_class="C0" if translated else "C2",
+            effort="verify" if translated else "S", confidence=STATIC,
+            provider=("the preloaded shim answers an app library's call in Android's terms: 0x0 keeps the window's "
+                      "size, and Android's format numbers map to OH's" if translated else
+                      "the runtime's definition hands 0x0 to OH as the buffer size and Android's format number to "
+                      "OH's numbering, where 1 (RGBA_8888) is CLUT1"),
+            provider_source=model.get("geometry"),
+            app_evidence=f"{', '.join(sized[:4])} import{'s' if len(sized) == 1 else ''} ANativeWindow_setBuffersGeometry",
+            libraries=sized,
+            seen_blocking=["anarchre, diesimu (SDL: after (0, 0, its EGL config's visual) on its SurfaceView's window, "
+                           "every buffer request on it failed, NATIVE_ERROR_UNKNOWN, and nothing of it showed)"],
+            shim="define ANativeWindow_setBuffersGeometry in the preloaded shim: 0x0 keeps the window's size, "
+                 "formats map from Android's numbers to OH's",
+        ))
     if not libraries:
         return rows
     supplied = bool(model.get("unwraps"))
@@ -1479,6 +1503,66 @@ def native_egl_window_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[
         app_evidence=f"{', '.join(libraries[:4])} import{'s' if len(libraries) == 1 else ''} eglCreateWindowSurface",
         seen_blocking=["cardswithcats, mousepounce, mobilev2 (Flutter, Skia: no surface for the SurfaceView)"],
         shim="unwrap the adapter's window with oh_anw_get_oh before calling OH's eglCreateWindowSurface",
+    )]
+
+
+def sqlite_collation_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """SQL that names Android's own SQLite collations: UNICODE, which Android registers on every
+    connection, and LOCALIZED and PHONEBOOK, registered for the locale. A query naming one the
+    connection lacks fails ("no such collation sequence"): Fossify Notes's notes list."""
+    named = sorted(scan["inventory"].get("sql_collations") or [])
+    if not named:
+        return []
+    provided = set(model.get("collations") or [])
+    missing = [name for name in named if name not in provided]
+    return [_row(
+        "app-framework", "db:sqlite-collations", "SQLite collations Android registers (" + ", ".join(named) + ")",
+        oh_touchpoint="none: the runtime's SQLite and ICU",
+        verdict="supplied" if not missing else "missing", shim_class="C0" if not missing else "C9",
+        effort="verify" if not missing else "S", confidence=STATIC,
+        provider=("SQLiteConnection's natives are wrapped to register them over ICU" if not missing else
+                  "the runtime registers no UNICODE, and LOCALIZED and PHONEBOOK compare bytes (strcoll on musl)"),
+        provider_source=model.get("source"),
+        app_evidence="the app's SQL names COLLATE " + ", COLLATE ".join(named),
+        seen_blocking=["fnotes (its notes query failed on its worker threads: no such collation sequence: UNICODE)"],
+        shim="register UNICODE on every connection and LOCALIZED and PHONEBOOK for the locale, over ICU",
+    )]
+
+
+_CANVAS_OWNERS = ("Landroid/view/SurfaceHolder;", "Landroid/view/Surface;")
+
+
+def software_canvas_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """Windows drawn in software: SurfaceHolder.lockCanvas or Surface.lockCanvas from the app's dex,
+    ANativeWindow_lock from its native code. The runtime's lockCanvas handed back no buffer and the
+    shim's ANativeWindow_lock answered -ENODEV: nounours's SurfaceView, drawn with a Canvas, was a
+    transparent hole. Flutter links the native pair for its software fallback only."""
+    called = scan["inventory"].get("platform_method_names") or {}
+    java = sorted({owner.strip("L;").rsplit("/", 1)[-1] for owner in _CANVAS_OWNERS
+                   if "lockCanvas" in (called.get(owner) or [])})
+    elfs = [elf for elf in scan["inventory"].get("elfs") or [] if elf.get("abi_matches_machine", True)]
+    native = sorted({elf.get("soname") or elf.get("name") for elf in elfs
+                     if "ANativeWindow_lock" in (elf.get("undefined_symbols") or [])})
+    if not java and not native:
+        return []
+    supplied = (not java or bool(model.get("java"))) and (not native or bool(model.get("native")))
+    evidence = ([f"the app calls {', '.join(name + '.lockCanvas' for name in java)}"] if java else []) \
+        + ([f"{', '.join(native[:4])} import{'s' if len(native) == 1 else ''} ANativeWindow_lock"] if native else [])
+    return [_row(
+        "window", "window:software-canvas", "Windows drawn in software (lockCanvas, ANativeWindow_lock)",
+        oh_touchpoint="graphic_2d (OHNativeWindow RequestBuffer, NativeBuffer map, FlushBuffer)",
+        verdict="supplied" if supplied else "missing", shim_class="C0" if supplied else "C9",
+        effort="verify" if supplied else "S", confidence=STATIC,
+        provider=("ANativeWindow_lock maps a buffer of the adapter's OH window, and Surface.lockCanvas points the "
+                  "Canvas at it" if supplied else
+                  "Surface.lockCanvas hands back no buffer and unlockCanvasAndPost posts nothing; ANativeWindow_lock "
+                  "answers -ENODEV"),
+        provider_source=", ".join(filter(None, [model.get("java"), model.get("native")])) or None,
+        app_evidence="; ".join(evidence),
+        libraries=native,
+        seen_blocking=["nounours (its SurfaceView, drawn with lockCanvas, a transparent hole under its action bar)"],
+        shim="lock: request and map a buffer of the OH window, the Canvas pointed at it (ACanvas_setBuffer); "
+             "unlock: flush it",
     )]
 
 
@@ -2633,13 +2717,18 @@ def engine_surface_rows(scan: dict[str, Any], model: dict[str, Any] | None = Non
     engines = sorted({ENGINE_LIBRARIES[lib] for lib in libraries if lib in ENGINE_LIBRARIES})
     chains = scan["inventory"].get("launch_activity_chains") or {}
     native_activity = sorted(name for name, chain in chains.items() if any("NativeActivity" in c for c in chain))
-    if not engines and not native_activity:
+    # A GL renderer of the app's own in a GLSurfaceView (usp's): no engine library names it.
+    gl_renderer = "setRenderer" in ((scan["inventory"].get("platform_method_names") or {})
+                                    .get("Landroid/opengl/GLSurfaceView;") or [])
+    if not engines and not native_activity and not gl_renderer:
         return []
     evidence = []
     if engines:
         evidence.append(f"packages {', '.join(engines)}")
     if native_activity:
         evidence.append(f"launch activity extends a NativeActivity ({', '.join(native_activity)})")
+    if gl_renderer and not engines:
+        evidence.append("sets a GLSurfaceView renderer")
     model = model or {}
     supplied = bool(model.get("own_surface"))
     return [_row(
@@ -3180,6 +3269,8 @@ def build_map(
             + vulkan_feature_rows(scan, contracts.feature_claims_model(westlake_root), runtime_libraries)
             + window_metrics_rows(scan, contracts.window_metrics_model(westlake_root))
             + native_egl_window_rows(scan, contracts.native_egl_window_model(westlake_root))
+            + software_canvas_rows(scan, contracts.software_canvas_model(westlake_root))
+            + sqlite_collation_rows(scan, contracts.sqlite_collations_model(westlake_root))
             + native_loading_rows(facts, scan, launcher_extraction(manifest_root), board_paths,
                                   launcher_namespace_option(manifest_root), runtime_libraries,
                                   bionic_loader_model(westlake_root, manifest_root))

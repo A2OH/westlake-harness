@@ -404,11 +404,60 @@ def native_egl_window_model(westlake_root: Path) -> dict[str, Any]:
     body = _braced_block(text, match.start()) if match else ""
     line = text.count("\n", 0, match.start()) + 1 if match else None
     by_handle = re.search(r"\bwestlake_egl_by_handle\(", text)
+    # ANativeWindow_setBuffersGeometry in Android's terms: a 0x0 size is the window's own, and the
+    # format is translated from Android's numbering, not handed to OH's SET_FORMAT as is.
+    geometry = re.search(r"^\S[^\n;]*\bANativeWindow_setBuffersGeometry\([^;{]*\)\s*\{", text, re.M)
+    geometry_body = _braced_block(text, geometry.start()) if geometry else ""
+    translated = (re.search(r"\bwidth\s*[!=]=\s*0\b", geometry_body) is not None
+                  and re.search(r"\b\w*format\w*\s*\(", geometry_body) is not None)
     return {"unwraps": "anw_get_oh" in body,
             "source": f"{path.relative_to(westlake_root)}:{line}" if match else None,
             # An Android library's dlsym of these by handle gets the shim's, not OH's EGL directly.
             "by_handle": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, by_handle.start()) + 1}"
-            if by_handle else None}
+            if by_handle else None,
+            "geometry": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, geometry.start()) + 1}"
+            if geometry and translated else None}
+
+
+def software_canvas_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether a window can be drawn in software: the preloaded shim's ANativeWindow_lock requests and
+    maps a buffer (it answered -ENODEV), and Surface.lockCanvas, whose runtime native handed back no
+    buffer, is wrapped over that pair from libwl_missing_natives (canvas_natives.c, registered from
+    its JNI_OnLoad and compiled by its build)."""
+    shim = westlake_root / "framework/webview-shim/webview_bionic_shim.c"
+    text = shim.read_text(errors="replace") if shim.exists() else ""
+    match = re.search(r"^\S[^\n;]*\bANativeWindow_lock\([^;{]*\)\s*\{", text, re.M)
+    body = _braced_block(text, match.start()) if match else ""
+    native = f"{shim.relative_to(westlake_root)}:{text.count(chr(10), 0, match.start()) + 1}" \
+        if match and "RequestBuffer" in body else None
+    canvas = westlake_root / "framework/javacore-shim/canvas_natives.c"
+    onload = westlake_root / "framework/javacore-shim/missing_natives.c"
+    build = westlake_root / "tools/build_missing_natives.sh"
+    read = lambda path: path.read_text(errors="replace") if path.exists() else ""
+    canvas_text = read(canvas)
+    wraps = re.search(r"^int wl_register_surface_canvas\(", canvas_text, re.M)
+    java = (f"{canvas.relative_to(westlake_root)}:{canvas_text.count(chr(10), 0, wraps.start()) + 1}"
+            if wraps and "wl_register_surface_canvas(env)" in read(onload) and "canvas_natives" in read(build)
+            else None)
+    return {"native": native, "java": java}
+
+
+def sqlite_collations_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether a SQLite connection gets Android's collations over ICU: UNICODE on every connection,
+    LOCALIZED and PHONEBOOK for the locale. The runtime registered no UNICODE, and its LOCALIZED and
+    PHONEBOOK compare with strcoll (byte order on musl); libwl_missing_natives wraps SQLiteConnection's
+    natives to register them (sqlite_natives.c, from its JNI_OnLoad, compiled by its build)."""
+    source = westlake_root / "framework/javacore-shim/sqlite_natives.c"
+    onload = westlake_root / "framework/javacore-shim/missing_natives.c"
+    build = westlake_root / "tools/build_missing_natives.sh"
+    read = lambda path: path.read_text(errors="replace") if path.exists() else ""
+    text = read(source)
+    match = re.search(r"^int wl_register_sqlite_collations\(", text, re.M)
+    names = set(re.findall(r'wl_register_collation\(db, "(\w+)"', text))
+    wired = match is not None and "wl_register_sqlite_collations(env)" in read(onload) and "sqlite_natives" in read(build)
+    return {"collations": sorted(names) if wired else [],
+            "source": f"{source.relative_to(westlake_root)}:{text.count(chr(10), 0, match.start()) + 1}"
+            if wired else None}
 
 
 def activity_client_model(westlake_root: Path) -> dict[str, Any]:
