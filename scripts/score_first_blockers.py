@@ -100,9 +100,14 @@ def crash_rows(dump, rows):
     """Rows that name a library the crash's app frames are in, for a native crash: a row about a
     library's own risk (an init array, an import version, a thread start, EGL by handle) lists it in
     `libraries`. None when no such row names one, which leaves the crash unscorable."""
-    names = {frame["library"] for frame in (dump or {}).get("frames") or []
+    frames = (dump or {}).get("frames") or []
+    names = {frame["library"] for frame in frames
              if str(frame.get("path", "")).startswith(_APP_DIRS) and frame.get("library")}
-    found = [r for r in rows if names & {str(name).rsplit("/", 1)[-1] for name in r.get("libraries") or []}]
+    symbols = [frame["symbol"] for frame in frames if frame.get("symbol")]
+    # A row about one kind of call (a thread start, an allocator) also names the frames such a crash
+    # shows; PPSSPP's crash in libhwui is not a thread-handle crash because its library has one.
+    found = [r for r in rows if names & {str(name).rsplit("/", 1)[-1] for name in r.get("libraries") or []}
+             and (not r.get("crash_symbols") or any(re.search(r["crash_symbols"], s) for s in symbols))]
     return found or None
 
 

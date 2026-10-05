@@ -1537,6 +1537,11 @@ def versioned_clash_rows(clashes: list[dict[str, Any]], shim_versions: set[str])
         open_symbols=[f"{c['symbol']}@{c['version']}" for c in shown][:16],
         app_evidence="; ".join(f"{c['symbol']}: {', '.join(c['importing_libraries'][:3])}" for c in shown[:4]),
         libraries=sorted({name for c in shown for name in c["importing_libraries"]}),
+        # A crash it explains runs in one of the clashing names, or in musl's allocator for one of them.
+        crash_symbols="^(" + "|".join(sorted({re.escape(c["symbol"]) for c in shown}
+                                              | ({"__libc_\\w+", "get_meta"} if {c["symbol"] for c in shown}
+                                                 & {"malloc", "free", "calloc", "realloc"} else set())))
+                      + r")\b",
         seen_blocking=["fennec (libxul freed with musl's free what libmozglue's mozjemalloc allocated)"],
         shim="none" if not open_ else "define the open names under their version in the bionic shim, forwarding to "
                                       "the app library's definitions",
@@ -1714,7 +1719,7 @@ def thread_handle_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict
         app_evidence="; ".join(f"{name}: {count} call{'s' if count > 1 else ''} pthread_create(&obj->thread, ..., obj)"
                                for name, count in sorted(found.items())[:6])
                      + " (a risk: whether the thread reads the field first is not seen)",
-        libraries=sorted(found),
+        libraries=sorted(found), crash_symbols=r"^pthread_",
         seen_blocking=["tiktok (r85: vcbasekit's thread named itself with pthread_setname_np(this->thread_, ...) "
                        "before pthread_create stored thread_, and died in musl's pthread_setname_np on handle 0; it "
                        "drew in the run before)"],

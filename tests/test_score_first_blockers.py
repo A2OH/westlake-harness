@@ -1,4 +1,5 @@
 import importlib.util
+import re
 import unittest
 from pathlib import Path
 
@@ -72,6 +73,17 @@ class NativeCrashScoring(unittest.TestCase):
         self.assertEqual([r["id"] for r in score.crash_rows(sdl, rows)], ["egl:by-handle"])
         mali = {"frames": [{"path": "/vendor/lib64/chipsetsdk/libGLES_mali.z.so", "library": "libGLES_mali.z.so"}]}
         self.assertIsNone(score.crash_rows(mali, rows), "no app frame: unscorable")
+
+    def test_a_row_about_one_call_needs_that_call_in_the_crash(self) -> None:
+        handle = {"id": "abi:thread-handle-order", "verdict": "missing", "libraries": ["libvcbasekit.so", "libppsspp_jni.so"],
+                  "crash_symbols": "^pthread_"}
+        tiktok = {"frames": [{"path": "/system/lib/ld-musl-aarch64.so.1", "library": "ld-musl-aarch64.so.1",
+                              "symbol": "pthread_setname_np+92"},
+                             {"path": "/data/local/tmp/asx/lib/arm64-v8a/libvcbasekit.so", "library": "libvcbasekit.so"}]}
+        ppsspp = {"frames": [{"path": "/data/local/tmp/asx/libhwui.so", "library": "libhwui.so"},
+                             {"path": "/data/local/tmp/asx/lib/arm64-v8a/libppsspp_jni.so", "library": "libppsspp_jni.so"}]}
+        self.assertEqual([r["id"] for r in score.crash_rows(tiktok, [handle])], ["abi:thread-handle-order"])
+        self.assertIsNone(score.crash_rows(ppsspp, [handle]))
 
 
 if __name__ == "__main__":
