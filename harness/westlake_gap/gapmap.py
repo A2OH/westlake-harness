@@ -231,7 +231,9 @@ def service_rows(scan: dict[str, Any], aosp: dict[str, Any], westlake: dict[str,
             "system-services", f"svc:{entry['service']}", entry["service"],
             oh_touchpoint=analog or "none",
             verdict=verdict, shim_class=entry.get("shim_class", "C5"), effort=effort, confidence=STATIC,
-            provider=basis.get("detail") or ("no Westlake provision: getSystemService returns null" if verdict == services.NULL else ""),
+            provider=(f"answered as a device without it: {entry['device_answer']}" if entry.get("device_answer")
+                      else basis.get("detail") or ("no Westlake provision: getSystemService returns null"
+                                                   if verdict == services.NULL else "")),
             provider_source=basis.get("source"),
             aosp_contract=f"{entry.get('manager')} needs binder(s) {[b['name'] for b in entry.get('binders', [])]} ({entry.get('aosp_source')})"
                 if entry.get("manager") else None,
@@ -239,6 +241,7 @@ def service_rows(scan: dict[str, Any], aosp: dict[str, Any], westlake: dict[str,
             example_site=_site(entry["sites"][0]) if entry.get("sites") else None,
             shim=shim, app_evidence=evidence, throws_if_null=len(throwing), throws_in_framework=unwrapping,
             throwing_sites=sorted({f"{c['owner'].strip('L;').replace('/', '.')}.{c['method']}" for c in throwing})[:40],
+            device_answer=entry.get("device_answer"),
         ))
     dynamic = sum(1 for r in requests if r.get("dynamic"))
     return rows, dynamic
@@ -477,6 +480,58 @@ def ndk_symbol_rows(
 # never one of them, and SDKs iterate the result unchecked.
 AM_PROCESS_TABLE = {"getRunningAppProcesses": "getRunningAppProcesses", "getRunningServices": "getServices",
                     "getProcessMemoryInfo": "getProcessMemoryInfo"}
+
+
+_PRIMITIVES = {"boolean", "int", "long", "float", "double", "byte", "char", "short"}
+
+# Out-parameter methods whose untouched argument is the right answer for the app itself:
+# a new RunningAppProcessInfo already reads IMPORTANCE_FOREGROUND, the calling app's own state.
+_AM_OUT_DEFAULTS_RIGHT = {"getMyMemoryState"}
+
+
+def am_default_rows(scan: dict[str, Any], am: dict[str, Any], census: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+    """Every other ActivityManager call the app makes whose binder method the direct-launch proxy
+    does not answer: a census of type defaults. The curated rows above (memory info, task queries,
+    process table) are left out. A default that reaches the app as null, or leaves an `out`
+    parameter as the app made it, is open; a false or 0, or a null ActivityManager turns into an
+    empty answer, is noted but not open."""
+    if not am.get("proxy_stub") or not census:
+        return []
+    curated = {"getMemoryInfo"} | set(contracts.TASK_QUERIES) | set(AM_PROCESS_TABLE)
+    called = sorted(set(scan["inventory"].get("platform_method_names", {}).get("Landroid/app/ActivityManager;", [])) - curated)
+    open_, quiet = [], []
+    for method in called:
+        for call in census.get(method, []):
+            if call["binder"] in am.get("answered", []):
+                continue
+            returns = call["returns"]
+            if returns == "void" and call["out"] and call["binder"] in _AM_OUT_DEFAULTS_RIGHT:
+                quiet.append(f"{method} ({call['binder']}: its out parameter as made, already the app's own answer)")
+            elif returns == "void" and call["out"]:
+                open_.append(f"{method} ({call['binder']}: its out parameter is left as the app made it)")
+            elif returns == "void":
+                continue
+            elif returns in _PRIMITIVES:
+                quiet.append(f"{method} ({call['binder']}: {'false' if returns == 'boolean' else '0'})")
+            elif call["null_checked"]:
+                quiet.append(f"{method} ({call['binder']}: null, which ActivityManager turns into an empty answer)")
+            elif call.get("null_documented"):
+                quiet.append(f"{method} ({call['binder']}: null, an answer its documentation names)")
+            else:
+                open_.append(f"{method} ({call['binder']}: null, handed to the app)")
+    if not open_:
+        return []
+    return [_row(
+        "app-framework", "am:type-defaults",
+        f"Other ActivityManager calls answered with a type default ({len(open_)} open)",
+        oh_touchpoint="none: in direct launch IActivityManager is a proxy with no system_server behind it",
+        verdict="hollow", shim_class="C9", effort="S", confidence=STATIC,
+        provider="the direct-launch IActivityManager proxy answers methods it does not name with null, 0 or false",
+        provider_source=am.get("source"), open_symbols=open_[:16],
+        app_evidence="app calls ActivityManager." + ", ActivityManager.".join(sorted({o.split(" ")[0] for o in open_}))
+                     + (f"; answered harmlessly: {'; '.join(quiet[:4])}" if quiet else ""),
+        shim="answer each method in the proxy as ActivityManagerService answers an app about itself",
+    )]
 
 
 def app_framework_rows(scan: dict[str, Any], am: dict[str, Any], wm: dict[str, Any] | None = None,
@@ -796,6 +851,60 @@ def pm_null_consequences(aosp_root: Path | None) -> dict[str, str]:
             elif re.search(rf"\b{variable}\.getList\(\)", after) and not re.search(rf"{variable}\s*[!=]=\s*null", after):
                 out.setdefault(binder, "dereferences the null (ParceledListSlice.getList)")
     return out
+
+
+def _aidl_methods(path: Path) -> dict[str, dict[str, Any]]:
+    """Method name -> its return type and whether it takes an `out` parameter, from an AIDL file."""
+    text = re.sub(r"/\*.*?\*/|//[^\n]*", " ", path.read_text(errors="replace"), flags=re.S)
+    text = re.sub(r"@[\w.]+(?:\([^)]*\))?", " ", text)
+    methods: dict[str, dict[str, Any]] = {}
+    # The delimiter is looked behind, not consumed: one declaration's ';' starts the next.
+    for match in re.finditer(r"(?:(?<=[;{}])|\A)\s*(oneway\s+)?([\w.<>\[\], ]+?)\s+(\w+)\s*\(([^)]*)\)\s*;", text):
+        returns, name, params = " ".join(match.group(2).split()), match.group(3), match.group(4)
+        if returns in ("import", "package", "interface"):
+            continue
+        methods.setdefault(name, {"returns": returns, "out": bool(re.search(r"\b(?:in)?out\s", params))})
+    return methods
+
+
+def am_default_census(aosp_root: Path | None) -> dict[str, list[dict[str, Any]]]:
+    """Public ActivityManager method -> the IActivityManager calls its body makes, each with the
+    binder method's return type, whether it fills an `out` parameter, and whether ActivityManager
+    checks the answer for null before handing it on.
+
+    With no system_server the direct-launch proxy answers a method it does not name with a type
+    default, and what the app sees depends on the wrapper: getHistoricalProcessExitReasons turns
+    null into an empty list, getMyMemoryState leaves the caller's RunningAppProcessInfo as it was
+    made (importance 0, not foreground)."""
+    if aosp_root is None:
+        return {}
+    am_path = aosp_root / "frameworks-base/core/java/android/app/ActivityManager.java"
+    aidl_path = aosp_root / "frameworks-base/core/java/android/app/IActivityManager.aidl"
+    if not am_path.exists() or not aidl_path.exists():
+        return {}
+    binder = _aidl_methods(aidl_path)
+    original = am_path.read_text(errors="replace")
+    text = contracts._strip_java_comments(original)
+    census: dict[str, list[dict[str, Any]]] = {}
+    for head in re.finditer(r"\bpublic\s+(?:static\s+|final\s+|synchronized\s+)*[\w.<>\[\], ?]+?\s+(\w+)\s*\(", text):
+        body = contracts._braced_block(text, head.end())
+        if not body:
+            continue
+        # The method's javadoc: a null it documents (getProcessesInErrorState: "or null if there are no
+        # processes in error") is an answer, not a default the app is unready for.
+        doc, doc_end = "", original.rfind("*/", 0, head.start())
+        if doc_end >= 0 and re.fullmatch(r"\*/\s*(?:@[\w.]+(?:\([^)]*\))?\s*)*", original[doc_end:head.start()]):
+            doc = original[original.rfind("/**", 0, doc_end):doc_end]
+        for call in re.finditer(r"(?<![\w.])getService\(\)\s*\.\s*(\w+)\s*\(", body):
+            info = binder.get(call.group(1))
+            if info is None:
+                continue
+            entry = {"binder": call.group(1), **info, "null_checked": bool(re.search(r"[!=]=\s*null", body)),
+                     "null_documented": bool(re.search(r"\bnull\b", doc))}
+            calls = census.setdefault(head.group(1), [])
+            if entry not in calls:
+                calls.append(entry)
+    return census
 
 
 def webview_process_model(aosp_root: Path | None, westlake_root: Path) -> dict[str, Any]:
@@ -1142,6 +1251,8 @@ def interposition_rows(scan: dict[str, Any], runtime: dict[str, Any] | None,
         provider=("routed to the Android namespace, where the runtime's libraries are not global" if not exposed else
                   f"{len(exposed)} of {len(hits)} load in the default namespace"),
         app_evidence=evidence,
+        # A crash this explains runs in the runtime library's copy, called from the app's library.
+        libraries=exposed, crash_libraries=sorted({owner for name in exposed for owner in hits[name]}),
         seen_blocking=["ppsspp (r83: its own VMA calls ran in libhwui.so's copy; SIGSEGV in CalcAllocationParams)"],
         shim="route these libraries to the Android namespace (--android-native-target), or stop the runtime's "
              "libraries exporting what Android keeps private to the platform",
@@ -1171,6 +1282,109 @@ def task_root_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str
     )]
 
 
+def own_intent_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """The app's own activities reached by implicit intent: its code names a scheme or action that
+    only its own activity filters declare (scanner.named_filter_targets). Android resolves such an
+    intent through the package manager; OH's bundle manager knows only OH's abilities."""
+    named = scan["inventory"].get("own_intent_names") or []
+    if not named:
+        return []
+    resolved, started = model.get("resolved", False), model.get("started", False)
+    supplied = resolved and started
+    open_ = [part for part, done in (("queryIntentActivities/resolveIntent", resolved),
+                                     ("startActivity", started)) if not done]
+    return [_row(
+        "app-framework", "am:own-implicit-intents",
+        "Implicit intents for the app's own activities (" + ", ".join(named[:4]) + ")",
+        oh_touchpoint="bundle manager QueryAbilityInfos and StartAbility: OH's abilities only",
+        verdict="supplied" if supplied else "missing", shim_class="C0" if supplied else "C9",
+        effort="verify" if supplied else "S", confidence=STATIC,
+        provider=("the app's own activities are matched against their manifest filters, and an implicit start "
+                  "is made explicit" if supplied else "not resolved in process: " + ", ".join(open_)),
+        provider_source=model.get("source"), open_symbols=open_,
+        app_evidence="the app's code names " + ", ".join(named[:6]) + ", declared only by its own activity filters",
+        seen_blocking=["shazam (r85: its splash resolved VIEW shazam_activity://configuration in its own package, "
+                       "got nothing, started nothing and finished)"],
+        shim="answer queryIntentActivities and resolveIntent for the app's own package from its parsed manifest "
+             "filters (MATCH_DEFAULT_ONLY needs CATEGORY_DEFAULT), and resolve an implicit startActivity the same way",
+    )]
+
+
+def post_create_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """The app's own activity code in onPostCreate or onRestoreInstanceState (scanner.after_start_overrides),
+    which Android calls after onStart from the pending actions its launch marked. A provider that
+    resumes in a transaction of its own makes neither call."""
+    overrides = scan["inventory"].get("after_start_overrides") or []
+    if not overrides or model.get("carries_start") is None:
+        return []
+    supplied = bool(model["carries_start"])
+    callbacks = sorted({name for item in overrides for name in item["callbacks"]})
+    launch = set(scan.get("apk", {}).get("main_activities") or [])
+    first = sorted(overrides, key=lambda item: item["activity"] not in launch)
+    return [_row(
+        "app-framework", "am:post-create",
+        "Activity callbacks after onStart (" + ", ".join(callbacks) + ")",
+        oh_touchpoint="none: the in-process transaction executor runs the activity lifecycle",
+        verdict="supplied" if supplied else "missing", shim_class="C0" if supplied else "C9",
+        effort="verify" if supplied else "XS", confidence=STATIC,
+        provider=("the launch transaction carries the start, so its pending actions reach it" if supplied else
+                  "the launch transaction stops at onCreate and the resume comes in one of its own: the pending "
+                  "onRestoreInstanceState and onPostCreate are cleared in between"),
+        provider_source=model.get("source"),
+        app_evidence="; ".join(item["activity"] + " (" + ", ".join(item["callbacks"]) + ")" for item in first[:4])
+        + (f"; {len(overrides) - 4} more" if len(overrides) > 4 else ""),
+        seen_blocking=["linphone (r85: MainActivity marks its first screen ready in onPostCreate and cancels every "
+                       "draw until then; its window never drew)"],
+        shim="request the start state in the launch transaction, as Android's starts and resumes in it",
+    )]
+
+
+def permission_request_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """Runtime permission requests. Android answers every one, in onRequestPermissionsResult with what
+    the user chose; a request that is never answered leaves the activity waiting on it."""
+    called = set(scan["inventory"].get("platform_method_names", {}).get("Landroid/app/Activity;", []))
+    if "requestPermissions" not in called or model.get("answered") is None:
+        return []
+    supplied = bool(model["answered"])
+    return [_row(
+        "app-framework", "am:permission-request", "Runtime permission requests (Activity.requestPermissions)",
+        oh_touchpoint="access_token: the host application's grants (no permission dialog is raised)",
+        verdict="supplied" if supplied else "missing", shim_class="C0" if supplied else "C9",
+        effort="verify" if supplied else "XS", confidence=STATIC,
+        provider=("answered in process with what OH has granted the host application, as the permission "
+                  "controller's result" if supplied else
+                  "the request goes to OH as an implicit action it does not know: no answer arrives"),
+        provider_source=model.get("source"),
+        app_evidence="the app calls Activity.requestPermissions",
+        seen_blocking=["aat, castlab, element, msstart, ssh (r85: each asked and never heard back; each drew)"],
+        shim="answer ACTION_REQUEST_PERMISSIONS with the permission controller's result: the names and their grants",
+    )]
+
+
+def ce_storage_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """StrictMode's VM checks, which report a credential-protected data access while the user's storage
+    is locked, each with a stack trace: an app that turns them on pays for every file it touches when
+    the provider says the storage is still locked."""
+    called = set(scan["inventory"].get("platform_method_names", {}).get("Landroid/os/StrictMode$VmPolicy$Builder;", []))
+    used = sorted(called & {"detectAll", "detectCredentialProtectedWhileLocked"})
+    if not used:
+        return []
+    supplied = bool(model.get("unlocked"))
+    return [_row(
+        "app-framework", "os:ce-storage-unlocked", "Credential-encrypted storage unlocked, for StrictMode's checks",
+        oh_touchpoint="none: the in-process storage manager answers for the user's storage",
+        verdict="supplied" if supplied else "missing", shim_class="C0" if supplied else "C9",
+        effort="verify" if supplied else "XS", confidence=STATIC,
+        provider=("isCeStorageUnlocked answers true" if supplied else
+                  "isCeStorageUnlocked gets a default false: every data access is a violation while locked"),
+        provider_source=model.get("source"),
+        app_evidence="the app enables StrictMode.VmPolicy." + ", ".join(used),
+        seen_blocking=["osmand (r85: 730 violations in its hilog, 20,000 lines with their stacks, while it started; "
+                       "it then aborted in a race with its own data copy)"],
+        shim="answer isCeStorageUnlocked, Android 15's name for isUserKeyUnlocked, with true",
+    )]
+
+
 def window_metrics_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
     """WindowMetrics read before the first relayout. aat derived its button count from the window
     width in onCreate, got 0x0, and divided by zero."""
@@ -1194,17 +1408,67 @@ def window_metrics_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dic
     )]
 
 
+def vm_lookup_rows(scan: dict[str, Any], shim_exports: set[str]) -> list[dict[str, Any]]:
+    """Native code that finds the process's JavaVM itself, with JNI_GetCreatedJavaVMs (scanner.vm_lookups).
+    libnativehelper answers from the invocation table its JniInvocation filled; appspawn-x's is a
+    local of startVm(), whose destructor clears that table, so once the VM runs it answers JNI_OK
+    with no VM. A caller that checks only the result takes an uninitialized JavaVM*."""
+    elfs = [elf for elf in scan["inventory"].get("elfs") or [] if elf.get("abi_matches_machine", True)]
+    found = {(elf.get("soname") or elf.get("name")): elf["vm_lookup"] for elf in elfs if elf.get("vm_lookup")}
+    if not found:
+        return []
+    libraries = sorted(found)
+    supplied = "JNI_GetCreatedJavaVMs" in shim_exports
+    return [_row(
+        "native-loading", "jni:created-vms",
+        "The process's JavaVM found from native code (" + ", ".join(libraries[:4]) + ")",
+        oh_touchpoint="none: the runtime's libnativehelper and libart",
+        verdict="supplied" if supplied else "missing", shim_class="C0" if supplied else "C3",
+        effort="verify" if supplied else "XS", confidence=STATIC,
+        provider=("the preloaded shim answers JNI_GetCreatedJavaVMs from libart's Runtime" if supplied else
+                  "libnativehelper answers JNI_OK with no VM: the JniInvocation that filled its table is gone "
+                  "once appspawn-x has started the VM"),
+        app_evidence="; ".join(f"{name} {'imports' if how == 'import' else 'looks up'} JNI_GetCreatedJavaVMs"
+                               for name, how in sorted(found.items())[:4]),
+        libraries=libraries,
+        seen_blocking=["elementx (r85: its Rust library took an uninitialized JavaVM* from the empty answer; "
+                       "SIGSEGV in its first FindClass)"],
+        shim="define JNI_GetCreatedJavaVMs in the preloaded shim, forwarding to libart's",
+    )]
+
+
 def native_egl_window_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
     """App code that creates its own EGL window surface. ANativeWindow_fromSurface gives it the
     adapter's AOSP-shaped window, which OH's EGL rejects: Flutter's Skia renderer (apps that opt out
     of Impeller) got no surface for its SurfaceView and never drew."""
-    libraries = sorted({elf.get("soname") or elf.get("name") for elf in scan["inventory"].get("elfs") or []
-                        if elf.get("abi_matches_machine", True)
-                        and "eglCreateWindowSurface" in (elf.get("undefined_symbols") or [])})
+    elfs = [elf for elf in scan["inventory"].get("elfs") or [] if elf.get("abi_matches_machine", True)]
+    libraries = sorted({elf.get("soname") or elf.get("name") for elf in elfs
+                        if "eglCreateWindowSurface" in (elf.get("undefined_symbols") or [])})
+    # Libraries that look EGL up by handle (SDL dlopens libEGL.so): they reach the shim's entry
+    # points only if its dlsym hands them over.
+    by_handle = sorted({elf.get("soname") or elf.get("name") for elf in elfs if elf.get("egl_lookups")})
+    rows = []
+    if by_handle:
+        handled = bool(model.get("by_handle"))
+        rows.append(_row(
+            "window", "egl:by-handle", "EGL looked up by handle from native code (" + ", ".join(by_handle[:4]) + ")",
+            oh_touchpoint="graphic_2d (OH's EGL; its NDK libEGL.so loads into OH's ndk namespace)",
+            verdict="supplied" if handled else "missing", shim_class="C0" if handled else "C6",
+            effort="verify" if handled else "S", confidence=STATIC,
+            provider=("the shim answers an Android dlopen of libEGL.so with the runtime's EGL and a dlsym of "
+                      "eglCreateWindowSurface or eglTerminate with its own" if handled else
+                      "lookups by handle reach OH's EGL directly: the adapter's window is refused and eglTerminate "
+                      "tears down the display hwui renders through"),
+            provider_source=model.get("by_handle"),
+            app_evidence=f"{', '.join(by_handle[:4])} name EGL entry points without importing them",
+            libraries=by_handle,
+            seen_blocking=["anarchre (SDL: eglCreateWindowSurface refused, then hwui aborted with EGL_NOT_INITIALIZED)"],
+            shim="answer dlopen(libEGL.so) with the runtime's EGL and dlsym of the shim's EGL overrides with its own",
+        ))
     if not libraries:
-        return []
+        return rows
     supplied = bool(model.get("unwraps"))
-    return [_row(
+    return rows + [_row(
         "window", "egl:native-window", "EGL window surfaces created from native code",
         oh_touchpoint="graphic_2d (OHNativeWindow under OH's EGL)",
         verdict="supplied" if supplied else "missing", shim_class="C0" if supplied else "C6",
@@ -1281,6 +1545,83 @@ def feature_rows(scan: dict[str, Any], claims: dict[str, Any], aosp: dict[str, A
     return rows
 
 
+def _vulkan_version(encoded: int) -> str:
+    """VK_MAKE_API_VERSION's major.minor.patch, as android.hardware.vulkan.version carries it."""
+    return f"{(encoded >> 22) & 0x7f}.{(encoded >> 12) & 0x3ff}.{encoded & 0xfff}"
+
+
+def vulkan_feature_rows(scan: dict[str, Any], claims: dict[str, Any],
+                        runtime_libraries: list[str] | None) -> list[dict[str, Any]]:
+    """An app that asks for android.hardware.vulkan.version must get the answer its native side
+    finds. Godot checks the feature in Java before it makes a Vulkan view, and its engine probes
+    libvulkan on its own: with the runtime's libvulkan working and the feature unclaimed, the Java
+    side fell back to an OpenGL view that never hands the engine a window, while the engine chose
+    Vulkan, failed on the null window and called its renderer through a null pointer (duckrun,
+    playmaker)."""
+    feature = "android.hardware.vulkan.version"
+    sites = [q for q in scan["inventory"].get("feature_queries") or [] if q.get("feature") == feature]
+    if not sites:
+        return []
+    loader = "libvulkan.so" in (runtime_libraries or [])
+    claimed = feature in claims.get("claimed", [])
+    version = (claims.get("versions") or {}).get(feature)
+    if not claimed and not loader:
+        return []
+    if claimed and loader:
+        verdict, shim_class, effort = "supplied", "C0", "verify"
+        provider = (f"claimed at Vulkan {_vulkan_version(version) if version else '(version unread)'}; the "
+                    "runtime's libvulkan forwards to OH's loader with VK_KHR_android_surface")
+        shim = "none"
+    elif loader:
+        verdict, shim_class, effort = "contradicted", "C1", "XS"
+        provider = ("reported absent while the runtime's libvulkan answers: an engine that checks the feature "
+                    "in Java and probes Vulkan natively takes two paths")
+        shim = "claim android.hardware.vulkan.version at the board's Vulkan API version"
+    else:
+        verdict, shim_class, effort = "contradicted", "C5", "S"
+        provider = "claimed, but the runtime ships no libvulkan"
+        shim = "report android.hardware.vulkan.version absent until a Vulkan loader is staged"
+    return [_row(
+        "package-manager", f"feature:{feature}", "Vulkan feature against the runtime's Vulkan",
+        oh_touchpoint="OH's Vulkan loader (VK_OHOS_surface) and the board's ICD",
+        verdict=verdict, shim_class=shim_class, effort=effort, confidence=STATIC,
+        provider=provider, provider_source=claims.get("source"),
+        app_evidence=f"{len(sites)} call site{'s' if len(sites) != 1 else ''}, e.g. {_site(sites[0])}",
+        call_sites=len(sites),
+        seen_blocking=["duckrun, playmaker (Godot 4.5: OpenGL view, Vulkan engine, null native window)"],
+        shim=shim,
+    )]
+
+
+def weak_api_rows(weak: list[dict[str, Any]], shim_exports: set[str]) -> list[dict[str, Any]]:
+    """Weak imports of the NDK's API that nothing on the board defines (ohresolve.weak_missing). The
+    loader binds them to 0; an app calls one once the device reports an API level that has it, and a
+    call to 0 is a SIGSEGV with nothing in the log. The bionic shim, preloaded, can define them."""
+    if not weak:
+        return []
+    open_ = [item for item in weak if item["symbol"] not in shim_exports]
+    shown = open_ or weak
+    surfaces = sorted({item["surface"] for item in shown})
+    return [_row(
+        "native-symbols", "ndk:weak-api",
+        f"Weak NDK imports nothing on the board defines ({', '.join(i['symbol'] for i in shown[:4])}"
+        + (" ..." if len(shown) > 4 else "") + ")",
+        oh_touchpoint="the loader binds an undefined weak import to 0; the app checks the device's API level, "
+                      "not the symbol",
+        verdict="missing" if open_ else "supplied", shim_class="C1", effort="S" if open_ else "verify",
+        confidence=STATIC, open_symbols=[i["symbol"] for i in open_][:16],
+        provider=("the bionic shim defines them" if not open_ else
+                  f"{len(open_)} of {len(weak)} undefined: a call jumps to address 0"),
+        app_evidence="; ".join(f"{i['symbol']} ({i['surface']}): {', '.join(i['importing_libraries'][:2])}"
+                               for i in shown[:4]),
+        libraries=sorted({name.rsplit("/", 1)[-1] for i in shown for name in i["importing_libraries"]}),
+        crash_kinds=["null-call"],
+        seen_blocking=["fennec (its font-list thread called ASystemFontIterator_open, API 29, through a PLT slot "
+                       "holding 0)"],
+        shim="define the " + "/".join(surfaces) + " functions in the bionic shim, answering as the board can",
+    )]
+
+
 def symbol_version_rows(oh_missing: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Imports a library defines, but under another symbol version. OH's loader binds a versioned
     import to a versioned library only under the same version name, so the load fails as if the
@@ -1300,6 +1641,49 @@ def symbol_version_rows(oh_missing: list[dict[str, Any]]) -> list[dict[str, Any]
         app_evidence="; ".join(f"{i['symbol']}: {', '.join(i['importing_libraries'][:3])}" for i in mismatched[:4]),
         seen_blocking=["messenger (superpack libcore.so: __system_property_read_callback@LIBC_O)"],
         shim="define the symbol under the version Bionic gives it (the bionic shim's version script)",
+    )]
+
+
+def versioned_clash_rows(clashes: list[dict[str, Any]], shim_definitions: dict[str, set[str]]) -> list[dict[str, Any]]:
+    """Imports versioned against the app's own library that a board library without symbol versions
+    also defines (ohresolve.versioned_clashes). OH's loader binds them to the board's copy, searched
+    first; the bionic shim restores Android's binding for the names it defines forwarders for at
+    that version (contracts.shim_versioned_definitions), as non-default versions that call the app
+    library's own definitions. A version the shim covers for malloc and free says nothing of its
+    operator delete: Fennec's sized delete still bound to a libc++'s."""
+    if not clashes:
+        return []
+    forwarded = lambda c: c["symbol"] in (shim_definitions.get(c["version"], set())
+                                          | shim_definitions.get(c["version"] + ".so", set()))
+    supplied = sorted({c["version"] for c in clashes if forwarded(c)})
+    open_ = [c for c in clashes if not forwarded(c)]
+    shown = open_ or clashes
+    provider = []
+    if supplied:
+        provider.append("the bionic shim defines non-default " + "/".join(v + ".so" for v in supplied)
+                        + " forwarders that call the app library's own definitions, for "
+                        + str(sum(forwarded(c) for c in clashes)) + " of these names")
+    if open_:
+        provider.append("nothing under " + "/".join(sorted({c["version"] + ".so" for c in open_}))
+                        + " precedes the board's unversioned copy, so the import binds to it")
+    return [_row(
+        "native-symbols", "abi:versioned-import-clash",
+        "Imports versioned against the app's own libraries, also defined unversioned on the board ("
+        + ", ".join(f"{c['symbol']}@{c['version']}" for c in shown[:4]) + (" ..." if len(shown) > 4 else "") + ")",
+        oh_touchpoint="OH musl's check_verinfo: an import naming its version by hash matches a library without versions",
+        verdict="missing" if open_ else "supplied", shim_class="C1", effort="S" if open_ else "verify",
+        confidence=STATIC, provider="; ".join(provider),
+        open_symbols=[f"{c['symbol']}@{c['version']}" for c in shown][:16],
+        app_evidence="; ".join(f"{c['symbol']}: {', '.join(c['importing_libraries'][:3])}" for c in shown[:4]),
+        libraries=sorted({name for c in shown for name in c["importing_libraries"]}),
+        # A crash it explains runs in one of the clashing names, or in musl's allocator for one of them.
+        crash_symbols="^(" + "|".join(sorted({re.escape(c["symbol"]) for c in shown}
+                                              | ({"__libc_\\w+", "get_meta"} if {c["symbol"] for c in shown}
+                                                 & {"malloc", "free", "calloc", "realloc"} else set())))
+                      + r")\b",
+        seen_blocking=["fennec (libxul freed with musl's free what libmozglue's mozjemalloc allocated)"],
+        shim="none" if not open_ else "define the open names under their version in the bionic shim, forwarding to "
+                                      "the app library's definitions",
     )]
 
 
@@ -1440,11 +1824,74 @@ def static_mutex_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[
         provider_source=model.get("source"), open_symbols=open_,
         app_evidence="; ".join(f"{name}: " + ", ".join(f"{count} {kind}" for kind, count in sorted(counts.items()))
                                + " locked as initialized" for name, counts in sorted(found.items())[:6]),
+        libraries=sorted(found),
         seen_blocking=["discord (r84: sentry-native's sentry_init holds its options lock and takes it again in "
                        "sentry_close; the crash-reporting thread never left initSentryNative and the main thread "
                        "waited out two 30 s application-initialization timeouts, first frame at 62.9 s)"],
         shim="convert the type word of an unlocked mutex holding Bionic's static initializer to musl's recursive or "
              "error-checking type before musl's lock sees it; a held mutex is left alone",
+    )]
+
+
+def bionic_tls_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
+    """Libraries that read Bionic's TLS slots directly (scanner.bionic_tls_slots). OH musl lays out
+    the words above the thread pointer differently, and no shim can change what a load from them
+    reads: the thread pointer's layout is the loader's."""
+    found: dict[str, dict[str, int]] = {}
+    for elf in ohresolve.target_elfs(scan):
+        if elf.get("bionic_tls_slots"):
+            found[elf.get("soname") or elf["name"].rsplit("/", 1)[-1]] = elf["bionic_tls_slots"]
+    if not found:
+        return []
+    slots = sorted({slot for counts in found.values() for slot in counts})
+    return [_row(
+        "native-symbols", "abi:bionic-tls-slots",
+        f"Bionic TLS slots read directly ({', '.join(slots)}: {', '.join(sorted(found)[:4])}"
+        + (" ..." if len(found) > 4 else "") + ")",
+        oh_touchpoint="OH musl's thread pointer: its own reserved slots lie below it, a 16-byte gap and the "
+                      "static TLS blocks above it, where Bionic keeps eight slots",
+        verdict="missing", shim_class="C6", effort="L", confidence=STATIC,
+        provider="none: what a load from the thread pointer reads is the loader's layout",
+        app_evidence="; ".join(f"{name}: " + ", ".join(f"{count} {slot}" for slot, count in sorted(counts.items()))
+                               for name, counts in sorted(found.items())[:6]),
+        libraries=sorted(found), crash_kinds=["fault"],
+        seen_blocking=["capcut (its security library's inlined vfork cleared pthread_internal_t's cached pid "
+                       "through the thread id slot, which held -1 on OH: a store to 0x13)"],
+        shim="none from a library: Bionic's slots above the thread pointer would need a loader that lays them out",
+    )]
+
+
+def thread_handle_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """Threads created with their handle stored inside the object they are handed
+    (scanner.thread_handles_in_argument). Bionic stores the handle before the thread runs; musl
+    after clone returns, so a thread that first reads its own handle from that object can read 0."""
+    found: dict[str, int] = {}
+    for elf in ohresolve.target_elfs(scan):
+        if elf.get("thread_handle_in_argument"):
+            found[elf.get("soname") or elf["name"].rsplit("/", 1)[-1]] = elf["thread_handle_in_argument"]
+    if not found:
+        return []
+    ordered = model.get("ordered", False)
+    return [_row(
+        "native-symbols", "abi:thread-handle-order",
+        f"threads handed the object that holds their own handle ({', '.join(sorted(found)[:4])})",
+        oh_touchpoint="OH musl: pthread_create stores *thread after clone returns, and the thread may already run "
+                      "(Bionic stores it first and holds the thread until then)",
+        verdict="supplied" if ordered else "missing", shim_class="C2", effort="verify" if ordered else "S",
+        confidence=STATIC,
+        provider=("the bionic shim's pthread_create starts an Android caller's thread in a routine that waits until "
+                  "the handle is stored" if ordered else "pthread_create is musl's: the thread may run before *thread "
+                                                         "is stored"),
+        provider_source=model.get("source"),
+        app_evidence="; ".join(f"{name}: {count} call{'s' if count > 1 else ''} pthread_create(&obj->thread, ..., obj)"
+                               for name, count in sorted(found.items())[:6])
+                     + " (a risk: whether the thread reads the field first is not seen)",
+        libraries=sorted(found), crash_symbols=r"^pthread_",
+        seen_blocking=["tiktok (r85: vcbasekit's thread named itself with pthread_setname_np(this->thread_, ...) "
+                       "before pthread_create stored thread_, and died in musl's pthread_setname_np on handle 0; it "
+                       "drew in the run before)"],
+        shim="start the thread in a routine that waits until pthread_create has stored the handle, as Bionic's "
+             "startup lock does",
     )]
 
 
@@ -1616,7 +2063,12 @@ def bionic_loader_model(westlake_root: Path | None, manifest_root: Path | None =
             "null_entries_launcher": find("tools/probe_source_app.py", "def init_array_sanitized(", manifest_root),
             "funopen_unbuffered": find("framework/webview-shim/webview_bionic_shim.c", "setvbuf(file, NULL, _IONBF, 0)"),
             "apk_member_redirect": find("framework/webview-shim/webview_bionic_shim.c", 'strstr(filename, ".apk!/lib/")'),
-            "open_by_name": find("framework/webview-shim/webview_bionic_shim.c", "westlake_open_lib_by_name(")}
+            "open_by_name": find("framework/webview-shim/webview_bionic_shim.c", "westlake_open_lib_by_name("),
+            "written_shares_packaged": find("framework/webview-shim/webview_bionic_shim.c",
+                                            "westlake_shared_with_default("),
+            # art-build sits beside the westlake checkout; the runtime's init array sanitizer.
+            "sanitizer_knows_packed_rela": find("stubs/link_stubs_arm64.cc", "case 0x60000011:",
+                                                westlake_root.parent / "art-build")}
 
 
 def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_extracts: dict[str, Any],
@@ -1782,6 +2234,64 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
             app_evidence=f"{len(dependents)} libraries loaded through System.loadLibrary name packaged siblings in DT_NEEDED",
             seen_blocking=["econverter (Chaquopy: two copies of libpython3.11.so; a call through a null slot)"],
             shim="open app libraries by name where the name finds the same file, so a later DT_NEEDED matches them",
+        ))
+    # A Java-loaded library relocated only by Android's packed format, with constructors. The slots
+    # the packed table fills read as zero in the file; a sanitizer that does not recognize the format
+    # drops them all as null (libwaze.so: 2189, libsignal_jni.so: 2).
+    # Java loads a library by a name the scan may not see (libsignal's loader computes it); a packaged
+    # library no other packaged library needs is loaded from Java too, since nothing else pulls it in.
+    needed_by_siblings = {name for elf in packaged for name in elf.get("needed") or []}
+    packed = sorted({(elf.get("soname") or Path(elf["name"]).name, elf["packed_init_entries"]) for elf in packaged
+                     if elf.get("packed_init_entries")
+                     and ((elf.get("soname") or Path(elf["name"]).name) in java_loaded
+                          or (elf.get("soname") or Path(elf["name"]).name) not in needed_by_siblings)})
+    if packed:
+        known = loader.get("sanitizer_knows_packed_rela")
+        rows.append(_row(
+            "native-loading", "load:packed-init-array",
+            "Java-loaded libraries whose constructors packed relocations fill ("
+            + ", ".join(f"{name}: {count}" for name, count in packed[:4]) + (" ..." if len(packed) > 4 else "") + ")",
+            oh_touchpoint="none: the runtime's own init array sanitizer, before ART opens the library",
+            verdict="supplied" if known else "missing", shim_class="C3", effort="verify" if known else "XS",
+            confidence=STATIC,
+            provider=("the sanitizer leaves a library with DT_ANDROID_REL or DT_ANDROID_RELA as it is" if known else
+                      "the sanitizer does not recognize DT_ANDROID_RELA: it reads the slots as null and drops every "
+                      "constructor"),
+            provider_source=known,
+            app_evidence=f"{len(packed)} libraries System.loadLibrary names",
+            libraries=[name for name, _ in packed],
+            seen_blocking=["waze (all 2189 of libwaze.so's constructors dropped; an abort in its own code)"],
+            shim="leave libraries in Android's packed relocation format to the loader, which applies the table",
+        ))
+    # A library the app writes at run time that needs one it packages. The shim loads written
+    # libraries in a namespace of its own; with no Android namespace ART's loader put the packaged
+    # ones in the default namespace, and a written library found its packaged dependency again on
+    # its own path: Chaquopy's extension modules loaded a second, uninitialized libpython3.11.so
+    # (econverter, werewolvesgame). Chaquopy is recognized by its packaged libraries even when no
+    # run has harvested the modules it writes.
+    written_needs = sorted({name for elf in unpacked for name in elf.get("needed") or [] if name in packaged_names})
+    # By file name: libchaquopy_java.so's SONAME carries the Python version (libchaquopy_java-3.11.so).
+    files = {Path(elf["name"]).name for elf in packaged}
+    chaquopy = "libchaquopy_java.so" in files and any(n.startswith("libpython") for n in files)
+    if written_needs or chaquopy:
+        shared = loader.get("written_shares_packaged")
+        needs = written_needs or sorted(n for n in files if n.startswith("libpython"))
+        rows.append(_row(
+            "native-loading", "load:written-needs-packaged",
+            f"Libraries written at run time that need packaged ones ({', '.join(needs[:4])}"
+            + (" ..." if len(needs) > 4 else "") + ")",
+            oh_touchpoint="OH musl namespaces: a library is shared across namespaces only by an inherit list",
+            verdict="supplied" if shared else "missing", shim_class="C3", effort="verify" if shared else "S",
+            confidence=STATIC,
+            provider=("the written-library namespace shares the APK's packaged libraries with the default namespace"
+                      if shared else "none: the written library's namespace loads its packaged dependency again"),
+            provider_source=shared,
+            app_evidence=(f"{len(written_needs)} packaged libraries needed by harvested ones" if written_needs
+                          else "Chaquopy (libchaquopy_java.so and libpython): its extension modules are written at run time"),
+            libraries=needs,
+            seen_blocking=["econverter, werewolvesgame (Chaquopy: a second libpython3.11.so; a call through a PLT slot "
+                           "never relocated)"],
+            shim="share the packaged libraries with the namespace written libraries load in",
         ))
     if loaders or path_loads or unpacked:
         copy = loader.get("code_cache_copy")
@@ -2092,8 +2602,22 @@ def surfaceview_model(westlake_root: Path | None, manifest_root: Path | None,
     patches = sorted((manifest_root / "patches").glob("**/frameworks-base*.patch")) if manifest_root else []
     patch = next((hit for hit in (has(p, "attachSurfaceView") for p in patches) if hit), None)
     vulkan = "libvulkan.so" in (runtime_libraries or [])
+    # OH moves focus to the SurfaceView's own window once it shows; the window bridge counts that focus
+    # as the activity window's when the session is created for a SurfaceViewWindow.
+    bridge = has(westlake_root / "framework/window/java/WindowCallbackBridge.java" if westlake_root else None,
+                 "instanceof SurfaceViewWindow")
+    created = has(westlake_root / "framework/window/java/WindowSessionAdapter.java" if westlake_root else None,
+                  "new SurfaceViewWindow(")
     return {"own_surface": bool(adapter and patch), "vulkan_android_surface": vulkan,
+            "focus_group": bridge if bridge and created else None,
             "evidence": ", ".join(filter(None, [adapter, patch, "runtime libvulkan.so" if vulkan else None]))}
+
+
+# Engines that render only while their activity's window has focus: SDL pauses its native loop when it
+# loses focus (SDLActivity.onWindowFocusChanged, single-window), Cocos2d-x resumes its GLSurfaceView only
+# with focus (Cocos2dxActivity.resumeIfHasFocus).
+FOCUS_GATED_ENGINES = {"libSDL2.so": "SDL", "libSDL3.so": "SDL", "libcocos2dcpp.so": "Cocos2d-x"}
+FOCUS_GATED_ACTIVITIES = {"Lorg/libsdl/app/SDLActivity;": "SDL", "Lorg/cocos2dx/lib/Cocos2dxActivity;": "Cocos2d-x"}
 
 
 def engine_surface_rows(scan: dict[str, Any], model: dict[str, Any] | None = None) -> list[dict[str, Any]]:
@@ -2132,6 +2656,35 @@ def engine_surface_rows(scan: dict[str, Any], model: dict[str, Any] | None = Non
         app_evidence="; ".join(evidence),
         engine_libraries=sorted(lib for lib in libraries if lib in ENGINE_LIBRARIES),
         shim="give each SurfaceView its own OH surface (a child RS node) instead of the activity's window",
+    )] + surfaceview_focus_rows(scan, libraries, model)
+
+
+def surfaceview_focus_rows(scan: dict[str, Any], libraries: set[str], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """An engine that renders only while its window has focus, in a provider that gives its SurfaceView
+    an OH window of its own: OH moves focus to that window once it shows, and the activity's window
+    sees only the loss unless the bridge counts the SurfaceView's focus as its window's."""
+    if not model.get("own_surface"):
+        return []
+    chains = scan["inventory"].get("launch_activity_chains") or {}
+    engines = sorted({FOCUS_GATED_ENGINES[lib] for lib in libraries if lib in FOCUS_GATED_ENGINES}
+                     | {FOCUS_GATED_ACTIVITIES[c] for chain in chains.values() for c in chain if c in FOCUS_GATED_ACTIVITIES})
+    if not engines:
+        return []
+    supplied = bool(model.get("focus_group"))
+    return [_row(
+        "window", "window:surfaceview-focus", "An engine that renders only with focus, in a SurfaceView's own window ("
+        + ", ".join(engines) + ")",
+        oh_touchpoint="window_manager: focus moves to the topmost window, the SurfaceView's",
+        verdict="supplied" if supplied else "missing", shim_class="C0" if supplied else "C9",
+        effort="verify" if supplied else "S", confidence=STATIC,
+        provider=("a SurfaceView's window and its activity's are one focus group: the activity stays focused"
+                  if supplied else "the SurfaceView's window takes OH focus and the activity's window sees it lost"),
+        provider_source=model.get("focus_group"),
+        app_evidence=", ".join(engines) + " stops rendering when its activity loses focus",
+        engine_libraries=sorted(lib for lib in libraries if lib in FOCUS_GATED_ENGINES),
+        seen_blocking=["anarchre, diesimu (SDL: OH moved focus to their SurfaceView's window, the activity's window saw "
+                       "only the loss, and nothing showed)"],
+        shim="count the SurfaceView window's OH focus as its activity window's",
     )]
 
 
@@ -2593,6 +3146,7 @@ def build_map(
     java, java_excluded = java_api_rows(scan, api_levels)
     svc, dynamic = service_rows(scan, aosp_services, westlake_services)
     rows = (java + svc + package_manager_rows(scan, facts, pm, pm_null_consequences(aosp_root))
+            + am_default_rows(scan, contracts.direct_launch_am_model(westlake_root), am_default_census(aosp_root))
             + app_framework_rows(scan, contracts.direct_launch_am_model(westlake_root),
                                  contracts.window_adapter_model(westlake_root),
                                  contracts.task_queries_model(westlake_root),
@@ -2605,13 +3159,24 @@ def build_map(
             + framework_native_rows(scan, runtime_index, runtime_class_paths)
             + lifecycle_native_rows(runtime_index, runtime_class_paths)
             + native_upcall_rows(scan)
-            + (ndk_symbol_rows(scan, [m for m in oh_missing if not m.get("version_mismatch")],
+            + (ndk_symbol_rows(scan, [m for m in oh_missing if not m.get("version_mismatch")
+                                      and not m.get("versioned_clash") and not m.get("weak")],
                                bionic_shim_exports(westlake_root), ndk_cov) if ndk_cov
-               else native_symbol_rows(scan, [m for m in oh_missing if not m.get("version_mismatch")],
+               else native_symbol_rows(scan, [m for m in oh_missing if not m.get("version_mismatch")
+                                                and not m.get("versioned_clash") and not m.get("weak")],
                                        bionic_shim_exports(westlake_root)))
+            + weak_api_rows([m for m in oh_missing if m.get("weak")], bionic_shim_exports(westlake_root))
+            + vm_lookup_rows(scan, bionic_shim_exports(westlake_root))
             + symbol_version_rows(oh_missing)
+            + versioned_clash_rows([m for m in oh_missing if m.get("versioned_clash")],
+                                   contracts.shim_versioned_definitions(westlake_root))
             + task_root_rows(scan, contracts.activity_client_model(westlake_root))
+            + own_intent_rows(scan, contracts.own_intent_model(westlake_root))
+            + post_create_rows(scan, contracts.launch_start_model(westlake_root))
+            + permission_request_rows(scan, contracts.permission_request_model(westlake_root))
+            + ce_storage_rows(scan, contracts.ce_storage_model(westlake_root))
             + feature_rows(scan, contracts.feature_claims_model(westlake_root), aosp_services, westlake_services)
+            + vulkan_feature_rows(scan, contracts.feature_claims_model(westlake_root), runtime_libraries)
             + window_metrics_rows(scan, contracts.window_metrics_model(westlake_root))
             + native_egl_window_rows(scan, contracts.native_egl_window_model(westlake_root))
             + native_loading_rows(facts, scan, launcher_extraction(manifest_root), board_paths,
@@ -2623,6 +3188,8 @@ def build_map(
             + libc_constant_rows(scan, contracts.libc_constant_model(westlake_root))
             + signal_abi_rows(scan, contracts.signal_abi_model(westlake_root))
             + static_mutex_rows(scan, contracts.static_mutex_model(westlake_root))
+            + thread_handle_rows(scan, contracts.thread_start_model(westlake_root))
+            + bionic_tls_rows(scan)
             + security_rows(scan, contracts.keystore_model(westlake_root))
             + webview_rows(scan, webview_process_model(aosp_root, westlake_root))
             # art-build sits beside the westlake checkout in the same workspace; absent, the row

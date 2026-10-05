@@ -269,6 +269,85 @@ class ServiceVerdicts(unittest.TestCase):
         self.assertNotIn("feature:android.hardware.touchscreen", rows, "no service backs a form factor")
         self.assertNotIn("feature:android.hardware.nfc", rows, "a feature reported absent promises nothing")
 
+    def test_feature_table_claims_with_versions(self) -> None:
+        """The claims can live in a CLAIMED_FEATURES table with versions; the WebView answer stays
+        conditional."""
+        _write(self.root / "westlake/framework/package-manager/java/PackageManagerAdapter.java", """class PackageManagerAdapter {
+            @Override
+            public boolean hasSystemFeature(String name, int version) {
+                if ("android.software.webview".equals(name)) {
+                    return getSideloadedWebViewPackageInfo() != null;
+                }
+                Integer claimed = name != null ? CLAIMED_FEATURES.get(name) : null;
+                return claimed != null && claimed >= version;
+            }
+            private static final int VULKAN_API_VERSION = (1 << 22) | (2 << 12);  // 1.2.0
+            private static final java.util.Map<String, Integer> CLAIMED_FEATURES = new java.util.LinkedHashMap<>();
+            static {
+                CLAIMED_FEATURES.put("android.hardware.touchscreen", 0);
+                CLAIMED_FEATURES.put("android.hardware.vulkan.version", VULKAN_API_VERSION);
+            }
+        }""")
+        claims = feature_claims_model(self.root / "westlake")
+        self.assertEqual(claims["claimed"], ["android.hardware.touchscreen", "android.hardware.vulkan.version"])
+        self.assertEqual(claims["versions"]["android.hardware.vulkan.version"], 0x402000)
+        self.assertEqual(claims["conditional"], {"android.software.webview": "getSideloadedWebViewPackageInfo() != null"})
+
+    def test_vulkan_feature_must_match_the_runtime_loader(self) -> None:
+        """Godot (duckrun): unclaimed Vulkan sent its Java side to an OpenGL view while its engine,
+        finding the runtime's libvulkan, chose Vulkan and had no window."""
+        site = {"owner": "Lorg/godotengine/godot/Godot;", "method": "meetsVulkanRequirements", "offset": 50}
+        scan = {"inventory": {"feature_queries": [{**site, "feature": "android.hardware.vulkan.version"}]}}
+        unclaimed = {"claimed": ["android.hardware.touchscreen"], "versions": {}, "source": "PM.java:1"}
+        claimed = {"claimed": ["android.hardware.vulkan.version"],
+                   "versions": {"android.hardware.vulkan.version": 0x402000}, "source": "PM.java:1"}
+        row = gapmap.vulkan_feature_rows(scan, unclaimed, ["libvulkan.so"])[0]
+        self.assertEqual((row["id"], row["verdict"]), ("feature:android.hardware.vulkan.version", "contradicted"))
+        row = gapmap.vulkan_feature_rows(scan, claimed, ["libvulkan.so"])[0]
+        self.assertEqual(row["verdict"], "supplied")
+        self.assertIn("Vulkan 1.2.0", row["provider"])
+        self.assertEqual(gapmap.vulkan_feature_rows(scan, claimed, [])[0]["verdict"], "contradicted",
+                         "a claim with no loader sends the app to a Vulkan that is not there")
+        self.assertEqual(gapmap.vulkan_feature_rows(scan, unclaimed, []), [], "absent and unclaimed agree")
+        self.assertEqual(gapmap.vulkan_feature_rows({"inventory": {}}, unclaimed, ["libvulkan.so"]), [])
+
+    def test_versioned_import_clash_is_supplied_name_by_name(self) -> None:
+        """Fennec: free@libmozglue.so bound to musl's free; the shim's non-default libmozglue.so
+        forwarders restore libmozglue's own, for the names they forward."""
+        clashes = [{"symbol": "free", "version": "libmozglue", "importing_libraries": ["libxul.so"],
+                    "versioned_clash": True},
+                   {"symbol": "malloc", "version": "libmozglue", "importing_libraries": ["libxul.so", "libnss3.so"],
+                    "versioned_clash": True}]
+        row = gapmap.versioned_clash_rows(clashes, {"LIBC": {"open"}})[0]
+        self.assertEqual((row["id"], row["verdict"]), ("abi:versioned-import-clash", "missing"))
+        self.assertEqual(row["open_symbols"], ["free@libmozglue", "malloc@libmozglue"])
+        forwarders = {"libmozglue.so": {"free", "malloc"}}
+        self.assertEqual(gapmap.versioned_clash_rows(clashes, forwarders)[0]["verdict"], "supplied")
+        mixed = clashes + [{"symbol": "sqlite3_open", "version": "libnss3", "importing_libraries": ["libxul.so"],
+                            "versioned_clash": True},
+                           {"symbol": "_ZdlPvm", "version": "libmozglue", "importing_libraries": ["libxul.so"],
+                            "versioned_clash": True}]
+        row = gapmap.versioned_clash_rows(mixed, forwarders)[0]
+        self.assertEqual((row["verdict"], row["open_symbols"]), ("missing", ["sqlite3_open@libnss3", "_ZdlPvm@libmozglue"]),
+                         "a name the shim does not forward is open, whatever else its version covers")
+        self.assertEqual(gapmap.versioned_clash_rows([], {}), [])
+        _write(self.root / "westlake/framework/webview-shim/webview_bionic_shim.c", """
+#define WL_MOZGLUE_FORWARD(index, ret, name, params, args)                                      \\
+    ret westlake_mozglue_##name params { return ((ret (*) params) entry(index)) args; }         \\
+    __asm__(".symver westlake_mozglue_" #name ", " #name "@libmozglue.so");
+WL_MOZGLUE_FORWARD(WL_MOZ_MALLOC, void *, malloc, (size_t size), (size))
+WL_MOZGLUE_FORWARD(WL_MOZ_POSIX_MEMALIGN, int, posix_memalign, (void **out, size_t alignment, size_t size),
+                   (out, alignment, size))
+void westlake_mozglue__ZdlPvm(void *pointer, size_t size) { }
+__asm__(".symver westlake_mozglue__ZdlPvm, _ZdlPvm@libmozglue.so");
+/* __asm__(".symver westlake_old, old@libmozglue.so"); */
+""")
+        self.assertEqual(contracts.shim_versioned_definitions(self.root / "westlake"),
+                         {"libmozglue.so": {"malloc", "posix_memalign", "_ZdlPvm"}})
+        _write(self.root / "westlake/framework/webview-shim/webview_bionic_shim.map",
+               "/* comment {not a node} */\nLIBC_N {\n global: x;\n};\nlibmozglue.so {\n};\nLIBC {\n global: *;\n} LIBC_N;\n")
+        self.assertEqual(contracts.shim_version_nodes(self.root / "westlake"), {"LIBC_N", "libmozglue.so", "LIBC"})
+
     def test_a_proxy_that_throws_is_strict_not_hollow(self) -> None:
         """Burger King: WebView's policy provider called UserManager.getApplicationRestrictions; the
         runtime-published user proxy threw, Chromium aborted. The static model had read the native
@@ -559,6 +638,69 @@ class AppStorageExec(unittest.TestCase):
         self.assertNotIn("load:needed-sibling", {r["id"] for r in gapmap.native_loading_rows(
             {"extract_native_libs": True}, scan, {"present": True}, [])})
 
+    def test_packed_relocation_constructors_need_a_sanitizer_that_knows_the_format(self) -> None:
+        """Waze: libwaze.so's packed relocations fill its 2189 init array slots; the runtime's sanitizer
+        did not recognize DT_ANDROID_RELA and dropped them all."""
+        import struct
+        from westlake_gap import scanner
+
+        def elf(tags: dict[int, int]) -> bytes:
+            dynamic = b"".join(struct.pack("<QQ", t, v) for t, v in tags.items()) + struct.pack("<QQ", 0, 0)
+            header = bytearray(64)
+            header[:6] = b"\x7fELF\x02\x01"
+            struct.pack_into("<Q", header, 0x20, 64)       # e_phoff
+            struct.pack_into("<H", header, 0x38, 1)        # e_phnum
+            phdr = struct.pack("<IIQQQQQQ", 2, 6, 120, 0, 0, len(dynamic), len(dynamic), 8)
+            return bytes(header) + phdr + dynamic
+
+        self.assertEqual(scanner.packed_init_entries(elf({0x60000011: 0x1000, 0x60000012: 64, 25: 0x2000, 27: 2189 * 8})),
+                         {"packed_init_entries": 2189})
+        self.assertEqual(scanner.packed_init_entries(elf({0x60000011: 0x1000, 35: 0x3000, 25: 0x2000, 27: 16})), {},
+                         "a library with RELR as well is left alone by the sanitizer")
+        self.assertEqual(scanner.packed_init_entries(elf({7: 0x1000, 25: 0x2000, 27: 16})), {})
+        base = {"abi": "arm64-v8a", "abi_matches_machine": True}
+        scan = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {
+            "elfs": [{**base, "name": "lib/arm64-v8a/libwaze.so", "soname": "libwaze.so", "packed_init_entries": 2189,
+                      "needed": ["libdep.so"]},
+                     {**base, "name": "lib/arm64-v8a/libdep.so", "soname": "libdep.so", "packed_init_entries": 3}],
+            "load_library_calls": [{"api": "loadLibrary", "owner": "Lcom/waze/NativeManager;", "value": "waze"}]}}
+        rows = {r["id"]: r for r in gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True}, [])}
+        row = rows["load:packed-init-array"]
+        self.assertEqual((row["verdict"], row["item"]),
+                         ("missing", "Java-loaded libraries whose constructors packed relocations fill (libwaze.so: 2189)"),
+                         "a dependency the loader brings in never passes through the sanitizer")
+        rows = {r["id"]: r for r in gapmap.native_loading_rows(
+            {"extract_native_libs": True}, scan, {"present": True}, [],
+            loader={"sanitizer_knows_packed_rela": "stubs/link_stubs_arm64.cc:1"})}
+        self.assertEqual(rows["load:packed-init-array"]["verdict"], "supplied")
+        scan["inventory"]["load_library_calls"] = []
+        rows = {r["id"]: r for r in gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True}, [])}
+        self.assertIn("libwaze.so: 2189", rows["load:packed-init-array"]["item"],
+                      "a library nothing else needs is loaded from Java, by a name the scan may not see")
+
+    def test_written_libraries_that_need_packaged_ones(self) -> None:
+        """econverter: Chaquopy's extension modules, written at run time, need libpython3.11.so; the
+        written-library namespace loaded a second copy instead of the one ART had loaded."""
+        elf = {"abi": "arm64-v8a", "abi_matches_machine": True}
+        packaged = [{**elf, "name": "lib/arm64-v8a/libpython3.11.so"},
+                    {**elf, "name": "lib/arm64-v8a/libchaquopy_java.so", "soname": "libchaquopy_java-3.11.so",
+                     "needed": ["libpython3.11.so"]}]
+        scan = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {"elfs": packaged}}
+        rows = {r["id"]: r for r in gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True}, [])}
+        self.assertEqual(rows["load:written-needs-packaged"]["verdict"], "missing", "Chaquopy, before any harvest")
+        harvested = {**elf, "name": "files/zlib.so", "soname": "zlib.so", "origin": "unpacked",
+                     "needed": ["libpython3.11.so", "libc.so"]}
+        scan = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {"elfs": [packaged[0], harvested]}}
+        rows = {r["id"]: r for r in gapmap.native_loading_rows(
+            {"extract_native_libs": True}, scan, {"present": True}, [],
+            loader={"written_shares_packaged": "framework/webview-shim/webview_bionic_shim.c:1"})}
+        row = rows["load:written-needs-packaged"]
+        self.assertEqual((row["verdict"], row["item"]),
+                         ("supplied", "Libraries written at run time that need packaged ones (libpython3.11.so)"))
+        scan = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {"elfs": [packaged[0]]}}
+        self.assertNotIn("load:written-needs-packaged", {r["id"] for r in gapmap.native_loading_rows(
+            {"extract_native_libs": True}, scan, {"present": True}, [])})
+
 
 class AndroidRelocations(unittest.TestCase):
     ELFS = [{"soname": "libc++_shared.so", "name": "lib/arm64-v8a/libc++_shared.so", "abi": "arm64-v8a",
@@ -621,6 +763,23 @@ class LaunchRemedies(unittest.TestCase):
         self.assertEqual(gapmap.engine_surface_rows(scan)[0]["verdict"], "missing")
         supplied = gapmap.engine_surface_rows(scan, {"own_surface": True, "vulkan_android_surface": True, "evidence": "e"})
         self.assertEqual(supplied[0]["verdict"], "supplied")
+
+    def test_an_engine_that_needs_focus_in_its_own_surface(self) -> None:
+        """anarchre (SDL): OH moved focus to its SurfaceView's window and SDL paused."""
+        sdl = {"apk": {"target_abi": "arm64-v8a"},
+               "inventory": {"elfs": [{"soname": "libSDL2.so", "abi": "arm64-v8a"}],
+                             "launch_activity_chains": {"dev.serwin.AnarchRE.AnarchreActivity":
+                                                        ["Lorg/libsdl/app/SDLActivity;", "Landroid/app/Activity;"]}}}
+        rows = {r["id"]: r for r in gapmap.engine_surface_rows(sdl, {"own_surface": True, "evidence": "e"})}
+        self.assertEqual(rows["window:surfaceview-focus"]["verdict"], "missing")
+        rows = {r["id"]: r for r in gapmap.engine_surface_rows(sdl, {"own_surface": True, "focus_group": "W.java:9"})}
+        self.assertEqual(rows["window:surfaceview-focus"]["verdict"], "supplied")
+        self.assertNotIn("window:surfaceview-focus", {r["id"] for r in gapmap.engine_surface_rows(sdl, {})},
+                         "a SurfaceView that shares its window takes no focus from it")
+        flutter = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {"elfs": [{"soname": "libflutter.so", "abi": "arm64-v8a"}]}}
+        self.assertNotIn("window:surfaceview-focus",
+                         {r["id"] for r in gapmap.engine_surface_rows(flutter, {"own_surface": True})},
+                         "Flutter draws on without focus")
 
 
 class KeystoreProviderNames(unittest.TestCase):
@@ -831,6 +990,58 @@ class ProviderAuthority(unittest.TestCase):
         facts = dict(self.FACTS, components=self.FACTS["components"][1:])
         self.assertNotIn("pm:provider-authority", {r["id"] for r in gapmap.package_manager_rows(
             self.SCAN, facts, self.model(False))})
+
+class ActivityManagerDefaults(unittest.TestCase):
+    """The census of ActivityManager calls the direct-launch proxy answers with a type default."""
+
+    def setUp(self) -> None:
+        self.root = Path(tempfile.mkdtemp(prefix="westlake-am-census-"))
+        app = self.root / "aosp/frameworks-base/core/java/android/app"
+        _write(app / "IActivityManager.aidl", """interface IActivityManager {
+            @UnsupportedAppUsage
+            List<ActivityManager.RunningServiceInfo> getServices(int maxNum, int flags);
+            List<ActivityManager.ProcessErrorStateInfo> getProcessesInErrorState();
+            void getMyMemoryState(out ActivityManager.RunningAppProcessInfo outInfo);
+            void getWidgetState(out Bundle state);
+            ParceledListSlice<ApplicationExitInfo> getHistoricalProcessExitReasons(String packageName, int pid);
+            boolean isUserAMonkey();
+            IBinder getOddToken();
+        }""")
+        _write(app / "ActivityManager.java", """public class ActivityManager {
+            /** @return the processes in error, or null if there are none. */
+            public List<ProcessErrorStateInfo> getProcessesInErrorState() {
+                return getService().getProcessesInErrorState();
+            }
+            public static void getMyMemoryState(RunningAppProcessInfo outState) { getService().getMyMemoryState(outState); }
+            public void getWidgetState(Bundle out) { getService().getWidgetState(out); }
+            public List<ApplicationExitInfo> getHistoricalProcessExitReasons(String p, int pid) {
+                ParceledListSlice<ApplicationExitInfo> r = getService().getHistoricalProcessExitReasons(p, pid);
+                return r == null ? Collections.emptyList() : r.getList();
+            }
+            @SuppressWarnings("x")
+            public static boolean isUserAMonkey() { return getService().isUserAMonkey(); }
+            public IBinder getOddToken() { return getService().getOddToken(); }
+        }""")
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.root, ignore_errors=True)
+
+    def test_open_defaults_are_nulls_handed_on_and_untouched_out_parameters(self) -> None:
+        census = gapmap.am_default_census(self.root / "aosp")
+        self.assertTrue(census["getProcessesInErrorState"][0]["null_documented"])
+        self.assertTrue(census["getHistoricalProcessExitReasons"][0]["null_checked"])
+        scan = {"inventory": {"platform_method_names": {"Landroid/app/ActivityManager;": [
+            "getProcessesInErrorState", "getMyMemoryState", "getWidgetState", "getHistoricalProcessExitReasons",
+            "isUserAMonkey", "getOddToken", "getRunningServices"]}}}
+        am = {"proxy_stub": True, "answered": [], "source": "AppSpawnXInit.java:1"}
+        row = gapmap.am_default_rows(scan, am, census)[0]
+        self.assertEqual(row["id"], "am:type-defaults")
+        self.assertEqual(sorted(o.split(" ")[0] for o in row["open_symbols"]), ["getOddToken", "getWidgetState"],
+                         "a documented null, a checked one, a primitive and an out parameter already right are answers; "
+                         "the process table belongs to its own row")
+        self.assertEqual(gapmap.am_default_rows(scan, dict(am, answered=["getOddToken", "getWidgetState"]), census), [])
+        self.assertEqual(gapmap.am_default_rows(scan, dict(am, proxy_stub=False), census), [])
+
 
 class AppFrameworkContracts(unittest.TestCase):
     _STUB = """class AppSpawnXInit {
@@ -1497,6 +1708,285 @@ class StaticMutexes(unittest.TestCase):
         self.assertTrue(model["source"].endswith(":5"))
 
 
+class ThreadHandles(unittest.TestCase):
+    MODEL = {"ordered": True, "source": "webview_bionic_shim.c:4038"}
+    # vcbasekit's call (TikTok): ldr x8, [x19]; ldur x8, [x8, #-24]; add x0, x19, x8; bl; adrp x2;
+    # add x0, x19, #256; add x2, x2, #1728; mov x1, sp; mov x3, x19; bl pthread_create
+    VCBASEKIT = [0xF9400268, 0xF85E8108, 0x8B080260, 0x97FFB291, 0x90000002, 0x91040260, 0x911B0042,
+                 0x910003E1, 0xAA1303E3, 0x97FFB3EF]
+
+    def test_the_handle_inside_the_argument_is_seen(self) -> None:
+        from westlake_gap.scanner import register_base_before
+        words = self.VCBASEKIT
+        self.assertEqual(register_base_before(words, 9, 0), (19, 256, 5))
+        self.assertEqual(register_base_before(words, 9, 3), (19, 0, 8))
+        self.assertEqual(register_base_before(words, 9, 1), (31, 0, 7), "mov x1, sp is add x1, sp, #0")
+        self.assertIsNone(register_base_before(words, 3, 0), "x0 = x19 + x8 is no constant offset")
+        # A store names the register it reads: str x0, [x19] between the add and the call is no write.
+        words = [_add(0, 19, 256), 0xF9000260, 0xAA1303E3, 0x94000000]
+        self.assertEqual(register_base_before(words, 3, 0), (19, 256, 0))
+        # A call in between leaves x0 to its return value.
+        words = [_add(0, 19, 256), 0x94000010, 0xAA1303E3, 0x94000000]
+        self.assertIsNone(register_base_before(words, 3, 0))
+
+    def test_writes_to_the_stack_pointer_are_add_and_sub_only(self) -> None:
+        from westlake_gap.scanner import _writes
+        self.assertTrue(_writes(0xD10083FF, 31), "sub sp, sp, #32")
+        self.assertFalse(_writes(0xEB01001F, 31), "cmp x0, x1 writes xzr")
+        self.assertFalse(_writes(0xF9000260, 0), "str x0, [x19]")
+        self.assertTrue(_writes(0xF9400260, 0), "ldr x0, [x19]")
+
+    def test_a_row_names_the_libraries_and_the_shim_orders_the_start(self) -> None:
+        kit = {"name": "lib/arm64-v8a/libvcbasekit.so", "thread_handle_in_argument": 1}
+        plain = {"name": "lib/arm64-v8a/libplain.so"}
+        rows = gapmap.thread_handle_rows({"inventory": {"elfs": [kit, plain]}}, self.MODEL)
+        self.assertEqual((rows[0]["id"], rows[0]["verdict"]), ("abi:thread-handle-order", "supplied"))
+        self.assertIn("libvcbasekit.so: 1 call pthread_create(&obj->thread, ..., obj)", rows[0]["app_evidence"])
+        rows = gapmap.thread_handle_rows({"inventory": {"elfs": [kit]}}, {"ordered": False, "source": None})
+        self.assertEqual((rows[0]["verdict"], rows[0]["effort"]), ("missing", "S"))
+        self.assertEqual(gapmap.thread_handle_rows({"inventory": {"elfs": [plain]}}, self.MODEL), [])
+
+    def test_the_model_needs_a_start_routine_that_waits(self) -> None:
+        import tempfile
+        from westlake_gap import contracts
+        start = ("static void *wait_then_run(void *data)\n{\n    syscall(SYS_futex, data, FUTEX_WAIT_PRIVATE, 0);\n"
+                 "    return data;\n}\n")
+        create = ("\nint pthread_create(pthread_t *t, const pthread_attr_t *a, void *(*r)(void *), void *v)\n{\n"
+                  "    int rc = real(t, a, wait_then_run, v);\n    syscall(SYS_futex, v, FUTEX_WAKE_PRIVATE, 1);\n"
+                  "    return rc;\n}\n")
+        with tempfile.TemporaryDirectory() as tmp:
+            shim = Path(tmp) / "framework/webview-shim/webview_bionic_shim.c"
+            shim.parent.mkdir(parents=True)
+            shim.write_text(start + create)
+            model = contracts.thread_start_model(Path(tmp))
+            self.assertEqual(model, {"ordered": True, "source": "framework/webview-shim/webview_bionic_shim.c:7"})
+            shim.write_text(start.replace("FUTEX_WAIT", "FUTEX_NOP") + create)
+            self.assertFalse(contracts.thread_start_model(Path(tmp))["ordered"], "a start routine that never waits")
+
+
+class BionicTlsSlots(unittest.TestCase):
+    def test_a_slot_read_is_a_row(self) -> None:
+        sec = {"name": "lib/arm64-v8a/libmetasec_ov.so", "bionic_tls_slots": {"thread id": 1}}
+        rows = gapmap.bionic_tls_rows({"inventory": {"elfs": [sec, {"name": "lib/arm64-v8a/libplain.so"}]}})
+        self.assertEqual((rows[0]["id"], rows[0]["verdict"], rows[0]["libraries"]),
+                         ("abi:bionic-tls-slots", "missing", ["libmetasec_ov.so"]))
+        self.assertIn("libmetasec_ov.so: 1 thread id", rows[0]["app_evidence"])
+        self.assertEqual(gapmap.bionic_tls_rows({"inventory": {"elfs": [{"name": "libplain.so"}]}}), [])
+
+
+class WeakApi(unittest.TestCase):
+    def test_weak_ndk_imports_are_a_row_until_the_shim_defines_them(self) -> None:
+        weak = [{"symbol": "ASystemFontIterator_open", "importing_libraries": ["libxul.so"], "surface": "libandroid",
+                 "weak": True}]
+        rows = gapmap.weak_api_rows(weak, set())
+        self.assertEqual((rows[0]["id"], rows[0]["verdict"], rows[0]["libraries"], rows[0]["crash_kinds"]),
+                         ("ndk:weak-api", "missing", ["libxul.so"], ["null-call"]))
+        self.assertEqual(gapmap.weak_api_rows(weak, {"ASystemFontIterator_open"})[0]["verdict"], "supplied")
+        self.assertEqual(gapmap.weak_api_rows([], set()), [])
+
+
+class OwnImplicitIntents(unittest.TestCase):
+    def test_a_row_when_the_code_names_its_own_filters(self) -> None:
+        scan = {"inventory": {"own_intent_names": ["shazam_activity", "shazam"]}}
+        model = {"resolved": True, "started": True, "source": "SourcePackageRegistry.java:198"}
+        rows = gapmap.own_intent_rows(scan, model)
+        self.assertEqual((rows[0]["id"], rows[0]["verdict"]), ("am:own-implicit-intents", "supplied"))
+        rows = gapmap.own_intent_rows(scan, dict(model, started=False))
+        self.assertEqual((rows[0]["verdict"], rows[0]["open_symbols"]), ("missing", ["startActivity"]))
+        self.assertEqual(gapmap.own_intent_rows({"inventory": {}}, model), [])
+
+    def test_the_model_needs_the_registry_the_query_and_the_start(self) -> None:
+        import tempfile
+        from westlake_gap import contracts
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            files = {
+                "framework/package-manager/java/SourcePackageRegistry.java":
+                    "class R {\n    public static synchronized List<ResolveInfo> queryActivities(Intent i, String t, long f) {\n"
+                    "        return null;\n    }\n}\n",
+                "framework/package-manager/java/PackageManagerAdapter.java":
+                    "class P {\n    public ParceledListSlice<ResolveInfo> queryIntentActivities(Intent i, String t, long f, int u) {\n"
+                    "        return wrap(SourcePackageRegistry.queryActivities(i, t, f));\n    }\n}\n",
+                "framework/activity/java/ActivityTaskManagerAdapter.java":
+                    "class A {\n    public int startActivity(Intent intent, String type) {\n        intent = own(intent, type);\n"
+                    "        return 0;\n    }\n    private static Intent own(Intent intent, String type) {\n"
+                    "        return SourcePackageRegistry.queryActivities(intent, type, 0).isEmpty() ? intent : intent;\n"
+                    "    }\n}\n"}
+            for name, text in files.items():
+                (root / name).parent.mkdir(parents=True, exist_ok=True)
+                (root / name).write_text(text)
+            self.assertEqual(contracts.own_intent_model(root),
+                             {"resolved": True, "started": True,
+                              "source": "framework/package-manager/java/SourcePackageRegistry.java:2"})
+            (root / "framework/activity/java/ActivityTaskManagerAdapter.java").write_text(
+                "class A {\n    public int startActivity(Intent intent, String type) {\n        return 0;\n    }\n}\n")
+            self.assertFalse(contracts.own_intent_model(root)["started"])
+
+
+class JavaVmLookups(unittest.TestCase):
+    def test_an_import_or_a_name_for_dlsym(self) -> None:
+        from westlake_gap.scanner import vm_lookups
+        rust = b"\x7fELF api/\x00JNI_GetCreatedJavaVMs\x00\x02(?"
+        self.assertEqual(vm_lookups(rust, set(), set()), {"vm_lookup": "by-name"})
+        self.assertEqual(vm_lookups(b"\x00JNI_GetCreatedJavaVMs\x00", {"JNI_GetCreatedJavaVMs"}, set()),
+                         {"vm_lookup": "import"})
+        self.assertEqual(vm_lookups(b"\x00JNI_GetCreatedJavaVMs\x00", set(), {"JNI_GetCreatedJavaVMs"}), {},
+                         "a library that defines it (a packaged runtime) is not a caller")
+        self.assertEqual(vm_lookups(b"Failed to find JNI_GetCreatedJavaVMs", set(), set()), {},
+                         "a message naming it is not a lookup")
+
+    def test_a_row_supplied_when_the_shim_answers_it(self) -> None:
+        scan = {"inventory": {"elfs": [{"name": "lib/arm64-v8a/libmatrix_sdk_ffi.so", "soname": "libmatrix_sdk_ffi.so",
+                                        "vm_lookup": "by-name"}, {"name": "lib/arm64-v8a/libz.so"}]}}
+        rows = gapmap.vm_lookup_rows(scan, {"dlsym"})
+        self.assertEqual((rows[0]["id"], rows[0]["verdict"], rows[0]["libraries"]),
+                         ("jni:created-vms", "missing", ["libmatrix_sdk_ffi.so"]))
+        self.assertEqual(gapmap.vm_lookup_rows(scan, {"JNI_GetCreatedJavaVMs"})[0]["verdict"], "supplied")
+        self.assertEqual(gapmap.vm_lookup_rows({"inventory": {"elfs": []}}, set()), [])
+
+
+class CeStorageUnlocked(unittest.TestCase):
+    def test_strictmode_apps_need_the_android_15_name(self) -> None:
+        import tempfile
+        from westlake_gap import contracts
+        scan = {"inventory": {"platform_method_names": {"Landroid/os/StrictMode$VmPolicy$Builder;": ["detectAll", "build"]}}}
+        self.assertEqual(gapmap.ce_storage_rows(scan, {"unlocked": False})[0]["verdict"], "missing")
+        self.assertEqual(gapmap.ce_storage_rows(scan, {"unlocked": True})[0]["verdict"], "supplied")
+        self.assertEqual(gapmap.ce_storage_rows({"inventory": {}}, {"unlocked": False}), [])
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / "framework/appspawn-x/java/com/android/internal/os/AppSpawnXInit.java"
+            path.parent.mkdir(parents=True)
+            old = '                    if ("isUserKeyUnlocked".equals(name)) {\n                        return Boolean.TRUE;\n'
+            path.write_text("class I {\n" + old + "                    }\n}\n")
+            self.assertFalse(contracts.ce_storage_model(root)["unlocked"])
+            path.write_text("class I {\n" + old.replace('("isUserKeyUnlocked".equals(name))',
+                            '("isUserKeyUnlocked".equals(name) || "isCeStorageUnlocked".equals(name))') + "                    }\n}\n")
+            self.assertTrue(contracts.ce_storage_model(root)["unlocked"])
+
+
+class PermissionRequests(unittest.TestCase):
+    def test_a_row_when_the_app_requests_permissions(self) -> None:
+        scan = {"inventory": {"platform_method_names": {"Landroid/app/Activity;": ["requestPermissions", "finish"]}}}
+        rows = gapmap.permission_request_rows(scan, {"answered": False, "source": "A.java:142"})
+        self.assertEqual((rows[0]["id"], rows[0]["verdict"]), ("am:permission-request", "missing"))
+        self.assertEqual(gapmap.permission_request_rows(scan, {"answered": True})[0]["verdict"], "supplied")
+        self.assertEqual(gapmap.permission_request_rows({"inventory": {}}, {"answered": False}), [])
+
+    def test_the_model_needs_the_start_to_answer_with_a_result(self) -> None:
+        import tempfile
+        from westlake_gap import contracts
+        tasks = ("class A {\n    public int startActivity(Intent intent, IBinder resultTo) {\n%s        return 0;\n    }\n"
+                 "    private static int answer(Intent i, IBinder to) {\n"
+                 "        t.addTransactionItem(ActivityResultItem.obtain(to, results));\n        return 0;\n    }\n}\n")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / "framework/activity/java/ActivityTaskManagerAdapter.java"
+            path.parent.mkdir(parents=True)
+            path.write_text(tasks % "        if (PackageManager.ACTION_REQUEST_PERMISSIONS.equals(intent.getAction())) return answer(intent, resultTo);\n")
+            self.assertEqual(contracts.permission_request_model(root),
+                             {"answered": True, "source": "framework/activity/java/ActivityTaskManagerAdapter.java:2"})
+            path.write_text(tasks % "        // ACTION_REQUEST_PERMISSIONS: not handled\n")
+            self.assertFalse(contracts.permission_request_model(root)["answered"])
+
+
+class PostCreateCallbacks(unittest.TestCase):
+    def test_the_activity_or_a_named_base_class_overrides(self) -> None:
+        from westlake_gap.scanner import after_start_overrides
+        superclasses = {"Lorg/linphone/ui/main/MainActivity;": "Lk/h;", "Lk/h;": "Landroid/app/Activity;",
+                        "Lnet/openid/appauth/RedirectActivity;": "Lk/h;",
+                        "Lcom/app/Settings;": "Lcom/app/BaseActivity;", "Lcom/app/BaseActivity;": "Lk/h;",
+                        "Lcom/app/Plain;": "Landroidx/appcompat/app/AppCompatActivity;",
+                        "Landroidx/appcompat/app/AppCompatActivity;": "Landroid/app/Activity;"}
+        callbacks = {"Lorg/linphone/ui/main/MainActivity;": {"onPostCreate"}, "Lk/h;": {"onPostCreate"},
+                     "Lcom/app/BaseActivity;": {"onRestoreInstanceState"},
+                     "Landroidx/appcompat/app/AppCompatActivity;": {"onPostCreate"}}
+        found = after_start_overrides(["org.linphone.ui.main.MainActivity", "net.openid.appauth.RedirectActivity",
+                                       "com.app.Settings", "com.app.Plain"], superclasses, callbacks)
+        # R8's renamed AppCompatActivity (Lk/h;) and AndroidX's own are not the app's code.
+        self.assertEqual([(f["activity"], f["class"], f["callbacks"]) for f in found],
+                         [("org.linphone.ui.main.MainActivity", "Lorg/linphone/ui/main/MainActivity;", ["onPostCreate"]),
+                          ("com.app.Settings", "Lcom/app/BaseActivity;", ["onRestoreInstanceState"])])
+
+    def test_a_row_supplied_when_the_launch_carries_the_start(self) -> None:
+        scan = {"apk": {"main_activities": ["org.linphone.ui.main.MainActivity"]},
+                "inventory": {"after_start_overrides": [
+                    {"activity": "org.linphone.ui.assistant.AssistantActivity", "class": "x", "callbacks": ["onPostCreate"]},
+                    {"activity": "org.linphone.ui.main.MainActivity", "class": "y", "callbacks": ["onPostCreate"]}]}}
+        rows = gapmap.post_create_rows(scan, {"carries_start": False, "source": "AppSchedulerBridge.java:1844"})
+        self.assertEqual((rows[0]["id"], rows[0]["verdict"], rows[0]["effort"]), ("am:post-create", "missing", "XS"))
+        self.assertTrue(rows[0]["app_evidence"].startswith("org.linphone.ui.main.MainActivity"), "the launch activity first")
+        rows = gapmap.post_create_rows(scan, {"carries_start": True, "source": "AppSchedulerBridge.java:1844"})
+        self.assertEqual(rows[0]["verdict"], "supplied")
+        self.assertEqual(gapmap.post_create_rows({"inventory": {}}, {"carries_start": False}), [])
+
+    def test_the_model_reads_the_launch_transaction(self) -> None:
+        import tempfile
+        from westlake_gap import contracts
+        launch = ("class B {\n    public static void nativeOnScheduleLaunchAbility(Object t, String b) {\n"
+                  "        LaunchActivityItem item = LaunchActivityItem.obtain(token, intent);\n"
+                  "        transaction.addTransactionItem(item);\n%s    }\n}\n")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / "framework/activity/java/AppSchedulerBridge.java"
+            path.parent.mkdir(parents=True)
+            path.write_text(launch % "        transaction.addTransactionItem(StartActivityItem.obtain(token, null));\n")
+            self.assertEqual(contracts.launch_start_model(root),
+                             {"carries_start": True, "source": "framework/activity/java/AppSchedulerBridge.java:2"})
+            # A lifecycle request only in a comment is not one.
+            path.write_text(launch % "        // NO setLifecycleStateRequest(ResumeActivityItem.obtain(token)) here\n")
+            self.assertFalse(contracts.launch_start_model(root)["carries_start"])
+            path.write_text("class B {}\n")
+            self.assertIsNone(contracts.launch_start_model(root)["carries_start"])
+
+
+class DeviceAnswers(unittest.TestCase):
+    SOURCE = """
+            switch (name) {
+                case "role":
+                    binder = proxy(name, "android.app.role.IRoleManager", LocalServiceBinders::role);
+                    break;
+                case "audio":
+                    binder = proxy(name, "android.media.IAudioService", LocalServiceBinders::audio);
+                    break;
+                case "alarm":
+                    binder = proxy(name, "android.app.IAlarmManager", LocalServiceBinders::alarm);
+                    break;
+                // No USB device or accessory attached: the device list is empty.
+                case "usb":
+                    binder = proxy(name, "android.hardware.usb.IUsbManager", (method, args) -> DEFAULT);
+                    break;
+            }
+
+    /**
+     * Roles on a board with no telephony: no role is available (so none is offered to the user)
+     * and none is held. An SMS app sees that it is not the default.
+     */
+    private static Object role(String method, Object[] args) {
+        return DEFAULT;   // isRoleAvailable/isRoleHeld false
+    }
+
+    /** Every player registers itself with the audio service's player registry. */
+    private static Object audio(String method, Object[] args) {
+        return DEFAULT;
+    }
+
+    /** No alarms are kept. */
+    private static Object alarm(String method, Object[] args) {
+        if ("set".equals(method)) return null;
+        return DEFAULT;
+    }
+"""
+
+    def test_handlers_that_answer_an_absence_with_defaults(self) -> None:
+        from westlake_gap import services
+        found = {name: detail for name, (detail, _) in services.device_answers(self.SOURCE).items()}
+        self.assertEqual(found, {
+            "role": "Roles on a board with no telephony: no role is available (so none is offered to the user) "
+                    "and none is held.",
+            "usb": "No USB device or accessory attached: the device list is empty."})
+
+
 class StubNatives(unittest.TestCase):
     STUB = """
 static jlong UnixFileSystem_getSpace0(JNIEnv* env, jobject thiz, jobject file, jint t) {
@@ -1641,6 +2131,25 @@ class NativeEglWindow(unittest.TestCase):
             self.assertEqual(row["verdict"], "supplied")
             self.assertEqual(row["app_evidence"], "libflutter.so imports eglCreateWindowSurface")
         self.assertEqual(gapmap.native_egl_window_rows({"inventory": {"elfs": []}}, {"unwraps": True}), [])
+
+    def test_egl_looked_up_by_handle_needs_the_shims_dlsym(self) -> None:
+        """anarchre: SDL dlopens libEGL.so and takes eglCreateWindowSurface by handle, past the shim."""
+        from westlake_gap import scanner
+        from westlake_gap.contracts import native_egl_window_model
+        raw = b"\x7fELF..\x00libEGL.so\x00eglCreateWindowSurface\x00eglTerminate\x00"
+        self.assertEqual(scanner.egl_lookups(raw, set()), {"egl_lookups": ["eglCreateWindowSurface", "eglTerminate"]})
+        self.assertEqual(scanner.egl_lookups(raw, {"eglCreateWindowSurface", "eglTerminate"}), {})
+        scan = {"inventory": {"elfs": [{"name": "lib/arm64-v8a/libSDL3.so", "soname": "libSDL3.so",
+                                        "abi_matches_machine": True, "egl_lookups": ["eglCreateWindowSurface"]}]}}
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "framework/webview-shim/webview_bionic_shim.c"
+            _write(source, "unsigned eglTerminate(void *display)\n{\n    return 1;\n}\n")
+            rows = gapmap.native_egl_window_rows(scan, native_egl_window_model(root))
+            self.assertEqual([(r["id"], r["verdict"]) for r in rows], [("egl:by-handle", "missing")])
+            _write(source, "static void *westlake_egl_by_handle(const char *name)\n{\n    return 0;\n}\n")
+            rows = gapmap.native_egl_window_rows(scan, native_egl_window_model(root))
+            self.assertEqual([(r["id"], r["verdict"]) for r in rows], [("egl:by-handle", "supplied")])
 
 class SandboxAndBacktest(unittest.TestCase):
     def test_realm_fifo_is_predicted(self) -> None:

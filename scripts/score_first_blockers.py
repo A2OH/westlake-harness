@@ -7,6 +7,9 @@ first blocker (harness.westlake_gap.lifecycle --json) is looked up in the app's 
   named      a row that is not supplied names the blocker (predicted before launch)
   supplied   the row exists but says supplied: the harness thought the gap closed
   not-named  no row names it: a blind spot to fix in the harness
+  device     the rows are supplied, and one answers as a device without the feature that the app
+             asked before it closed itself (a role on a board with no telephony): Android on such
+             a device stops the app the same way
   unscorable no blocker was recognized in the log, or it is a symptom no row type names: a native
              crash, an app exception with no platform symbol, an app's own native class
 
@@ -18,8 +21,13 @@ The blocker text is reduced to a key: a missing symbol needs a row mentioning it
 load:shadowed-by-board); an unbound platform native a jni:<class> row; a missing library a load:
 or ndk: row naming it; a null system service its svc:<name> row. A graphics abort or a window
 the platform never surfaced is a platform gap no row type covers yet, so it counts as not named.
+A native crash counts when a row names a library its app frames are in: rows about a library's own
+risk (an init array, an import version, a thread start, EGL looked up by handle) list them.
 An activity that finished itself on start (lifecycle's self-finish) needs the row for what it asked
-first: am:task-root, or svc:bluetooth.
+first: am:task-root, svc:bluetooth, am:own-implicit-intents, or a service row answering as a device
+without the feature, for a service the app called in process before it left. An activity that
+resumed and never drew (lifecycle's no-frame) needs a row for what holds its draws: am:post-create,
+its own onPostCreate that the provider never called.
 
 Usage: score_first_blockers.py <lifecycle.json> <map-root> [<map-root> ...] [--out report.json]
 """
@@ -66,6 +74,8 @@ def platform_key(category, blocker):
         return "platform", blocker
     if category == "self-finish":
         return "exit", blocker
+    if category == "no-frame":
+        return "no-frame", blocker
     return None  # a native crash or an app exception: a symptom no row type names
 
 
@@ -87,8 +97,31 @@ def root_cause_rows(cause, rows):
     return None
 
 
-def candidate_rows(category, blocker, rows, cause=None):
+_APP_DIRS = ("/data/local/tmp/asx/lib/", "/data/data/", "/data/user/")
+
+
+def crash_rows(dump, rows):
+    """Rows that name a library the crash's app frames are in, for a native crash: a row about a
+    library's own risk (an init array, an import version, a thread start, EGL by handle) lists it in
+    `libraries`. None when no such row names one, which leaves the crash unscorable."""
+    frames = (dump or {}).get("frames") or []
+    names = {frame["library"] for frame in frames
+             if str(frame.get("path", "")).startswith(_APP_DIRS) and frame.get("library")}
+    symbols = [frame["symbol"] for frame in frames if frame.get("symbol")]
+    in_libraries = {frame.get("library") for frame in frames}
+    # A row about one kind of call (a thread start, an allocator) also names the frames such a crash
+    # shows; PPSSPP's crash in libhwui is not a thread-handle crash because its library has one.
+    found = [r for r in rows if names & {str(name).rsplit("/", 1)[-1] for name in r.get("libraries") or []}
+             and (not r.get("crash_symbols") or any(re.search(r["crash_symbols"], s) for s in symbols))
+             and (not r.get("crash_libraries") or in_libraries & set(r["crash_libraries"]))
+             and (not r.get("crash_kinds") or (dump or {}).get("kind") in r["crash_kinds"])]
+    return found or None
+
+
+def candidate_rows(category, blocker, rows, cause=None, finished=None, dump=None):
     """Rows that would name this blocker; None if it is not one a gap map could name."""
+    if category == "native-crash" and dump:
+        return crash_rows(dump, rows)
     key = platform_key(category, blocker)
     if key is None:
         return root_cause_rows(cause, rows) if cause else None
@@ -107,9 +140,27 @@ def candidate_rows(category, blocker, rows, cause=None):
         return [r for r in rows if r["id"] == "svc:" + value]
     if kind == "exit":
         # An activity that closes itself on start asked something first: whether it is its task's
-        # root, or for hardware the device does not have.
-        return [r for r in rows if r["id"] in ("am:task-root", "svc:bluetooth")]
+        # root, for hardware the device does not have, or for one of its own activities by an
+        # implicit intent. A service answering as a device without the feature counts only if the
+        # app called it in process before it left.
+        called = set((finished or {}).get("local_services") or [])
+        return [r for r in rows if r["id"] in ("am:task-root", "svc:bluetooth", "am:own-implicit-intents")
+                or (r.get("device_answer") and r["id"].startswith("svc:") and r["id"][4:] in called)]
+    if kind == "no-frame":
+        return [r for r in rows if r["id"] == "am:post-create"]
     return []  # a platform behaviour no row type covers yet
+
+
+def outcome_of(rows):
+    """The outcome for the rows that would name a blocker: not-named when there are none, named when
+    one is not supplied, device when all are and one answers as a device without the feature."""
+    if not rows:
+        return "not-named"
+    if any(r["verdict"] != "supplied" for r in rows):
+        return "named"
+    if any(r.get("device_answer") for r in rows):
+        return "device"
+    return "supplied"
 
 
 def main():
@@ -129,25 +180,22 @@ def main():
         elif not blocker:
             outcome, rows = "unscorable", []
         else:
-            rows = candidate_rows(category, blocker, gap["rows"], entry.get("root_cause"))
+            rows = candidate_rows(category, blocker, gap["rows"], entry.get("root_cause"), entry.get("self_finish"),
+                                  entry.get("crash_dump"))
             if rows is None:
                 outcome, rows = "unscorable", []
-            elif not rows:
-                outcome = "not-named"
-            elif any(r["verdict"] != "supplied" for r in rows):
-                outcome = "named"
             else:
-                outcome = "supplied"
+                outcome = outcome_of(rows)
         results.append({"app": app, "stage": entry["rung_name"], "category": category, "blocker": blocker,
                         "outcome": outcome, "rows": [r["id"] + "=" + r["verdict"] for r in rows][:3]})
     counts = {}
     for r in results:
         counts[r["outcome"]] = counts.get(r["outcome"], 0) + 1
-    scorable = counts.get("named", 0) + counts.get("supplied", 0) + counts.get("not-named", 0)
+    scorable = sum(counts.get(k, 0) for k in ("named", "supplied", "not-named", "device"))
     print(f"{len(results)} apps short of drawing; scorable {scorable}: "
           f"named {counts.get('named', 0)}, marked supplied {counts.get('supplied', 0)}, "
-          f"not named {counts.get('not-named', 0)}; unscorable {counts.get('unscorable', 0)}; "
-          f"no map {counts.get('no-map', 0)}")
+          f"not named {counts.get('not-named', 0)}, a device's answer {counts.get('device', 0)}; "
+          f"unscorable {counts.get('unscorable', 0)}; no map {counts.get('no-map', 0)}")
     for r in sorted(results, key=lambda r: (r["outcome"], r["app"])):
         if r["outcome"] != "unscorable":
             print(f"  {r['outcome']:10} {r['app']:18} {r['category']}: {r['blocker']}  {' '.join(r['rows'])}")

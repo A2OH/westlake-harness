@@ -76,27 +76,34 @@ _WAITS = (
 
 
 def main_thread(stderr: str) -> dict | None:
-    """The Java main thread (tid=1) in the last ART thread dump of the log: its state, what it is
-    waiting in, and its top frames."""
+    """The app's main thread in the last ART thread dump of the log: its state, what it is waiting
+    in, and its top frames.
+
+    That is the thread running ActivityThread.main, not necessarily tid=1: appspawn-x starts the VM
+    on a worker pthread, and ART hands tid 1 on to a later thread once the first one detaches
+    (cclauncher: tid 1 was a WorkManager pool thread parked in its queue, while the main looper
+    ran as "Thread-2" and sat idle). Then a thread named "main", then tid 1."""
     dumps = list(_DUMP.finditer(stderr))
     if not dumps:
         return None
     body = stderr[dumps[-1].end():]
     heads = list(_THREAD_HEAD.finditer(body))
-    for i, head in enumerate(heads):
-        if head[2] != "1":
-            continue
-        end = heads[i + 1].start() if i + 1 < len(heads) else min(len(body), head.end() + 20000)
-        block = body[head.start():end]
-        state = _STATE.search(block)
-        frames = [f.strip() for f in _FRAME.findall(block)][:8]
-        top = "\n".join(frames[:4])
-        waiting = next((label for pattern, label in _WAITS if pattern.search(top)), "running")
-        app_frame = next((f for f in frames if not f.startswith(("java.", "android.", "dalvik.", "sun.", "jdk.",
-                                                                   "libcore.", "com.android."))), None)
-        return {"name": head[1], "java_state": head[3], "state": state[1] if state else None,
-                "waiting": waiting, "frames": frames, "first_app_frame": app_frame}
-    return None
+    blocks = [(head, body[head.start():heads[i + 1].start() if i + 1 < len(heads)
+                              else min(len(body), head.end() + 20000)]) for i, head in enumerate(heads)]
+    chosen = (next((hb for hb in blocks if "android.app.ActivityThread.main(" in hb[1]), None)
+              or next((hb for hb in blocks if hb[0][1] == "main"), None)
+              or next((hb for hb in blocks if hb[0][2] == "1"), None))
+    if chosen is None:
+        return None
+    head, block = chosen
+    state = _STATE.search(block)
+    frames = [f.strip() for f in _FRAME.findall(block)][:8]
+    top = "\n".join(frames[:4])
+    waiting = next((label for pattern, label in _WAITS if pattern.search(top)), "running")
+    app_frame = next((f for f in frames if not f.startswith(("java.", "android.", "dalvik.", "sun.", "jdk.",
+                                                               "libcore.", "com.android."))), None)
+    return {"name": head[1], "java_state": head[3], "state": state[1] if state else None,
+            "waiting": waiting, "frames": frames, "first_app_frame": app_frame}
 
 
 _CPP_REASON = re.compile(r"^Reason:Signal:(\w+)\((\w+)\)@(?:0x)?([0-9a-fA-F]+)", re.M)
@@ -125,8 +132,54 @@ def _dump_frame(match: re.Match) -> dict:
     return frame
 
 
+# musl's allocator entry points, and get_meta, mallocng's check of the chunk it is handed: Fennec's
+# libxul freed with musl's free what libmozglue's mozjemalloc had allocated, and faulted there.
+_ALLOCATOR = r"(__libc_malloc_impl|__libc_free|malloc|free|realloc|calloc|alloc_|get_meta)"
+
+
 def _is_app(frame: dict) -> bool:
     return frame.get("path", "").startswith(_APP_DIRS)
+
+
+_CPP_MAP = re.compile(r"^[0-9a-f]+-[0-9a-f]+ \S+ [0-9a-f]+ /", re.M)
+
+
+_CPP_REGISTERS = re.compile(r"^lr:([0-9a-f]+) sp:[0-9a-f]+ pc:([0-9a-f]+)", re.M)
+
+
+def _mapped_file(text: str, address: int) -> tuple[str, int] | None:
+    """The file and file offset the dump's own Maps section places an address at."""
+    at = text.find("\nMaps:")
+    if at < 0:
+        return None
+    for line in text[at:].splitlines():
+        if not _CPP_MAP.match(line):
+            continue
+        span, _, offset, path = line.split(None, 3)
+        start, end = (int(x, 16) for x in span.split("-"))
+        if start <= address < end:
+            return path.strip().removesuffix(" (deleted)").strip(), address - start + int(offset, 16)
+    return None
+
+
+def _file_extents(text: str) -> dict[str, int]:
+    """How far into each file the dump's own Maps section maps it: the furthest file offset any of
+    its mappings reaches. A frame placed past that is not in the file. OH's dumper names such a pc
+    after the file mapped before it: CapCut's crash "in libmetasec_ov.so+0x215d6ec" ran in anonymous
+    memory after a 1.9 MB library (ByteDance decrypts code there), and TikTok's calling frames read
+    0x20000 past libvcbasekit.so's end, where its saved frame records put them inside it."""
+    at = text.find("\nMaps:")
+    extents: dict[str, int] = {}
+    if at < 0:
+        return extents
+    for line in text[at:].splitlines():
+        if not _CPP_MAP.match(line):
+            continue
+        span, _, offset, path = line.split(None, 3)
+        start, end = (int(x, 16) for x in span.split("-"))
+        path = path.strip().removesuffix(" (deleted)").strip()
+        extents[path] = max(extents.get(path, 0), end - start + int(offset, 16))
+    return extents
 
 
 def cppcrash(text: str) -> dict | None:
@@ -145,10 +198,31 @@ def cppcrash(text: str) -> dict | None:
             if match is None:
                 break
             frames.append(_dump_frame(match))
+    # An app library's faulting frame from the pc register itself: the dump's own offset for it has
+    # been wrong by 0x1a000 (CapCut's libmetasec_ov.so, a store at 0x15b6ec printed as 0x1756ec, in
+    # .rodata) and 0x2000000 (Fennec's libxul.so). The Maps section gives file offsets, which in an
+    # app library's text are its addresses; OH's own libraries come symbolized and right, and their
+    # text is not at its file offset (ld-musl's lies 0x1000 above), so they keep the dump's.
+    registers = _CPP_REGISTERS.search(text)
+    if registers and frames and _is_app(frames[0]):
+        placed = _mapped_file(text, int(registers[2], 16))
+        if placed and placed[0].startswith(_APP_DIRS) and placed[1] != frames[0]["pc"]:
+            frames[0]["dump_pc"] = frames[0]["pc"]
+            frames[0]["pc"] = placed[1]
+            if placed[0] != frames[0]["path"]:
+                name = placed[0].rsplit("/", 1)[-1]
+                copy = _INIT_COPY.match(name)
+                frames[0]["path"], frames[0]["library"] = placed[0], copy[1] if copy else name
+                frames[0].pop("symbol", None)
+    extents = _file_extents(text)
+    for frame in frames:
+        if frame.get("path") in extents and frame["pc"] >= extents[frame["path"]]:
+            frame["beyond_mapping"] = True
     dump["frames"] = frames[:8]
     app = next((f for f in frames if _is_app(f)), None)
     if app:
-        dump["first_app_frame"] = "%s+%#x" % (app["library"], app["pc"])
+        dump["first_app_frame"] = "%s+%#x" % (app["library"], app["pc"]) + (
+            " (past its mappings)" if app.get("beyond_mapping") else "")
     top = frames[0] if frames else {}
     caller = frames[1] if len(frames) > 1 else {}
     from_init = caller.get("symbol", "").startswith("do_init_fini")
@@ -158,9 +232,10 @@ def cppcrash(text: str) -> dict | None:
     elif from_init and top.get("library") == "[Unknown]":
         dump["kind"] = "unrelocated-constructor"
         dump["summary"] = "a constructor pointer kept its link-time value (%#x): a relocation the loader did not apply" % top["pc"]
-    elif top.get("library", "").startswith("ld-musl") and re.match(r"(__libc_malloc_impl|__libc_free|malloc|free|realloc|calloc|alloc_)", top.get("symbol", "")):
+    elif top.get("library", "").startswith("ld-musl") and re.match(_ALLOCATOR, top.get("symbol", "")):
         dump["kind"] = "heap"
-        dump["summary"] = "a fault inside musl's allocator: the heap was corrupt before this call"
+        dump["summary"] = ("a fault inside musl's allocator: the heap was corrupt before this call, or it was "
+                           "handed memory its heap never allocated")
         if app:
             dump["summary"] += " (allocating for %s)" % dump["first_app_frame"]
     elif dump["signal"] == "SIGABRT":
@@ -170,6 +245,11 @@ def cppcrash(text: str) -> dict | None:
     elif top.get("library") == "not mapped" and caller:
         dump["kind"] = "null-call"
         dump["summary"] = "a null function pointer called from %s+%#x" % (caller.get("library", "?"), caller.get("pc", 0))
+    elif top.get("beyond_mapping"):
+        dump["kind"] = "fault"
+        dump["summary"] = ("in code past %s's mappings, where the dump places it at +%#x: anonymous memory "
+                           "(generated or decrypted code), or an offset the dump got wrong"
+                           % (top.get("library", "?"), top.get("pc", 0)))
     else:
         dump["kind"] = "fault"
         dump["summary"] = "in %s+%#x" % (top.get("library", "?"), top.get("pc", 0))
@@ -216,8 +296,12 @@ def hilog_signal(hilog: str) -> dict | None:
     return None
 
 
+# The adapter reports the activity's first drawn frame, or 800 ms after its resume with none drawn, a
+# timeout. Before build 88 both logged "(first-frame)", so in older logs a first frame may be the
+# timeout: 80 of r85's apps sat 0.79-1.2 s after their resume, piled up at 0.8 s.
 _STARTUP_MARKS = (("resumed", "activityResumed: OnDrawListener attached"),
-                  ("first_frame", "activityResumed (first-frame)"))
+                  ("first_frame", "activityResumed (first-frame)"),
+                  ("first_frame_timeout", "activityResumed (first-frame timeout)"))
 
 
 def startup_times(hilog: str) -> dict | None:
@@ -266,6 +350,19 @@ def self_finish(hilog: str) -> dict | None:
     if at is not None and gone is not None:
         out["after_ms"] = max(0, round((gone - at) * 1000))
     return out
+
+
+_LOCAL_SERVICE = re.compile(r"^\[WESTLAKE-LOCAL-SERVICE\] ([\w.]+)\.(\w+)$", re.M)
+
+
+def local_service_calls(stderr: str) -> list[str]:
+    """The in-process services the app called, in the order of their first call: LocalServiceBinders
+    logs each service and method once ("[WESTLAKE-LOCAL-SERVICE] role.isRoleAvailableAsUser")."""
+    seen: list[str] = []
+    for match in _LOCAL_SERVICE.finditer(stderr):
+        if match.group(1) not in seen:
+            seen.append(match.group(1))
+    return seen
 
 
 _WITNESS = re.compile(r"\[WESTLAKE-SIGNAL-WITNESS\] signal=(0x[0-9a-f]+) code=(0x[0-9a-f]+) tid=(0x[0-9a-f]+) "

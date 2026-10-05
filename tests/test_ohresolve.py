@@ -27,6 +27,34 @@ class Resolve(unittest.TestCase):
         self.assertEqual(ohresolve.resolve(scan, provided, {}, versions)["missing"], [])
         self.assertEqual(ohresolve.resolve(scan, provided, {})["missing"], [], "no versions known: names only")
 
+    def test_an_import_versioned_against_a_sibling_clashes_with_an_unversioned_board_copy(self) -> None:
+        """Fennec: libxul imports free@libmozglue.so; musl's unversioned free took the binding."""
+        scan = {"inventory": {"elfs": [
+            {"name": "lib/arm64-v8a/libxul.so", "soname": "libxul.so",
+             "undefined_symbols": ["free", "CERT_Dup", "memcpy"],
+             "import_versions": {"free": "libmozglue", "CERT_Dup": "libnss3", "memcpy": "LIBC"}},
+            {"name": "lib/arm64-v8a/libmozglue.so", "soname": "libmozglue.so", "exported_symbols": ["free"]},
+            {"name": "lib/arm64-v8a/libnss3.so", "soname": "libnss3.so", "exported_symbols": ["CERT_Dup"]}]}}
+        versions = {"free": {None}, "memcpy": {None}}
+        result = ohresolve.resolve(scan, {"free", "memcpy"}, {}, versions)
+        self.assertEqual(result["versioned_clash"],
+                         [{"symbol": "free", "version": "libmozglue", "importing_libraries": ["libxul.so"]}])
+        self.assertEqual(ohresolve.versioned_clashes(scan["inventory"]["elfs"], {"free": {"LIBC"}}), [],
+                         "a board copy under a version of its own does not match another version")
+        self.assertEqual(ohresolve.resolve(scan, {"free", "memcpy"}, {})["versioned_clash"], [], "no versions known")
+
+    def test_weak_ndk_imports_nothing_defines(self) -> None:
+        """Fennec: libxul imports ASystemFontIterator_open (API 29) weakly; a call jumped to 0."""
+        scan = {"inventory": {"elfs": [{"soname": "libxul.so", "exported_symbols": [],
+                                        "undefined_symbols": ["ASystemFontIterator_open", "AFont_close", "__cxa_finalize"],
+                                        "undefined_weak_symbols": ["ASystemFontIterator_open", "AFont_close",
+                                                                   "__cxa_finalize"]}]}}
+        declared = {"ASystemFontIterator_open": "libandroid", "AFont_close": "libandroid"}
+        result = ohresolve.resolve(scan, {"AFont_close"}, declared)
+        self.assertEqual(result["weak_missing"], [{"symbol": "ASystemFontIterator_open",
+                                                   "importing_libraries": ["libxul.so"], "surface": "libandroid"}])
+        self.assertEqual(result["missing"], [], "weak imports are never missing to the loader")
+
     def test_own_exports_index_and_weak_imports(self) -> None:
         cc = shutil.which("cc") or shutil.which("gcc")
         if not cc:

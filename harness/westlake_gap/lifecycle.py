@@ -264,12 +264,15 @@ _HOST_SCREEN = Path(__file__).parent / "data" / "host-screen.png"
 
 
 def screen_state(image: Path) -> str | None:
-    """'host' when the screenshot is the board's launcher host screen, not the app; else 'app'.
+    """'host' when the screenshot is the board's launcher host screen, not the app; 'partial' when
+    it is the host screen with the app's content over part of it; else 'app'.
 
     The log can reach "drawing" and the app still not be on screen: it drew, then died or
     finished (Unciv, Shattered Pixel Dungeon, Fossify Messages). Four apps were scored "drawing"
     that way before the screenshot was read. The comparison crops the status bar, whose clock
-    changes; host screenshots match the reference exactly, app screens differ by 7 or more.
+    changes; host screenshots match the reference exactly, app screens differ by 7 or more on
+    average. Draw Anywhere's toolbar is an overlay over whatever is underneath, the host here: the
+    average barely moves, but a band of pixels differs from the host by far more than JPEG noise.
     """
     try:
         from PIL import Image
@@ -280,8 +283,11 @@ def screen_state(image: Path) -> str | None:
     shot = Image.open(image).convert("L").resize((60, 96)).crop((0, 6, 60, 96))
     ref = Image.open(_HOST_SCREEN).convert("L")
     get = lambda im: list(getattr(im, "get_flattened_data", im.getdata)())
-    a, b = get(shot), get(ref)
-    return "host" if sum(abs(x - y) for x, y in zip(a, b)) / len(a) < 2.0 else "app"
+    diffs = [abs(x - y) for x, y in zip(get(shot), get(ref))]
+    if sum(diffs) / len(diffs) >= 2.0:
+        return "app"
+    # Resampling and JPEG noise stay under 32 here (a round trip of the reference reaches 26).
+    return "partial" if sum(1 for d in diffs if d > 32) >= 8 else "host"
 
 
 def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str | None = None,
@@ -310,7 +316,7 @@ def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str 
         # Rethink's log stopped at "bound" while its welcome screen was up. On screen, it is drawing;
         # on the host screen, it drew and left, as for a log that reached drawing.
         if "first_frame" in startup and s.rung < RUNGS.index("drawing"):
-            on_screen = s.screen == "app"
+            on_screen = s.screen in ("app", "partial")
             target = RUNGS.index("drawing") if on_screen else RUNGS.index("view")
             if s.rung < target:
                 s.rung, s.rung_name = target, RUNGS[target]
@@ -323,6 +329,14 @@ def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str 
         if "first_frame" in startup and s.screen == "host" and s.anomaly is None:
             s.anomaly = ("its activity drew a first frame %.1f s after start, but the screenshot shows the "
                          "host screen: the window went away" % startup["first_frame"])
+        # Resumed, and only the timeout reported: the activity never drew, and the host screen shows
+        # through its window. Its draws may be cancelled (a pre-draw listener answering false until
+        # something that never happens: linphone's onPostCreate).
+        if "first_frame_timeout" in startup and "first_frame" not in startup and s.screen == "host" \
+                and (s.blocker is None or s.blocker_category == "stall" or not s.blocking):
+            s.blocker_category, s.blocking = "no-frame", True
+            s.blocker = "the activity resumed %.1f s after start and drew no frame" % startup.get(
+                "resumed", startup["first_frame_timeout"])
     signal = evidence.hilog_signal(hilog_text) if hilog_text and not dump else None
     if signal:
         s.hilog_signal = signal
@@ -358,8 +372,12 @@ def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str 
     # what it did, and what to explain (a task-root check, absent hardware, a trampoline elsewhere).
     finished = evidence.self_finish(hilog_text) if hilog_text and s.screen == "host" and not dump and not signal else None
     if finished:
+        # What it asked the in-process services before it left: a device's answer may be the reason.
+        finished["local_services"] = evidence.local_service_calls(text)
         s.self_finish = finished
-        if s.blocker is None or s.blocker_category == "stall" or not s.blocking:
+        # An activity that finished itself drew nothing because it left: its first-frame report times
+        # out too, so a no-frame reading gives way to what it did (Fossify Messages).
+        if s.blocker is None or s.blocker_category in ("stall", "no-frame") or not s.blocking:
             s.blocker_category, s.blocking = "self-finish", True
             s.blocker = "its last activity finished itself%s after resuming, and nothing replaced it" % (
                 " %d ms" % finished["after_ms"] if "after_ms" in finished else "")
@@ -375,6 +393,9 @@ def score_paths(paths: list[Path]) -> list[Score]:
             # The screenshot decides: it drew, and is no longer on screen.
             s.rung, s.rung_name, s.blocking = RUNGS.index("view"), "view", True
             s.anomaly = "drew, but the screenshot shows the host screen: the app left or died"
+        elif s.screen == "partial" and s.rung_name == "drawing":
+            s.anomaly = ("the screenshot shows the host screen with the app's content over part of it: an "
+                         "overlay window, or a window that is transparent where it draws nothing")
         maps, dump, hilog = path.with_suffix(".maps"), path.with_suffix(".cppcrash"), path.with_suffix(".hilog")
         add_evidence(s, text, maps.read_text(errors="replace") if maps.exists() else None,
                      dump.read_text(errors="replace") if dump.exists() else None,

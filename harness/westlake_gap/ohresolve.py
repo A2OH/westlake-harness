@@ -105,4 +105,41 @@ def resolve(scan: dict[str, Any], provided: set[str], declared: dict[str, str],
         missing.append({"symbol": symbol, "importers": len(names), "importing_libraries": sorted(names),
                         "surface": declared.get(symbol, "bionic-private (not in the NDK)")})
     missing.sort(key=lambda m: (-m["importers"], m["symbol"]))
-    return {"symbols": len(importers), "resolved": len(importers) - len(missing), "missing": missing}
+    return {"symbols": len(importers), "resolved": len(importers) - len(missing), "missing": missing,
+            "versioned_clash": versioned_clashes(elfs, versions),
+            "weak_missing": weak_missing(elfs, own, provided, declared)}
+
+
+def weak_missing(elfs: list[dict[str, Any]], own: set[str], provided: set[str],
+                 declared: dict[str, str]) -> list[dict[str, Any]]:
+    """Weak imports of the NDK's API that nothing on the board defines. A weak import is optional to
+    the loader, which binds it to 0, but the NDK makes an API newer than the app's minSdk weak and the
+    app calls it once the device reports a level that has it: Fennec's libxul called
+    ASystemFontIterator_open (API 29) and jumped to address 0."""
+    importers: dict[str, set[str]] = {}
+    for elf in elfs:
+        for symbol in elf.get("undefined_weak_symbols", []):
+            if symbol in declared and symbol not in own and symbol not in provided:
+                importers.setdefault(symbol, set()).add(elf.get("soname") or elf.get("name"))
+    return [{"symbol": symbol, "importing_libraries": sorted(names), "surface": declared[symbol]}
+            for symbol, names in sorted(importers.items())]
+
+
+def versioned_clashes(elfs: list[dict[str, Any]], versions: dict[str, set[str | None]] | None) -> list[dict[str, Any]]:
+    """Imports versioned against another of the app's own libraries, under a name a library without
+    symbol versions on the board also defines. OH's loader takes that unversioned definition for an
+    import that names its version by hash, and libc is searched before the app's libraries, so the
+    import binds to the board's copy; Android's linker binds it only to the versioned one. Firefox's
+    libraries import malloc and free as name@libmozglue.so: libxul freed with musl's free what
+    libmozglue's mozjemalloc had allocated."""
+    if not versions:
+        return []
+    own = {(elf.get("soname") or elf.get("name", "").rsplit("/", 1)[-1]).removesuffix(".so") for elf in elfs}
+    by_import: dict[tuple[str, str], set[str]] = {}
+    for elf in elfs:
+        name = elf.get("soname") or elf.get("name")
+        for symbol, version in (elf.get("import_versions") or {}).items():
+            if version and version.removesuffix(".so") in own and None in versions.get(symbol, set()):
+                by_import.setdefault((symbol, version.removesuffix(".so")), set()).add(name)
+    return [{"symbol": symbol, "version": version, "importing_libraries": sorted(names)}
+            for (symbol, version), names in sorted(by_import.items())]

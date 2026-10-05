@@ -168,17 +168,22 @@ def pm_adapter_model(westlake_root: Path) -> dict[str, Any]:
 
 
 def feature_claims_model(westlake_root: Path) -> dict[str, Any]:
-    """The features PackageManagerAdapter.hasSystemFeature reports present: each case label that
-    reaches `return true`, and those answered by a condition, with the condition."""
+    """The features PackageManagerAdapter.hasSystemFeature reports present, with their versions
+    where it declares them, and those answered by a condition, with the condition.
+
+    Two forms are read: case labels that reach `return true` (or a condition), and a table of
+    CLAIMED_FEATURES.put("name", version) entries, which also gives each claim's version."""
     path = westlake_root / "framework/package-manager/java/PackageManagerAdapter.java"
     text = path.read_text(errors="replace") if path.exists() else ""
     match = re.search(r"public boolean hasSystemFeature\(String \w+, int \w+\)\s*\{", text)
     if not match:
-        return {"claimed": [], "conditional": {}, "source": None}
+        return {"claimed": [], "conditional": {}, "versions": {}, "source": None}
     claimed: list[str] = []
     conditional: dict[str, str] = {}
+    versions: dict[str, int | None] = {}
     pending: list[str] = []
-    for line in _braced_block(text, match.start()).splitlines():
+    body = _braced_block(text, match.start())
+    for line in body.splitlines():
         stripped = line.strip()
         case = re.match(r'case "([^"]+)":', stripped)
         if case:
@@ -194,9 +199,96 @@ def feature_claims_model(westlake_root: Path) -> dict[str, Any]:
             pending = []
         elif stripped.startswith("default:"):
             pending = []
+    for name, value in re.findall(r'if \("([^"]+)"\.equals\(\w+\)\)\s*\{\s*return\s+([^;]+);', body):
+        if value.strip() == "true":
+            claimed.append(name)
+        elif value.strip() != "false":
+            conditional[name] = value.strip()
+    constants = {name: value for name, value in re.findall(r"static final int (\w+)\s*=\s*([^;]+);", text)}
+    for name, value in re.findall(r'CLAIMED_FEATURES\.put\("([^"]+)",\s*([^)]+)\);', text):
+        claimed.append(name)
+        versions[name] = _int_expression(value, constants)
     line = text.count("\n", 0, match.start()) + 1
-    return {"claimed": sorted(claimed), "conditional": conditional,
+    return {"claimed": sorted(set(claimed)), "conditional": conditional, "versions": versions,
             "source": f"{path.relative_to(westlake_root)}:{line}"}
+
+
+def shim_version_nodes(westlake_root: Path) -> set[str]:
+    """The version nodes the bionic shim's version script defines (LIBC, LIBC_O, libmozglue.so, ...)."""
+    path = westlake_root / "framework/webview-shim/webview_bionic_shim.map"
+    text = path.read_text(errors="replace") if path.exists() else ""
+    text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
+    return set(re.findall(r"^\s*([A-Za-z_][\w.]*)\s*\{", text, flags=re.M))
+
+
+def _macro_arguments(text: str, start: int, count: int) -> list[str]:
+    """The first count arguments of a macro call whose "(" is at start, split at top-level commas."""
+    args, depth, current = [], 0, []
+    for char in text[start + 1:]:
+        if char in "([{":
+            depth += 1
+        elif char in ")]}":
+            if depth == 0:
+                break
+            depth -= 1
+        if char == "," and depth == 0:
+            args.append("".join(current).strip())
+            current = []
+            if len(args) == count:
+                return args
+            continue
+        current.append(char)
+    args.append("".join(current).strip())
+    return args[:count]
+
+
+def shim_versioned_definitions(westlake_root: Path) -> dict[str, set[str]]:
+    """The names the bionic shim defines at each version node, from its ".symver x, name@version"
+    directives and the forwarding macros that write them (WL_MOZGLUE_FORWARD(index, ret, name, ...)).
+    An import versioned against an app library binds to the shim only for a name listed here; the
+    version node alone covers nothing."""
+    found: dict[str, set[str]] = {}
+    for path in sorted((westlake_root / "framework/webview-shim").glob("*.c")):
+        text = re.sub(r"/\*.*?\*/|//[^\n]*", "", path.read_text(errors="replace"), flags=re.S)
+        for name, version in re.findall(r'\.symver\s+\w+\s*,\s*([A-Za-z_]\w*)@{1,2}([\w.]+)"', text):
+            found.setdefault(version, set()).add(name)
+        for macro, params, body in re.findall(r"#define\s+(\w+)\(([^)]*)\)((?:[^\n]*\\\n)*[^\n]*)", text):
+            stringized = re.search(r'#\s*(\w+)\s*"@([\w.]+)"', body)
+            names = [p.strip() for p in params.split(",")]
+            if not stringized or stringized.group(1) not in names:
+                continue
+            index = names.index(stringized.group(1))
+            for use in re.finditer(rf"^{re.escape(macro)}\(", text, re.M):
+                args = _macro_arguments(text, use.end() - 1, index + 1)
+                if len(args) > index and re.fullmatch(r"[A-Za-z_]\w*", args[index]):
+                    found.setdefault(stringized.group(2), set()).add(args[index])
+    return found
+
+
+def _int_expression(text: str, constants: dict[str, str], depth: int = 0) -> int | None:
+    """A Java int expression of literals, named int constants, parentheses and + - * << >> | &,
+    or None when it is anything else."""
+    import ast
+    import operator
+    ops = {ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul, ast.LShift: operator.lshift,
+           ast.RShift: operator.rshift, ast.BitOr: operator.or_, ast.BitAnd: operator.and_}
+
+    def value(node: ast.AST) -> int | None:
+        if isinstance(node, ast.Constant) and isinstance(node.value, int):
+            return node.value
+        if isinstance(node, ast.Name) and node.id in constants and depth < 4:
+            return _int_expression(constants[node.id], constants, depth + 1)
+        if isinstance(node, ast.BinOp) and type(node.op) in ops:
+            left, right = value(node.left), value(node.right)
+            return None if left is None or right is None else ops[type(node.op)](left, right)
+        return None
+
+    source = re.sub(r"//.*", "", text).strip()
+    source = re.sub(r"\b(0[xX][0-9a-fA-F]+|\d+)[lL]\b", r"\1", source)
+    try:
+        return value(ast.parse(source, mode="eval").body)
+    except SyntaxError:
+        return None
 
 
 def _braced_block(text: str, start: int) -> str:
@@ -311,8 +403,12 @@ def native_egl_window_model(westlake_root: Path) -> dict[str, Any]:
     match = re.search(r"^\S[^\n;]*\beglCreateWindowSurface\([^;{]*\)\s*\{", text, re.M)
     body = _braced_block(text, match.start()) if match else ""
     line = text.count("\n", 0, match.start()) + 1 if match else None
+    by_handle = re.search(r"\bwestlake_egl_by_handle\(", text)
     return {"unwraps": "anw_get_oh" in body,
-            "source": f"{path.relative_to(westlake_root)}:{line}" if match else None}
+            "source": f"{path.relative_to(westlake_root)}:{line}" if match else None,
+            # An Android library's dlsym of these by handle gets the shim's, not OH's EGL directly.
+            "by_handle": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, by_handle.start()) + 1}"
+            if by_handle else None}
 
 
 def activity_client_model(westlake_root: Path) -> dict[str, Any]:
@@ -328,6 +424,80 @@ def activity_client_model(westlake_root: Path) -> dict[str, Any]:
     line = text.count("\n", 0, match.start()) + 1
     return {"task_for_activity": "constant" if hollow else "answered",
             "source": f"{path.relative_to(westlake_root)}:{line}"}
+
+
+def own_intent_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether an implicit intent reaches the app's own activities: the source package's registry
+    matches them against their manifest filters, the package manager's queryIntentActivities asks
+    it, and startActivity makes such an intent explicit before it becomes a Want."""
+    registry = westlake_root / "framework/package-manager/java/SourcePackageRegistry.java"
+    manager = westlake_root / "framework/package-manager/java/PackageManagerAdapter.java"
+    tasks = westlake_root / "framework/activity/java/ActivityTaskManagerAdapter.java"
+    read = lambda path: _strip_java_comments(path.read_text(errors="replace")) if path.exists() else ""
+    registry_text, manager_text, tasks_text = read(registry), read(manager), read(tasks)
+    defined = re.search(r"\bstatic\b[^;{]*\bqueryActivities\s*\(", registry_text)
+    query = re.search(r"public\s+\S+\s+queryIntentActivities\s*\(", manager_text)
+    start = re.search(r"public\s+int\s+startActivity\s*\(", tasks_text)
+    queried = bool(query and "SourcePackageRegistry.queryActivities(" in _braced_block(manager_text, query.start()))
+    # startActivity resolves through a helper of its own that asks the registry.
+    started = False
+    if start:
+        for name in set(re.findall(r"\b(\w+)\s*\(", _braced_block(tasks_text, start.start()))):
+            helper = re.search(rf"\b{name}\s*\([^;{{]*\)\s*\{{", tasks_text)
+            if helper and ".queryActivities(" in _braced_block(tasks_text, helper.start()):
+                started = True
+                break
+    return {"resolved": bool(defined and queried), "started": started,
+            "source": f"{registry.relative_to(westlake_root)}:{registry_text.count(chr(10), 0, defined.start()) + 1}"
+                      if defined else None}
+
+
+def launch_start_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether an activity's launch transaction carries its start (or its resume). handleLaunchActivity
+    marks the transaction executor's pending actions -- restore the saved state, call onPostCreate --
+    and the executor clears them when its transaction ends. A start in a transaction of its own finds
+    them cleared: no onRestoreInstanceState, no onPostCreate."""
+    path = westlake_root / "framework/activity/java/AppSchedulerBridge.java"
+    text = _strip_java_comments(path.read_text(errors="replace")) if path.exists() else ""
+    match = re.search(r"public\s+static\s+void\s+nativeOnScheduleLaunchAbility\s*\(", text)
+    if not match:
+        return {"carries_start": None, "source": None}
+    body = _braced_block(text, match.start())
+    carries = "LaunchActivityItem.obtain(" in body and re.search(
+        r"\b(?:StartActivityItem|ResumeActivityItem)\.obtain\s*\(", body) is not None
+    return {"carries_start": carries,
+            "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, match.start()) + 1}"}
+
+
+def permission_request_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether a runtime permission request gets an answer: Activity.requestPermissions starts the
+    permission controller for a result, and the in-process activity task manager must answer that
+    start with the result the controller would send (ActivityResultItem to the caller)."""
+    path = westlake_root / "framework/activity/java/ActivityTaskManagerAdapter.java"
+    text = _strip_java_comments(path.read_text(errors="replace")) if path.exists() else ""
+    start = re.search(r"public\s+int\s+startActivity\s*\(", text)
+    if not start:
+        return {"answered": None, "source": None}
+    body = _braced_block(text, start.start())
+    answered = False
+    if "ACTION_REQUEST_PERMISSIONS" in body:
+        for name in set(re.findall(r"\b(\w+)\s*\(", body)):
+            helper = re.search(rf"\b{name}\s*\([^;{{]*\)\s*\{{", text)
+            if helper and "ActivityResultItem.obtain(" in _braced_block(text, helper.start()):
+                answered = True
+                break
+    return {"answered": answered,
+            "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, start.start()) + 1}"}
+
+
+def ce_storage_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether the in-process storage manager says the user's credential-encrypted storage is unlocked
+    under Android 15's name for the call, isCeStorageUnlocked (it was isUserKeyUnlocked)."""
+    path = westlake_root / "framework/appspawn-x/java/com/android/internal/os/AppSpawnXInit.java"
+    text = _strip_java_comments(path.read_text(errors="replace")) if path.exists() else ""
+    match = re.search(r'"isCeStorageUnlocked"\.equals\(name\)[^{;]*\{\s*return\s+Boolean\.TRUE', text)
+    return {"unlocked": match is not None,
+            "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, match.start()) + 1}" if match else None}
 
 
 def window_adapter_model(westlake_root: Path) -> dict[str, Any]:
@@ -467,7 +637,7 @@ def static_mutex_model(westlake_root: Path) -> dict[str, Any]:
     text = _strip_java_comments(path.read_text(errors="replace"))
     adopted, first = [], None
     for name in STATIC_MUTEX_LOCKS:
-        match = re.search(rf"^\s*int\s+{name}\s*\(", text, re.M)
+        match = re.search(rf"^[ \t]*int\s+{name}\s*\(", text, re.M)
         if not match or "0x4000" not in text:
             continue
         body = _braced_block(text, match.start())
@@ -479,6 +649,28 @@ def static_mutex_model(westlake_root: Path) -> dict[str, Any]:
             first = first or match
     return {"adopted": adopted,
             "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, first.start()) + 1}" if first else None}
+
+
+def thread_start_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether the bionic shim's pthread_create gives a new thread Bionic's order: the thread starts
+    in a routine of the shim's that waits on a futex, and pthread_create wakes it after musl has
+    stored the handle. Defined in the preloaded shim, it is every caller's."""
+    path = westlake_root / "framework/webview-shim/webview_bionic_shim.c"
+    if not path.exists():
+        return {"ordered": False, "source": None}
+    text = _strip_java_comments(path.read_text(errors="replace"))
+    match = re.search(r"^[ \t]*int\s+pthread_create\s*\(", text, re.M)
+    body = _braced_block(text, match.start()) if match else ""
+    ordered = False
+    if "FUTEX_WAKE" in body:
+        for name in sorted(set(re.findall(r"\b([A-Za-z_]\w*)\b", body))):
+            start = re.search(rf"^static\s+void\s*\*\s*{name}\s*\(\s*void\s*\*\s*\w+\s*\)\s*\{{", text, re.M)
+            if start and "FUTEX_WAIT" in _braced_block(text, start.start()):
+                ordered = True
+                break
+    return {"ordered": ordered,
+            "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, match.start()) + 1}"
+                      if ordered else None}
 
 
 def libc_constant_model(westlake_root: Path) -> dict[str, Any]:

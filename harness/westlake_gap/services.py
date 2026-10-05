@@ -348,11 +348,44 @@ def westlake_service_model(westlake_root: Path) -> dict[str, list[dict[str, Any]
         add(match.group(1), "cached-binder", "LocalServiceBinders answers it in process (published over the native seed)",
             init, java, match.start())
         model[match.group(1)][-1]["empty_lists"] = "ParceledListSlice.emptyList" in local_src
+    for name, (detail, offset) in device_answers(local_src).items():
+        add(name, "device-answer", detail, local, local_src, offset)
     return dict(model)
 
 
+def _first_sentence(comment: str) -> str:
+    text = " ".join(re.sub(r"^\s*(?:/\*\*?|\*/?|//)\s?", "", line).strip() for line in comment.splitlines())
+    text = re.sub(r"\s+", " ", text.replace("*/", "")).strip()
+    end = re.search(r"\.(?:\s|$)", text)
+    return text[:end.start() + 1] if end else text
+
+
+def device_answers(source: str) -> dict[str, tuple[str, int]]:
+    """Services LocalServiceBinders answers with the type default for every call, by design: what
+    Android answers on hardware without the feature (no telephony, so no role is available). Name
+    -> (the first sentence of the comment that says so, offset). A handler with any other body
+    answers something of its own and is not one."""
+    found: dict[str, tuple[str, int]] = {}
+    case = re.compile(r'((?:[ \t]*//[^\n]*\n)*)[ \t]*case "([^"]+)":\s*binder = proxy\(name, "[^"]+",\s*'
+                      r'(?:LocalServiceBinders::(\w+)|\(method, args\) -> DEFAULT)\);')
+    for match in case.finditer(source):
+        comment, name, handler = match.group(1), match.group(2), match.group(3)
+        if handler:
+            body = re.search(rf"((?:/\*\*(?:(?!\*/).)*\*/\s*)?)private static Object {handler}\(String method, "
+                             rf"Object\[\] args\)\s*\{{([^{{}}]*)\}}", source, re.S)
+            if not body or re.sub(r"//[^\n]*|\s+", "", body.group(2)) != "returnDEFAULT;":
+                continue
+            comment = body.group(1)
+        sentence = _first_sentence(comment) if comment.strip() else ""
+        # Only an answer that states an absence: no telephony, no widgets, Bluetooth off. Defaults
+        # that keep the framework's plumbing quiet (audio's player registry) are not a device's.
+        if re.search(r"\b(?:no|none|without|off)\b", sentence, re.I):
+            found[name] = (sentence, match.start(2))
+    return found
+
+
 _RANK = {"local-impl": 6, "adapter": 5, "cached-binder": 4, "strict-proxy": 4, "adapter-conditional": 3,
-         "local-fetcher": 2, "hollow-proxy": 1, "hollow-binder": 1, "explicit-null": 0}
+         "device-answer": 3, "local-fetcher": 2, "hollow-proxy": 1, "hollow-binder": 1, "explicit-null": 0}
 
 
 def provision_verdict(provisions: list[dict[str, Any]]) -> tuple[str, dict[str, Any] | None]:
@@ -368,7 +401,8 @@ def provision_verdict(provisions: list[dict[str, Any]]) -> tuple[str, dict[str, 
     strict = [p for p in provisions if p["kind"] == "strict-proxy"]
     if strict:
         return STRICT, strict[0]
-    if strongest["kind"] in {"local-impl", "adapter", "cached-binder", "adapter-conditional", "local-fetcher"}:
+    if strongest["kind"] in {"local-impl", "adapter", "cached-binder", "adapter-conditional", "local-fetcher",
+                             "device-answer"}:
         return SUPPLIED, strongest
     if hollow:
         return HOLLOW, hollow[0]
@@ -428,6 +462,11 @@ def service_map(
                                           "detail": "no binder found in fetcher or manager source; reached through a helper"}
         analog = OH_ANALOG.get(name, "unmapped")
         calls = sorted((manager_calls or {}).get(contract["manager"], set()))
+        # Answered in process as a device without the feature answers (device_answers). Only for a
+        # service the app gets: one that is inert or null for another binder is not answered at all.
+        device = next((p["detail"] for binder in [name] + [b["name"] for b in contract["binders"]]
+                       for p in westlake.get(binder, []) if p["kind"] == "device-answer"),
+                      None) if verdict == SUPPLIED else None
         rows.append({
             "service": name,
             "fetcher_can_fail": contract.get("fetcher_can_fail", True),
@@ -443,6 +482,7 @@ def service_map(
             "unwrapping_calls": [] if (basis or {}).get("empty_lists") else
                 sorted(set(calls) & set(contract.get("unwrapping_methods", []))),
             "auxiliary_binders": auxiliary,
+            "device_answer": device,
             "sites": sites[:5],
             "site_count": len(sites),
         })

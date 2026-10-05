@@ -1,4 +1,5 @@
 import importlib.util
+import re
 import unittest
 from pathlib import Path
 
@@ -41,6 +42,71 @@ class SelfFinishScoring(unittest.TestCase):
         blocker = "its last activity finished itself 0 ms after resuming, and nothing replaced it"
         self.assertEqual([r["id"] for r in score.candidate_rows("self-finish", blocker, rows)], ["am:task-root"])
         self.assertEqual(score.candidate_rows("self-finish", blocker, ROWS), [], "no such row: a blind spot")
+
+    def test_a_device_answer_counts_for_a_service_the_app_called_before_it_left(self) -> None:
+        """Fossify Messages: no SMS role on a board with no telephony, a toast, and the activity closes."""
+        role = {"id": "svc:role", "verdict": "supplied", "device_answer": "Roles on a board with no telephony."}
+        rows = [{"id": "am:task-root", "verdict": "supplied"}, role]
+        blocker = "its last activity finished itself 326 ms after resuming, and nothing replaced it"
+        found = score.candidate_rows("self-finish", blocker, rows, finished={"local_services": ["role", "notification"]})
+        self.assertEqual([r["id"] for r in found], ["am:task-root", "svc:role"])
+        self.assertEqual(score.outcome_of(found), "device")
+        found = score.candidate_rows("self-finish", blocker, rows, finished={"local_services": ["notification"]})
+        self.assertEqual((score.outcome_of(found), [r["id"] for r in found]), ("supplied", ["am:task-root"]),
+                         "a device answer the app never asked for is not its reason")
+        own = {"id": "am:own-implicit-intents", "verdict": "missing"}
+        self.assertEqual(score.outcome_of(score.candidate_rows("self-finish", blocker, rows + [own])), "named")
+
+
+class NoFrameScoring(unittest.TestCase):
+    def test_an_activity_that_never_drew_needs_what_holds_its_draws(self) -> None:
+        """Linphone: its own onPostCreate releases its draws, and the provider never called it."""
+        blocker = "the activity resumed 1.5 s after start and drew no frame"
+        rows = ROWS + [{"id": "am:post-create", "verdict": "missing"}]
+        found = score.candidate_rows("no-frame", blocker, rows)
+        self.assertEqual(([r["id"] for r in found], score.outcome_of(found)), (["am:post-create"], "named"))
+        self.assertEqual(score.outcome_of(score.candidate_rows("no-frame", blocker, ROWS)), "not-named")
+
+
+class NativeCrashScoring(unittest.TestCase):
+    def test_a_row_about_a_library_in_the_crash_names_it(self) -> None:
+        """Waze aborted in libwaze.so (loaded from the shim's init copy); its constructors were dropped."""
+        dump = {"frames": [
+            {"path": "/system/lib/ld-musl-aarch64.so.1", "library": "ld-musl-aarch64.so.1", "symbol": "abort+20"},
+            {"path": "/data/local/tmp/asx/lib/arm64-v8a/.libwaze.so.westlake-init.24312.0", "library": "libwaze.so"}]}
+        rows = [{"id": "load:packed-init-array", "verdict": "missing", "libraries": ["libwaze.so"]},
+                {"id": "egl:by-handle", "verdict": "missing", "libraries": ["lib/arm64-v8a/libSDL2.so"]}]
+        found = score.candidate_rows("native-crash", "SIGABRT on thread Native Thread: aborted from libwaze.so",
+                                     rows, dump=dump)
+        self.assertEqual([r["id"] for r in found], ["load:packed-init-array"])
+        sdl = {"frames": [{"path": "/data/local/tmp/asx/lib/arm64-v8a/libSDL2.so", "library": "libSDL2.so"}]}
+        self.assertEqual([r["id"] for r in score.crash_rows(sdl, rows)], ["egl:by-handle"])
+        mali = {"frames": [{"path": "/vendor/lib64/chipsetsdk/libGLES_mali.z.so", "library": "libGLES_mali.z.so"}]}
+        self.assertIsNone(score.crash_rows(mali, rows), "no app frame: unscorable")
+
+    def test_a_row_about_one_call_needs_that_call_in_the_crash(self) -> None:
+        handle = {"id": "abi:thread-handle-order", "verdict": "missing", "libraries": ["libvcbasekit.so", "libppsspp_jni.so"],
+                  "crash_symbols": "^pthread_"}
+        tiktok = {"frames": [{"path": "/system/lib/ld-musl-aarch64.so.1", "library": "ld-musl-aarch64.so.1",
+                              "symbol": "pthread_setname_np+92"},
+                             {"path": "/data/local/tmp/asx/lib/arm64-v8a/libvcbasekit.so", "library": "libvcbasekit.so"}]}
+        ppsspp = {"frames": [{"path": "/data/local/tmp/asx/libhwui.so", "library": "libhwui.so"},
+                             {"path": "/data/local/tmp/asx/lib/arm64-v8a/libppsspp_jni.so", "library": "libppsspp_jni.so"}]}
+        self.assertEqual([r["id"] for r in score.crash_rows(tiktok, [handle])], ["abi:thread-handle-order"])
+        self.assertIsNone(score.crash_rows(ppsspp, [handle]))
+        # PPSSPP's crash runs in libhwui's copy of its own symbols: the interposition row names it.
+        interposed = {"id": "load:interposed-by-runtime", "verdict": "missing", "libraries": ["libppsspp_jni.so"],
+                      "crash_libraries": ["libhwui.so", "libpng.so"]}
+        self.assertEqual([r["id"] for r in score.crash_rows(ppsspp, [handle, interposed])], ["load:interposed-by-runtime"])
+        own = {"frames": [{"path": "/data/local/tmp/asx/lib/arm64-v8a/libppsspp_jni.so", "library": "libppsspp_jni.so"}]}
+        self.assertIsNone(score.crash_rows(own, [interposed]), "a crash in its own code is not interposition")
+
+    def test_a_weak_import_names_only_a_call_through_null(self) -> None:
+        weak = {"id": "ndk:weak-api", "verdict": "missing", "libraries": ["libxul.so"], "crash_kinds": ["null-call"]}
+        frames = [{"path": "/data/local/tmp/asx/lib/arm64-v8a/libxul.so", "library": "libxul.so"}]
+        self.assertEqual([r["id"] for r in score.crash_rows({"kind": "null-call", "frames": frames}, [weak])],
+                         ["ndk:weak-api"])
+        self.assertIsNone(score.crash_rows({"kind": "heap", "frames": frames}, [weak]))
 
 
 if __name__ == "__main__":

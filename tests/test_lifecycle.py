@@ -20,6 +20,12 @@ class ScreenshotDecides(unittest.TestCase):
             app = Path(temp) / "app.jpeg"
             Image.new("RGB", (1200, 1920), (20, 90, 200)).save(app)
             self.assertEqual(lifecycle.screen_state(app), "app")
+            # An overlay toolbar over the host screen (Draw Anywhere): a band, the rest the host.
+            over = Path(temp) / "overlay.jpeg"
+            shot = full.resize((1200, 1920)).convert("RGB")
+            shot.paste((150, 150, 150), (40, 140, 560, 200))
+            shot.save(over, quality=95)
+            self.assertEqual(lifecycle.screen_state(over), "partial")
 
 
 class FirstBlocker(unittest.TestCase):
@@ -54,6 +60,13 @@ class FirstBlocker(unittest.TestCase):
         # A trampoline: the first activity finished after another one resumed.
         self.assertIsNone(evidence.self_finish(resumed % "a1" + resumed % "b2" + finished % ("950", "a1")))
         self.assertIsNone(evidence.self_finish(resumed % "a1"))
+
+    def test_the_in_process_services_an_app_called(self) -> None:
+        from westlake_gap import evidence
+        stderr = ("[WESTLAKE-LOCAL-SERVICE] role bound in process\n[WESTLAKE-LOCAL-SERVICE] role.isRoleAvailableAsUser\n"
+                  "[WESTLAKE-LOCAL-SERVICE] notification.enqueueTextToast\n[WESTLAKE-LOCAL-SERVICE] role.isRoleHeld\n"
+                  "[WESTLAKE-LOCAL-SERVICE] telephony.registry.listenWithEventList\n")
+        self.assertEqual(evidence.local_service_calls(stderr), ["role", "notification", "telephony.registry"])
 
     def test_trampoline_window_held_back_then_a_frame_is_drawing(self) -> None:
         from westlake_gap import lifecycle
@@ -91,6 +104,18 @@ class Evidence(unittest.TestCase):
         self.assertEqual((s.blocker_category, s.blocker),
                          ("stall", "main thread waiting on a monitor at com.example.Init.await(Init.java:3)"))
 
+    def test_the_main_thread_is_the_one_running_activity_thread_main(self) -> None:
+        """cclauncher: tid 1 was a WorkManager pool thread parked in its queue; the main looper ran as
+        "Thread-2" (appspawn-x starts the VM on a worker pthread) and was idle."""
+        from westlake_gap import evidence
+        dump = ('DALVIK THREADS (2):\n"Thread-2" prio=5 tid=9 Native\n  | state=S schedstat=( 1 2 3 )\n'
+                "  at android.os.MessageQueue.nativePollOnce(Native method)\n  at android.os.Looper.loop(Looper.java:1)\n"
+                "  at android.app.ActivityThread.main(ActivityThread.java:1)\n"
+                '"WM.task-1" prio=5 tid=1 Waiting\n  | state=S\n  at jdk.internal.misc.Unsafe.park(Native method)\n'
+                "  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:1)\n")
+        thread = evidence.main_thread(dump)
+        self.assertEqual((thread["name"], thread["waiting"]), ("Thread-2", "idle in its message loop"))
+
     DUMP = ("Build info:OpenHarmony 6.1.0.31\nPid:6719\nReason:Signal:SIGSEGV(SEGV_MAPERR)@000000000000000000 \n"
             "Fault thread info:\nTid:6808, Name:acceleratePlayH\n#00 pc 0000000000000000 Not mapped\n"
             "#01 pc 00000000000802e8 /system/lib/ld-musl-aarch64.so.1(do_init_fini+444)(a9d018197b852b7e)\n"
@@ -116,6 +141,13 @@ class Evidence(unittest.TestCase):
                                  + "#00 pc 00000000000d6e20 /system/lib/ld-musl-aarch64.so.1(__libc_malloc_impl+1332)(ab)\n"
                                  + "#01 pc 000000000003928c /data/local/tmp/asx/lib/arm64-v8a/libsyscall.so\n")
         self.assertEqual((heap["kind"], heap["first_app_frame"]), ("heap", "libsyscall.so+0x3928c"))
+        # Fennec: libxul freed with musl's free what mozjemalloc allocated; mallocng faults checking it.
+        foreign = evidence.cppcrash(head % "SIGSEGV(SEGV_MAPERR)"
+                                    + "#00 pc 00000000000d5e1c /system/lib/ld-musl-aarch64.so.1(get_meta+92)(ab)\n"
+                                    + "#01 pc 00000000000d5b40 /system/lib/ld-musl-aarch64.so.1(__libc_free+24)(ab)\n"
+                                    + "#02 pc 0000000002906cb0 /data/local/tmp/asx/lib/arm64-v8a/libxul.so\n")
+        self.assertEqual(foreign["kind"], "heap")
+        self.assertIn("handed memory its heap never allocated", foreign["summary"])
         abort = evidence.cppcrash(head % "SIGABRT(SI_TKILL)"
                                   + "#00 pc 0000000000111344 /system/lib/ld-musl-aarch64.so.1(raise+384)(ab)\n"
                                   + "#01 pc 00000000000bd55c /system/lib/ld-musl-aarch64.so.1(abort+20)(ab)\n"
@@ -127,6 +159,39 @@ class Evidence(unittest.TestCase):
         init = evidence.cppcrash(head % "SIGSEGV(SEGV_ACCERR)" + "#00 pc 00000000000482a0 [Unknown]\n"
                                  + "#01 pc 00000000000802e8 /system/lib/ld-musl-aarch64.so.1(do_init_fini+444)(ab)\n")
         self.assertEqual(init["kind"], "unrelocated-constructor")
+
+    def test_a_frame_past_its_files_mappings(self) -> None:
+        """CapCut: the dump placed its fault at libmetasec_ov.so+0x215d6ec, past the 1.9 MB library."""
+        from westlake_gap import evidence
+        lib = "/data/local/tmp/asx/lib/arm64-v8a/libmetasec_ov.so"
+        text = ("Reason:Signal:SIGSEGV(SEGV_MAPERR)@0x0000000000000013 \nFault thread info:\nTid:17197, Name:Thread-13\n"
+                f"#00 pc 000000000215d6ec {lib}\n#01 pc 00000000000210a0 {lib}\nRegisters:\n\nMaps:\n"
+                f"7ea1680000-7ea183e000 r-xp 00000000 {lib}\n7ea183e000-7ea1842000 r--p 001be000 {lib}\n"
+                f"7ea1858000-7ea185c000 rw-p 001d4000 {lib}\n")
+        dump = evidence.cppcrash(text)
+        self.assertTrue(dump["frames"][0]["beyond_mapping"])
+        self.assertNotIn("beyond_mapping", dump["frames"][1])
+        self.assertTrue(dump["summary"].startswith("in code past libmetasec_ov.so's mappings"))
+        self.assertEqual(dump["first_app_frame"], "libmetasec_ov.so+0x215d6ec (past its mappings)")
+        self.assertEqual(evidence.cppcrash(text.split("Maps:")[0])["summary"], "in libmetasec_ov.so+0x215d6ec",
+                         "no maps, no judgement")
+
+    def test_the_pc_register_places_an_app_librarys_fault(self) -> None:
+        """CapCut: the dump printed libmetasec_ov.so+0x1756ec (in .rodata); pc is a store at 0x15b6ec."""
+        from westlake_gap import evidence
+        lib = "/data/local/tmp/asx/lib/arm64-v8a/libmetasec_ov.so"
+        musl = "/system/lib/ld-musl-aarch64.so.1"
+        text = ("Reason:Signal:SIGSEGV(SEGV_MAPERR)@0x0000000000000013 \nFault thread info:\nTid:1, Name:Thread-13\n"
+                f"#00 pc 00000000001756ec {lib}\n#01 pc 000000000017588c {lib}\nRegisters:\n"
+                "lr:0000007ed0b9b890 sp:0000007eb2d7c030 pc:0000007ed0b9b6ec\n\nMaps:\n"
+                f"7ed0a40000-7ed0bfe000 r-xp 00000000 {lib}\n7fb2b13000-7fb2bec000 r-xp 0007e000 {musl}\n")
+        dump = evidence.cppcrash(text)
+        self.assertEqual((dump["frames"][0]["pc"], dump["frames"][0]["dump_pc"]), (0x15b6ec, 0x1756ec))
+        self.assertEqual(dump["summary"], "in libmetasec_ov.so+0x15b6ec")
+        # OH's own libraries keep the dump's address: their text does not lie at its file offset.
+        musl_text = (text.replace(f"#00 pc 00000000001756ec {lib}", f"#00 pc 000000000013331c {musl}(pthread_setname_np+92)(ab)")
+                     .replace("pc:0000007ed0b9b6ec", "pc:0000007fb2bc731c"))
+        self.assertEqual(evidence.cppcrash(musl_text)["frames"][0]["pc"], 0x13331c)
 
     def test_crash_dump_completes_a_crash_the_log_saw(self) -> None:
         from westlake_gap import lifecycle
@@ -159,6 +224,37 @@ class Evidence(unittest.TestCase):
                  "10-03 11:25:28.131 22245 22262 W C00f00/OH_ACCAdapter: activityResumed (first-frame): no OH token mapping\n")
         self.assertEqual(evidence.startup_times(hilog), {"resumed": 2.26, "first_frame": 2.79})
         self.assertIsNone(evidence.startup_times("10-03 11:25:25.346 1 1 I C00f00/X: other\n"))
+
+    def test_a_resumed_activity_that_drew_no_frame(self) -> None:
+        """Since build 88 the adapter's 800 ms timeout says so. Linphone resumed, its pre-draw
+        listener cancelled every draw, and only the timeout reported: the host screen showed."""
+        from westlake_gap import evidence, lifecycle
+        hilog = ("10-05 08:30:20.900   942   942 I C00f00/AppSpawnX: Child process started, pid=1\n"
+                 "10-05 08:30:22.380   942   967 I C00f00/OH_ACCAdapter: activityResumed: OnDrawListener attached\n"
+                 "10-05 08:30:23.191   942   967 W C00f00/OH_ACCAdapter: activityResumed (first-frame timeout): no OH token mapping\n")
+        self.assertEqual(evidence.startup_times(hilog), {"resumed": 1.48, "first_frame_timeout": 2.29})
+        text = "kRegJNI loop done\n[DIRECT-LAUNCH] bind done sBindAppDone=true\n"
+        s = lifecycle.score("linphone", text)
+        s.screen = "host"
+        lifecycle.add_evidence(s, text, None, None, hilog)
+        self.assertEqual((s.blocker_category, s.blocker),
+                         ("no-frame", "the activity resumed 1.5 s after start and drew no frame"))
+        s = lifecycle.score("linphone", text)
+        s.screen = "app"
+        lifecycle.add_evidence(s, text, None, None, hilog)
+        self.assertNotEqual(s.blocker_category, "no-frame", "on screen: something drew")
+        left = hilog + ("10-05 08:30:22.500   942   967 I C00f00/OH_ACCAdapter: finishActivity: no OH ability; "
+                        "local destroy scheduled for android.os.Binder@1\n")
+        s = lifecycle.score("fmessages", text)
+        s.screen = "host"
+        lifecycle.add_evidence(s, text, None, None, left.replace("activityResumed: OnDrawListener attached",
+                                                                 "activityResumed: OnDrawListener attached (token=android.os.Binder@1)"))
+        self.assertEqual(s.blocker_category, "self-finish", "it left; the timeout follows from that")
+        drawn = hilog.replace("(first-frame timeout)", "(first-frame)")
+        s = lifecycle.score("linphone", text)
+        s.screen = "host"
+        lifecycle.add_evidence(s, text, None, None, drawn)
+        self.assertNotEqual(s.blocker_category, "no-frame", "a frame was drawn")
 
     def test_root_cause_is_the_deepest_cause_with_its_app_frame(self) -> None:
         """otgmaster's blocker read "start activity: NullPointerException"; its cause named the
