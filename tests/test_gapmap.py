@@ -311,23 +311,39 @@ class ServiceVerdicts(unittest.TestCase):
         self.assertEqual(gapmap.vulkan_feature_rows(scan, unclaimed, []), [], "absent and unclaimed agree")
         self.assertEqual(gapmap.vulkan_feature_rows({"inventory": {}}, unclaimed, ["libvulkan.so"]), [])
 
-    def test_versioned_import_clash_is_supplied_by_a_shim_version_node(self) -> None:
+    def test_versioned_import_clash_is_supplied_name_by_name(self) -> None:
         """Fennec: free@libmozglue.so bound to musl's free; the shim's non-default libmozglue.so
-        forwarders restore libmozglue's own."""
+        forwarders restore libmozglue's own, for the names they forward."""
         clashes = [{"symbol": "free", "version": "libmozglue", "importing_libraries": ["libxul.so"],
                     "versioned_clash": True},
                    {"symbol": "malloc", "version": "libmozglue", "importing_libraries": ["libxul.so", "libnss3.so"],
                     "versioned_clash": True}]
-        row = gapmap.versioned_clash_rows(clashes, {"LIBC", "LIBC_N"})[0]
+        row = gapmap.versioned_clash_rows(clashes, {"LIBC": {"open"}})[0]
         self.assertEqual((row["id"], row["verdict"]), ("abi:versioned-import-clash", "missing"))
         self.assertEqual(row["open_symbols"], ["free@libmozglue", "malloc@libmozglue"])
-        self.assertEqual(gapmap.versioned_clash_rows(clashes, {"LIBC", "libmozglue.so"})[0]["verdict"], "supplied")
+        forwarders = {"libmozglue.so": {"free", "malloc"}}
+        self.assertEqual(gapmap.versioned_clash_rows(clashes, forwarders)[0]["verdict"], "supplied")
         mixed = clashes + [{"symbol": "sqlite3_open", "version": "libnss3", "importing_libraries": ["libxul.so"],
+                            "versioned_clash": True},
+                           {"symbol": "_ZdlPvm", "version": "libmozglue", "importing_libraries": ["libxul.so"],
                             "versioned_clash": True}]
-        row = gapmap.versioned_clash_rows(mixed, {"libmozglue.so"})[0]
-        self.assertEqual((row["verdict"], row["open_symbols"]), ("missing", ["sqlite3_open@libnss3"]),
-                         "a version the shim covers is not listed as open")
-        self.assertEqual(gapmap.versioned_clash_rows([], {"LIBC"}), [])
+        row = gapmap.versioned_clash_rows(mixed, forwarders)[0]
+        self.assertEqual((row["verdict"], row["open_symbols"]), ("missing", ["sqlite3_open@libnss3", "_ZdlPvm@libmozglue"]),
+                         "a name the shim does not forward is open, whatever else its version covers")
+        self.assertEqual(gapmap.versioned_clash_rows([], {}), [])
+        _write(self.root / "westlake/framework/webview-shim/webview_bionic_shim.c", """
+#define WL_MOZGLUE_FORWARD(index, ret, name, params, args)                                      \\
+    ret westlake_mozglue_##name params { return ((ret (*) params) entry(index)) args; }         \\
+    __asm__(".symver westlake_mozglue_" #name ", " #name "@libmozglue.so");
+WL_MOZGLUE_FORWARD(WL_MOZ_MALLOC, void *, malloc, (size_t size), (size))
+WL_MOZGLUE_FORWARD(WL_MOZ_POSIX_MEMALIGN, int, posix_memalign, (void **out, size_t alignment, size_t size),
+                   (out, alignment, size))
+void westlake_mozglue__ZdlPvm(void *pointer, size_t size) { }
+__asm__(".symver westlake_mozglue__ZdlPvm, _ZdlPvm@libmozglue.so");
+/* __asm__(".symver westlake_old, old@libmozglue.so"); */
+""")
+        self.assertEqual(contracts.shim_versioned_definitions(self.root / "westlake"),
+                         {"libmozglue.so": {"malloc", "posix_memalign", "_ZdlPvm"}})
         _write(self.root / "westlake/framework/webview-shim/webview_bionic_shim.map",
                "/* comment {not a node} */\nLIBC_N {\n global: x;\n};\nlibmozglue.so {\n};\nLIBC {\n global: *;\n} LIBC_N;\n")
         self.assertEqual(contracts.shim_version_nodes(self.root / "westlake"), {"LIBC_N", "libmozglue.so", "LIBC"})

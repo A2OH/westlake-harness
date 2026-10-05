@@ -1644,21 +1644,25 @@ def symbol_version_rows(oh_missing: list[dict[str, Any]]) -> list[dict[str, Any]
     )]
 
 
-def versioned_clash_rows(clashes: list[dict[str, Any]], shim_versions: set[str]) -> list[dict[str, Any]]:
+def versioned_clash_rows(clashes: list[dict[str, Any]], shim_definitions: dict[str, set[str]]) -> list[dict[str, Any]]:
     """Imports versioned against the app's own library that a board library without symbol versions
     also defines (ohresolve.versioned_clashes). OH's loader binds them to the board's copy, searched
-    first; the bionic shim restores Android's binding for a version it defines forwarders under,
-    as non-default versions that call the app library's own definitions."""
+    first; the bionic shim restores Android's binding for the names it defines forwarders for at
+    that version (contracts.shim_versioned_definitions), as non-default versions that call the app
+    library's own definitions. A version the shim covers for malloc and free says nothing of its
+    operator delete: Fennec's sized delete still bound to a libc++'s."""
     if not clashes:
         return []
-    versions = sorted({c["version"] for c in clashes})
-    supplied = [v for v in versions if v in shim_versions or v + ".so" in shim_versions]
-    open_ = [c for c in clashes if c["version"] not in supplied]
+    forwarded = lambda c: c["symbol"] in (shim_definitions.get(c["version"], set())
+                                          | shim_definitions.get(c["version"] + ".so", set()))
+    supplied = sorted({c["version"] for c in clashes if forwarded(c)})
+    open_ = [c for c in clashes if not forwarded(c)]
     shown = open_ or clashes
     provider = []
     if supplied:
         provider.append("the bionic shim defines non-default " + "/".join(v + ".so" for v in supplied)
-                        + " forwarders that call the app library's own definitions")
+                        + " forwarders that call the app library's own definitions, for "
+                        + str(sum(forwarded(c) for c in clashes)) + " of these names")
     if open_:
         provider.append("nothing under " + "/".join(sorted({c["version"] + ".so" for c in open_}))
                         + " precedes the board's unversioned copy, so the import binds to it")
@@ -3165,7 +3169,7 @@ def build_map(
             + vm_lookup_rows(scan, bionic_shim_exports(westlake_root))
             + symbol_version_rows(oh_missing)
             + versioned_clash_rows([m for m in oh_missing if m.get("versioned_clash")],
-                                   contracts.shim_version_nodes(westlake_root))
+                                   contracts.shim_versioned_definitions(westlake_root))
             + task_root_rows(scan, contracts.activity_client_model(westlake_root))
             + own_intent_rows(scan, contracts.own_intent_model(westlake_root))
             + post_create_rows(scan, contracts.launch_start_model(westlake_root))

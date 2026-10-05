@@ -221,6 +221,50 @@ def shim_version_nodes(westlake_root: Path) -> set[str]:
     return set(re.findall(r"^\s*([A-Za-z_][\w.]*)\s*\{", text, flags=re.M))
 
 
+def _macro_arguments(text: str, start: int, count: int) -> list[str]:
+    """The first count arguments of a macro call whose "(" is at start, split at top-level commas."""
+    args, depth, current = [], 0, []
+    for char in text[start + 1:]:
+        if char in "([{":
+            depth += 1
+        elif char in ")]}":
+            if depth == 0:
+                break
+            depth -= 1
+        if char == "," and depth == 0:
+            args.append("".join(current).strip())
+            current = []
+            if len(args) == count:
+                return args
+            continue
+        current.append(char)
+    args.append("".join(current).strip())
+    return args[:count]
+
+
+def shim_versioned_definitions(westlake_root: Path) -> dict[str, set[str]]:
+    """The names the bionic shim defines at each version node, from its ".symver x, name@version"
+    directives and the forwarding macros that write them (WL_MOZGLUE_FORWARD(index, ret, name, ...)).
+    An import versioned against an app library binds to the shim only for a name listed here; the
+    version node alone covers nothing."""
+    found: dict[str, set[str]] = {}
+    for path in sorted((westlake_root / "framework/webview-shim").glob("*.c")):
+        text = re.sub(r"/\*.*?\*/|//[^\n]*", "", path.read_text(errors="replace"), flags=re.S)
+        for name, version in re.findall(r'\.symver\s+\w+\s*,\s*([A-Za-z_]\w*)@{1,2}([\w.]+)"', text):
+            found.setdefault(version, set()).add(name)
+        for macro, params, body in re.findall(r"#define\s+(\w+)\(([^)]*)\)((?:[^\n]*\\\n)*[^\n]*)", text):
+            stringized = re.search(r'#\s*(\w+)\s*"@([\w.]+)"', body)
+            names = [p.strip() for p in params.split(",")]
+            if not stringized or stringized.group(1) not in names:
+                continue
+            index = names.index(stringized.group(1))
+            for use in re.finditer(rf"^{re.escape(macro)}\(", text, re.M):
+                args = _macro_arguments(text, use.end() - 1, index + 1)
+                if len(args) > index and re.fullmatch(r"[A-Za-z_]\w*", args[index]):
+                    found.setdefault(stringized.group(2), set()).add(args[index])
+    return found
+
+
 def _int_expression(text: str, constants: dict[str, str], depth: int = 0) -> int | None:
     """A Java int expression of literals, named int constants, parentheses and + - * << >> | &,
     or None when it is anything else."""
