@@ -243,6 +243,13 @@ class Evidence(unittest.TestCase):
         s.screen = "app"
         lifecycle.add_evidence(s, text, None, None, hilog)
         self.assertNotEqual(s.blocker_category, "no-frame", "on screen: something drew")
+        left = hilog + ("10-05 08:30:22.500   942   967 I C00f00/OH_ACCAdapter: finishActivity: no OH ability; "
+                        "local destroy scheduled for android.os.Binder@1\n")
+        s = lifecycle.score("fmessages", text)
+        s.screen = "host"
+        lifecycle.add_evidence(s, text, None, None, left.replace("activityResumed: OnDrawListener attached",
+                                                                 "activityResumed: OnDrawListener attached (token=android.os.Binder@1)"))
+        self.assertEqual(s.blocker_category, "self-finish", "it left; the timeout follows from that")
         drawn = hilog.replace("(first-frame timeout)", "(first-frame)")
         s = lifecycle.score("linphone", text)
         s.screen = "host"

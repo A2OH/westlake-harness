@@ -375,7 +375,9 @@ def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str 
         # What it asked the in-process services before it left: a device's answer may be the reason.
         finished["local_services"] = evidence.local_service_calls(text)
         s.self_finish = finished
-        if s.blocker is None or s.blocker_category == "stall" or not s.blocking:
+        # An activity that finished itself drew nothing because it left: its first-frame report times
+        # out too, so a no-frame reading gives way to what it did (Fossify Messages).
+        if s.blocker is None or s.blocker_category in ("stall", "no-frame") or not s.blocking:
             s.blocker_category, s.blocking = "self-finish", True
             s.blocker = "its last activity finished itself%s after resuming, and nothing replaced it" % (
                 " %d ms" % finished["after_ms"] if "after_ms" in finished else "")
