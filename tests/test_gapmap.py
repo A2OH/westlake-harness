@@ -1790,6 +1790,56 @@ class OwnImplicitIntents(unittest.TestCase):
             self.assertFalse(contracts.own_intent_model(root)["started"])
 
 
+class PostCreateCallbacks(unittest.TestCase):
+    def test_the_activity_or_a_named_base_class_overrides(self) -> None:
+        from westlake_gap.scanner import after_start_overrides
+        superclasses = {"Lorg/linphone/ui/main/MainActivity;": "Lk/h;", "Lk/h;": "Landroid/app/Activity;",
+                        "Lnet/openid/appauth/RedirectActivity;": "Lk/h;",
+                        "Lcom/app/Settings;": "Lcom/app/BaseActivity;", "Lcom/app/BaseActivity;": "Lk/h;",
+                        "Lcom/app/Plain;": "Landroidx/appcompat/app/AppCompatActivity;",
+                        "Landroidx/appcompat/app/AppCompatActivity;": "Landroid/app/Activity;"}
+        callbacks = {"Lorg/linphone/ui/main/MainActivity;": {"onPostCreate"}, "Lk/h;": {"onPostCreate"},
+                     "Lcom/app/BaseActivity;": {"onRestoreInstanceState"},
+                     "Landroidx/appcompat/app/AppCompatActivity;": {"onPostCreate"}}
+        found = after_start_overrides(["org.linphone.ui.main.MainActivity", "net.openid.appauth.RedirectActivity",
+                                       "com.app.Settings", "com.app.Plain"], superclasses, callbacks)
+        # R8's renamed AppCompatActivity (Lk/h;) and AndroidX's own are not the app's code.
+        self.assertEqual([(f["activity"], f["class"], f["callbacks"]) for f in found],
+                         [("org.linphone.ui.main.MainActivity", "Lorg/linphone/ui/main/MainActivity;", ["onPostCreate"]),
+                          ("com.app.Settings", "Lcom/app/BaseActivity;", ["onRestoreInstanceState"])])
+
+    def test_a_row_supplied_when_the_launch_carries_the_start(self) -> None:
+        scan = {"apk": {"main_activities": ["org.linphone.ui.main.MainActivity"]},
+                "inventory": {"after_start_overrides": [
+                    {"activity": "org.linphone.ui.assistant.AssistantActivity", "class": "x", "callbacks": ["onPostCreate"]},
+                    {"activity": "org.linphone.ui.main.MainActivity", "class": "y", "callbacks": ["onPostCreate"]}]}}
+        rows = gapmap.post_create_rows(scan, {"carries_start": False, "source": "AppSchedulerBridge.java:1844"})
+        self.assertEqual((rows[0]["id"], rows[0]["verdict"], rows[0]["effort"]), ("am:post-create", "missing", "XS"))
+        self.assertTrue(rows[0]["app_evidence"].startswith("org.linphone.ui.main.MainActivity"), "the launch activity first")
+        rows = gapmap.post_create_rows(scan, {"carries_start": True, "source": "AppSchedulerBridge.java:1844"})
+        self.assertEqual(rows[0]["verdict"], "supplied")
+        self.assertEqual(gapmap.post_create_rows({"inventory": {}}, {"carries_start": False}), [])
+
+    def test_the_model_reads_the_launch_transaction(self) -> None:
+        import tempfile
+        from westlake_gap import contracts
+        launch = ("class B {\n    public static void nativeOnScheduleLaunchAbility(Object t, String b) {\n"
+                  "        LaunchActivityItem item = LaunchActivityItem.obtain(token, intent);\n"
+                  "        transaction.addTransactionItem(item);\n%s    }\n}\n")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / "framework/activity/java/AppSchedulerBridge.java"
+            path.parent.mkdir(parents=True)
+            path.write_text(launch % "        transaction.addTransactionItem(StartActivityItem.obtain(token, null));\n")
+            self.assertEqual(contracts.launch_start_model(root),
+                             {"carries_start": True, "source": "framework/activity/java/AppSchedulerBridge.java:2"})
+            # A lifecycle request only in a comment is not one.
+            path.write_text(launch % "        // NO setLifecycleStateRequest(ResumeActivityItem.obtain(token)) here\n")
+            self.assertFalse(contracts.launch_start_model(root)["carries_start"])
+            path.write_text("class B {}\n")
+            self.assertIsNone(contracts.launch_start_model(root)["carries_start"])
+
+
 class DeviceAnswers(unittest.TestCase):
     SOURCE = """
             switch (name) {

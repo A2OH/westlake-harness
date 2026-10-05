@@ -942,6 +942,8 @@ class DexInventory:
     native_methods: list[dict[str, Any]] = field(default_factory=list)
     superclasses: dict[str, str] = field(default_factory=dict)
     own_intent_names: set[str] = field(default_factory=set)
+    # Classes defining one of AFTER_START_CALLBACKS, with which ones.
+    after_start_callbacks: dict[str, set[str]] = field(default_factory=dict)
 
 
 def named_filter_targets(strings: Iterable[str], targets: dict[str, list[str]]) -> set[str]:
@@ -957,6 +959,40 @@ def named_filter_targets(strings: Iterable[str], targets: dict[str, list[str]]) 
             found.add(text)
         elif ":" in text and text.split(":", 1)[0] in schemes:
             found.add(text.split(":", 1)[0])
+    return found
+
+
+# Callbacks Android makes after onStart on an activity's way to its first resume, from the pending
+# actions its launch marked: onRestoreInstanceState (with a saved state) and onPostCreate. A provider
+# that resumes in a transaction of its own finds those actions cleared and makes neither.
+AFTER_START_CALLBACKS = frozenset({"onPostCreate", "onRestoreInstanceState"})
+# Library activities whose overrides of them are left out: AppCompat's onPostCreate installs a decor
+# that setContentView has already installed.
+_LIBRARY_ACTIVITY_PREFIXES = ("Landroidx/", "Landroid/support/", "Lcom/google/android/material/")
+
+
+def _renamed(descriptor: str) -> bool:
+    """A class R8 renamed: every segment of its name one or two characters (AppCompatActivity is
+    Lk/h; in linphone). A manifest activity keeps its name; an app's renamed base class is
+    indistinguishable from a library's and is left out."""
+    return all(len(part) <= 2 for part in descriptor[1:-1].split("/"))
+
+
+def after_start_overrides(activities: list[str], superclasses: dict[str, str],
+                          callbacks: dict[str, set[str]]) -> list[dict[str, Any]]:
+    """The app's activities whose own classes override an AFTER_START_CALLBACKS callback: the most
+    derived such class in each activity's chain, the activity itself or a base class that kept its
+    name. Linphone's MainActivity marks its first screen ready in onPostCreate and cancels every
+    draw until then."""
+    found = []
+    for name in activities:
+        current, depth = "L" + name.replace(".", "/") + ";", 0
+        while current and depth < 32:
+            if current in callbacks and not current.startswith(_LIBRARY_ACTIVITY_PREFIXES) \
+                    and (depth == 0 or not _renamed(current)):
+                found.append({"activity": name, "class": current, "callbacks": sorted(callbacks[current])})
+                break
+            current, depth = superclasses.get(current), depth + 1
     return found
 
 
@@ -987,6 +1023,9 @@ def inventory_dex(path: Path, filter_targets: dict[str, list[str]] | None = None
             result.defined_classes.add(str(c.get_name()))
             # Kept for the activity hierarchy: which engine base class a launch activity extends.
             result.superclasses[str(c.get_name())] = str(c.get_superclassname() or "")
+            for m in c.get_methods():
+                if str(m.get_name()) in AFTER_START_CALLBACKS and str(m.get_descriptor()).startswith("(Landroid/os/Bundle;"):
+                    result.after_start_callbacks.setdefault(str(c.get_name()), set()).add(str(m.get_name()))
         for type_idx in range(dex.get_header_item().type_ids_size):
             type_name = component_type(str(dex.get_cm_type(type_idx)))
             if is_platform_type(type_name):
@@ -1538,6 +1577,7 @@ def apk_metadata(path: Path) -> dict[str, Any]:
             "main_activities": _launch_targets(apk),
             "activity_filter_targets": activity_filter_targets(apk),
             "activities": len(apk.get_activities() or []),
+            "activity_names": sorted(apk.get_activities() or []),
             "services": len(apk.get_services() or []),
             "receivers": len(apk.get_receivers() or []),
             "providers": len(apk.get_providers() or []),
@@ -2079,6 +2119,8 @@ def scan_apk(
             "feature_queries": inventory.feature_queries,
             "nonnull_casts": inventory.nonnull_casts,
             "own_intent_names": sorted(inventory.own_intent_names),
+            "after_start_overrides": after_start_overrides(identity.get("activity_names") or [],
+                                                           inventory.superclasses, inventory.after_start_callbacks),
             "native_upcalls": native_upcalls if platform_members is not None else None,
             "platform_method_names": _method_names_by_owner(inventory.method_refs),
             "declared_native_methods": native_findings,

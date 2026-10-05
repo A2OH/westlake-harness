@@ -1310,6 +1310,35 @@ def own_intent_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[st
     )]
 
 
+def post_create_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """The app's own activity code in onPostCreate or onRestoreInstanceState (scanner.after_start_overrides),
+    which Android calls after onStart from the pending actions its launch marked. A provider that
+    resumes in a transaction of its own makes neither call."""
+    overrides = scan["inventory"].get("after_start_overrides") or []
+    if not overrides or model.get("carries_start") is None:
+        return []
+    supplied = bool(model["carries_start"])
+    callbacks = sorted({name for item in overrides for name in item["callbacks"]})
+    launch = set(scan.get("apk", {}).get("main_activities") or [])
+    first = sorted(overrides, key=lambda item: item["activity"] not in launch)
+    return [_row(
+        "app-framework", "am:post-create",
+        "Activity callbacks after onStart (" + ", ".join(callbacks) + ")",
+        oh_touchpoint="none: the in-process transaction executor runs the activity lifecycle",
+        verdict="supplied" if supplied else "missing", shim_class="C0" if supplied else "C9",
+        effort="verify" if supplied else "XS", confidence=STATIC,
+        provider=("the launch transaction carries the start, so its pending actions reach it" if supplied else
+                  "the launch transaction stops at onCreate and the resume comes in one of its own: the pending "
+                  "onRestoreInstanceState and onPostCreate are cleared in between"),
+        provider_source=model.get("source"),
+        app_evidence="; ".join(item["activity"] + " (" + ", ".join(item["callbacks"]) + ")" for item in first[:4])
+        + (f"; {len(overrides) - 4} more" if len(overrides) > 4 else ""),
+        seen_blocking=["linphone (r85: MainActivity marks its first screen ready in onPostCreate and cancels every "
+                       "draw until then; its window never drew)"],
+        shim="request the start state in the launch transaction, as Android's starts and resumes in it",
+    )]
+
+
 def window_metrics_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
     """WindowMetrics read before the first relayout. aat derived its button count from the window
     width in onCreate, got 0x0, and divided by zero."""
@@ -3020,6 +3049,7 @@ def build_map(
                                    contracts.shim_version_nodes(westlake_root))
             + task_root_rows(scan, contracts.activity_client_model(westlake_root))
             + own_intent_rows(scan, contracts.own_intent_model(westlake_root))
+            + post_create_rows(scan, contracts.launch_start_model(westlake_root))
             + feature_rows(scan, contracts.feature_claims_model(westlake_root), aosp_services, westlake_services)
             + vulkan_feature_rows(scan, contracts.feature_claims_model(westlake_root), runtime_libraries)
             + window_metrics_rows(scan, contracts.window_metrics_model(westlake_root))

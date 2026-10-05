@@ -408,6 +408,23 @@ def own_intent_model(westlake_root: Path) -> dict[str, Any]:
                       if defined else None}
 
 
+def launch_start_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether an activity's launch transaction carries its start (or its resume). handleLaunchActivity
+    marks the transaction executor's pending actions -- restore the saved state, call onPostCreate --
+    and the executor clears them when its transaction ends. A start in a transaction of its own finds
+    them cleared: no onRestoreInstanceState, no onPostCreate."""
+    path = westlake_root / "framework/activity/java/AppSchedulerBridge.java"
+    text = _strip_java_comments(path.read_text(errors="replace")) if path.exists() else ""
+    match = re.search(r"public\s+static\s+void\s+nativeOnScheduleLaunchAbility\s*\(", text)
+    if not match:
+        return {"carries_start": None, "source": None}
+    body = _braced_block(text, match.start())
+    carries = "LaunchActivityItem.obtain(" in body and re.search(
+        r"\b(?:StartActivityItem|ResumeActivityItem)\.obtain\s*\(", body) is not None
+    return {"carries_start": carries,
+            "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, match.start()) + 1}"}
+
+
 def window_adapter_model(westlake_root: Path) -> dict[str, Any]:
     """Window-manager semantics the in-process IWindowSession must reproduce, checked in source."""
     path = westlake_root / "framework/window/java/WindowSessionAdapter.java"
