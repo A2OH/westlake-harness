@@ -425,6 +425,27 @@ def launch_start_model(westlake_root: Path) -> dict[str, Any]:
             "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, match.start()) + 1}"}
 
 
+def permission_request_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether a runtime permission request gets an answer: Activity.requestPermissions starts the
+    permission controller for a result, and the in-process activity task manager must answer that
+    start with the result the controller would send (ActivityResultItem to the caller)."""
+    path = westlake_root / "framework/activity/java/ActivityTaskManagerAdapter.java"
+    text = _strip_java_comments(path.read_text(errors="replace")) if path.exists() else ""
+    start = re.search(r"public\s+int\s+startActivity\s*\(", text)
+    if not start:
+        return {"answered": None, "source": None}
+    body = _braced_block(text, start.start())
+    answered = False
+    if "ACTION_REQUEST_PERMISSIONS" in body:
+        for name in set(re.findall(r"\b(\w+)\s*\(", body)):
+            helper = re.search(rf"\b{name}\s*\([^;{{]*\)\s*\{{", text)
+            if helper and "ActivityResultItem.obtain(" in _braced_block(text, helper.start()):
+                answered = True
+                break
+    return {"answered": answered,
+            "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, start.start()) + 1}"}
+
+
 def window_adapter_model(westlake_root: Path) -> dict[str, Any]:
     """Window-manager semantics the in-process IWindowSession must reproduce, checked in source."""
     path = westlake_root / "framework/window/java/WindowSessionAdapter.java"

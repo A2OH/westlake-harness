@@ -748,6 +748,23 @@ class LaunchRemedies(unittest.TestCase):
         supplied = gapmap.engine_surface_rows(scan, {"own_surface": True, "vulkan_android_surface": True, "evidence": "e"})
         self.assertEqual(supplied[0]["verdict"], "supplied")
 
+    def test_an_engine_that_needs_focus_in_its_own_surface(self) -> None:
+        """anarchre (SDL): OH moved focus to its SurfaceView's window and SDL paused."""
+        sdl = {"apk": {"target_abi": "arm64-v8a"},
+               "inventory": {"elfs": [{"soname": "libSDL2.so", "abi": "arm64-v8a"}],
+                             "launch_activity_chains": {"dev.serwin.AnarchRE.AnarchreActivity":
+                                                        ["Lorg/libsdl/app/SDLActivity;", "Landroid/app/Activity;"]}}}
+        rows = {r["id"]: r for r in gapmap.engine_surface_rows(sdl, {"own_surface": True, "evidence": "e"})}
+        self.assertEqual(rows["window:surfaceview-focus"]["verdict"], "missing")
+        rows = {r["id"]: r for r in gapmap.engine_surface_rows(sdl, {"own_surface": True, "focus_group": "W.java:9"})}
+        self.assertEqual(rows["window:surfaceview-focus"]["verdict"], "supplied")
+        self.assertNotIn("window:surfaceview-focus", {r["id"] for r in gapmap.engine_surface_rows(sdl, {})},
+                         "a SurfaceView that shares its window takes no focus from it")
+        flutter = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {"elfs": [{"soname": "libflutter.so", "abi": "arm64-v8a"}]}}
+        self.assertNotIn("window:surfaceview-focus",
+                         {r["id"] for r in gapmap.engine_surface_rows(flutter, {"own_surface": True})},
+                         "Flutter draws on without focus")
+
 
 class KeystoreProviderNames(unittest.TestCase):
     def test_each_requested_provider_name_is_its_own_row(self) -> None:
@@ -1810,6 +1827,31 @@ class JavaVmLookups(unittest.TestCase):
                          ("jni:created-vms", "missing", ["libmatrix_sdk_ffi.so"]))
         self.assertEqual(gapmap.vm_lookup_rows(scan, {"JNI_GetCreatedJavaVMs"})[0]["verdict"], "supplied")
         self.assertEqual(gapmap.vm_lookup_rows({"inventory": {"elfs": []}}, set()), [])
+
+
+class PermissionRequests(unittest.TestCase):
+    def test_a_row_when_the_app_requests_permissions(self) -> None:
+        scan = {"inventory": {"platform_method_names": {"Landroid/app/Activity;": ["requestPermissions", "finish"]}}}
+        rows = gapmap.permission_request_rows(scan, {"answered": False, "source": "A.java:142"})
+        self.assertEqual((rows[0]["id"], rows[0]["verdict"]), ("am:permission-request", "missing"))
+        self.assertEqual(gapmap.permission_request_rows(scan, {"answered": True})[0]["verdict"], "supplied")
+        self.assertEqual(gapmap.permission_request_rows({"inventory": {}}, {"answered": False}), [])
+
+    def test_the_model_needs_the_start_to_answer_with_a_result(self) -> None:
+        import tempfile
+        from westlake_gap import contracts
+        tasks = ("class A {\n    public int startActivity(Intent intent, IBinder resultTo) {\n%s        return 0;\n    }\n"
+                 "    private static int answer(Intent i, IBinder to) {\n"
+                 "        t.addTransactionItem(ActivityResultItem.obtain(to, results));\n        return 0;\n    }\n}\n")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / "framework/activity/java/ActivityTaskManagerAdapter.java"
+            path.parent.mkdir(parents=True)
+            path.write_text(tasks % "        if (PackageManager.ACTION_REQUEST_PERMISSIONS.equals(intent.getAction())) return answer(intent, resultTo);\n")
+            self.assertEqual(contracts.permission_request_model(root),
+                             {"answered": True, "source": "framework/activity/java/ActivityTaskManagerAdapter.java:2"})
+            path.write_text(tasks % "        // ACTION_REQUEST_PERMISSIONS: not handled\n")
+            self.assertFalse(contracts.permission_request_model(root)["answered"])
 
 
 class PostCreateCallbacks(unittest.TestCase):

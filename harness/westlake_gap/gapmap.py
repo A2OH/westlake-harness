@@ -1339,6 +1339,28 @@ def post_create_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[s
     )]
 
 
+def permission_request_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """Runtime permission requests. Android answers every one, in onRequestPermissionsResult with what
+    the user chose; a request that is never answered leaves the activity waiting on it."""
+    called = set(scan["inventory"].get("platform_method_names", {}).get("Landroid/app/Activity;", []))
+    if "requestPermissions" not in called or model.get("answered") is None:
+        return []
+    supplied = bool(model["answered"])
+    return [_row(
+        "app-framework", "am:permission-request", "Runtime permission requests (Activity.requestPermissions)",
+        oh_touchpoint="access_token: the host application's grants (no permission dialog is raised)",
+        verdict="supplied" if supplied else "missing", shim_class="C0" if supplied else "C9",
+        effort="verify" if supplied else "XS", confidence=STATIC,
+        provider=("answered in process with what OH has granted the host application, as the permission "
+                  "controller's result" if supplied else
+                  "the request goes to OH as an implicit action it does not know: no answer arrives"),
+        provider_source=model.get("source"),
+        app_evidence="the app calls Activity.requestPermissions",
+        seen_blocking=["aat, castlab, element, msstart, ssh (r85: each asked and never heard back; each drew)"],
+        shim="answer ACTION_REQUEST_PERMISSIONS with the permission controller's result: the names and their grants",
+    )]
+
+
 def window_metrics_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
     """WindowMetrics read before the first relayout. aat derived its button count from the window
     width in onCreate, got 0x0, and divided by zero."""
@@ -2552,8 +2574,22 @@ def surfaceview_model(westlake_root: Path | None, manifest_root: Path | None,
     patches = sorted((manifest_root / "patches").glob("**/frameworks-base*.patch")) if manifest_root else []
     patch = next((hit for hit in (has(p, "attachSurfaceView") for p in patches) if hit), None)
     vulkan = "libvulkan.so" in (runtime_libraries or [])
+    # OH moves focus to the SurfaceView's own window once it shows; the window bridge counts that focus
+    # as the activity window's when the session is created for a SurfaceViewWindow.
+    bridge = has(westlake_root / "framework/window/java/WindowCallbackBridge.java" if westlake_root else None,
+                 "instanceof SurfaceViewWindow")
+    created = has(westlake_root / "framework/window/java/WindowSessionAdapter.java" if westlake_root else None,
+                  "new SurfaceViewWindow(")
     return {"own_surface": bool(adapter and patch), "vulkan_android_surface": vulkan,
+            "focus_group": bridge if bridge and created else None,
             "evidence": ", ".join(filter(None, [adapter, patch, "runtime libvulkan.so" if vulkan else None]))}
+
+
+# Engines that render only while their activity's window has focus: SDL pauses its native loop when it
+# loses focus (SDLActivity.onWindowFocusChanged, single-window), Cocos2d-x resumes its GLSurfaceView only
+# with focus (Cocos2dxActivity.resumeIfHasFocus).
+FOCUS_GATED_ENGINES = {"libSDL2.so": "SDL", "libSDL3.so": "SDL", "libcocos2dcpp.so": "Cocos2d-x"}
+FOCUS_GATED_ACTIVITIES = {"Lorg/libsdl/app/SDLActivity;": "SDL", "Lorg/cocos2dx/lib/Cocos2dxActivity;": "Cocos2d-x"}
 
 
 def engine_surface_rows(scan: dict[str, Any], model: dict[str, Any] | None = None) -> list[dict[str, Any]]:
@@ -2592,6 +2628,35 @@ def engine_surface_rows(scan: dict[str, Any], model: dict[str, Any] | None = Non
         app_evidence="; ".join(evidence),
         engine_libraries=sorted(lib for lib in libraries if lib in ENGINE_LIBRARIES),
         shim="give each SurfaceView its own OH surface (a child RS node) instead of the activity's window",
+    )] + surfaceview_focus_rows(scan, libraries, model)
+
+
+def surfaceview_focus_rows(scan: dict[str, Any], libraries: set[str], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """An engine that renders only while its window has focus, in a provider that gives its SurfaceView
+    an OH window of its own: OH moves focus to that window once it shows, and the activity's window
+    sees only the loss unless the bridge counts the SurfaceView's focus as its window's."""
+    if not model.get("own_surface"):
+        return []
+    chains = scan["inventory"].get("launch_activity_chains") or {}
+    engines = sorted({FOCUS_GATED_ENGINES[lib] for lib in libraries if lib in FOCUS_GATED_ENGINES}
+                     | {FOCUS_GATED_ACTIVITIES[c] for chain in chains.values() for c in chain if c in FOCUS_GATED_ACTIVITIES})
+    if not engines:
+        return []
+    supplied = bool(model.get("focus_group"))
+    return [_row(
+        "window", "window:surfaceview-focus", "An engine that renders only with focus, in a SurfaceView's own window ("
+        + ", ".join(engines) + ")",
+        oh_touchpoint="window_manager: focus moves to the topmost window, the SurfaceView's",
+        verdict="supplied" if supplied else "missing", shim_class="C0" if supplied else "C9",
+        effort="verify" if supplied else "S", confidence=STATIC,
+        provider=("a SurfaceView's window and its activity's are one focus group: the activity stays focused"
+                  if supplied else "the SurfaceView's window takes OH focus and the activity's window sees it lost"),
+        provider_source=model.get("focus_group"),
+        app_evidence=", ".join(engines) + " stops rendering when its activity loses focus",
+        engine_libraries=sorted(lib for lib in libraries if lib in FOCUS_GATED_ENGINES),
+        seen_blocking=["anarchre, diesimu (SDL: OH moved focus to their SurfaceView's window, the activity's window saw "
+                       "only the loss, and nothing showed)"],
+        shim="count the SurfaceView window's OH focus as its activity window's",
     )]
 
 
@@ -3080,6 +3145,7 @@ def build_map(
             + task_root_rows(scan, contracts.activity_client_model(westlake_root))
             + own_intent_rows(scan, contracts.own_intent_model(westlake_root))
             + post_create_rows(scan, contracts.launch_start_model(westlake_root))
+            + permission_request_rows(scan, contracts.permission_request_model(westlake_root))
             + feature_rows(scan, contracts.feature_claims_model(westlake_root), aosp_services, westlake_services)
             + vulkan_feature_rows(scan, contracts.feature_claims_model(westlake_root), runtime_libraries)
             + window_metrics_rows(scan, contracts.window_metrics_model(westlake_root))
