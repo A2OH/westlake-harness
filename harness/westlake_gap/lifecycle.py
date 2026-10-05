@@ -329,6 +329,14 @@ def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str 
         if "first_frame" in startup and s.screen == "host" and s.anomaly is None:
             s.anomaly = ("its activity drew a first frame %.1f s after start, but the screenshot shows the "
                          "host screen: the window went away" % startup["first_frame"])
+        # Resumed, and only the timeout reported: the activity never drew, and the host screen shows
+        # through its window. Its draws may be cancelled (a pre-draw listener answering false until
+        # something that never happens: linphone's onPostCreate).
+        if "first_frame_timeout" in startup and "first_frame" not in startup and s.screen == "host" \
+                and (s.blocker is None or s.blocker_category == "stall" or not s.blocking):
+            s.blocker_category, s.blocking = "no-frame", True
+            s.blocker = "the activity resumed %.1f s after start and drew no frame" % startup.get(
+                "resumed", startup["first_frame_timeout"])
     signal = evidence.hilog_signal(hilog_text) if hilog_text and not dump else None
     if signal:
         s.hilog_signal = signal

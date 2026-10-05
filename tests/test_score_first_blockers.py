@@ -58,6 +58,16 @@ class SelfFinishScoring(unittest.TestCase):
         self.assertEqual(score.outcome_of(score.candidate_rows("self-finish", blocker, rows + [own])), "named")
 
 
+class NoFrameScoring(unittest.TestCase):
+    def test_an_activity_that_never_drew_needs_what_holds_its_draws(self) -> None:
+        """Linphone: its own onPostCreate releases its draws, and the provider never called it."""
+        blocker = "the activity resumed 1.5 s after start and drew no frame"
+        rows = ROWS + [{"id": "am:post-create", "verdict": "missing"}]
+        found = score.candidate_rows("no-frame", blocker, rows)
+        self.assertEqual(([r["id"] for r in found], score.outcome_of(found)), (["am:post-create"], "named"))
+        self.assertEqual(score.outcome_of(score.candidate_rows("no-frame", blocker, ROWS)), "not-named")
+
+
 class NativeCrashScoring(unittest.TestCase):
     def test_a_row_about_a_library_in_the_crash_names_it(self) -> None:
         """Waze aborted in libwaze.so (loaded from the shim's init copy); its constructors were dropped."""

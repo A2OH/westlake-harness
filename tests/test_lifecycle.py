@@ -225,6 +225,30 @@ class Evidence(unittest.TestCase):
         self.assertEqual(evidence.startup_times(hilog), {"resumed": 2.26, "first_frame": 2.79})
         self.assertIsNone(evidence.startup_times("10-03 11:25:25.346 1 1 I C00f00/X: other\n"))
 
+    def test_a_resumed_activity_that_drew_no_frame(self) -> None:
+        """Since build 88 the adapter's 800 ms timeout says so. Linphone resumed, its pre-draw
+        listener cancelled every draw, and only the timeout reported: the host screen showed."""
+        from westlake_gap import evidence, lifecycle
+        hilog = ("10-05 08:30:20.900   942   942 I C00f00/AppSpawnX: Child process started, pid=1\n"
+                 "10-05 08:30:22.380   942   967 I C00f00/OH_ACCAdapter: activityResumed: OnDrawListener attached\n"
+                 "10-05 08:30:23.191   942   967 W C00f00/OH_ACCAdapter: activityResumed (first-frame timeout): no OH token mapping\n")
+        self.assertEqual(evidence.startup_times(hilog), {"resumed": 1.48, "first_frame_timeout": 2.29})
+        text = "kRegJNI loop done\n[DIRECT-LAUNCH] bind done sBindAppDone=true\n"
+        s = lifecycle.score("linphone", text)
+        s.screen = "host"
+        lifecycle.add_evidence(s, text, None, None, hilog)
+        self.assertEqual((s.blocker_category, s.blocker),
+                         ("no-frame", "the activity resumed 1.5 s after start and drew no frame"))
+        s = lifecycle.score("linphone", text)
+        s.screen = "app"
+        lifecycle.add_evidence(s, text, None, None, hilog)
+        self.assertNotEqual(s.blocker_category, "no-frame", "on screen: something drew")
+        drawn = hilog.replace("(first-frame timeout)", "(first-frame)")
+        s = lifecycle.score("linphone", text)
+        s.screen = "host"
+        lifecycle.add_evidence(s, text, None, None, drawn)
+        self.assertNotEqual(s.blocker_category, "no-frame", "a frame was drawn")
+
     def test_root_cause_is_the_deepest_cause_with_its_app_frame(self) -> None:
         """otgmaster's blocker read "start activity: NullPointerException"; its cause named the
         manager, and the first app frame where the null was used."""

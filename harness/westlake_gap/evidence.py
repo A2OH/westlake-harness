@@ -296,8 +296,12 @@ def hilog_signal(hilog: str) -> dict | None:
     return None
 
 
+# The adapter reports the activity's first drawn frame, or 800 ms after its resume with none drawn, a
+# timeout. Before build 88 both logged "(first-frame)", so in older logs a first frame may be the
+# timeout: 80 of r85's apps sat 0.79-1.2 s after their resume, piled up at 0.8 s.
 _STARTUP_MARKS = (("resumed", "activityResumed: OnDrawListener attached"),
-                  ("first_frame", "activityResumed (first-frame)"))
+                  ("first_frame", "activityResumed (first-frame)"),
+                  ("first_frame_timeout", "activityResumed (first-frame timeout)"))
 
 
 def startup_times(hilog: str) -> dict | None:

@@ -25,7 +25,9 @@ A native crash counts when a row names a library its app frames are in: rows abo
 risk (an init array, an import version, a thread start, EGL looked up by handle) list them.
 An activity that finished itself on start (lifecycle's self-finish) needs the row for what it asked
 first: am:task-root, svc:bluetooth, am:own-implicit-intents, or a service row answering as a device
-without the feature, for a service the app called in process before it left.
+without the feature, for a service the app called in process before it left. An activity that
+resumed and never drew (lifecycle's no-frame) needs a row for what holds its draws: am:post-create,
+its own onPostCreate that the provider never called.
 
 Usage: score_first_blockers.py <lifecycle.json> <map-root> [<map-root> ...] [--out report.json]
 """
@@ -72,6 +74,8 @@ def platform_key(category, blocker):
         return "platform", blocker
     if category == "self-finish":
         return "exit", blocker
+    if category == "no-frame":
+        return "no-frame", blocker
     return None  # a native crash or an app exception: a symptom no row type names
 
 
@@ -142,6 +146,8 @@ def candidate_rows(category, blocker, rows, cause=None, finished=None, dump=None
         called = set((finished or {}).get("local_services") or [])
         return [r for r in rows if r["id"] in ("am:task-root", "svc:bluetooth", "am:own-implicit-intents")
                 or (r.get("device_answer") and r["id"].startswith("svc:") and r["id"][4:] in called)]
+    if kind == "no-frame":
+        return [r for r in rows if r["id"] == "am:post-create"]
     return []  # a platform behaviour no row type covers yet
 
 
