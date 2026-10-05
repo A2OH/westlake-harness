@@ -1675,6 +1675,62 @@ class StaticMutexes(unittest.TestCase):
         self.assertTrue(model["source"].endswith(":5"))
 
 
+class ThreadHandles(unittest.TestCase):
+    MODEL = {"ordered": True, "source": "webview_bionic_shim.c:4038"}
+    # vcbasekit's call (TikTok): ldr x8, [x19]; ldur x8, [x8, #-24]; add x0, x19, x8; bl; adrp x2;
+    # add x0, x19, #256; add x2, x2, #1728; mov x1, sp; mov x3, x19; bl pthread_create
+    VCBASEKIT = [0xF9400268, 0xF85E8108, 0x8B080260, 0x97FFB291, 0x90000002, 0x91040260, 0x911B0042,
+                 0x910003E1, 0xAA1303E3, 0x97FFB3EF]
+
+    def test_the_handle_inside_the_argument_is_seen(self) -> None:
+        from westlake_gap.scanner import register_base_before
+        words = self.VCBASEKIT
+        self.assertEqual(register_base_before(words, 9, 0), (19, 256, 5))
+        self.assertEqual(register_base_before(words, 9, 3), (19, 0, 8))
+        self.assertEqual(register_base_before(words, 9, 1), (31, 0, 7), "mov x1, sp is add x1, sp, #0")
+        self.assertIsNone(register_base_before(words, 3, 0), "x0 = x19 + x8 is no constant offset")
+        # A store names the register it reads: str x0, [x19] between the add and the call is no write.
+        words = [_add(0, 19, 256), 0xF9000260, 0xAA1303E3, 0x94000000]
+        self.assertEqual(register_base_before(words, 3, 0), (19, 256, 0))
+        # A call in between leaves x0 to its return value.
+        words = [_add(0, 19, 256), 0x94000010, 0xAA1303E3, 0x94000000]
+        self.assertIsNone(register_base_before(words, 3, 0))
+
+    def test_writes_to_the_stack_pointer_are_add_and_sub_only(self) -> None:
+        from westlake_gap.scanner import _writes
+        self.assertTrue(_writes(0xD10083FF, 31), "sub sp, sp, #32")
+        self.assertFalse(_writes(0xEB01001F, 31), "cmp x0, x1 writes xzr")
+        self.assertFalse(_writes(0xF9000260, 0), "str x0, [x19]")
+        self.assertTrue(_writes(0xF9400260, 0), "ldr x0, [x19]")
+
+    def test_a_row_names_the_libraries_and_the_shim_orders_the_start(self) -> None:
+        kit = {"name": "lib/arm64-v8a/libvcbasekit.so", "thread_handle_in_argument": 1}
+        plain = {"name": "lib/arm64-v8a/libplain.so"}
+        rows = gapmap.thread_handle_rows({"inventory": {"elfs": [kit, plain]}}, self.MODEL)
+        self.assertEqual((rows[0]["id"], rows[0]["verdict"]), ("abi:thread-handle-order", "supplied"))
+        self.assertIn("libvcbasekit.so: 1 call pthread_create(&obj->thread, ..., obj)", rows[0]["app_evidence"])
+        rows = gapmap.thread_handle_rows({"inventory": {"elfs": [kit]}}, {"ordered": False, "source": None})
+        self.assertEqual((rows[0]["verdict"], rows[0]["effort"]), ("missing", "S"))
+        self.assertEqual(gapmap.thread_handle_rows({"inventory": {"elfs": [plain]}}, self.MODEL), [])
+
+    def test_the_model_needs_a_start_routine_that_waits(self) -> None:
+        import tempfile
+        from westlake_gap import contracts
+        start = ("static void *wait_then_run(void *data)\n{\n    syscall(SYS_futex, data, FUTEX_WAIT_PRIVATE, 0);\n"
+                 "    return data;\n}\n")
+        create = ("\nint pthread_create(pthread_t *t, const pthread_attr_t *a, void *(*r)(void *), void *v)\n{\n"
+                  "    int rc = real(t, a, wait_then_run, v);\n    syscall(SYS_futex, v, FUTEX_WAKE_PRIVATE, 1);\n"
+                  "    return rc;\n}\n")
+        with tempfile.TemporaryDirectory() as tmp:
+            shim = Path(tmp) / "framework/webview-shim/webview_bionic_shim.c"
+            shim.parent.mkdir(parents=True)
+            shim.write_text(start + create)
+            model = contracts.thread_start_model(Path(tmp))
+            self.assertEqual(model, {"ordered": True, "source": "framework/webview-shim/webview_bionic_shim.c:7"})
+            shim.write_text(start.replace("FUTEX_WAIT", "FUTEX_NOP") + create)
+            self.assertFalse(contracts.thread_start_model(Path(tmp))["ordered"], "a start routine that never waits")
+
+
 class StubNatives(unittest.TestCase):
     STUB = """
 static jlong UnixFileSystem_getSpace0(JNIEnv* env, jobject thiz, jobject file, jint t) {

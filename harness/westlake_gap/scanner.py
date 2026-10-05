@@ -497,6 +497,106 @@ def x0_address_before(words: list[int], index: int, base: int, got: dict[int, in
     return None
 
 
+def _plt_stubs(elf: Any, names: Iterable[str]) -> tuple[set[int], dict[int, int]]:
+    """The addresses of the PLT entries that call any of ``names``, and the GOT slots whose
+    relocations hold a known address (RELATIVE, or GLOB_DAT of a symbol the library defines)."""
+    from elftools.elf.relocation import RelocationSection
+
+    names = set(names)
+    jump_slots, got = {}, {}
+    for relocations in elf.iter_sections():
+        if not isinstance(relocations, RelocationSection) or not relocations.is_RELA():
+            continue
+        symbols = elf.get_section(relocations["sh_link"])
+        for relocation in relocations.iter_relocations():
+            kind, index = relocation["r_info_type"], relocation["r_info_sym"]
+            if kind == 1026 and index:                    # R_AARCH64_JUMP_SLOT
+                jump_slots[relocation["r_offset"]] = symbols.get_symbol(index).name
+            elif kind == 1027:                            # R_AARCH64_RELATIVE
+                got[relocation["r_offset"]] = relocation["r_addend"]
+            elif kind == 1025 and index:                  # R_AARCH64_GLOB_DAT
+                symbol = symbols.get_symbol(index)
+                if symbol["st_shndx"] != "SHN_UNDEF":
+                    got[relocation["r_offset"]] = symbol["st_value"] + relocation["r_addend"]
+    stubs = set()
+    plt = elf.get_section_by_name(".plt")
+    if plt is not None:
+        code, base = plt.data(), plt["sh_addr"]
+        words = [int.from_bytes(code[i:i + 4], "little") for i in range(0, len(code) - 3, 4)]
+        for i in range(len(words) - 1):
+            adrp, load = words[i], words[i + 1]
+            if (adrp & 0x9F00001F) != 0x90000010 or (load & 0xFFC003FF) != 0xF9400211:
+                continue                                  # adrp x16, page; ldr x17, [x16, #slot]
+            page = ((base + 4 * i) & ~0xFFF) + (_sext((((adrp >> 5) & 0x7FFFF) << 2) | ((adrp >> 29) & 3), 21) << 12)
+            if jump_slots.get(page + ((load >> 10) & 0xFFF) * 8) in names:
+                stubs.add(base + 4 * i)
+                if i and words[i - 1] == 0xD503245F:      # bti c opens the entry
+                    stubs.add(base + 4 * (i - 1))
+    return stubs, got
+
+
+def _writes(insn: int, register: int) -> bool:
+    """Whether an instruction may write ``register`` (its destination field, bits 0-4). Stores name
+    the register they read there and are not writes; anything else with that field is taken as one.
+    Field 31 is sp only for add and sub (immediate); everywhere else it is xzr."""
+    if (insn & 0x1F) != register:
+        return False
+    if register == 31:
+        return (insn & 0x7F800000) in (0x11000000, 0x51000000)
+    return not ((insn & 0x0A000000) == 0x08000000 and not insn & (1 << 22))   # a store: str, stp, stur
+
+
+def register_base_before(words: list[int], index: int, register: int) -> tuple[int, int, int] | None:
+    """How the instructions just before the call at ``words[index]`` build ``register``: as another
+    register plus a constant (add xd, xn, #imm; mov xd, xm). (base register, offset, the index of the
+    instruction) or None for anything else, or a call or branch in between."""
+    for j in range(index - 1, max(index - 24, -1), -1):
+        insn = words[j]
+        if (insn & 0x7C000000) == 0x14000000 or (insn & 0xFFFFFC1F) in (0xD63F0000, 0xD65F0000, 0xD61F0000):
+            return None
+        if not _writes(insn, register):
+            continue
+        if (insn & 0xFF800000) == 0x91000000:             # add xd, xn, #imm{, lsl 12}
+            return (insn >> 5) & 0x1F, ((insn >> 10) & 0xFFF) << (12 * ((insn >> 22) & 1)), j
+        if (insn & 0xFFE0FFE0) == 0xAA0003E0:             # mov xd, xm
+            return (insn >> 16) & 0x1F, 0, j
+        return None
+    return None
+
+
+def thread_handles_in_argument(data: bytes) -> dict[str, int]:
+    """Calls to pthread_create that store the new thread's handle inside the object they hand the
+    thread: pthread_create(&obj->thread, attr, start, obj), x0 built as x3 plus a constant. Bionic
+    stores the handle before the thread runs; musl stores it after clone returns, so a thread that
+    reads its own handle there first can read 0 (ByteDance's vcbasekit names its threads with it).
+    Such a call is a risk, not a proof: the thread may never read the field."""
+    try:
+        from elftools.elf.elffile import ELFFile
+
+        elf = ELFFile(io.BytesIO(data))
+        if elf["e_machine"] != "EM_AARCH64":
+            return {}
+        stubs, _ = _plt_stubs(elf, ("pthread_create",))
+        text = elf.get_section_by_name(".text")
+        if not stubs or text is None:
+            return {}
+        code, base = text.data(), text["sh_addr"]
+        words = [w for (w,) in struct.iter_unpack("<I", code[:len(code) - len(code) % 4])]
+        calls = 0
+        for index, insn in enumerate(words):
+            if (insn & 0xFC000000) != 0x94000000 or base + 4 * index + _sext(insn & 0x3FFFFFF, 26) * 4 not in stubs:
+                continue
+            handle, argument = register_base_before(words, index, 0), register_base_before(words, index, 3)
+            if handle is None or argument is None or argument[1] != 0 or handle[0] != argument[0]:
+                continue
+            # The shared base must hold one value for both: not rewritten after the first of them.
+            if not any(_writes(words[j], handle[0]) for j in range(min(handle[2], argument[2]) + 1, index)):
+                calls += 1
+        return {"thread_handle_in_argument": calls} if calls else {}
+    except Exception:
+        return {}
+
+
 def bionic_static_mutexes(data: bytes) -> dict[str, Any]:
     """Mutexes initialized with Bionic's recursive or error-checking static initializer that the
     library's code locks: one whose address is built right before a call to pthread_mutex_lock (or
@@ -504,7 +604,6 @@ def bionic_static_mutexes(data: bytes) -> dict[str, Any]:
     a lock, is not counted; one locked through a pointer kept elsewhere is missed."""
     try:
         from elftools.elf.elffile import ELFFile
-        from elftools.elf.relocation import RelocationSection
 
         elf = ELFFile(io.BytesIO(data))
         if elf["e_machine"] != "EM_AARCH64":
@@ -520,35 +619,7 @@ def bionic_static_mutexes(data: bytes) -> dict[str, Any]:
                 candidates[start + at] = _BIONIC_MUTEX_TYPES[first]
         if not candidates:
             return {}
-        jump_slots, got = {}, {}
-        for relocations in elf.iter_sections():
-            if not isinstance(relocations, RelocationSection) or not relocations.is_RELA():
-                continue
-            symbols = elf.get_section(relocations["sh_link"])
-            for relocation in relocations.iter_relocations():
-                kind, index = relocation["r_info_type"], relocation["r_info_sym"]
-                if kind == 1026 and index:                # R_AARCH64_JUMP_SLOT
-                    jump_slots[relocation["r_offset"]] = symbols.get_symbol(index).name
-                elif kind == 1027:                        # R_AARCH64_RELATIVE
-                    got[relocation["r_offset"]] = relocation["r_addend"]
-                elif kind == 1025 and index:              # R_AARCH64_GLOB_DAT
-                    symbol = symbols.get_symbol(index)
-                    if symbol["st_shndx"] != "SHN_UNDEF":
-                        got[relocation["r_offset"]] = symbol["st_value"] + relocation["r_addend"]
-        stubs = set()
-        plt = elf.get_section_by_name(".plt")
-        if plt is not None:
-            code, base = plt.data(), plt["sh_addr"]
-            words = [int.from_bytes(code[i:i + 4], "little") for i in range(0, len(code) - 3, 4)]
-            for i in range(len(words) - 1):
-                adrp, load = words[i], words[i + 1]
-                if (adrp & 0x9F00001F) != 0x90000010 or (load & 0xFFC003FF) != 0xF9400211:
-                    continue                              # adrp x16, page; ldr x17, [x16, #slot]
-                page = ((base + 4 * i) & ~0xFFF) + (_sext((((adrp >> 5) & 0x7FFFF) << 2) | ((adrp >> 29) & 3), 21) << 12)
-                if jump_slots.get(page + ((load >> 10) & 0xFFF) * 8) in _MUTEX_LOCKS:
-                    stubs.add(base + 4 * i)
-                    if i and words[i - 1] == 0xD503245F:  # bti c opens the entry
-                        stubs.add(base + 4 * (i - 1))
+        stubs, got = _plt_stubs(elf, _MUTEX_LOCKS)
         text = elf.get_section_by_name(".text")
         if not stubs or text is None:
             return {}
@@ -622,6 +693,7 @@ def read_elf(
             **signal_lookups(raw, set(undefined) | set(undefined_weak)),
             **egl_lookups(raw, set(undefined) | set(undefined_weak)),
             **bionic_static_mutexes(raw),
+            **thread_handles_in_argument(raw),
             **import_versions(text),
             "exported_symbols": sorted(exports),
             "undefined_symbols": sorted(undefined),

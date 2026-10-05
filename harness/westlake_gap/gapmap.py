@@ -1655,6 +1655,39 @@ def static_mutex_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[
     )]
 
 
+def thread_handle_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """Threads created with their handle stored inside the object they are handed
+    (scanner.thread_handles_in_argument). Bionic stores the handle before the thread runs; musl
+    after clone returns, so a thread that first reads its own handle from that object can read 0."""
+    found: dict[str, int] = {}
+    for elf in ohresolve.target_elfs(scan):
+        if elf.get("thread_handle_in_argument"):
+            found[elf.get("soname") or elf["name"].rsplit("/", 1)[-1]] = elf["thread_handle_in_argument"]
+    if not found:
+        return []
+    ordered = model.get("ordered", False)
+    return [_row(
+        "native-symbols", "abi:thread-handle-order",
+        f"threads handed the object that holds their own handle ({', '.join(sorted(found)[:4])})",
+        oh_touchpoint="OH musl: pthread_create stores *thread after clone returns, and the thread may already run "
+                      "(Bionic stores it first and holds the thread until then)",
+        verdict="supplied" if ordered else "missing", shim_class="C2", effort="verify" if ordered else "S",
+        confidence=STATIC,
+        provider=("the bionic shim's pthread_create starts an Android caller's thread in a routine that waits until "
+                  "the handle is stored" if ordered else "pthread_create is musl's: the thread may run before *thread "
+                                                         "is stored"),
+        provider_source=model.get("source"),
+        app_evidence="; ".join(f"{name}: {count} call{'s' if count > 1 else ''} pthread_create(&obj->thread, ..., obj)"
+                               for name, count in sorted(found.items())[:6])
+                     + " (a risk: whether the thread reads the field first is not seen)",
+        seen_blocking=["tiktok (r85: vcbasekit's thread named itself with pthread_setname_np(this->thread_, ...) "
+                       "before pthread_create stored thread_, and died in musl's pthread_setname_np on handle 0; it "
+                       "drew in the run before)"],
+        shim="start the thread in a routine that waits until pthread_create has stored the handle, as Bionic's "
+             "startup lock does",
+    )]
+
+
 def native_upcall_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
     """One row per library that calls back into Java: what it names, and what the runtime lacks."""
     rows = []
@@ -2897,6 +2930,7 @@ def build_map(
             + libc_constant_rows(scan, contracts.libc_constant_model(westlake_root))
             + signal_abi_rows(scan, contracts.signal_abi_model(westlake_root))
             + static_mutex_rows(scan, contracts.static_mutex_model(westlake_root))
+            + thread_handle_rows(scan, contracts.thread_start_model(westlake_root))
             + security_rows(scan, contracts.keystore_model(westlake_root))
             + webview_rows(scan, webview_process_model(aosp_root, westlake_root))
             # art-build sits beside the westlake checkout in the same workspace; absent, the row

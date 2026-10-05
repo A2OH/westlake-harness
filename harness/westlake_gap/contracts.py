@@ -519,7 +519,7 @@ def static_mutex_model(westlake_root: Path) -> dict[str, Any]:
     text = _strip_java_comments(path.read_text(errors="replace"))
     adopted, first = [], None
     for name in STATIC_MUTEX_LOCKS:
-        match = re.search(rf"^\s*int\s+{name}\s*\(", text, re.M)
+        match = re.search(rf"^[ \t]*int\s+{name}\s*\(", text, re.M)
         if not match or "0x4000" not in text:
             continue
         body = _braced_block(text, match.start())
@@ -531,6 +531,28 @@ def static_mutex_model(westlake_root: Path) -> dict[str, Any]:
             first = first or match
     return {"adopted": adopted,
             "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, first.start()) + 1}" if first else None}
+
+
+def thread_start_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether the bionic shim's pthread_create gives a new thread Bionic's order: the thread starts
+    in a routine of the shim's that waits on a futex, and pthread_create wakes it after musl has
+    stored the handle. Defined in the preloaded shim, it is every caller's."""
+    path = westlake_root / "framework/webview-shim/webview_bionic_shim.c"
+    if not path.exists():
+        return {"ordered": False, "source": None}
+    text = _strip_java_comments(path.read_text(errors="replace"))
+    match = re.search(r"^[ \t]*int\s+pthread_create\s*\(", text, re.M)
+    body = _braced_block(text, match.start()) if match else ""
+    ordered = False
+    if "FUTEX_WAKE" in body:
+        for name in sorted(set(re.findall(r"\b([A-Za-z_]\w*)\b", body))):
+            start = re.search(rf"^static\s+void\s*\*\s*{name}\s*\(\s*void\s*\*\s*\w+\s*\)\s*\{{", text, re.M)
+            if start and "FUTEX_WAIT" in _braced_block(text, start.start()):
+                ordered = True
+                break
+    return {"ordered": ordered,
+            "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, match.start()) + 1}"
+                      if ordered else None}
 
 
 def libc_constant_model(westlake_root: Path) -> dict[str, Any]:
