@@ -144,6 +144,24 @@ def _is_app(frame: dict) -> bool:
 _CPP_MAP = re.compile(r"^[0-9a-f]+-[0-9a-f]+ \S+ [0-9a-f]+ /", re.M)
 
 
+_CPP_REGISTERS = re.compile(r"^lr:([0-9a-f]+) sp:[0-9a-f]+ pc:([0-9a-f]+)", re.M)
+
+
+def _mapped_file(text: str, address: int) -> tuple[str, int] | None:
+    """The file and file offset the dump's own Maps section places an address at."""
+    at = text.find("\nMaps:")
+    if at < 0:
+        return None
+    for line in text[at:].splitlines():
+        if not _CPP_MAP.match(line):
+            continue
+        span, _, offset, path = line.split(None, 3)
+        start, end = (int(x, 16) for x in span.split("-"))
+        if start <= address < end:
+            return path.strip().removesuffix(" (deleted)").strip(), address - start + int(offset, 16)
+    return None
+
+
 def _file_extents(text: str) -> dict[str, int]:
     """How far into each file the dump's own Maps section maps it: the furthest file offset any of
     its mappings reaches. A frame placed past that is not in the file. OH's dumper names such a pc
@@ -180,6 +198,22 @@ def cppcrash(text: str) -> dict | None:
             if match is None:
                 break
             frames.append(_dump_frame(match))
+    # An app library's faulting frame from the pc register itself: the dump's own offset for it has
+    # been wrong by 0x1a000 (CapCut's libmetasec_ov.so, a store at 0x15b6ec printed as 0x1756ec, in
+    # .rodata) and 0x2000000 (Fennec's libxul.so). The Maps section gives file offsets, which in an
+    # app library's text are its addresses; OH's own libraries come symbolized and right, and their
+    # text is not at its file offset (ld-musl's lies 0x1000 above), so they keep the dump's.
+    registers = _CPP_REGISTERS.search(text)
+    if registers and frames and _is_app(frames[0]):
+        placed = _mapped_file(text, int(registers[2], 16))
+        if placed and placed[0].startswith(_APP_DIRS) and placed[1] != frames[0]["pc"]:
+            frames[0]["dump_pc"] = frames[0]["pc"]
+            frames[0]["pc"] = placed[1]
+            if placed[0] != frames[0]["path"]:
+                name = placed[0].rsplit("/", 1)[-1]
+                copy = _INIT_COPY.match(name)
+                frames[0]["path"], frames[0]["library"] = placed[0], copy[1] if copy else name
+                frames[0].pop("symbol", None)
     extents = _file_extents(text)
     for frame in frames:
         if frame.get("path") in extents and frame["pc"] >= extents[frame["path"]]:

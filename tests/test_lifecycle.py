@@ -176,6 +176,23 @@ class Evidence(unittest.TestCase):
         self.assertEqual(evidence.cppcrash(text.split("Maps:")[0])["summary"], "in libmetasec_ov.so+0x215d6ec",
                          "no maps, no judgement")
 
+    def test_the_pc_register_places_an_app_librarys_fault(self) -> None:
+        """CapCut: the dump printed libmetasec_ov.so+0x1756ec (in .rodata); pc is a store at 0x15b6ec."""
+        from westlake_gap import evidence
+        lib = "/data/local/tmp/asx/lib/arm64-v8a/libmetasec_ov.so"
+        musl = "/system/lib/ld-musl-aarch64.so.1"
+        text = ("Reason:Signal:SIGSEGV(SEGV_MAPERR)@0x0000000000000013 \nFault thread info:\nTid:1, Name:Thread-13\n"
+                f"#00 pc 00000000001756ec {lib}\n#01 pc 000000000017588c {lib}\nRegisters:\n"
+                "lr:0000007ed0b9b890 sp:0000007eb2d7c030 pc:0000007ed0b9b6ec\n\nMaps:\n"
+                f"7ed0a40000-7ed0bfe000 r-xp 00000000 {lib}\n7fb2b13000-7fb2bec000 r-xp 0007e000 {musl}\n")
+        dump = evidence.cppcrash(text)
+        self.assertEqual((dump["frames"][0]["pc"], dump["frames"][0]["dump_pc"]), (0x15b6ec, 0x1756ec))
+        self.assertEqual(dump["summary"], "in libmetasec_ov.so+0x15b6ec")
+        # OH's own libraries keep the dump's address: their text does not lie at its file offset.
+        musl_text = (text.replace(f"#00 pc 00000000001756ec {lib}", f"#00 pc 000000000013331c {musl}(pthread_setname_np+92)(ab)")
+                     .replace("pc:0000007ed0b9b6ec", "pc:0000007fb2bc731c"))
+        self.assertEqual(evidence.cppcrash(musl_text)["frames"][0]["pc"], 0x13331c)
+
     def test_crash_dump_completes_a_crash_the_log_saw(self) -> None:
         from westlake_gap import lifecycle
         text = "kRegJNI loop done\nFatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR) fault addr 0x0\nThread: 1 \"acceleratePlayH\"\n"
