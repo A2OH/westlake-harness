@@ -368,6 +368,18 @@ def egl_lookups(raw: bytes, imported: set[str]) -> dict[str, Any]:
     return {"egl_lookups": names} if names else {}
 
 
+def vm_lookups(raw: bytes, imported: set[str], exported: set[str]) -> dict[str, Any]:
+    """How a library finds the process's JavaVM without being handed one: JNI_GetCreatedJavaVMs,
+    imported (the NDK's libnativehelper, API 31) or named for a dlsym (Element X's Rust library:
+    dlsym(dlopen(NULL), ...))."""
+    name = "JNI_GetCreatedJavaVMs"
+    if name in exported:
+        return {}
+    if name in imported:
+        return {"vm_lookup": "import"}
+    return {"vm_lookup": "by-name"} if b"\x00" + name.encode() + b"\x00" in raw else {}
+
+
 _ART_INTERNAL = re.compile(rb"_ZN3art[A-Za-z0-9_]{4,}")
 
 
@@ -733,6 +745,7 @@ def read_elf(
             **art_internal_names(raw),
             **signal_lookups(raw, set(undefined) | set(undefined_weak)),
             **egl_lookups(raw, set(undefined) | set(undefined_weak)),
+            **vm_lookups(raw, set(undefined) | set(undefined_weak), set(exports or ())),
             **bionic_static_mutexes(raw),
             **thread_handles_in_argument(raw),
             **bionic_tls_slots(raw),

@@ -1790,6 +1790,28 @@ class OwnImplicitIntents(unittest.TestCase):
             self.assertFalse(contracts.own_intent_model(root)["started"])
 
 
+class JavaVmLookups(unittest.TestCase):
+    def test_an_import_or_a_name_for_dlsym(self) -> None:
+        from westlake_gap.scanner import vm_lookups
+        rust = b"\x7fELF api/\x00JNI_GetCreatedJavaVMs\x00\x02(?"
+        self.assertEqual(vm_lookups(rust, set(), set()), {"vm_lookup": "by-name"})
+        self.assertEqual(vm_lookups(b"\x00JNI_GetCreatedJavaVMs\x00", {"JNI_GetCreatedJavaVMs"}, set()),
+                         {"vm_lookup": "import"})
+        self.assertEqual(vm_lookups(b"\x00JNI_GetCreatedJavaVMs\x00", set(), {"JNI_GetCreatedJavaVMs"}), {},
+                         "a library that defines it (a packaged runtime) is not a caller")
+        self.assertEqual(vm_lookups(b"Failed to find JNI_GetCreatedJavaVMs", set(), set()), {},
+                         "a message naming it is not a lookup")
+
+    def test_a_row_supplied_when_the_shim_answers_it(self) -> None:
+        scan = {"inventory": {"elfs": [{"name": "lib/arm64-v8a/libmatrix_sdk_ffi.so", "soname": "libmatrix_sdk_ffi.so",
+                                        "vm_lookup": "by-name"}, {"name": "lib/arm64-v8a/libz.so"}]}}
+        rows = gapmap.vm_lookup_rows(scan, {"dlsym"})
+        self.assertEqual((rows[0]["id"], rows[0]["verdict"], rows[0]["libraries"]),
+                         ("jni:created-vms", "missing", ["libmatrix_sdk_ffi.so"]))
+        self.assertEqual(gapmap.vm_lookup_rows(scan, {"JNI_GetCreatedJavaVMs"})[0]["verdict"], "supplied")
+        self.assertEqual(gapmap.vm_lookup_rows({"inventory": {"elfs": []}}, set()), [])
+
+
 class PostCreateCallbacks(unittest.TestCase):
     def test_the_activity_or_a_named_base_class_overrides(self) -> None:
         from westlake_gap.scanner import after_start_overrides

@@ -1362,6 +1362,35 @@ def window_metrics_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dic
     )]
 
 
+def vm_lookup_rows(scan: dict[str, Any], shim_exports: set[str]) -> list[dict[str, Any]]:
+    """Native code that finds the process's JavaVM itself, with JNI_GetCreatedJavaVMs (scanner.vm_lookups).
+    libnativehelper answers from the invocation table its JniInvocation filled; appspawn-x's is a
+    local of startVm(), whose destructor clears that table, so once the VM runs it answers JNI_OK
+    with no VM. A caller that checks only the result takes an uninitialized JavaVM*."""
+    elfs = [elf for elf in scan["inventory"].get("elfs") or [] if elf.get("abi_matches_machine", True)]
+    found = {(elf.get("soname") or elf.get("name")): elf["vm_lookup"] for elf in elfs if elf.get("vm_lookup")}
+    if not found:
+        return []
+    libraries = sorted(found)
+    supplied = "JNI_GetCreatedJavaVMs" in shim_exports
+    return [_row(
+        "native-loading", "jni:created-vms",
+        "The process's JavaVM found from native code (" + ", ".join(libraries[:4]) + ")",
+        oh_touchpoint="none: the runtime's libnativehelper and libart",
+        verdict="supplied" if supplied else "missing", shim_class="C0" if supplied else "C3",
+        effort="verify" if supplied else "XS", confidence=STATIC,
+        provider=("the preloaded shim answers JNI_GetCreatedJavaVMs from libart's Runtime" if supplied else
+                  "libnativehelper answers JNI_OK with no VM: the JniInvocation that filled its table is gone "
+                  "once appspawn-x has started the VM"),
+        app_evidence="; ".join(f"{name} {'imports' if how == 'import' else 'looks up'} JNI_GetCreatedJavaVMs"
+                               for name, how in sorted(found.items())[:4]),
+        libraries=libraries,
+        seen_blocking=["elementx (r85: its Rust library took an uninitialized JavaVM* from the empty answer; "
+                       "SIGSEGV in its first FindClass)"],
+        shim="define JNI_GetCreatedJavaVMs in the preloaded shim, forwarding to libart's",
+    )]
+
+
 def native_egl_window_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
     """App code that creates its own EGL window surface. ANativeWindow_fromSurface gives it the
     adapter's AOSP-shaped window, which OH's EGL rejects: Flutter's Skia renderer (apps that opt out
@@ -3044,6 +3073,7 @@ def build_map(
                                                 and not m.get("versioned_clash") and not m.get("weak")],
                                        bionic_shim_exports(westlake_root)))
             + weak_api_rows([m for m in oh_missing if m.get("weak")], bionic_shim_exports(westlake_root))
+            + vm_lookup_rows(scan, bionic_shim_exports(westlake_root))
             + symbol_version_rows(oh_missing)
             + versioned_clash_rows([m for m in oh_missing if m.get("versioned_clash")],
                                    contracts.shim_version_nodes(westlake_root))
