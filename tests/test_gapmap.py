@@ -1829,6 +1829,26 @@ class JavaVmLookups(unittest.TestCase):
         self.assertEqual(gapmap.vm_lookup_rows({"inventory": {"elfs": []}}, set()), [])
 
 
+class CeStorageUnlocked(unittest.TestCase):
+    def test_strictmode_apps_need_the_android_15_name(self) -> None:
+        import tempfile
+        from westlake_gap import contracts
+        scan = {"inventory": {"platform_method_names": {"Landroid/os/StrictMode$VmPolicy$Builder;": ["detectAll", "build"]}}}
+        self.assertEqual(gapmap.ce_storage_rows(scan, {"unlocked": False})[0]["verdict"], "missing")
+        self.assertEqual(gapmap.ce_storage_rows(scan, {"unlocked": True})[0]["verdict"], "supplied")
+        self.assertEqual(gapmap.ce_storage_rows({"inventory": {}}, {"unlocked": False}), [])
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / "framework/appspawn-x/java/com/android/internal/os/AppSpawnXInit.java"
+            path.parent.mkdir(parents=True)
+            old = '                    if ("isUserKeyUnlocked".equals(name)) {\n                        return Boolean.TRUE;\n'
+            path.write_text("class I {\n" + old + "                    }\n}\n")
+            self.assertFalse(contracts.ce_storage_model(root)["unlocked"])
+            path.write_text("class I {\n" + old.replace('("isUserKeyUnlocked".equals(name))',
+                            '("isUserKeyUnlocked".equals(name) || "isCeStorageUnlocked".equals(name))') + "                    }\n}\n")
+            self.assertTrue(contracts.ce_storage_model(root)["unlocked"])
+
+
 class PermissionRequests(unittest.TestCase):
     def test_a_row_when_the_app_requests_permissions(self) -> None:
         scan = {"inventory": {"platform_method_names": {"Landroid/app/Activity;": ["requestPermissions", "finish"]}}}

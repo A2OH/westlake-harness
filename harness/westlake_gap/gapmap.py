@@ -1361,6 +1361,30 @@ def permission_request_rows(scan: dict[str, Any], model: dict[str, Any]) -> list
     )]
 
 
+def ce_storage_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """StrictMode's VM checks, which report a credential-protected data access while the user's storage
+    is locked, each with a stack trace: an app that turns them on pays for every file it touches when
+    the provider says the storage is still locked."""
+    called = set(scan["inventory"].get("platform_method_names", {}).get("Landroid/os/StrictMode$VmPolicy$Builder;", []))
+    used = sorted(called & {"detectAll", "detectCredentialProtectedWhileLocked"})
+    if not used:
+        return []
+    supplied = bool(model.get("unlocked"))
+    return [_row(
+        "app-framework", "os:ce-storage-unlocked", "Credential-encrypted storage unlocked, for StrictMode's checks",
+        oh_touchpoint="none: the in-process storage manager answers for the user's storage",
+        verdict="supplied" if supplied else "missing", shim_class="C0" if supplied else "C9",
+        effort="verify" if supplied else "XS", confidence=STATIC,
+        provider=("isCeStorageUnlocked answers true" if supplied else
+                  "isCeStorageUnlocked gets a default false: every data access is a violation while locked"),
+        provider_source=model.get("source"),
+        app_evidence="the app enables StrictMode.VmPolicy." + ", ".join(used),
+        seen_blocking=["osmand (r85: 730 violations in its hilog, 20,000 lines with their stacks, while it started; "
+                       "it then aborted in a race with its own data copy)"],
+        shim="answer isCeStorageUnlocked, Android 15's name for isUserKeyUnlocked, with true",
+    )]
+
+
 def window_metrics_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
     """WindowMetrics read before the first relayout. aat derived its button count from the window
     width in onCreate, got 0x0, and divided by zero."""
@@ -3146,6 +3170,7 @@ def build_map(
             + own_intent_rows(scan, contracts.own_intent_model(westlake_root))
             + post_create_rows(scan, contracts.launch_start_model(westlake_root))
             + permission_request_rows(scan, contracts.permission_request_model(westlake_root))
+            + ce_storage_rows(scan, contracts.ce_storage_model(westlake_root))
             + feature_rows(scan, contracts.feature_claims_model(westlake_root), aosp_services, westlake_services)
             + vulkan_feature_rows(scan, contracts.feature_claims_model(westlake_root), runtime_libraries)
             + window_metrics_rows(scan, contracts.window_metrics_model(westlake_root))

@@ -446,6 +446,16 @@ def permission_request_model(westlake_root: Path) -> dict[str, Any]:
             "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, start.start()) + 1}"}
 
 
+def ce_storage_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether the in-process storage manager says the user's credential-encrypted storage is unlocked
+    under Android 15's name for the call, isCeStorageUnlocked (it was isUserKeyUnlocked)."""
+    path = westlake_root / "framework/appspawn-x/java/com/android/internal/os/AppSpawnXInit.java"
+    text = _strip_java_comments(path.read_text(errors="replace")) if path.exists() else ""
+    match = re.search(r'"isCeStorageUnlocked"\.equals\(name\)[^{;]*\{\s*return\s+Boolean\.TRUE', text)
+    return {"unlocked": match is not None,
+            "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, match.start()) + 1}" if match else None}
+
+
 def window_adapter_model(westlake_root: Path) -> dict[str, Any]:
     """Window-manager semantics the in-process IWindowSession must reproduce, checked in source."""
     path = westlake_root / "framework/window/java/WindowSessionAdapter.java"
