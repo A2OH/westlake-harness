@@ -597,6 +597,47 @@ def thread_handles_in_argument(data: bytes) -> dict[str, int]:
         return {}
 
 
+#: Bionic's TLS slots above the arm64 thread pointer (bionic/libc/platform/bionic/tls_defines.h), by
+#: byte offset. Slot 5, the stack guard, is read by nearly all Android-built code and is not counted.
+_BIONIC_TLS_SLOTS = {0: "self", 8: "thread id", 16: "app", 24: "opengl", 32: "opengl api", 48: "sanitizer",
+                     56: "art thread self"}
+
+
+def bionic_tls_slots(data: bytes) -> dict[str, Any]:
+    """Bionic TLS slots the library's code reads directly: mrs xT, tpidr_el0, then a load from xT at
+    one of the slots' fixed offsets. OH musl keeps its own slots below the thread pointer and its TLS
+    blocks above it, so these words hold something else: ByteDance's security libraries inline
+    Bionic's vfork, which clears pthread_internal_t's cached pid through the thread id slot (CapCut
+    stored to -1 + 20), and profilers read ART's Thread* from slot 7."""
+    try:
+        from elftools.elf.elffile import ELFFile
+
+        elf = ELFFile(io.BytesIO(data))
+        if elf["e_machine"] != "EM_AARCH64":
+            return {}
+        text = elf.get_section_by_name(".text")
+        if text is None:
+            return {}
+        code = text.data()
+        words = [w for (w,) in struct.iter_unpack("<I", code[:len(code) - len(code) % 4])]
+        found: Counter = Counter()
+        for index, insn in enumerate(words):
+            if (insn & 0xFFFFFFE0) != 0xD53BD040:                 # mrs xT, tpidr_el0
+                continue
+            register = insn & 0x1F
+            for later in words[index + 1:index + 5]:
+                if (later & 0xFFC00000) == 0xF9400000 and ((later >> 5) & 0x1F) == register:   # ldr xM, [xT, #imm]
+                    offset = ((later >> 10) & 0xFFF) * 8
+                    if offset in _BIONIC_TLS_SLOTS:
+                        found[_BIONIC_TLS_SLOTS[offset]] += 1
+                    break
+                if _writes(later, register):
+                    break
+        return {"bionic_tls_slots": dict(sorted(found.items()))} if found else {}
+    except Exception:
+        return {}
+
+
 def bionic_static_mutexes(data: bytes) -> dict[str, Any]:
     """Mutexes initialized with Bionic's recursive or error-checking static initializer that the
     library's code locks: one whose address is built right before a call to pthread_mutex_lock (or
@@ -694,6 +735,7 @@ def read_elf(
             **egl_lookups(raw, set(undefined) | set(undefined_weak)),
             **bionic_static_mutexes(raw),
             **thread_handles_in_argument(raw),
+            **bionic_tls_slots(raw),
             **import_versions(text),
             "exported_symbols": sorted(exports),
             "undefined_symbols": sorted(undefined),

@@ -1731,6 +1731,16 @@ class ThreadHandles(unittest.TestCase):
             self.assertFalse(contracts.thread_start_model(Path(tmp))["ordered"], "a start routine that never waits")
 
 
+class BionicTlsSlots(unittest.TestCase):
+    def test_a_slot_read_is_a_row(self) -> None:
+        sec = {"name": "lib/arm64-v8a/libmetasec_ov.so", "bionic_tls_slots": {"thread id": 1}}
+        rows = gapmap.bionic_tls_rows({"inventory": {"elfs": [sec, {"name": "lib/arm64-v8a/libplain.so"}]}})
+        self.assertEqual((rows[0]["id"], rows[0]["verdict"], rows[0]["libraries"]),
+                         ("abi:bionic-tls-slots", "missing", ["libmetasec_ov.so"]))
+        self.assertIn("libmetasec_ov.so: 1 thread id", rows[0]["app_evidence"])
+        self.assertEqual(gapmap.bionic_tls_rows({"inventory": {"elfs": [{"name": "libplain.so"}]}}), [])
+
+
 class WeakApi(unittest.TestCase):
     def test_weak_ndk_imports_are_a_row_until_the_shim_defines_them(self) -> None:
         weak = [{"symbol": "ASystemFontIterator_open", "importing_libraries": ["libxul.so"], "surface": "libandroid",

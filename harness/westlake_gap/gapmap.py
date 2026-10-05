@@ -1725,6 +1725,34 @@ def static_mutex_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[
     )]
 
 
+def bionic_tls_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
+    """Libraries that read Bionic's TLS slots directly (scanner.bionic_tls_slots). OH musl lays out
+    the words above the thread pointer differently, and no shim can change what a load from them
+    reads: the thread pointer's layout is the loader's."""
+    found: dict[str, dict[str, int]] = {}
+    for elf in ohresolve.target_elfs(scan):
+        if elf.get("bionic_tls_slots"):
+            found[elf.get("soname") or elf["name"].rsplit("/", 1)[-1]] = elf["bionic_tls_slots"]
+    if not found:
+        return []
+    slots = sorted({slot for counts in found.values() for slot in counts})
+    return [_row(
+        "native-symbols", "abi:bionic-tls-slots",
+        f"Bionic TLS slots read directly ({', '.join(slots)}: {', '.join(sorted(found)[:4])}"
+        + (" ..." if len(found) > 4 else "") + ")",
+        oh_touchpoint="OH musl's thread pointer: its own reserved slots lie below it, a 16-byte gap and the "
+                      "static TLS blocks above it, where Bionic keeps eight slots",
+        verdict="missing", shim_class="C6", effort="L", confidence=STATIC,
+        provider="none: what a load from the thread pointer reads is the loader's layout",
+        app_evidence="; ".join(f"{name}: " + ", ".join(f"{count} {slot}" for slot, count in sorted(counts.items()))
+                               for name, counts in sorted(found.items())[:6]),
+        libraries=sorted(found), crash_kinds=["fault"],
+        seen_blocking=["capcut (its security library's inlined vfork cleared pthread_internal_t's cached pid "
+                       "through the thread id slot, which held -1 on OH: a store to 0x13)"],
+        shim="none from a library: Bionic's slots above the thread pointer would need a loader that lays them out",
+    )]
+
+
 def thread_handle_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
     """Threads created with their handle stored inside the object they are handed
     (scanner.thread_handles_in_argument). Bionic stores the handle before the thread runs; musl
@@ -3006,6 +3034,7 @@ def build_map(
             + signal_abi_rows(scan, contracts.signal_abi_model(westlake_root))
             + static_mutex_rows(scan, contracts.static_mutex_model(westlake_root))
             + thread_handle_rows(scan, contracts.thread_start_model(westlake_root))
+            + bionic_tls_rows(scan)
             + security_rows(scan, contracts.keystore_model(westlake_root))
             + webview_rows(scan, webview_process_model(aosp_root, westlake_root))
             # art-build sits beside the westlake checkout in the same workspace; absent, the row
