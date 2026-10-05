@@ -1251,6 +1251,8 @@ def interposition_rows(scan: dict[str, Any], runtime: dict[str, Any] | None,
         provider=("routed to the Android namespace, where the runtime's libraries are not global" if not exposed else
                   f"{len(exposed)} of {len(hits)} load in the default namespace"),
         app_evidence=evidence,
+        # A crash this explains runs in the runtime library's copy, called from the app's library.
+        libraries=exposed, crash_libraries=sorted({owner for name in exposed for owner in hits[name]}),
         seen_blocking=["ppsspp (r83: its own VMA calls ran in libhwui.so's copy; SIGSEGV in CalcAllocationParams)"],
         shim="route these libraries to the Android namespace (--android-native-target), or stop the runtime's "
              "libraries exporting what Android keeps private to the platform",

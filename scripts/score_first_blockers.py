@@ -104,10 +104,12 @@ def crash_rows(dump, rows):
     names = {frame["library"] for frame in frames
              if str(frame.get("path", "")).startswith(_APP_DIRS) and frame.get("library")}
     symbols = [frame["symbol"] for frame in frames if frame.get("symbol")]
+    in_libraries = {frame.get("library") for frame in frames}
     # A row about one kind of call (a thread start, an allocator) also names the frames such a crash
     # shows; PPSSPP's crash in libhwui is not a thread-handle crash because its library has one.
     found = [r for r in rows if names & {str(name).rsplit("/", 1)[-1] for name in r.get("libraries") or []}
-             and (not r.get("crash_symbols") or any(re.search(r["crash_symbols"], s) for s in symbols))]
+             and (not r.get("crash_symbols") or any(re.search(r["crash_symbols"], s) for s in symbols))
+             and (not r.get("crash_libraries") or in_libraries & set(r["crash_libraries"]))]
     return found or None
 
 

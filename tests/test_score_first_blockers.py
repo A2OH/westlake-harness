@@ -84,6 +84,12 @@ class NativeCrashScoring(unittest.TestCase):
                              {"path": "/data/local/tmp/asx/lib/arm64-v8a/libppsspp_jni.so", "library": "libppsspp_jni.so"}]}
         self.assertEqual([r["id"] for r in score.crash_rows(tiktok, [handle])], ["abi:thread-handle-order"])
         self.assertIsNone(score.crash_rows(ppsspp, [handle]))
+        # PPSSPP's crash runs in libhwui's copy of its own symbols: the interposition row names it.
+        interposed = {"id": "load:interposed-by-runtime", "verdict": "missing", "libraries": ["libppsspp_jni.so"],
+                      "crash_libraries": ["libhwui.so", "libpng.so"]}
+        self.assertEqual([r["id"] for r in score.crash_rows(ppsspp, [handle, interposed])], ["load:interposed-by-runtime"])
+        own = {"frames": [{"path": "/data/local/tmp/asx/lib/arm64-v8a/libppsspp_jni.so", "library": "libppsspp_jni.so"}]}
+        self.assertIsNone(score.crash_rows(own, [interposed]), "a crash in its own code is not interposition")
 
 
 if __name__ == "__main__":
