@@ -68,6 +68,16 @@ class NoFrameScoring(unittest.TestCase):
         self.assertEqual(score.outcome_of(score.candidate_rows("no-frame", blocker, ROWS)), "not-named")
 
 
+class WindowBuffersScoring(unittest.TestCase):
+    def test_a_window_with_no_buffers_needs_the_geometry_row(self) -> None:
+        """anarchre, diesimu: SDL's geometry reached OH as a 0x0 buffer size."""
+        blocker = "13915 buffer requests on one of its windows failed (ret 50002000)"
+        rows = ROWS + [{"id": "window:buffers-geometry", "verdict": "missing"}]
+        found = score.candidate_rows("window-buffers", blocker, rows)
+        self.assertEqual(([r["id"] for r in found], score.outcome_of(found)), (["window:buffers-geometry"], "named"))
+        self.assertEqual(score.outcome_of(score.candidate_rows("window-buffers", blocker, ROWS)), "not-named")
+
+
 class NativeCrashScoring(unittest.TestCase):
     def test_a_row_about_a_library_in_the_crash_names_it(self) -> None:
         """Waze aborted in libwaze.so (loaded from the shim's init copy); its constructors were dropped."""

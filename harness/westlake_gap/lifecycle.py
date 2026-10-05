@@ -146,6 +146,7 @@ class Score:
     startup: dict | None = None
     root_cause: dict | None = None
     self_finish: dict | None = None
+    buffer_requests: dict | None = None
 
     def as_dict(self) -> dict:
         return {k: v for k, v in self.__dict__.items()
@@ -337,6 +338,15 @@ def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str 
             s.blocker_category, s.blocking = "no-frame", True
             s.blocker = "the activity resumed %.1f s after start and drew no frame" % startup.get(
                 "resumed", startup["first_frame_timeout"])
+    failures = evidence.buffer_request_failures(hilog_text) if hilog_text else None
+    if failures:
+        s.buffer_requests = failures
+        # A window whose producer OH refused every buffer, and the host screen where it should show:
+        # it never drew (anarchre and diesimu: SDL's EGL surface on its SurfaceView's own window).
+        if s.screen == "host" and failures["count"] >= 3 \
+                and (s.blocker is None or s.blocker_category in ("stall", "no-frame") or not s.blocking):
+            s.blocker_category, s.blocking = "window-buffers", True
+            s.blocker = "%d buffer requests on one of its windows failed (ret %d)" % (failures["count"], failures["ret"])
     signal = evidence.hilog_signal(hilog_text) if hilog_text and not dump else None
     if signal:
         s.hilog_signal = signal

@@ -256,6 +256,27 @@ class Evidence(unittest.TestCase):
         lifecycle.add_evidence(s, text, None, None, drawn)
         self.assertNotEqual(s.blocker_category, "no-frame", "a frame was drawn")
 
+    def test_a_window_whose_buffer_requests_failed(self) -> None:
+        """anarchre: SDL's EGL surface asked OH for a buffer 13,915 times and got none, its window
+        sized 0x0 by SDL's (0, 0, visual) geometry; the host screen showed."""
+        from westlake_gap import evidence, lifecycle
+        line = ("10-06 03:10:57.%03d  9162  9229 E C01401/Bufferqueue: <native_window.cpp:229-NativeWindowRequestBuffer>: "
+                "RequestBuffer ret:50002000, uniqueId: 3758096388240.\n")
+        hilog = "".join(line % i for i in range(5)) + line.replace("3758096388240", "3758096388238") % 9
+        self.assertEqual(evidence.buffer_request_failures(hilog),
+                         {"count": 5, "ret": 50002000, "window": 3758096388240, "windows": 2})
+        self.assertIsNone(evidence.buffer_request_failures("10-06 03:10:57.100 1 1 I C00f00/SDL: onResume()\n"))
+        text = "kRegJNI loop done\n[DIRECT-LAUNCH] bind done sBindAppDone=true\n"
+        s = lifecycle.score("anarchre", text)
+        s.screen = "host"
+        lifecycle.add_evidence(s, text, None, None, hilog)
+        self.assertEqual((s.blocker_category, s.blocker),
+                         ("window-buffers", "5 buffer requests on one of its windows failed (ret 50002000)"))
+        s = lifecycle.score("anarchre", text)
+        s.screen = "app"
+        lifecycle.add_evidence(s, text, None, None, hilog)
+        self.assertNotEqual(s.blocker_category, "window-buffers", "on screen: the failures did not keep it off")
+
     def test_root_cause_is_the_deepest_cause_with_its_app_frame(self) -> None:
         """otgmaster's blocker read "start activity: NullPointerException"; its cause named the
         manager, and the first app frame where the null was used."""

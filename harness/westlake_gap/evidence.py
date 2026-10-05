@@ -322,6 +322,25 @@ def startup_times(hilog: str) -> dict | None:
     return found or None
 
 
+_REQUEST_FAILED = re.compile(r"NativeWindowRequestBuffer>: RequestBuffer ret:(-?\d+), uniqueId: (\d+)")
+
+
+def buffer_request_failures(hilog: str) -> dict | None:
+    """Buffer requests OH refused on one of the app's windows (native_window.cpp's RequestBuffer
+    error), most on one window: a producer that never got a buffer to draw into. SDL's EGL surface
+    asked 13,915 times in anarchre's minute, after its (0, 0, visual) geometry had reached OH as a
+    0x0 buffer size (NATIVE_ERROR_UNKNOWN, 50002000)."""
+    counts: dict[tuple[str, str], int] = {}
+    for line in hilog.splitlines():
+        match = _REQUEST_FAILED.search(line)
+        if match:
+            counts[(match[1], match[2])] = counts.get((match[1], match[2]), 0) + 1
+    if not counts:
+        return None
+    (code, window), count = max(counts.items(), key=lambda item: item[1])
+    return {"count": count, "ret": int(code), "window": int(window), "windows": len({w for _, w in counts})}
+
+
 _RESUMED = re.compile(r"activityResumed: OnDrawListener attached[^\n]*\(token=(\S+?)\)")
 _FINISHED = re.compile(r"finishActivity: [^\n]*? for (\S+)")
 
