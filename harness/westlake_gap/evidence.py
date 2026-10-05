@@ -136,6 +136,29 @@ def _is_app(frame: dict) -> bool:
     return frame.get("path", "").startswith(_APP_DIRS)
 
 
+_CPP_MAP = re.compile(r"^[0-9a-f]+-[0-9a-f]+ \S+ [0-9a-f]+ /", re.M)
+
+
+def _file_extents(text: str) -> dict[str, int]:
+    """How far into each file the dump's own Maps section maps it: the furthest file offset any of
+    its mappings reaches. A frame placed past that is not in the file. OH's dumper names such a pc
+    after the file mapped before it: CapCut's crash "in libmetasec_ov.so+0x215d6ec" ran in anonymous
+    memory after a 1.9 MB library (ByteDance decrypts code there), and TikTok's calling frames read
+    0x20000 past libvcbasekit.so's end, where its saved frame records put them inside it."""
+    at = text.find("\nMaps:")
+    extents: dict[str, int] = {}
+    if at < 0:
+        return extents
+    for line in text[at:].splitlines():
+        if not _CPP_MAP.match(line):
+            continue
+        span, _, offset, path = line.split(None, 3)
+        start, end = (int(x, 16) for x in span.split("-"))
+        path = path.strip().removesuffix(" (deleted)").strip()
+        extents[path] = max(extents.get(path, 0), end - start + int(offset, 16))
+    return extents
+
+
 def cppcrash(text: str) -> dict | None:
     """The fault in an OH crash dump: signal, address, faulting thread, its top frames, and what the
     frames say happened when it is one of the shapes Westlake apps keep hitting."""
@@ -152,10 +175,15 @@ def cppcrash(text: str) -> dict | None:
             if match is None:
                 break
             frames.append(_dump_frame(match))
+    extents = _file_extents(text)
+    for frame in frames:
+        if frame.get("path") in extents and frame["pc"] >= extents[frame["path"]]:
+            frame["beyond_mapping"] = True
     dump["frames"] = frames[:8]
     app = next((f for f in frames if _is_app(f)), None)
     if app:
-        dump["first_app_frame"] = "%s+%#x" % (app["library"], app["pc"])
+        dump["first_app_frame"] = "%s+%#x" % (app["library"], app["pc"]) + (
+            " (past its mappings)" if app.get("beyond_mapping") else "")
     top = frames[0] if frames else {}
     caller = frames[1] if len(frames) > 1 else {}
     from_init = caller.get("symbol", "").startswith("do_init_fini")
@@ -177,6 +205,11 @@ def cppcrash(text: str) -> dict | None:
     elif top.get("library") == "not mapped" and caller:
         dump["kind"] = "null-call"
         dump["summary"] = "a null function pointer called from %s+%#x" % (caller.get("library", "?"), caller.get("pc", 0))
+    elif top.get("beyond_mapping"):
+        dump["kind"] = "fault"
+        dump["summary"] = ("in code past %s's mappings, where the dump places it at +%#x: anonymous memory "
+                           "(generated or decrypted code), or an offset the dump got wrong"
+                           % (top.get("library", "?"), top.get("pc", 0)))
     else:
         dump["kind"] = "fault"
         dump["summary"] = "in %s+%#x" % (top.get("library", "?"), top.get("pc", 0))

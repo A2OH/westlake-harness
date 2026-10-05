@@ -147,6 +147,22 @@ class Evidence(unittest.TestCase):
                                  + "#01 pc 00000000000802e8 /system/lib/ld-musl-aarch64.so.1(do_init_fini+444)(ab)\n")
         self.assertEqual(init["kind"], "unrelocated-constructor")
 
+    def test_a_frame_past_its_files_mappings(self) -> None:
+        """CapCut: the dump placed its fault at libmetasec_ov.so+0x215d6ec, past the 1.9 MB library."""
+        from westlake_gap import evidence
+        lib = "/data/local/tmp/asx/lib/arm64-v8a/libmetasec_ov.so"
+        text = ("Reason:Signal:SIGSEGV(SEGV_MAPERR)@0x0000000000000013 \nFault thread info:\nTid:17197, Name:Thread-13\n"
+                f"#00 pc 000000000215d6ec {lib}\n#01 pc 00000000000210a0 {lib}\nRegisters:\n\nMaps:\n"
+                f"7ea1680000-7ea183e000 r-xp 00000000 {lib}\n7ea183e000-7ea1842000 r--p 001be000 {lib}\n"
+                f"7ea1858000-7ea185c000 rw-p 001d4000 {lib}\n")
+        dump = evidence.cppcrash(text)
+        self.assertTrue(dump["frames"][0]["beyond_mapping"])
+        self.assertNotIn("beyond_mapping", dump["frames"][1])
+        self.assertTrue(dump["summary"].startswith("in code past libmetasec_ov.so's mappings"))
+        self.assertEqual(dump["first_app_frame"], "libmetasec_ov.so+0x215d6ec (past its mappings)")
+        self.assertEqual(evidence.cppcrash(text.split("Maps:")[0])["summary"], "in libmetasec_ov.so+0x215d6ec",
+                         "no maps, no judgement")
+
     def test_crash_dump_completes_a_crash_the_log_saw(self) -> None:
         from westlake_gap import lifecycle
         text = "kRegJNI loop done\nFatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR) fault addr 0x0\nThread: 1 \"acceleratePlayH\"\n"
