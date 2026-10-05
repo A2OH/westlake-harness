@@ -106,7 +106,23 @@ def resolve(scan: dict[str, Any], provided: set[str], declared: dict[str, str],
                         "surface": declared.get(symbol, "bionic-private (not in the NDK)")})
     missing.sort(key=lambda m: (-m["importers"], m["symbol"]))
     return {"symbols": len(importers), "resolved": len(importers) - len(missing), "missing": missing,
-            "versioned_clash": versioned_clashes(elfs, versions)}
+            "versioned_clash": versioned_clashes(elfs, versions),
+            "weak_missing": weak_missing(elfs, own, provided, declared)}
+
+
+def weak_missing(elfs: list[dict[str, Any]], own: set[str], provided: set[str],
+                 declared: dict[str, str]) -> list[dict[str, Any]]:
+    """Weak imports of the NDK's API that nothing on the board defines. A weak import is optional to
+    the loader, which binds it to 0, but the NDK makes an API newer than the app's minSdk weak and the
+    app calls it once the device reports a level that has it: Fennec's libxul called
+    ASystemFontIterator_open (API 29) and jumped to address 0."""
+    importers: dict[str, set[str]] = {}
+    for elf in elfs:
+        for symbol in elf.get("undefined_weak_symbols", []):
+            if symbol in declared and symbol not in own and symbol not in provided:
+                importers.setdefault(symbol, set()).add(elf.get("soname") or elf.get("name"))
+    return [{"symbol": symbol, "importing_libraries": sorted(names), "surface": declared[symbol]}
+            for symbol, names in sorted(importers.items())]
 
 
 def versioned_clashes(elfs: list[dict[str, Any]], versions: dict[str, set[str | None]] | None) -> list[dict[str, Any]]:

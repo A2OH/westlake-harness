@@ -43,6 +43,18 @@ class Resolve(unittest.TestCase):
                          "a board copy under a version of its own does not match another version")
         self.assertEqual(ohresolve.resolve(scan, {"free", "memcpy"}, {})["versioned_clash"], [], "no versions known")
 
+    def test_weak_ndk_imports_nothing_defines(self) -> None:
+        """Fennec: libxul imports ASystemFontIterator_open (API 29) weakly; a call jumped to 0."""
+        scan = {"inventory": {"elfs": [{"soname": "libxul.so", "exported_symbols": [],
+                                        "undefined_symbols": ["ASystemFontIterator_open", "AFont_close", "__cxa_finalize"],
+                                        "undefined_weak_symbols": ["ASystemFontIterator_open", "AFont_close",
+                                                                   "__cxa_finalize"]}]}}
+        declared = {"ASystemFontIterator_open": "libandroid", "AFont_close": "libandroid"}
+        result = ohresolve.resolve(scan, {"AFont_close"}, declared)
+        self.assertEqual(result["weak_missing"], [{"symbol": "ASystemFontIterator_open",
+                                                   "importing_libraries": ["libxul.so"], "surface": "libandroid"}])
+        self.assertEqual(result["missing"], [], "weak imports are never missing to the loader")
+
     def test_own_exports_index_and_weak_imports(self) -> None:
         cc = shutil.which("cc") or shutil.which("gcc")
         if not cc:

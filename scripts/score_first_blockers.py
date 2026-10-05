@@ -109,7 +109,8 @@ def crash_rows(dump, rows):
     # shows; PPSSPP's crash in libhwui is not a thread-handle crash because its library has one.
     found = [r for r in rows if names & {str(name).rsplit("/", 1)[-1] for name in r.get("libraries") or []}
              and (not r.get("crash_symbols") or any(re.search(r["crash_symbols"], s) for s in symbols))
-             and (not r.get("crash_libraries") or in_libraries & set(r["crash_libraries"]))]
+             and (not r.get("crash_libraries") or in_libraries & set(r["crash_libraries"]))
+             and (not r.get("crash_kinds") or (dump or {}).get("kind") in r["crash_kinds"])]
     return found or None
 
 

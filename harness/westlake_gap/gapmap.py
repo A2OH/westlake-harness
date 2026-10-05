@@ -1489,6 +1489,35 @@ def vulkan_feature_rows(scan: dict[str, Any], claims: dict[str, Any],
     )]
 
 
+def weak_api_rows(weak: list[dict[str, Any]], shim_exports: set[str]) -> list[dict[str, Any]]:
+    """Weak imports of the NDK's API that nothing on the board defines (ohresolve.weak_missing). The
+    loader binds them to 0; an app calls one once the device reports an API level that has it, and a
+    call to 0 is a SIGSEGV with nothing in the log. The bionic shim, preloaded, can define them."""
+    if not weak:
+        return []
+    open_ = [item for item in weak if item["symbol"] not in shim_exports]
+    shown = open_ or weak
+    surfaces = sorted({item["surface"] for item in shown})
+    return [_row(
+        "native-symbols", "ndk:weak-api",
+        f"Weak NDK imports nothing on the board defines ({', '.join(i['symbol'] for i in shown[:4])}"
+        + (" ..." if len(shown) > 4 else "") + ")",
+        oh_touchpoint="the loader binds an undefined weak import to 0; the app checks the device's API level, "
+                      "not the symbol",
+        verdict="missing" if open_ else "supplied", shim_class="C1", effort="S" if open_ else "verify",
+        confidence=STATIC, open_symbols=[i["symbol"] for i in open_][:16],
+        provider=("the bionic shim defines them" if not open_ else
+                  f"{len(open_)} of {len(weak)} undefined: a call jumps to address 0"),
+        app_evidence="; ".join(f"{i['symbol']} ({i['surface']}): {', '.join(i['importing_libraries'][:2])}"
+                               for i in shown[:4]),
+        libraries=sorted({name.rsplit("/", 1)[-1] for i in shown for name in i["importing_libraries"]}),
+        crash_kinds=["null-call"],
+        seen_blocking=["fennec (its font-list thread called ASystemFontIterator_open, API 29, through a PLT slot "
+                       "holding 0)"],
+        shim="define the " + "/".join(surfaces) + " functions in the bionic shim, answering as the board can",
+    )]
+
+
 def symbol_version_rows(oh_missing: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Imports a library defines, but under another symbol version. OH's loader binds a versioned
     import to a versioned library only under the same version name, so the load fails as if the
@@ -2952,11 +2981,12 @@ def build_map(
             + lifecycle_native_rows(runtime_index, runtime_class_paths)
             + native_upcall_rows(scan)
             + (ndk_symbol_rows(scan, [m for m in oh_missing if not m.get("version_mismatch")
-                                      and not m.get("versioned_clash")],
+                                      and not m.get("versioned_clash") and not m.get("weak")],
                                bionic_shim_exports(westlake_root), ndk_cov) if ndk_cov
                else native_symbol_rows(scan, [m for m in oh_missing if not m.get("version_mismatch")
-                                                and not m.get("versioned_clash")],
+                                                and not m.get("versioned_clash") and not m.get("weak")],
                                        bionic_shim_exports(westlake_root)))
+            + weak_api_rows([m for m in oh_missing if m.get("weak")], bionic_shim_exports(westlake_root))
             + symbol_version_rows(oh_missing)
             + versioned_clash_rows([m for m in oh_missing if m.get("versioned_clash")],
                                    contracts.shim_version_nodes(westlake_root))

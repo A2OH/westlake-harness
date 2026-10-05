@@ -1731,6 +1731,17 @@ class ThreadHandles(unittest.TestCase):
             self.assertFalse(contracts.thread_start_model(Path(tmp))["ordered"], "a start routine that never waits")
 
 
+class WeakApi(unittest.TestCase):
+    def test_weak_ndk_imports_are_a_row_until_the_shim_defines_them(self) -> None:
+        weak = [{"symbol": "ASystemFontIterator_open", "importing_libraries": ["libxul.so"], "surface": "libandroid",
+                 "weak": True}]
+        rows = gapmap.weak_api_rows(weak, set())
+        self.assertEqual((rows[0]["id"], rows[0]["verdict"], rows[0]["libraries"], rows[0]["crash_kinds"]),
+                         ("ndk:weak-api", "missing", ["libxul.so"], ["null-call"]))
+        self.assertEqual(gapmap.weak_api_rows(weak, {"ASystemFontIterator_open"})[0]["verdict"], "supplied")
+        self.assertEqual(gapmap.weak_api_rows([], set()), [])
+
+
 class OwnImplicitIntents(unittest.TestCase):
     def test_a_row_when_the_code_names_its_own_filters(self) -> None:
         scan = {"inventory": {"own_intent_names": ["shazam_activity", "shazam"]}}

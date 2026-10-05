@@ -91,6 +91,13 @@ class NativeCrashScoring(unittest.TestCase):
         own = {"frames": [{"path": "/data/local/tmp/asx/lib/arm64-v8a/libppsspp_jni.so", "library": "libppsspp_jni.so"}]}
         self.assertIsNone(score.crash_rows(own, [interposed]), "a crash in its own code is not interposition")
 
+    def test_a_weak_import_names_only_a_call_through_null(self) -> None:
+        weak = {"id": "ndk:weak-api", "verdict": "missing", "libraries": ["libxul.so"], "crash_kinds": ["null-call"]}
+        frames = [{"path": "/data/local/tmp/asx/lib/arm64-v8a/libxul.so", "library": "libxul.so"}]
+        self.assertEqual([r["id"] for r in score.crash_rows({"kind": "null-call", "frames": frames}, [weak])],
+                         ["ndk:weak-api"])
+        self.assertIsNone(score.crash_rows({"kind": "heap", "frames": frames}, [weak]))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -440,7 +440,8 @@ def main(argv: list[str] | None = None) -> int:
             [args.aosp / "frameworks-base", *sorted(args.aosp.glob("modules-*"))],
         )
         oh_app = read_json(args.oh_resolution)["apps"][args.app_key]
-        oh = oh_app["missing"] + [dict(clash, versioned_clash=True) for clash in oh_app.get("versioned_clash", [])]
+        oh = (oh_app["missing"] + [dict(clash, versioned_clash=True) for clash in oh_app.get("versioned_clash", [])]
+              + [dict(item, weak=True) for item in oh_app.get("weak_missing", [])])
         gap_map = build_map(scan, manifest_facts(args.apk), levels, aosp, args.westlake, oh,
                             read_json(args.policy), args.manifest_repo,
                             ndk_cov=read_json(args.ndk_coverage) if args.ndk_coverage else None,
