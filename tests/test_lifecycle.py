@@ -135,6 +135,13 @@ class Evidence(unittest.TestCase):
                                  + "#00 pc 00000000000d6e20 /system/lib/ld-musl-aarch64.so.1(__libc_malloc_impl+1332)(ab)\n"
                                  + "#01 pc 000000000003928c /data/local/tmp/asx/lib/arm64-v8a/libsyscall.so\n")
         self.assertEqual((heap["kind"], heap["first_app_frame"]), ("heap", "libsyscall.so+0x3928c"))
+        # Fennec: libxul freed with musl's free what mozjemalloc allocated; mallocng faults checking it.
+        foreign = evidence.cppcrash(head % "SIGSEGV(SEGV_MAPERR)"
+                                    + "#00 pc 00000000000d5e1c /system/lib/ld-musl-aarch64.so.1(get_meta+92)(ab)\n"
+                                    + "#01 pc 00000000000d5b40 /system/lib/ld-musl-aarch64.so.1(__libc_free+24)(ab)\n"
+                                    + "#02 pc 0000000002906cb0 /data/local/tmp/asx/lib/arm64-v8a/libxul.so\n")
+        self.assertEqual(foreign["kind"], "heap")
+        self.assertIn("handed memory its heap never allocated", foreign["summary"])
         abort = evidence.cppcrash(head % "SIGABRT(SI_TKILL)"
                                   + "#00 pc 0000000000111344 /system/lib/ld-musl-aarch64.so.1(raise+384)(ab)\n"
                                   + "#01 pc 00000000000bd55c /system/lib/ld-musl-aarch64.so.1(abort+20)(ab)\n"

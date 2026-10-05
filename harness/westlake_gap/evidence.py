@@ -132,6 +132,11 @@ def _dump_frame(match: re.Match) -> dict:
     return frame
 
 
+# musl's allocator entry points, and get_meta, mallocng's check of the chunk it is handed: Fennec's
+# libxul freed with musl's free what libmozglue's mozjemalloc had allocated, and faulted there.
+_ALLOCATOR = r"(__libc_malloc_impl|__libc_free|malloc|free|realloc|calloc|alloc_|get_meta)"
+
+
 def _is_app(frame: dict) -> bool:
     return frame.get("path", "").startswith(_APP_DIRS)
 
@@ -193,9 +198,10 @@ def cppcrash(text: str) -> dict | None:
     elif from_init and top.get("library") == "[Unknown]":
         dump["kind"] = "unrelocated-constructor"
         dump["summary"] = "a constructor pointer kept its link-time value (%#x): a relocation the loader did not apply" % top["pc"]
-    elif top.get("library", "").startswith("ld-musl") and re.match(r"(__libc_malloc_impl|__libc_free|malloc|free|realloc|calloc|alloc_)", top.get("symbol", "")):
+    elif top.get("library", "").startswith("ld-musl") and re.match(_ALLOCATOR, top.get("symbol", "")):
         dump["kind"] = "heap"
-        dump["summary"] = "a fault inside musl's allocator: the heap was corrupt before this call"
+        dump["summary"] = ("a fault inside musl's allocator: the heap was corrupt before this call, or it was "
+                           "handed memory its heap never allocated")
         if app:
             dump["summary"] += " (allocating for %s)" % dump["first_app_frame"]
     elif dump["signal"] == "SIGABRT":

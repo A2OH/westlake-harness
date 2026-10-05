@@ -1355,6 +1355,7 @@ def native_egl_window_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[
                       "tears down the display hwui renders through"),
             provider_source=model.get("by_handle"),
             app_evidence=f"{', '.join(by_handle[:4])} name EGL entry points without importing them",
+            libraries=by_handle,
             seen_blocking=["anarchre (SDL: eglCreateWindowSurface refused, then hwui aborted with EGL_NOT_INITIALIZED)"],
             shim="answer dlopen(libEGL.so) with the runtime's EGL and dlsym of the shim's EGL overrides with its own",
         ))
@@ -1535,6 +1536,7 @@ def versioned_clash_rows(clashes: list[dict[str, Any]], shim_versions: set[str])
         confidence=STATIC, provider="; ".join(provider),
         open_symbols=[f"{c['symbol']}@{c['version']}" for c in shown][:16],
         app_evidence="; ".join(f"{c['symbol']}: {', '.join(c['importing_libraries'][:3])}" for c in shown[:4]),
+        libraries=sorted({name for c in shown for name in c["importing_libraries"]}),
         seen_blocking=["fennec (libxul freed with musl's free what libmozglue's mozjemalloc allocated)"],
         shim="none" if not open_ else "define the open names under their version in the bionic shim, forwarding to "
                                       "the app library's definitions",
@@ -1678,6 +1680,7 @@ def static_mutex_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[
         provider_source=model.get("source"), open_symbols=open_,
         app_evidence="; ".join(f"{name}: " + ", ".join(f"{count} {kind}" for kind, count in sorted(counts.items()))
                                + " locked as initialized" for name, counts in sorted(found.items())[:6]),
+        libraries=sorted(found),
         seen_blocking=["discord (r84: sentry-native's sentry_init holds its options lock and takes it again in "
                        "sentry_close; the crash-reporting thread never left initSentryNative and the main thread "
                        "waited out two 30 s application-initialization timeouts, first frame at 62.9 s)"],
@@ -1711,6 +1714,7 @@ def thread_handle_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict
         app_evidence="; ".join(f"{name}: {count} call{'s' if count > 1 else ''} pthread_create(&obj->thread, ..., obj)"
                                for name, count in sorted(found.items())[:6])
                      + " (a risk: whether the thread reads the field first is not seen)",
+        libraries=sorted(found),
         seen_blocking=["tiktok (r85: vcbasekit's thread named itself with pthread_setname_np(this->thread_, ...) "
                        "before pthread_create stored thread_, and died in musl's pthread_setname_np on handle 0; it "
                        "drew in the run before)"],
@@ -2083,6 +2087,7 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
                       "constructor"),
             provider_source=known,
             app_evidence=f"{len(packed)} libraries System.loadLibrary names",
+            libraries=[name for name, _ in packed],
             seen_blocking=["waze (all 2189 of libwaze.so's constructors dropped; an abort in its own code)"],
             shim="leave libraries in Android's packed relocation format to the loader, which applies the table",
         ))
@@ -2111,6 +2116,7 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
             provider_source=shared,
             app_evidence=(f"{len(written_needs)} packaged libraries needed by harvested ones" if written_needs
                           else "Chaquopy (libchaquopy_java.so and libpython): its extension modules are written at run time"),
+            libraries=needs,
             seen_blocking=["econverter, werewolvesgame (Chaquopy: a second libpython3.11.so; a call through a PLT slot "
                            "never relocated)"],
             shim="share the packaged libraries with the namespace written libraries load in",

@@ -21,6 +21,8 @@ The blocker text is reduced to a key: a missing symbol needs a row mentioning it
 load:shadowed-by-board); an unbound platform native a jni:<class> row; a missing library a load:
 or ndk: row naming it; a null system service its svc:<name> row. A graphics abort or a window
 the platform never surfaced is a platform gap no row type covers yet, so it counts as not named.
+A native crash counts when a row names a library its app frames are in: rows about a library's own
+risk (an init array, an import version, a thread start, EGL looked up by handle) list them.
 An activity that finished itself on start (lifecycle's self-finish) needs the row for what it asked
 first: am:task-root, svc:bluetooth, am:own-implicit-intents, or a service row answering as a device
 without the feature, for a service the app called in process before it left.
@@ -91,8 +93,23 @@ def root_cause_rows(cause, rows):
     return None
 
 
-def candidate_rows(category, blocker, rows, cause=None, finished=None):
+_APP_DIRS = ("/data/local/tmp/asx/lib/", "/data/data/", "/data/user/")
+
+
+def crash_rows(dump, rows):
+    """Rows that name a library the crash's app frames are in, for a native crash: a row about a
+    library's own risk (an init array, an import version, a thread start, EGL by handle) lists it in
+    `libraries`. None when no such row names one, which leaves the crash unscorable."""
+    names = {frame["library"] for frame in (dump or {}).get("frames") or []
+             if str(frame.get("path", "")).startswith(_APP_DIRS) and frame.get("library")}
+    found = [r for r in rows if names & {str(name).rsplit("/", 1)[-1] for name in r.get("libraries") or []}]
+    return found or None
+
+
+def candidate_rows(category, blocker, rows, cause=None, finished=None, dump=None):
     """Rows that would name this blocker; None if it is not one a gap map could name."""
+    if category == "native-crash" and dump:
+        return crash_rows(dump, rows)
     key = platform_key(category, blocker)
     if key is None:
         return root_cause_rows(cause, rows) if cause else None
@@ -149,7 +166,8 @@ def main():
         elif not blocker:
             outcome, rows = "unscorable", []
         else:
-            rows = candidate_rows(category, blocker, gap["rows"], entry.get("root_cause"), entry.get("self_finish"))
+            rows = candidate_rows(category, blocker, gap["rows"], entry.get("root_cause"), entry.get("self_finish"),
+                                  entry.get("crash_dump"))
             if rows is None:
                 outcome, rows = "unscorable", []
             else:

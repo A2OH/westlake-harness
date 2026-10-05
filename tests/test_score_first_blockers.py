@@ -57,5 +57,22 @@ class SelfFinishScoring(unittest.TestCase):
         self.assertEqual(score.outcome_of(score.candidate_rows("self-finish", blocker, rows + [own])), "named")
 
 
+class NativeCrashScoring(unittest.TestCase):
+    def test_a_row_about_a_library_in_the_crash_names_it(self) -> None:
+        """Waze aborted in libwaze.so (loaded from the shim's init copy); its constructors were dropped."""
+        dump = {"frames": [
+            {"path": "/system/lib/ld-musl-aarch64.so.1", "library": "ld-musl-aarch64.so.1", "symbol": "abort+20"},
+            {"path": "/data/local/tmp/asx/lib/arm64-v8a/.libwaze.so.westlake-init.24312.0", "library": "libwaze.so"}]}
+        rows = [{"id": "load:packed-init-array", "verdict": "missing", "libraries": ["libwaze.so"]},
+                {"id": "egl:by-handle", "verdict": "missing", "libraries": ["lib/arm64-v8a/libSDL2.so"]}]
+        found = score.candidate_rows("native-crash", "SIGABRT on thread Native Thread: aborted from libwaze.so",
+                                     rows, dump=dump)
+        self.assertEqual([r["id"] for r in found], ["load:packed-init-array"])
+        sdl = {"frames": [{"path": "/data/local/tmp/asx/lib/arm64-v8a/libSDL2.so", "library": "libSDL2.so"}]}
+        self.assertEqual([r["id"] for r in score.crash_rows(sdl, rows)], ["egl:by-handle"])
+        mali = {"frames": [{"path": "/vendor/lib64/chipsetsdk/libGLES_mali.z.so", "library": "libGLES_mali.z.so"}]}
+        self.assertIsNone(score.crash_rows(mali, rows), "no app frame: unscorable")
+
+
 if __name__ == "__main__":
     unittest.main()
