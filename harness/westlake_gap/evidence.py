@@ -322,6 +322,35 @@ def startup_times(hilog: str) -> dict | None:
     return found or None
 
 
+_NULL_SERVICE = re.compile(r"Attempt to invoke [^']*'[^' ]+ ((?:[a-z]\w*\.)+I[A-Z]\w*)\.\w+\([^']*\)' on a null object reference")
+
+
+def null_service_interfaces(*texts: str | None) -> list[str]:
+    """Platform service interfaces the app dereferenced null, from the NullPointerException messages
+    in its logs, caught or not: a binder that no in-process stand-in answers. wormhole2's device-info
+    plugin failed on IDeviceIdentifiersPolicyService (Build.getSerial) and the app never drew; the
+    launchers' LauncherApps calls failed on ILauncherApps."""
+    found: set[str] = set()
+    for text in texts:
+        if text:
+            found |= {match.group(1) for match in _NULL_SERVICE.finditer(text)}
+    return sorted(found)
+
+
+_REFUSED = re.compile(r"UnsupportedOperationException: (OH user service does not implement \w+)")
+
+
+def service_refusals(*texts: str | None) -> list[str]:
+    """Calls an in-process service refused outright, from the exception messages in the app's logs,
+    caught or not: the user service throws for an IUserManager method it does not name (clauncher's
+    UserManager.getUserProfiles: getProfileIds), and the app went on without its answer."""
+    found: set[str] = set()
+    for text in texts:
+        if text:
+            found |= {match.group(1) for match in _REFUSED.finditer(text)}
+    return sorted(found)
+
+
 _REQUEST_FAILED = re.compile(r"NativeWindowRequestBuffer>: RequestBuffer ret:(-?\d+), uniqueId: (\d+)")
 
 
@@ -339,6 +368,33 @@ def buffer_request_failures(hilog: str) -> dict | None:
         return None
     (code, window), count = max(counts.items(), key=lambda item: item[1])
     return {"count": count, "ret": int(code), "window": int(window), "windows": len({w for _, w in counts})}
+
+
+_DLSYM_FAILED = re.compile(r"do_dlsym failed: Symbol not found: (\w+), version: \S+ so=(\S+)")
+_HILOG_DOMAIN = re.compile(r"^\d\d-\d\d \d\d:\d\d:\d\d\.\d+\s+\d+\s+\d+\s+[A-Z]\s+(C[0-9a-fA-F]{5})/")
+
+
+def dlsym_failures(*texts: str | None) -> list[dict]:
+    """Lookups by handle that OH's dynamic linker refused, as the app logged them: a loader that
+    passes dlsym's error on (Ebiten in aaaaxy: "gl: glGenVertexArrays is missing: do_dlsym failed:
+    Symbol not found: glGenVertexArrays, version: null so=/system/lib64/ndk/libGLESv2.so"). A
+    lookup that returns null is otherwise silent. Each name once, in the order first seen. Only
+    the Android side's hilog domain (C00f00) counts: OH's graphics HAL logs its own optional probes
+    (load_hdi: MapperImplRelease in /vendor/lib64/passthrough) in every app that draws."""
+    seen: set[str] = set()
+    found = []
+    for text in texts:
+        for line in (text or "").splitlines():
+            match = _DLSYM_FAILED.search(line)
+            if match is None:
+                continue
+            domain = _HILOG_DOMAIN.match(line)
+            if domain is not None and domain[1].lower() != "c00f00":
+                continue
+            if match[1] not in seen:
+                seen.add(match[1])
+                found.append({"symbol": match[1], "library": match[2]})
+    return found
 
 
 _RESUMED = re.compile(r"activityResumed: OnDrawListener attached[^\n]*\(token=(\S+?)\)")

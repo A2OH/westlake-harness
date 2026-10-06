@@ -1896,6 +1896,87 @@ class PermissionRequests(unittest.TestCase):
             self.assertFalse(contracts.permission_request_model(root)["answered"])
 
 
+class HostPermissions(unittest.TestCase):
+    def test_a_guarded_capability_needs_the_host_to_request_its_permission(self) -> None:
+        """musekit: AudioRecord stayed uninitialized while the host did not request the microphone."""
+        host = ('{"module": {"name": "entry",\n "requestPermissions": [\n  {"name": "ohos.permission.INTERNET"}%s\n]}}\n')
+        mapper = ('    addMapping("android.permission.RECORD_AUDIO",             "ohos.permission.MICROPHONE");\n'
+                  '    addMapping("android.permission.CAMERA", "ohos.permission.CAMERA");\n')
+        facts = {"permissions": ["android.permission.CAMERA", "android.permission.INTERNET",
+                                 "android.permission.RECORD_AUDIO"]}
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            self.assertEqual(gapmap.host_permission_rows(facts, contracts.host_permission_model(root), root), [])
+            _write(root / "apps/imehost/module.json", host % "")
+            _write(root / "framework/package-manager/java/PermissionMapper.java", mapper)
+            model = contracts.host_permission_model(root)
+            self.assertEqual((model["requested"], model["source"]), (["ohos.permission.INTERNET"], "apps/imehost/module.json:2"))
+            self.assertEqual(gapmap.host_permission_rows(facts, model, root), [],
+                             "no row while the provider makes no capture call: that gap is another row's")
+            _write(root / "framework/javacore-shim/audiorecord_natives.c",
+                   'static void f(void) {\n    S(generate, "OH_AudioStreamBuilder_GenerateCapturer");\n}\n')
+            rows = gapmap.host_permission_rows(facts, model, root)
+            self.assertEqual([(r["id"], r["verdict"]) for r in rows], [("perm:host:ohos.permission.MICROPHONE", "missing")],
+                             "the camera is not bridged, so its permission has no row")
+            self.assertEqual(rows[0]["provider_source"],
+                             "apps/imehost/module.json:2; framework/javacore-shim/audiorecord_natives.c:2")
+            self.assertIn("uninitialized AudioRecord", rows[0]["symptoms"])
+            _write(root / "apps/imehost/module.json", host % ',\n  {"name": "ohos.permission.MICROPHONE"}')
+            rows = gapmap.host_permission_rows(facts, contracts.host_permission_model(root), root)
+            self.assertEqual(rows[0]["verdict"], "supplied")
+            self.assertEqual(gapmap.host_permission_rows({"permissions": ["android.permission.INTERNET"]},
+                                                         contracts.host_permission_model(root), root), [])
+
+
+class UserServiceAnswers(unittest.TestCase):
+    def test_user_manager_calls_reaching_a_method_the_user_service_throws_for(self) -> None:
+        """clauncher: UserManager.getUserProfiles asks getProfileIds, which the user service did not name."""
+        manager = """public class UserManager {
+    private final IUserManager mService;
+    public List<UserHandle> getUserProfiles() {
+        int[] userIds = getProfileIds(getContextUserIfAppropriate(), true /* enabledOnly */);
+        return convertUserIdsToUserHandles(userIds);
+    }
+    public @NonNull int[] getProfileIds(@UserIdInt int userId, boolean enabledOnly) {
+        try {
+            return mService.getProfileIds(userId, enabledOnly);
+        } catch (RemoteException re) {
+            throw re.rethrowFromSystemServer();
+        }
+    }
+    public boolean isManagedProfile() {
+        return isManagedProfile(0);
+    }
+    public boolean isManagedProfile(int userId) {
+        return "managed".equals(mService.getProfileType(userId));
+    }
+}
+"""
+        service = ("final class OHUserManager {\n    static Object answer(String name, Object[] arguments) {\n"
+                   "        if (name.equals(\"isUserRunning\")) return true;\n        switch (name) {\n"
+                   "            case \"getProfileType\":\n                return \"\";\n%s"
+                   "            default:\n                break;\n        }\n"
+                   "        throw new UnsupportedOperationException(\"OH user service does not implement \" + name);\n"
+                   "    }\n}\n")
+        scan = {"inventory": {"platform_method_names": {"Landroid/os/UserManager;": ["getUserProfiles", "isManagedProfile"]}}}
+        with tempfile.TemporaryDirectory() as temp:
+            aosp, westlake = Path(temp) / "aosp", Path(temp) / "westlake"
+            _write(aosp / "frameworks-base/core/java/android/os/UserManager.java", manager)
+            census = gapmap.user_manager_census(aosp)
+            self.assertEqual((census["getUserProfiles"], census["isManagedProfile"]), (["getProfileIds"], ["getProfileType"]))
+            _write(westlake / "framework/package-manager/java/OHUserManager.java", service % "")
+            model = contracts.user_service_model(westlake)
+            self.assertEqual((model["answered"], model["source"]),
+                             (["getProfileType", "isUserRunning"], "framework/package-manager/java/OHUserManager.java:10"))
+            rows = gapmap.user_service_rows(scan, model, census)
+            self.assertEqual([(r["id"], r["verdict"], r["open_symbols"]) for r in rows],
+                             [("svc:user-unanswered", "missing", ["getUserProfiles (getProfileIds)"])])
+            _write(westlake / "framework/package-manager/java/OHUserManager.java",
+                   service % "            case \"getProfileIds\":\n                return new int[] {0};\n")
+            self.assertEqual(gapmap.user_service_rows(scan, contracts.user_service_model(westlake), census), [])
+        self.assertEqual(gapmap.user_service_rows(scan, {"throws": True, "answered": []}, {}), [])
+
+
 class PostCreateCallbacks(unittest.TestCase):
     def test_the_activity_or_a_named_base_class_overrides(self) -> None:
         from westlake_gap.scanner import after_start_overrides
@@ -2157,6 +2238,43 @@ class NativeEglWindow(unittest.TestCase):
             rows = gapmap.native_egl_window_rows(scan, native_egl_window_model(root))
             self.assertEqual([(r["id"], r["verdict"]) for r in rows], [("egl:by-handle", "supplied")])
 
+    def test_gles3_looked_up_by_name_needs_libglesv2_to_carry_it(self) -> None:
+        """aaaaxy: Ebiten looked glGenVertexArrays up in libGLESv2.so's handle, which on OH has GLES 2 only."""
+        from westlake_gap import scanner
+        from westlake_gap.contracts import native_egl_window_model
+        # Go packs its strings with no terminators; an extension's name is not the core one's.
+        raw = b"\x7fELF..\x00libGLESv2.so\x00glBindVertexArrayglGenVertexArraysglClear\x00glDrawBuffersEXT\x00"
+        self.assertEqual(scanner.gles3_lookups(raw, set()), {"gles3_lookups": ["glBindVertexArray", "glGenVertexArrays"]})
+        self.assertEqual(scanner.gles3_lookups(raw, {"glBindVertexArray", "glGenVertexArrays"}), {})
+        scan = {"inventory": {"elfs": [{"name": "lib/arm64-v8a/libgojni.so", "abi_matches_machine": True,
+                                        "gles3_lookups": ["glBindVertexArray", "glGenVertexArrays"]}]}}
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "framework/webview-shim/webview_bionic_shim.c"
+            webview_only = ('    if (basename != NULL && strcmp(basename, "libGLESv2.so") == 0 &&\n'
+                            '        caller_is_webview(caller, NULL)) {\n'
+                            '        actual_filename = "/system/lib64/platformsdk/libGLESv3.so";\n    }\n')
+            _write(source, "void *dlopen(const char *filename, int flags)\n{\n" + webview_only + "}\n")
+            rows = gapmap.native_egl_window_rows(scan, native_egl_window_model(root))
+            self.assertEqual([(r["id"], r["verdict"]) for r in rows], [("gl:gles3-by-handle", "missing")])
+            self.assertEqual(rows[0]["app_evidence"],
+                             "lib/arm64-v8a/libgojni.so names 2 without importing them (glBindVertexArray, glGenVertexArrays)")
+            _write(source, "void *dlopen(const char *filename, int flags)\n{\n"
+                   + webview_only.replace("caller_is_webview(caller, NULL)", "caller_is_android_dso(caller, &gles_caller)")
+                   + "}\n")
+            model = native_egl_window_model(root)
+            self.assertEqual(model["gles3_by_handle"], "framework/webview-shim/webview_bionic_shim.c:3")
+            self.assertEqual([(r["id"], r["verdict"]) for r in gapmap.native_egl_window_rows(scan, model)],
+                             [("gl:gles3-by-handle", "supplied")])
+            # After the .z.so probe, which returns the bare name's own library first: never reached.
+            probe = ("    if (basename != NULL && basename == filename) {\n"
+                     "        void *plain = real_dlopen(actual_filename, flags);\n        if (plain != NULL) return plain;\n    }\n")
+            translated = webview_only.replace("caller_is_webview(caller, NULL)", "caller_is_android_dso(caller, &gles_caller)")
+            _write(source, "void *dlopen(const char *filename, int flags)\n{\n" + probe + translated + "}\n")
+            self.assertIsNone(native_egl_window_model(root)["gles3_by_handle"])
+            _write(source, "void *dlopen(const char *filename, int flags)\n{\n" + translated + probe + "}\n")
+            self.assertEqual(native_egl_window_model(root)["gles3_by_handle"], "framework/webview-shim/webview_bionic_shim.c:3")
+
     def test_buffers_geometry_needs_androids_terms(self) -> None:
         """anarchre, diesimu: SDL's (0, 0, visual) reached OH as a 0x0 buffer size and CLUT1."""
         from westlake_gap.contracts import native_egl_window_model
@@ -2233,6 +2351,19 @@ class SqliteCollations(unittest.TestCase):
             self.assertEqual(gapmap.sqlite_collation_rows({"inventory": {"sql_collations": ["UNICODE", "PHONEBOOK"]}},
                                                           sqlite_collations_model(root))[0]["verdict"], "missing")
         self.assertEqual(gapmap.sqlite_collation_rows({"inventory": {}}, {}), [])
+
+
+class DeviceIdentifiers(unittest.TestCase):
+    def test_build_get_serial_needs_its_service(self) -> None:
+        """wormhole2: Build.getSerial threw NullPointerException where Android throws SecurityException."""
+        scan = {"inventory": {"platform_method_names": {"Landroid/os/Build;": ["getSerial", "getRadioVersion"]}}}
+        row = gapmap.device_identifier_rows(scan, {})[0]
+        self.assertEqual((row["id"], row["verdict"]), ("svc:device_identifiers", "null"))
+        model = {"device_identifiers": [{"kind": "adapter", "source": "framework/core/java/OHServiceManager.java:188"}]}
+        self.assertEqual(gapmap.device_identifier_rows(scan, model)[0]["verdict"], "supplied")
+        self.assertEqual(gapmap.device_identifier_rows(scan, {"device_identifiers": [{"kind": "explicit-null"}]})[0]["verdict"],
+                         "null")
+        self.assertEqual(gapmap.device_identifier_rows({"inventory": {}}, model), [])
 
 
 class SandboxAndBacktest(unittest.TestCase):

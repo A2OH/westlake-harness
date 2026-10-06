@@ -147,6 +147,9 @@ class Score:
     root_cause: dict | None = None
     self_finish: dict | None = None
     buffer_requests: dict | None = None
+    null_services: list | None = None
+    dlsym_failures: list | None = None
+    service_refusals: list | None = None
 
     def as_dict(self) -> dict:
         return {k: v for k, v in self.__dict__.items()
@@ -338,6 +341,12 @@ def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str 
             s.blocker_category, s.blocking = "no-frame", True
             s.blocker = "the activity resumed %.1f s after start and drew no frame" % startup.get(
                 "resumed", startup["first_frame_timeout"])
+    nulls = evidence.null_service_interfaces(text, hilog_text)
+    if nulls:
+        s.null_services = nulls
+    refusals = evidence.service_refusals(text, hilog_text)
+    if refusals:
+        s.service_refusals = refusals
     failures = evidence.buffer_request_failures(hilog_text) if hilog_text else None
     if failures:
         s.buffer_requests = failures
@@ -347,6 +356,15 @@ def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str 
                 and (s.blocker is None or s.blocker_category in ("stall", "no-frame") or not s.blocking):
             s.blocker_category, s.blocking = "window-buffers", True
             s.blocker = "%d buffer requests on one of its windows failed (ret %d)" % (failures["count"], failures["ret"])
+    lookups = evidence.dlsym_failures(text, hilog_text)
+    if lookups:
+        s.dlsym_failures = lookups
+        # A lookup by handle that found nothing, and the host screen where the app should show: what
+        # it looked for is the gap (aaaaxy: GLES 3 in OH's NDK libGLESv2.so).
+        if s.screen == "host" and (s.blocker is None or s.blocker_category in ("stall", "no-frame") or not s.blocking):
+            s.blocker_category, s.blocking = "native-symbols", True
+            s.blocker = "dlsym found no %s in %s" % (lookups[0]["symbol"], lookups[0]["library"]) + (
+                " (%d names)" % len(lookups) if len(lookups) > 1 else "")
     signal = evidence.hilog_signal(hilog_text) if hilog_text and not dump else None
     if signal:
         s.hilog_signal = signal

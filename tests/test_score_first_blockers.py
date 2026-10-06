@@ -36,6 +36,17 @@ class RootCauseScoring(unittest.TestCase):
         self.assertIsNone(score.candidate_rows("app-framework", "start activity: ArithmeticException", ROWS, cause))
 
 
+class SymptomScoring(unittest.TestCase):
+    def test_an_app_exception_a_row_lists_as_its_symptom_is_named_by_it(self) -> None:
+        rows = ROWS + [{"id": "perm:host:ohos.permission.MICROPHONE", "verdict": "missing",
+                        "symptoms": ["uninitialized AudioRecord"]}]
+        blocker = "start activity: IllegalStateException: startRecording() called on an uninitialized AudioRecord."
+        named = score.candidate_rows("app-framework", blocker, rows)
+        self.assertEqual([r["id"] for r in named], ["perm:host:ohos.permission.MICROPHONE"])
+        self.assertEqual(score.outcome_of(named), "named")
+        self.assertIsNone(score.candidate_rows("app-framework", blocker, ROWS), "no row lists it: unscorable")
+
+
 class SelfFinishScoring(unittest.TestCase):
     def test_an_activity_closing_itself_needs_the_row_for_what_it_asked(self) -> None:
         rows = ROWS + [{"id": "am:task-root", "verdict": "missing"}]
@@ -76,6 +87,55 @@ class WindowBuffersScoring(unittest.TestCase):
         found = score.candidate_rows("window-buffers", blocker, rows)
         self.assertEqual(([r["id"] for r in found], score.outcome_of(found)), (["window:buffers-geometry"], "named"))
         self.assertEqual(score.outcome_of(score.candidate_rows("window-buffers", blocker, ROWS)), "not-named")
+
+
+class GlesCrashScoring(unittest.TestCase):
+    def test_a_gl_loader_row_names_only_a_call_through_null(self) -> None:
+        """supertuxkart: after r86 its libmain.so called a GL entry point that came back null; in r86
+        it crashed in musl's setjmp, which no GL lookup explains."""
+        rows = [{"id": "gl:gles3-by-handle", "verdict": "missing", "libraries": ["lib/arm64-v8a/libmain.so"],
+                 "crash_kinds": ["null-call"]}]
+        frame = {"library": "libmain.so", "path": "/data/local/tmp/asx/lib/arm64-v8a/libmain.so"}
+        self.assertEqual([r["id"] for r in score.crash_rows({"kind": "null-call", "frames": [frame]}, rows)],
+                         ["gl:gles3-by-handle"])
+        self.assertIsNone(score.crash_rows({"kind": "fault", "frames": [frame]}, rows))
+
+
+class RefusalScoring(unittest.TestCase):
+    def test_a_stall_after_a_service_refused_a_call_is_named_by_its_row(self) -> None:
+        rows = ROWS + [{"id": "svc:user-unanswered", "verdict": "missing", "symptoms": ["OH user service does not implement"]}]
+        refusals = ["OH user service does not implement getProfileIds"]
+        named = score.candidate_rows("stall", "main thread idle in its message loop at x", rows, refusals=refusals)
+        self.assertEqual([r["id"] for r in named], ["svc:user-unanswered"])
+        self.assertIsNone(score.candidate_rows("stall", "main thread idle in its message loop at x", rows),
+                          "no refusal logged: a stall names nothing")
+
+
+class DlsymScoring(unittest.TestCase):
+    def test_a_name_a_lookup_by_handle_missed_is_named_by_the_row_listing_it(self) -> None:
+        rows = ROWS + [{"id": "gl:gles3-by-handle", "verdict": "missing",
+                        "symbols": ["glBindVertexArray", "glGenVertexArrays"]}]
+        blocker = "dlsym found no glGenVertexArrays in /system/lib64/ndk/libGLESv2.so"
+        self.assertEqual(score.platform_key("native-symbols", blocker), ("symbol", "glGenVertexArrays"))
+        self.assertEqual([r["id"] for r in score.candidate_rows("native-symbols", blocker, rows)],
+                         ["gl:gles3-by-handle"])
+        self.assertEqual(score.platform_key("native-loading", "Error relocating /x/libgojni.so: AInputEvent_getDeviceId: "
+                                            "symbol not found"), ("symbol", "AInputEvent_getDeviceId"))
+
+
+class NullServiceScoring(unittest.TestCase):
+    def test_a_null_platform_service_names_its_row(self) -> None:
+        """wormhole2 never drew after Build.getSerial's NPE; the launchers stalled on LauncherApps."""
+        rows = ROWS + [{"id": "svc:device_identifiers", "verdict": "null",
+                        "aosp_contract": "Landroid/os/Build;.getSerial needs binder(s) ['device_identifiers'] "
+                                         "(IDeviceIdentifiersPolicyService)"},
+                       {"id": "svc:launcherapps", "verdict": "null"}]
+        found = score.candidate_rows("no-frame", "the activity resumed 0.9 s after start and drew no frame", rows,
+                                     null_services=["android.os.IDeviceIdentifiersPolicyService"])
+        self.assertEqual(([r["id"] for r in found], score.outcome_of(found)), (["svc:device_identifiers"], "named"))
+        found = score.candidate_rows("stall", "main thread idle", rows, null_services=["android.content.pm.ILauncherApps"])
+        self.assertEqual([r["id"] for r in found], ["svc:launcherapps"])
+        self.assertIsNone(score.candidate_rows("stall", "main thread idle", rows), "no evidence: unscorable as before")
 
 
 class NativeCrashScoring(unittest.TestCase):

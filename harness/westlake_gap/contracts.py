@@ -410,8 +410,18 @@ def native_egl_window_model(westlake_root: Path) -> dict[str, Any]:
     geometry_body = _braced_block(text, geometry.start()) if geometry else ""
     translated = (re.search(r"\bwidth\s*[!=]=\s*0\b", geometry_body) is not None
                   and re.search(r"\b\w*format\w*\s*\(", geometry_body) is not None)
+    # libGLESv2.so from Android code answered with OH's libGLESv3.so, which carries GLES 3 as
+    # Android's libGLESv2.so does (the WebView alone was given it before). It must come before the
+    # .z.so probe, which returns a bare name's own library whenever it opens: placed after it, the
+    # translation never saw "libGLESv2.so" (aaaaxy still failed on the shim that had it there).
+    gles3 = re.search(r'strcmp\(basename, "libGLESv2\.so"\) == 0 &&\s*caller_is_android_dso\(', text)
+    probe = re.search(r"\bvoid\s*\*\s*plain\s*=\s*real_dlopen\(actual_filename,", text)
+    gles3_ok = (gles3 is not None and "libGLESv3.so" in text[gles3.end():gles3.end() + 400]
+                and (probe is None or gles3.start() < probe.start()))
     return {"unwraps": "anw_get_oh" in body,
             "source": f"{path.relative_to(westlake_root)}:{line}" if match else None,
+            "gles3_by_handle": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, gles3.start()) + 1}"
+            if gles3_ok else None,
             # An Android library's dlsym of these by handle gets the shim's, not OH's EGL directly.
             "by_handle": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, by_handle.start()) + 1}"
             if by_handle else None,
@@ -537,6 +547,43 @@ def permission_request_model(westlake_root: Path) -> dict[str, Any]:
                 break
     return {"answered": answered,
             "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, start.start()) + 1}"}
+
+
+def host_permission_model(westlake_root: Path) -> dict[str, Any]:
+    """The OH permissions the host application requests, and the OH permission each Android permission
+    maps to. Android apps run in the host's process, so OH checks the host's access token: what the
+    app is granted in process is what OH has granted the host (PermissionMapper's mapping), and a
+    capability OH guards with a permission works only when the host requests it."""
+    host = westlake_root / "apps/imehost/module.json"
+    mapper = westlake_root / "framework/package-manager/java/PermissionMapper.java"
+    if not host.exists():
+        return {"requested": None, "mapping": {}, "source": None}
+    text = host.read_text(errors="replace")
+    requested = sorted(item["name"] for item in json.loads(text).get("module", {}).get("requestPermissions", [])
+                       if item.get("name"))
+    mapping: dict[str, str] = {}
+    if mapper.exists():
+        for android, oh in re.findall(r'addMapping\(\s*"([\w.]+)"\s*,\s*"([\w.]+)"\s*\)', mapper.read_text(errors="replace")):
+            mapping.setdefault(android, oh)
+    match = re.search(r'"requestPermissions"', text)
+    line = text.count("\n", 0, match.start()) + 1 if match else 1
+    return {"requested": requested, "mapping": mapping, "source": f"{host.relative_to(westlake_root)}:{line}"}
+
+
+def user_service_model(westlake_root: Path) -> dict[str, Any]:
+    """The IUserManager methods the in-process user service answers. It is a proxy over the OH account
+    service that throws UnsupportedOperationException for every method it does not name, where
+    system_server would have answered: clauncher's UserManager.getUserProfiles met "OH user service
+    does not implement getProfileIds"."""
+    path = westlake_root / "framework/package-manager/java/OHUserManager.java"
+    if not path.exists():
+        return {"answered": None, "source": None}
+    text = _strip_java_comments(path.read_text(errors="replace"))
+    answered = set(re.findall(r'\bname\.equals\("(\w+)"\)', text)) | set(re.findall(r'\bcase\s+"(\w+)"\s*:', text))
+    throws = re.search(r"throw new UnsupportedOperationException\(", text)
+    line = text.count("\n", 0, throws.start()) + 1 if throws else None
+    return {"answered": sorted(answered), "throws": throws is not None,
+            "source": f"{path.relative_to(westlake_root)}:{line}" if throws else None}
 
 
 def ce_storage_model(westlake_root: Path) -> dict[str, Any]:

@@ -277,6 +277,51 @@ class Evidence(unittest.TestCase):
         lifecycle.add_evidence(s, text, None, None, hilog)
         self.assertNotEqual(s.blocker_category, "window-buffers", "on screen: the failures did not keep it off")
 
+    def test_a_lookup_by_handle_that_found_nothing(self) -> None:
+        """aaaaxy: Ebiten logged dlsym's error for glGenVertexArrays, looked up in OH's NDK
+        libGLESv2.so, and the host screen showed."""
+        from westlake_gap import evidence, lifecycle
+        hilog = ("10-06 21:03:16.594 30377 30398 E C00f00/Go: go.Universe$proxyerror: gl: glGenVertexArrays is "
+                 "missing: do_dlsym failed: Symbol not found: glGenVertexArrays, version: null "
+                 "so=/system/lib64/ndk/libGLESv2.so\n")
+        found = [{"symbol": "glGenVertexArrays", "library": "/system/lib64/ndk/libGLESv2.so"}]
+        hal = ("10-06 18:36:48.754 14462 14574 W C02510/load_hdi: OpenHdiServiceImpl failed to get symbol of "
+               "'MapperImplRelease', do_dlsym failed: Symbol not found: MapperImplRelease, version: null "
+               "so=/vendor/lib64/passthrough/libmapper_service_1.0.z.so\n")
+        self.assertEqual(evidence.dlsym_failures(None, hal + hilog + hilog), found, "OH's HAL probes are not the app's")
+        text = "kRegJNI loop done\n[DIRECT-LAUNCH] bind done sBindAppDone=true\n"
+        s = lifecycle.score("aaaaxy", text)
+        s.screen = "host"
+        lifecycle.add_evidence(s, text, None, None, hilog)
+        self.assertEqual((s.blocker_category, s.blocker),
+                         ("native-symbols", "dlsym found no glGenVertexArrays in /system/lib64/ndk/libGLESv2.so"))
+        self.assertEqual(s.dlsym_failures, found)
+        s = lifecycle.score("aaaaxy", text)
+        s.screen = "app"
+        lifecycle.add_evidence(s, text, None, None, hilog)
+        self.assertNotEqual(s.blocker_category, "native-symbols", "on screen: the app went on without it")
+
+    def test_service_refusals_in_the_log(self) -> None:
+        """clauncher: the user service threw for getProfileIds, from UserManager.getUserProfiles."""
+        from westlake_gap import evidence
+        line = ("java.lang.UnsupportedOperationException: OH user service does not implement getProfileIds\n"
+                "\tat adapter.packagemanager.OHUserManager.lambda$install$0(Unknown Source:410)\n")
+        self.assertEqual(evidence.service_refusals(line, line), ["OH user service does not implement getProfileIds"])
+        self.assertEqual(evidence.service_refusals("UnsupportedOperationException: not supported\n", None), [])
+
+    def test_null_platform_services_in_the_log(self) -> None:
+        """wormhole2: Build.getSerial dereferenced a null IDeviceIdentifiersPolicyService, caught by
+        its plugin's channel and logged; the app never drew."""
+        from westlake_gap import evidence
+        line = ("10-06 18:09:41.446  4506  4527 E C00f00/MethodChannel#x: java.lang.NullPointerException: Attempt to "
+                "invoke InvokeType(4) method 'java.lang.String android.os.IDeviceIdentifiersPolicyService."
+                "getSerialForPackage(java.lang.String, java.lang.String)' on a null object reference\n")
+        other = ("NullPointerException: Attempt to invoke virtual method 'int java.lang.String.length()' on a null "
+                 "object reference\n")
+        self.assertEqual(evidence.null_service_interfaces(line + other, None),
+                         ["android.os.IDeviceIdentifiersPolicyService"])
+        self.assertEqual(evidence.null_service_interfaces(other), [])
+
     def test_root_cause_is_the_deepest_cause_with_its_app_frame(self) -> None:
         """otgmaster's blocker read "start activity: NullPointerException"; its cause named the
         manager, and the first app frame where the null was used."""

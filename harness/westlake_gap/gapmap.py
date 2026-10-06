@@ -247,6 +247,31 @@ def service_rows(scan: dict[str, Any], aosp: dict[str, Any], westlake: dict[str,
     return rows, dynamic
 
 
+def device_identifier_rows(scan: dict[str, Any], westlake: dict[str, Any]) -> list[dict[str, Any]]:
+    """Build.getSerial, which asks the device_identifiers service itself: no manager and no
+    getSystemService request names it. Android refuses an app without READ_PRIVILEGED_PHONE_STATE
+    with SecurityException, which callers catch; with no service, getSerial threw NullPointerException
+    (wormhole2's device-info plugin, which then never drew)."""
+    calls = (scan["inventory"].get("platform_method_names") or {}).get("Landroid/os/Build;") or []
+    if "getSerial" not in calls:
+        return []
+    provisions = [p for p in westlake.get("device_identifiers") or [] if p.get("kind") != "explicit-null"]
+    supplied = bool(provisions)
+    return [_row(
+        "system-services", "svc:device_identifiers", "device_identifiers (Build.getSerial)",
+        oh_touchpoint="none: Android refuses device identifiers to an ordinary app",
+        verdict=services.SUPPLIED if supplied else services.NULL, shim_class="C0" if supplied else "C9",
+        effort="verify" if supplied else "XS", confidence=STATIC,
+        provider=("answered in process: getSerial throws SecurityException, as Android's does" if supplied else
+                  "no service: Build.getSerial throws NullPointerException where Android throws SecurityException"),
+        provider_source=provisions[0]["source"] if provisions else None,
+        aosp_contract="Landroid/os/Build;.getSerial needs binder(s) ['device_identifiers'] (IDeviceIdentifiersPolicyService)",
+        app_evidence="the app calls Build.getSerial",
+        seen_blocking=["wormhole2 (its device-info plugin's call failed on the NullPointerException; it never drew)"],
+        shim="answer device_identifiers in process; its getSerial calls throw SecurityException",
+    )]
+
+
 def _site(site: dict[str, Any]) -> str:
     return f"{site['owner'].strip('L;').replace('/', '.')}.{site['method']}"
 
@@ -907,6 +932,64 @@ def am_default_census(aosp_root: Path | None) -> dict[str, list[dict[str, Any]]]
     return census
 
 
+def user_manager_census(aosp_root: Path | None) -> dict[str, list[str]]:
+    """UserManager method -> the IUserManager methods it reaches, through the other UserManager
+    methods it calls (getUserProfiles asks getProfileIds, which asks the service's). Methods that
+    reach the service only through a cache's field (isUserUnlocked) are not seen."""
+    if aosp_root is None:
+        return {}
+    path = aosp_root / "frameworks-base/core/java/android/os/UserManager.java"
+    if not path.exists():
+        return {}
+    text = contracts._strip_java_comments(path.read_text(errors="replace"))
+    direct: dict[str, set[str]] = defaultdict(set)
+    calls: dict[str, set[str]] = defaultdict(set)
+    heads = list(re.finditer(r"\b(?:public|private|protected|static)\s+(?:static\s+|final\s+|synchronized\s+)*"
+                             r"[\w.<>\[\], ?@]+?\s+(\w+)\s*\([^;{]*?\)\s*(?:throws [\w., ]+)?\{", text))
+    names = {head.group(1) for head in heads}
+    for head in heads:
+        body = contracts._braced_block(text, head.end() - 1)
+        direct[head.group(1)] |= set(re.findall(r"\bmService\s*\.\s*(\w+)\s*\(", body))
+        calls[head.group(1)] |= {name for name in re.findall(r"(?<![\w.])(\w+)\s*\(", body) if name in names}
+    census: dict[str, list[str]] = {}
+    for name in names:
+        reached, seen, frontier = set(direct[name]), {name}, set(calls[name])
+        for _ in range(3):
+            frontier -= seen
+            seen |= frontier
+            for other in frontier:
+                reached |= direct[other]
+            frontier = set().union(*(calls[other] for other in frontier)) if frontier else set()
+        if reached:
+            census[name] = sorted(reached)
+    return census
+
+
+def user_service_rows(scan: dict[str, Any], model: dict[str, Any], census: dict[str, list[str]]) -> list[dict[str, Any]]:
+    """UserManager calls the app makes that reach an IUserManager method the in-process user service
+    does not answer: it throws UnsupportedOperationException there, where system_server answers."""
+    if not model.get("throws") or not census:
+        return []
+    answered = set(model.get("answered") or [])
+    called = sorted(set(scan["inventory"].get("platform_method_names", {}).get("Landroid/os/UserManager;", [])))
+    open_ = [f"{method} ({', '.join(missing)})" for method in called
+             for missing in [[binder for binder in census.get(method, []) if binder not in answered]] if missing]
+    if not open_:
+        return []
+    return [_row(
+        "system-services", "svc:user-unanswered", f"UserManager calls the in-process user service does not answer ({len(open_)})",
+        oh_touchpoint="os_account: the user service is a proxy over OH's account service for the current user",
+        verdict="missing", shim_class="C9", effort="S", confidence=STATIC,
+        provider="the user service throws UnsupportedOperationException for IUserManager methods it does not name",
+        provider_source=model.get("source"), open_symbols=open_[:16],
+        app_evidence="app calls UserManager." + ", UserManager.".join(sorted({o.split(" ")[0] for o in open_})),
+        symptoms=["OH user service does not implement"],
+        seen_blocking=["clauncher (r86: UserManager.getUserProfiles met \"OH user service does not implement "
+                       "getProfileIds\")"],
+        shim="answer each method as UserManagerService answers an app about its own, only user",
+    )]
+
+
 def webview_process_model(aosp_root: Path | None, westlake_root: Path) -> dict[str, Any]:
     """Whether WebView will insist on its sandboxed renderer process, and whether anything hosts it.
 
@@ -1361,6 +1444,58 @@ def permission_request_rows(scan: dict[str, Any], model: dict[str, Any]) -> list
     )]
 
 
+# Capabilities the provider carries out in the host application's process through an OH call that
+# checks the caller's permission, by that OH permission: the provider source making the call, and what
+# an app sees when the host lacks the permission. A capability the provider does not bridge at all is
+# another row's gap, so a row appears only when the call is in the source.
+HOST_GUARDED_CAPABILITIES = {
+    "ohos.permission.MICROPHONE": {
+        "capability": "audio capture (AudioRecord, MediaRecorder) through OH's audio capturer",
+        "source": "framework/javacore-shim/audiorecord_natives.c", "call": "OH_AudioStreamBuilder_GenerateCapturer",
+        "symptoms": ["uninitialized AudioRecord", "OH refused the capturer"],
+    },
+}
+
+
+def host_permission_rows(facts: dict[str, Any], model: dict[str, Any], westlake_root: Path) -> list[dict[str, Any]]:
+    """Android permissions the app requests whose capability OH guards in the host application's
+    process. The app's grant in process is the host's grant (PermissionMapper), and OH checks the
+    host's token when the provider makes the call: unless the host requests the OH permission, both
+    say no. MuseKit's AudioRecord stayed uninitialized in r86 until the host requested
+    ohos.permission.MICROPHONE."""
+    if model.get("requested") is None:
+        return []
+    wanted: dict[str, list[str]] = defaultdict(list)
+    for permission in facts.get("permissions") or []:
+        oh = model["mapping"].get(permission)
+        if oh in HOST_GUARDED_CAPABILITIES:
+            wanted[oh].append(permission)
+    rows = []
+    for oh, android in sorted(wanted.items()):
+        info = HOST_GUARDED_CAPABILITIES[oh]
+        source = westlake_root / info["source"]
+        text = source.read_text(errors="replace") if source.exists() else ""
+        if info["call"] not in text:
+            continue
+        held = oh in model["requested"]
+        rows.append(_row(
+            "sandbox-policy", f"perm:host:{oh}", f"The host application's {oh}, for {info['capability']}",
+            oh_touchpoint="access_token: the host application's permissions, checked by the OH call",
+            verdict="supplied" if held else "missing", shim_class="C0" if held else "C1",
+            effort="verify" if held else "XS", confidence=STATIC,
+            provider=(f"the host requests {oh}; the user grant is the device owner's" if held else
+                      f"the host does not request {oh}: OH refuses the call, and the app is denied "
+                      + ", ".join(android) + " in process"),
+            provider_source=f"{model['source']}; {info['source']}:{text.count(chr(10), 0, text.index(info['call'])) + 1}",
+            app_evidence="the app requests " + ", ".join(android),
+            symptoms=info["symptoms"],
+            seen_blocking=["musekit (r86: \"startRecording() called on an uninitialized AudioRecord\"; it listens "
+                           "once the host requests the permission)"] if oh == "ohos.permission.MICROPHONE" else [],
+            shim=f"request {oh} in the host application's module.json, reinstall the host over itself and grant it",
+        ))
+    return rows
+
+
 def ce_storage_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
     """StrictMode's VM checks, which report a credential-protected data access while the user's storage
     is locked, each with a stack trace: an app that turns them on pays for every file it touches when
@@ -1464,6 +1599,34 @@ def native_egl_window_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[
             libraries=by_handle,
             seen_blocking=["anarchre (SDL: eglCreateWindowSurface refused, then hwui aborted with EGL_NOT_INITIALIZED)"],
             shim="answer dlopen(libEGL.so) with the runtime's EGL and dlsym of the shim's EGL overrides with its own",
+        ))
+    # GLES 3 named without being imported: a loader that dlopens libGLESv2.so and looks GLES 3 up in
+    # it, as Android's libGLESv2.so (the same library as its libGLESv3.so) carries it. A name may be
+    # looked up through eglGetProcAddress instead, so this names a lookup only by its shape.
+    gles3 = {elf.get("soname") or elf.get("name"): elf["gles3_lookups"] for elf in elfs if elf.get("gles3_lookups")}
+    if gles3:
+        supplied = bool(model.get("gles3_by_handle"))
+        names = sorted(gles3)
+        rows.append(_row(
+            "window", "gl:gles3-by-handle", "GLES 3 entry points looked up by name (" + ", ".join(names[:4]) + ")",
+            oh_touchpoint="graphic_2d: OH's NDK libGLESv2.so carries GLES 2 and its OES extensions; GLES 3 is in "
+                          "its libGLESv3.so",
+            verdict="supplied" if supplied else "missing", shim_class="C0" if supplied else "C2",
+            effort="verify" if supplied else "XS", confidence=STATIC,
+            provider=("the shim answers an Android dlopen of libGLESv2.so with OH's libGLESv3.so, which carries GLES 3 "
+                      "as Android's libGLESv2.so does" if supplied else
+                      "an Android dlopen of libGLESv2.so reaches OH's NDK library, where a GLES 3 lookup returns null"),
+            provider_source=model.get("gles3_by_handle"),
+            app_evidence="; ".join(f"{lib} names {len(gles3[lib])} without importing them ("
+                                   + ", ".join(gles3[lib][:3]) + (" ..." if len(gles3[lib]) > 3 else "") + ")"
+                                   for lib in names[:4]),
+            # A crash it explains is a call through the null a missing name left in the loader's table.
+            libraries=names, crash_kinds=["null-call"],
+            symbols=sorted(set().union(*gles3.values())),
+            symptoms=["do_dlsym failed: Symbol not found: gl"],
+            seen_blocking=["aaaaxy (after r86: Ebiten stopped on \"gl: glGenVertexArrays is missing\", looked up in "
+                           "libGLESv2.so's handle)"],
+            shim="answer an Android dlopen of libGLESv2.so with OH's libGLESv3.so",
         ))
     # ANativeWindow_setBuffersGeometry(window, 0, 0, format): the window's own size, on Android. SDL
     # sets its EGL config's visual that way before creating its surface, as the NDK documents.
@@ -3235,8 +3398,10 @@ def build_map(
     pm = contracts.pm_adapter_model(westlake_root)
     java, java_excluded = java_api_rows(scan, api_levels)
     svc, dynamic = service_rows(scan, aosp_services, westlake_services)
+    svc += device_identifier_rows(scan, westlake_services)
     rows = (java + svc + package_manager_rows(scan, facts, pm, pm_null_consequences(aosp_root))
             + am_default_rows(scan, contracts.direct_launch_am_model(westlake_root), am_default_census(aosp_root))
+            + user_service_rows(scan, contracts.user_service_model(westlake_root), user_manager_census(aosp_root))
             + app_framework_rows(scan, contracts.direct_launch_am_model(westlake_root),
                                  contracts.window_adapter_model(westlake_root),
                                  contracts.task_queries_model(westlake_root),
@@ -3264,6 +3429,7 @@ def build_map(
             + own_intent_rows(scan, contracts.own_intent_model(westlake_root))
             + post_create_rows(scan, contracts.launch_start_model(westlake_root))
             + permission_request_rows(scan, contracts.permission_request_model(westlake_root))
+            + host_permission_rows(facts, contracts.host_permission_model(westlake_root), westlake_root)
             + ce_storage_rows(scan, contracts.ce_storage_model(westlake_root))
             + feature_rows(scan, contracts.feature_claims_model(westlake_root), aosp_services, westlake_services)
             + vulkan_feature_rows(scan, contracts.feature_claims_model(westlake_root), runtime_libraries)

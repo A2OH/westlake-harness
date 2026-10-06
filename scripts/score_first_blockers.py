@@ -29,7 +29,8 @@ without the feature, for a service the app called in process before it left. An 
 resumed and never drew (lifecycle's no-frame) needs a row for what holds its draws: am:post-create,
 its own onPostCreate that the provider never called. A window whose buffer requests OH refused, with
 the host screen showing (lifecycle's window-buffers), needs window:buffers-geometry: the geometry an
-app library set on it in Android's terms.
+app library set on it in Android's terms. An app that stalled or never drew after dereferencing a null
+platform service in its log (lifecycle's null_services) is named by that service's row too.
 
 Usage: score_first_blockers.py <lifecycle.json> <map-root> [<map-root> ...] [--out report.json]
 """
@@ -47,7 +48,7 @@ def find_map(app, roots):
     return None
 
 
-_SYMBOL = re.compile(r"Error relocating [^:]*: (\w+)(?::|$)")  # the message may be cut short
+_SYMBOL = re.compile(r"(?:Error relocating [^:]*: |dlsym found no )(\w+)(?::|$| in )")  # the message may be cut short
 _LIBRARY = re.compile(r"(?:Error loading shared library |library ')([\w+.-]+?\.so|\w+)\b")
 _UPCALL = re.compile(r"No implementation found for [^(]*?([\w.$]+)\.\w+\(")
 _PLATFORM = ("android.", "com.android.", "java.", "javax.", "sun.", "libcore.", "dalvik.")
@@ -122,12 +123,40 @@ def crash_rows(dump, rows):
     return found or None
 
 
-def candidate_rows(category, blocker, rows, cause=None, finished=None, dump=None):
+def null_service_rows(interfaces, rows):
+    """Service rows for the platform interfaces the app dereferenced null: a row that names the
+    interface (svc:device_identifiers names IDeviceIdentifiersPolicyService), or whose service is the
+    interface's name (ILauncherApps, svc:launcherapps)."""
+    found = []
+    for interface in interfaces:
+        simple = interface.rsplit(".", 1)[-1]
+        derived = "svc:" + simple[1:].lower()
+        found += [r for r in rows if r["id"].startswith("svc:") and (r["id"] == derived or simple in json.dumps(r))
+                  and r not in found]
+    return found
+
+
+def candidate_rows(category, blocker, rows, cause=None, finished=None, dump=None, null_services=None,
+                   refusals=None):
     """Rows that would name this blocker; None if it is not one a gap map could name."""
     if category == "native-crash" and dump:
         return crash_rows(dump, rows)
+    # A stall, or an activity that never drew, after the app dereferenced a null platform service
+    # (wormhole2's Build.getSerial; the launchers' LauncherApps), or after an in-process service
+    # refused a call outright (clauncher's getProfileIds): that service's row names it.
+    if (null_services or refusals) and category in ("stall", "no-frame"):
+        named = null_service_rows(null_services or [], rows)
+        named += [r for r in rows if r not in named and any(symptom in refusal for symptom in r.get("symptoms") or []
+                                                             for refusal in refusals or [])]
+        if named:
+            return named + ([r for r in rows if r["id"] == "am:post-create"] if category == "no-frame" else [])
     key = platform_key(category, blocker)
     if key is None:
+        # An app exception that a row lists among the symptoms of its gap: MuseKit's uninitialized
+        # AudioRecord, from a host application without the microphone permission.
+        symptomatic = [r for r in rows if any(s in blocker for s in r.get("symptoms") or [])]
+        if symptomatic:
+            return symptomatic
         return root_cause_rows(cause, rows) if cause else None
     kind, value = key
     text = lambda row: json.dumps(row)
@@ -187,7 +216,7 @@ def main():
             outcome, rows = "unscorable", []
         else:
             rows = candidate_rows(category, blocker, gap["rows"], entry.get("root_cause"), entry.get("self_finish"),
-                                  entry.get("crash_dump"))
+                                  entry.get("crash_dump"), entry.get("null_services"), entry.get("service_refusals"))
             if rows is None:
                 outcome, rows = "unscorable", []
             else:
