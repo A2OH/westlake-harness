@@ -2235,6 +2235,19 @@ class SqliteCollations(unittest.TestCase):
         self.assertEqual(gapmap.sqlite_collation_rows({"inventory": {}}, {}), [])
 
 
+class DeviceIdentifiers(unittest.TestCase):
+    def test_build_get_serial_needs_its_service(self) -> None:
+        """wormhole2: Build.getSerial threw NullPointerException where Android throws SecurityException."""
+        scan = {"inventory": {"platform_method_names": {"Landroid/os/Build;": ["getSerial", "getRadioVersion"]}}}
+        row = gapmap.device_identifier_rows(scan, {})[0]
+        self.assertEqual((row["id"], row["verdict"]), ("svc:device_identifiers", "null"))
+        model = {"device_identifiers": [{"kind": "adapter", "source": "framework/core/java/OHServiceManager.java:188"}]}
+        self.assertEqual(gapmap.device_identifier_rows(scan, model)[0]["verdict"], "supplied")
+        self.assertEqual(gapmap.device_identifier_rows(scan, {"device_identifiers": [{"kind": "explicit-null"}]})[0]["verdict"],
+                         "null")
+        self.assertEqual(gapmap.device_identifier_rows({"inventory": {}}, model), [])
+
+
 class SandboxAndBacktest(unittest.TestCase):
     def test_realm_fifo_is_predicted(self) -> None:
         policy = {"oh": {"domain": "u:r:normal_hap:s0", "app_data_type": "u:object_r:appdat:s0",

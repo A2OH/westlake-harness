@@ -247,6 +247,31 @@ def service_rows(scan: dict[str, Any], aosp: dict[str, Any], westlake: dict[str,
     return rows, dynamic
 
 
+def device_identifier_rows(scan: dict[str, Any], westlake: dict[str, Any]) -> list[dict[str, Any]]:
+    """Build.getSerial, which asks the device_identifiers service itself: no manager and no
+    getSystemService request names it. Android refuses an app without READ_PRIVILEGED_PHONE_STATE
+    with SecurityException, which callers catch; with no service, getSerial threw NullPointerException
+    (wormhole2's device-info plugin, which then never drew)."""
+    calls = (scan["inventory"].get("platform_method_names") or {}).get("Landroid/os/Build;") or []
+    if "getSerial" not in calls:
+        return []
+    provisions = [p for p in westlake.get("device_identifiers") or [] if p.get("kind") != "explicit-null"]
+    supplied = bool(provisions)
+    return [_row(
+        "system-services", "svc:device_identifiers", "device_identifiers (Build.getSerial)",
+        oh_touchpoint="none: Android refuses device identifiers to an ordinary app",
+        verdict=services.SUPPLIED if supplied else services.NULL, shim_class="C0" if supplied else "C9",
+        effort="verify" if supplied else "XS", confidence=STATIC,
+        provider=("answered in process: getSerial throws SecurityException, as Android's does" if supplied else
+                  "no service: Build.getSerial throws NullPointerException where Android throws SecurityException"),
+        provider_source=provisions[0]["source"] if provisions else None,
+        aosp_contract="Landroid/os/Build;.getSerial needs binder(s) ['device_identifiers'] (IDeviceIdentifiersPolicyService)",
+        app_evidence="the app calls Build.getSerial",
+        seen_blocking=["wormhole2 (its device-info plugin's call failed on the NullPointerException; it never drew)"],
+        shim="answer device_identifiers in process; its getSerial calls throw SecurityException",
+    )]
+
+
 def _site(site: dict[str, Any]) -> str:
     return f"{site['owner'].strip('L;').replace('/', '.')}.{site['method']}"
 
@@ -3235,6 +3260,7 @@ def build_map(
     pm = contracts.pm_adapter_model(westlake_root)
     java, java_excluded = java_api_rows(scan, api_levels)
     svc, dynamic = service_rows(scan, aosp_services, westlake_services)
+    svc += device_identifier_rows(scan, westlake_services)
     rows = (java + svc + package_manager_rows(scan, facts, pm, pm_null_consequences(aosp_root))
             + am_default_rows(scan, contracts.direct_launch_am_model(westlake_root), am_default_census(aosp_root))
             + app_framework_rows(scan, contracts.direct_launch_am_model(westlake_root),

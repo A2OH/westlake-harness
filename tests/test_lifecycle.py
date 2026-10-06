@@ -277,6 +277,19 @@ class Evidence(unittest.TestCase):
         lifecycle.add_evidence(s, text, None, None, hilog)
         self.assertNotEqual(s.blocker_category, "window-buffers", "on screen: the failures did not keep it off")
 
+    def test_null_platform_services_in_the_log(self) -> None:
+        """wormhole2: Build.getSerial dereferenced a null IDeviceIdentifiersPolicyService, caught by
+        its plugin's channel and logged; the app never drew."""
+        from westlake_gap import evidence
+        line = ("10-06 18:09:41.446  4506  4527 E C00f00/MethodChannel#x: java.lang.NullPointerException: Attempt to "
+                "invoke InvokeType(4) method 'java.lang.String android.os.IDeviceIdentifiersPolicyService."
+                "getSerialForPackage(java.lang.String, java.lang.String)' on a null object reference\n")
+        other = ("NullPointerException: Attempt to invoke virtual method 'int java.lang.String.length()' on a null "
+                 "object reference\n")
+        self.assertEqual(evidence.null_service_interfaces(line + other, None),
+                         ["android.os.IDeviceIdentifiersPolicyService"])
+        self.assertEqual(evidence.null_service_interfaces(other), [])
+
     def test_root_cause_is_the_deepest_cause_with_its_app_frame(self) -> None:
         """otgmaster's blocker read "start activity: NullPointerException"; its cause named the
         manager, and the first app frame where the null was used."""

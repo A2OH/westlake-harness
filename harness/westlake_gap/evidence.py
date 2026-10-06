@@ -322,6 +322,21 @@ def startup_times(hilog: str) -> dict | None:
     return found or None
 
 
+_NULL_SERVICE = re.compile(r"Attempt to invoke [^']*'[^' ]+ ((?:[a-z]\w*\.)+I[A-Z]\w*)\.\w+\([^']*\)' on a null object reference")
+
+
+def null_service_interfaces(*texts: str | None) -> list[str]:
+    """Platform service interfaces the app dereferenced null, from the NullPointerException messages
+    in its logs, caught or not: a binder that no in-process stand-in answers. wormhole2's device-info
+    plugin failed on IDeviceIdentifiersPolicyService (Build.getSerial) and the app never drew; the
+    launchers' LauncherApps calls failed on ILauncherApps."""
+    found: set[str] = set()
+    for text in texts:
+        if text:
+            found |= {match.group(1) for match in _NULL_SERVICE.finditer(text)}
+    return sorted(found)
+
+
 _REQUEST_FAILED = re.compile(r"NativeWindowRequestBuffer>: RequestBuffer ret:(-?\d+), uniqueId: (\d+)")
 
 

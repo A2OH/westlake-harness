@@ -78,6 +78,21 @@ class WindowBuffersScoring(unittest.TestCase):
         self.assertEqual(score.outcome_of(score.candidate_rows("window-buffers", blocker, ROWS)), "not-named")
 
 
+class NullServiceScoring(unittest.TestCase):
+    def test_a_null_platform_service_names_its_row(self) -> None:
+        """wormhole2 never drew after Build.getSerial's NPE; the launchers stalled on LauncherApps."""
+        rows = ROWS + [{"id": "svc:device_identifiers", "verdict": "null",
+                        "aosp_contract": "Landroid/os/Build;.getSerial needs binder(s) ['device_identifiers'] "
+                                         "(IDeviceIdentifiersPolicyService)"},
+                       {"id": "svc:launcherapps", "verdict": "null"}]
+        found = score.candidate_rows("no-frame", "the activity resumed 0.9 s after start and drew no frame", rows,
+                                     null_services=["android.os.IDeviceIdentifiersPolicyService"])
+        self.assertEqual(([r["id"] for r in found], score.outcome_of(found)), (["svc:device_identifiers"], "named"))
+        found = score.candidate_rows("stall", "main thread idle", rows, null_services=["android.content.pm.ILauncherApps"])
+        self.assertEqual([r["id"] for r in found], ["svc:launcherapps"])
+        self.assertIsNone(score.candidate_rows("stall", "main thread idle", rows), "no evidence: unscorable as before")
+
+
 class NativeCrashScoring(unittest.TestCase):
     def test_a_row_about_a_library_in_the_crash_names_it(self) -> None:
         """Waze aborted in libwaze.so (loaded from the shim's init copy); its constructors were dropped."""
