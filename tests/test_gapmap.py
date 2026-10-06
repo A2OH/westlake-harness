@@ -557,6 +557,39 @@ class EngineSurface(unittest.TestCase):
                          (["window:engine-surface"], "sets a GLSurfaceView renderer"))
 
 
+class ShowWallpaper(unittest.TestCase):
+    def test_a_theme_that_shows_the_wallpaper(self) -> None:
+        """clauncher, cclauncher: their launch activities' themes inherit windowShowWallpaper."""
+        from westlake_gap import scanner
+
+        class Value:
+            def __init__(self, data, data_type=0x12):
+                self.data, self.data_type = data, data_type
+
+        class Entry:
+            def __init__(self, parent, items):
+                self.item = type("Complex", (), {"id_parent": parent, "items": items})()
+
+            def is_complex(self):
+                return True
+
+        styles = {0x7F110001: Entry(0x7F110002, []),                                   # AppTheme -> Base
+                  0x7F110002: Entry(0x0103005F, [(0x01010054, Value(0x7F080001, 0x01))]),  # Base -> Theme.Wallpaper.NoTitleBar
+                  0x7F110003: Entry(0x01030237, [(scanner._SHOW_WALLPAPER, Value(0xFFFFFFFF))]),
+                  0x7F110004: Entry(0x0103005E, [(scanner._SHOW_WALLPAPER, Value(0))])}  # says no, over a wallpaper theme
+        resources = type("Resources", (), {"get_res_configs": lambda self, rid: [(None, styles[rid])] if rid in styles else []})()
+        self.assertTrue(scanner._shows_wallpaper(resources, 0x7F110001, set()))
+        self.assertTrue(scanner._shows_wallpaper(resources, 0x7F110003, set()))
+        self.assertFalse(scanner._shows_wallpaper(resources, 0x7F110004, set()))
+        self.assertFalse(scanner._shows_wallpaper(resources, 0x01030237, set()), "Theme.Material.NoActionBar does not")
+        scan = {"apk": {"main_activities": ["app.clauncher.MainActivity"],
+                        "wallpaper_activities": ["app.clauncher.MainActivity", "app.clauncher.helper.FakeHomeActivity"]}}
+        rows = gapmap.wallpaper_rows(scan)
+        self.assertEqual([(r["id"], r["verdict"], r["app_evidence"]) for r in rows],
+                         [("wm:show-wallpaper", "missing", "its launch activity MainActivity shows the wallpaper")])
+        self.assertEqual(gapmap.wallpaper_rows({"apk": {"wallpaper_activities": []}}), [])
+
+
 class SurfaceViewOpacity(unittest.TestCase):
     def test_an_engines_own_window_needs_marking_opaque(self) -> None:
         """PPSSPP, routed: its SurfaceView's OH window blended alpha-0 frames with the host screen."""

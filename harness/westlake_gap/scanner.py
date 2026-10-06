@@ -1566,6 +1566,66 @@ def activity_filter_targets(apk: Any) -> dict[str, list[str]]:
     return {"schemes": sorted(schemes), "actions": sorted(actions)}
 
 
+_SHOW_WALLPAPER = 0x01010292  # android:attr/windowShowWallpaper
+# The framework's themes that show the wallpaper (public-final.xml's Theme.*Wallpaper*): an app theme
+# that inherits one shows it unless it says otherwise.
+_FRAMEWORK_WALLPAPER_THEMES = frozenset({0x0103005e, 0x0103005f, 0x01030060, 0x01030061, 0x01030062, 0x0103007d,
+                                         0x0103007e, 0x0103013c, 0x0103013d, 0x01030235, 0x01030236})
+
+
+def _shows_wallpaper(resources: Any, theme: int, seen: set[int]) -> bool:
+    """Whether a theme sets windowShowWallpaper, or, where it does not say, the parent it inherits from."""
+    if not theme or theme in seen or len(seen) > 32:
+        return False
+    seen.add(theme)
+    if theme >> 24 == 0x01:
+        return theme in _FRAMEWORK_WALLPAPER_THEMES
+    try:
+        configs = resources.get_res_configs(theme)
+    except Exception:
+        return False
+    said, parents = [], []
+    for _config, entry in configs:
+        if not entry.is_complex():
+            continue
+        for attr, value in entry.item.items:
+            if attr == _SHOW_WALLPAPER:
+                if value.data_type == 0x12:  # TYPE_INT_BOOLEAN
+                    said.append(value.data != 0)
+                elif value.data_type == 0x01:  # a reference to a bool resource
+                    try:
+                        resolved = resources.get_resolved_res_configs(value.data)
+                        said.append(bool(resolved) and str(resolved[0][1]).lower() == "true")
+                    except Exception:
+                        pass
+        parents.append(entry.item.id_parent)
+    if said:
+        return any(said)
+    return any(_shows_wallpaper(resources, parent, seen) for parent in parents)
+
+
+def wallpaper_activities(apk: Any) -> list[str]:
+    """Activities whose theme (theirs, else the application's) shows the wallpaper behind their window:
+    launchers and wallpaper settings. Android draws the wallpaper under such a window."""
+    ns = "{http://schemas.android.com/apk/res/android}"
+    resource_id = lambda text: int(text[1:], 16) if text and re.fullmatch(r"@[0-9A-Fa-f]{8}", text) else 0
+    try:
+        resources = apk.get_android_resources()
+        manifest = apk.get_android_manifest_xml()
+        application = manifest.find("application")
+        default = resource_id(application.get(ns + "theme")) if application is not None else 0
+        package = apk.get_package() or ""
+        found = set()
+        for activity in manifest.iter("activity"):
+            name = activity.get(ns + "name") or ""
+            name = package + name if name.startswith(".") else name
+            if name and _shows_wallpaper(resources, resource_id(activity.get(ns + "theme")) or default, set()):
+                found.add(name)
+        return sorted(found)
+    except Exception:
+        return []
+
+
 def apk_metadata(path: Path) -> dict[str, Any]:
     quiet_androguard()
     base = {
@@ -1624,6 +1684,7 @@ def apk_metadata(path: Path) -> dict[str, Any]:
             # starts is its targetActivity (Organic Maps, Element, Gallery, Fennec).
             "main_activities": _launch_targets(apk),
             "activity_filter_targets": activity_filter_targets(apk),
+            "wallpaper_activities": wallpaper_activities(apk),
             "activities": len(apk.get_activities() or []),
             "activity_names": sorted(apk.get_activities() or []),
             "services": len(apk.get_services() or []),

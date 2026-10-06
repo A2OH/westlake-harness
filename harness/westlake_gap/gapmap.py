@@ -2918,6 +2918,28 @@ def engine_surface_rows(scan: dict[str, Any], model: dict[str, Any] | None = Non
     )] + surfaceview_focus_rows(scan, libraries, model) + surfaceview_opacity_rows(libraries, model)
 
 
+def wallpaper_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
+    """Activities whose theme shows the wallpaper behind their window (windowShowWallpaper): launchers
+    and wallpaper settings. Android draws the wallpaper under such a window; OH draws its wallpaper
+    only under its own launcher, and the host's page is what shows under an Android window."""
+    activities = scan.get("apk", {}).get("wallpaper_activities") or []
+    if not activities:
+        return []
+    launch = sorted(set(activities) & set(scan.get("apk", {}).get("main_activities") or []))
+    short = lambda name: name.rsplit(".", 1)[-1]
+    return [_row(
+        "window", "wm:show-wallpaper", "Activities that show the wallpaper behind their window ("
+        + ", ".join(short(a) for a in (launch or activities)[:3]) + ")",
+        oh_touchpoint="wallpaper service: OH draws the wallpaper under its own launcher only",
+        verdict="missing", shim_class="C4", effort="S", confidence=STATIC,
+        provider="nothing is drawn under an Android window but the host's page: its transparent parts show that",
+        app_evidence=(f"its launch activity {', '.join(short(a) for a in launch)} shows the wallpaper" if launch else
+                      f"{len(activities)} of its activities show the wallpaper"),
+        seen_blocking=["cclauncher, clauncher (after r86: their transparent windows showed the host's page)"],
+        shim="draw OH's wallpaper under a window that asks for it (FLAG_SHOW_WALLPAPER)",
+    )]
+
+
 def surfaceview_opacity_rows(libraries: set[str], model: dict[str, Any]) -> list[dict[str, Any]]:
     """An engine's SurfaceView in an OH window of its own, composed over what lies below that window.
     Android composes an opaque SurfaceView's layer (RGB_565 unless the app sets a format) without
@@ -3441,6 +3463,7 @@ def build_map(
                                  contracts.launch_intent_model(westlake_root),
                                  contracts.thread_priority_model(westlake_root.parent / "art-build"))
             + engine_surface_rows(scan, surfaceview_model(westlake_root, manifest_root, runtime_libraries))
+            + wallpaper_rows(scan)
             + runtime_data_rows(scan)
             + android_path_rows(apk_path, scan, runtime_data, westlake_root)
             + uses_library_rows(facts, runtime_data, westlake_root)
