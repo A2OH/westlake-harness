@@ -277,6 +277,27 @@ class Evidence(unittest.TestCase):
         lifecycle.add_evidence(s, text, None, None, hilog)
         self.assertNotEqual(s.blocker_category, "window-buffers", "on screen: the failures did not keep it off")
 
+    def test_a_lookup_by_handle_that_found_nothing(self) -> None:
+        """aaaaxy: Ebiten logged dlsym's error for glGenVertexArrays, looked up in OH's NDK
+        libGLESv2.so, and the host screen showed."""
+        from westlake_gap import evidence, lifecycle
+        hilog = ("10-06 21:03:16.594 30377 30398 E C00f00/Go: go.Universe$proxyerror: gl: glGenVertexArrays is "
+                 "missing: do_dlsym failed: Symbol not found: glGenVertexArrays, version: null "
+                 "so=/system/lib64/ndk/libGLESv2.so\n")
+        found = [{"symbol": "glGenVertexArrays", "library": "/system/lib64/ndk/libGLESv2.so"}]
+        self.assertEqual(evidence.dlsym_failures(None, hilog + hilog), found)
+        text = "kRegJNI loop done\n[DIRECT-LAUNCH] bind done sBindAppDone=true\n"
+        s = lifecycle.score("aaaaxy", text)
+        s.screen = "host"
+        lifecycle.add_evidence(s, text, None, None, hilog)
+        self.assertEqual((s.blocker_category, s.blocker),
+                         ("native-symbols", "dlsym found no glGenVertexArrays in /system/lib64/ndk/libGLESv2.so"))
+        self.assertEqual(s.dlsym_failures, found)
+        s = lifecycle.score("aaaaxy", text)
+        s.screen = "app"
+        lifecycle.add_evidence(s, text, None, None, hilog)
+        self.assertNotEqual(s.blocker_category, "native-symbols", "on screen: the app went on without it")
+
     def test_null_platform_services_in_the_log(self) -> None:
         """wormhole2: Build.getSerial dereferenced a null IDeviceIdentifiersPolicyService, caught by
         its plugin's channel and logged; the app never drew."""

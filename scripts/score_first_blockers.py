@@ -48,7 +48,7 @@ def find_map(app, roots):
     return None
 
 
-_SYMBOL = re.compile(r"Error relocating [^:]*: (\w+)(?::|$)")  # the message may be cut short
+_SYMBOL = re.compile(r"(?:Error relocating [^:]*: |dlsym found no )(\w+)(?::|$| in )")  # the message may be cut short
 _LIBRARY = re.compile(r"(?:Error loading shared library |library ')([\w+.-]+?\.so|\w+)\b")
 _UPCALL = re.compile(r"No implementation found for [^(]*?([\w.$]+)\.\w+\(")
 _PLATFORM = ("android.", "com.android.", "java.", "javax.", "sun.", "libcore.", "dalvik.")

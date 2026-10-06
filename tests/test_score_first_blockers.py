@@ -89,6 +89,18 @@ class WindowBuffersScoring(unittest.TestCase):
         self.assertEqual(score.outcome_of(score.candidate_rows("window-buffers", blocker, ROWS)), "not-named")
 
 
+class DlsymScoring(unittest.TestCase):
+    def test_a_name_a_lookup_by_handle_missed_is_named_by_the_row_listing_it(self) -> None:
+        rows = ROWS + [{"id": "gl:gles3-by-handle", "verdict": "missing",
+                        "symbols": ["glBindVertexArray", "glGenVertexArrays"]}]
+        blocker = "dlsym found no glGenVertexArrays in /system/lib64/ndk/libGLESv2.so"
+        self.assertEqual(score.platform_key("native-symbols", blocker), ("symbol", "glGenVertexArrays"))
+        self.assertEqual([r["id"] for r in score.candidate_rows("native-symbols", blocker, rows)],
+                         ["gl:gles3-by-handle"])
+        self.assertEqual(score.platform_key("native-loading", "Error relocating /x/libgojni.so: AInputEvent_getDeviceId: "
+                                            "symbol not found"), ("symbol", "AInputEvent_getDeviceId"))
+
+
 class NullServiceScoring(unittest.TestCase):
     def test_a_null_platform_service_names_its_row(self) -> None:
         """wormhole2 never drew after Build.getSerial's NPE; the launchers stalled on LauncherApps."""

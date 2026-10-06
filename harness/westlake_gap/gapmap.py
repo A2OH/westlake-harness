@@ -1563,6 +1563,7 @@ def native_egl_window_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[
                                    + ", ".join(gles3[lib][:3]) + (" ..." if len(gles3[lib]) > 3 else "") + ")"
                                    for lib in names[:4]),
             libraries=names,
+            symbols=sorted(set().union(*gles3.values())),
             symptoms=["do_dlsym failed: Symbol not found: gl"],
             seen_blocking=["aaaaxy (after r86: Ebiten stopped on \"gl: glGenVertexArrays is missing\", looked up in "
                            "libGLESv2.so's handle)"],

@@ -356,6 +356,24 @@ def buffer_request_failures(hilog: str) -> dict | None:
     return {"count": count, "ret": int(code), "window": int(window), "windows": len({w for _, w in counts})}
 
 
+_DLSYM_FAILED = re.compile(r"do_dlsym failed: Symbol not found: (\w+), version: \S+ so=(\S+)")
+
+
+def dlsym_failures(*texts: str | None) -> list[dict]:
+    """Lookups by handle that OH's dynamic linker refused, as the app logged them: a loader that
+    passes dlsym's error on (Ebiten in aaaaxy: "gl: glGenVertexArrays is missing: do_dlsym failed:
+    Symbol not found: glGenVertexArrays, version: null so=/system/lib64/ndk/libGLESv2.so"). A
+    lookup that returns null is otherwise silent. Each name once, in the order first seen."""
+    seen: set[str] = set()
+    found = []
+    for text in texts:
+        for match in _DLSYM_FAILED.finditer(text or ""):
+            if match[1] not in seen:
+                seen.add(match[1])
+                found.append({"symbol": match[1], "library": match[2]})
+    return found
+
+
 _RESUMED = re.compile(r"activityResumed: OnDrawListener attached[^\n]*\(token=(\S+?)\)")
 _FINISHED = re.compile(r"finishActivity: [^\n]*? for (\S+)")
 
