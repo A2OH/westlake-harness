@@ -710,6 +710,97 @@
    "corpus": "batch-14",
    "symptom": "libgodot_android.so needs libcamera2ndk.so, which OH does not ship (Godot 4 camera feed)",
    "row": "ndk:weld:camera"
+  },
+  {
+   "app": "wormhole2",
+   "corpus": "r86",
+   "row": "svc:device_identifiers",
+   "symptom": "Build.getSerial reached a null device_identifiers service: NullPointerException where Android throws SecurityException; its device-info plugin failed and it drew no first screen",
+   "fixed_in": "b97df85"
+  },
+  {
+   "app": "musekit",
+   "corpus": "r86",
+   "row": "perm:host:ohos.permission.MICROPHONE",
+   "symptom": "startRecording() called on an uninitialized AudioRecord: OH refused the capturer, the host application never having requested ohos.permission.MICROPHONE",
+   "fixed_in": "9a5a432"
+  },
+  {
+   "app": "emacs",
+   "corpus": "r86",
+   "row": null,
+   "symptom": "ClassNotFoundException for its launch activity, which its manifest names relative to its package (.EmacsLauncherPreferencesActivity) and the launcher passed on unexpanded",
+   "fixed_in": "manifest e97c20d"
+  },
+  {
+   "app": "aaaaxy",
+   "corpus": "r86",
+   "row": "ndk:weld:input",
+   "symptom": "libgojni.so: AInputEvent_getDeviceId unresolved (Go's mobile runtime links NativeActivity's input glue into the library)",
+   "fixed_in": null
+  },
+  {
+   "app": "aaaaxy",
+   "corpus": "r86",
+   "row": "gl:gles3-by-handle",
+   "symptom": "after r86, its library loaded: Ebiten's \"gl: glGenVertexArrays is missing\", looked up in OH's NDK libGLESv2.so, which has GLES 2 only",
+   "fixed_in": null
+  },
+  {
+   "app": "cclauncher",
+   "corpus": "r86",
+   "row": "svc:launcherapps",
+   "symptom": "ILauncherApps.getUserProfiles on a null service: the launcher lists nothing",
+   "fixed_in": null
+  },
+  {
+   "app": "clauncher",
+   "corpus": "r86",
+   "row": "svc:user-unanswered",
+   "symptom": "UserManager.getUserProfiles: \"OH user service does not implement getProfileIds\"; the launcher lists nothing",
+   "fixed_in": null
+  },
+  {
+   "app": "ppsspp",
+   "corpus": "r86",
+   "row": "load:interposed-by-runtime",
+   "symptom": "SIGSEGV in libhwui.so: its library's calls to its own exported functions bind to libhwui's copies (341 shared symbols); routed by hand, it runs",
+   "fixed_in": null
+  },
+  {
+   "app": "supertuxkart",
+   "corpus": "r86",
+   "row": "load:interposed-by-runtime",
+   "symptom": "SIGSEGV in musl's setjmp on SDL's thread: libmain.so's png_set_longjmp_fn bound to the runtime's libpng",
+   "fixed_in": null
+  },
+  {
+   "app": "insigno",
+   "corpus": "r86",
+   "row": null,
+   "symptom": "Mali's backend thread aborts at bind, as Flutter's Vulkan backend imports a native buffer (base_jd_event_term)",
+   "fixed_in": null
+  },
+  {
+   "app": "osmand",
+   "corpus": "r86",
+   "row": null,
+   "symptom": "its first-start data copy races the map engine: the world basemap read mid-copy, then PROJ's FactoryException aborts a pool thread",
+   "fixed_in": null
+  },
+  {
+   "app": "opflashcontrol",
+   "corpus": "r86",
+   "row": null,
+   "symptom": "a flashlight slider out of range on a board with no camera exposed to Android: a device's answer",
+   "fixed_in": null
+  },
+  {
+   "app": "shortcut",
+   "corpus": "r86",
+   "row": null,
+   "symptom": "its trampoline hands its intent to an app that is not installed and finishes itself",
+   "fixed_in": null
   }
  ]
 }
