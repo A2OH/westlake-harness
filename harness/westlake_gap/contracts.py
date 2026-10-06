@@ -411,9 +411,13 @@ def native_egl_window_model(westlake_root: Path) -> dict[str, Any]:
     translated = (re.search(r"\bwidth\s*[!=]=\s*0\b", geometry_body) is not None
                   and re.search(r"\b\w*format\w*\s*\(", geometry_body) is not None)
     # libGLESv2.so from Android code answered with OH's libGLESv3.so, which carries GLES 3 as
-    # Android's libGLESv2.so does (the WebView alone was given it before).
+    # Android's libGLESv2.so does (the WebView alone was given it before). It must come before the
+    # .z.so probe, which returns a bare name's own library whenever it opens: placed after it, the
+    # translation never saw "libGLESv2.so" (aaaaxy still failed on the shim that had it there).
     gles3 = re.search(r'strcmp\(basename, "libGLESv2\.so"\) == 0 &&\s*caller_is_android_dso\(', text)
-    gles3_ok = gles3 is not None and "libGLESv3.so" in text[gles3.end():gles3.end() + 400]
+    probe = re.search(r"\bvoid\s*\*\s*plain\s*=\s*real_dlopen\(actual_filename,", text)
+    gles3_ok = (gles3 is not None and "libGLESv3.so" in text[gles3.end():gles3.end() + 400]
+                and (probe is None or gles3.start() < probe.start()))
     return {"unwraps": "anw_get_oh" in body,
             "source": f"{path.relative_to(westlake_root)}:{line}" if match else None,
             "gles3_by_handle": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, gles3.start()) + 1}"

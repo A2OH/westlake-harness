@@ -2266,6 +2266,14 @@ class NativeEglWindow(unittest.TestCase):
             self.assertEqual(model["gles3_by_handle"], "framework/webview-shim/webview_bionic_shim.c:3")
             self.assertEqual([(r["id"], r["verdict"]) for r in gapmap.native_egl_window_rows(scan, model)],
                              [("gl:gles3-by-handle", "supplied")])
+            # After the .z.so probe, which returns the bare name's own library first: never reached.
+            probe = ("    if (basename != NULL && basename == filename) {\n"
+                     "        void *plain = real_dlopen(actual_filename, flags);\n        if (plain != NULL) return plain;\n    }\n")
+            translated = webview_only.replace("caller_is_webview(caller, NULL)", "caller_is_android_dso(caller, &gles_caller)")
+            _write(source, "void *dlopen(const char *filename, int flags)\n{\n" + probe + translated + "}\n")
+            self.assertIsNone(native_egl_window_model(root)["gles3_by_handle"])
+            _write(source, "void *dlopen(const char *filename, int flags)\n{\n" + translated + probe + "}\n")
+            self.assertEqual(native_egl_window_model(root)["gles3_by_handle"], "framework/webview-shim/webview_bionic_shim.c:3")
 
     def test_buffers_geometry_needs_androids_terms(self) -> None:
         """anarchre, diesimu: SDL's (0, 0, visual) reached OH as a 0x0 buffer size and CLUT1."""
