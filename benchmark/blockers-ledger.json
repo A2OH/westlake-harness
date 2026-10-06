@@ -737,14 +737,14 @@
    "corpus": "r86",
    "row": "ndk:weld:input",
    "symptom": "libgojni.so: AInputEvent_getDeviceId unresolved (Go's mobile runtime links NativeActivity's input glue into the library)",
-   "fixed_in": null
+   "fixed_in": "127e553"
   },
   {
    "app": "aaaaxy",
    "corpus": "r86",
    "row": "gl:gles3-by-handle",
    "symptom": "after r86, its library loaded: Ebiten's \"gl: glGenVertexArrays is missing\", looked up in OH's NDK libGLESv2.so, which has GLES 2 only",
-   "fixed_in": null
+   "fixed_in": "ca4a0d7"
   },
   {
    "app": "cclauncher",
@@ -801,6 +801,13 @@
    "row": null,
    "symptom": "its trampoline hands its intent to an app that is not installed and finishes itself",
    "fixed_in": null
+  },
+  {
+   "app": "supertuxkart",
+   "corpus": "r86",
+   "row": "gl:gles3-by-handle",
+   "symptom": "routed to the Android namespace, after r86: SDL's loader called a GL entry point that came back null from OH's NDK libGLESv2.so",
+   "fixed_in": "ca4a0d7"
   }
  ]
 }
