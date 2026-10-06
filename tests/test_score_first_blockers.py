@@ -89,6 +89,16 @@ class WindowBuffersScoring(unittest.TestCase):
         self.assertEqual(score.outcome_of(score.candidate_rows("window-buffers", blocker, ROWS)), "not-named")
 
 
+class RefusalScoring(unittest.TestCase):
+    def test_a_stall_after_a_service_refused_a_call_is_named_by_its_row(self) -> None:
+        rows = ROWS + [{"id": "svc:user-unanswered", "verdict": "missing", "symptoms": ["OH user service does not implement"]}]
+        refusals = ["OH user service does not implement getProfileIds"]
+        named = score.candidate_rows("stall", "main thread idle in its message loop at x", rows, refusals=refusals)
+        self.assertEqual([r["id"] for r in named], ["svc:user-unanswered"])
+        self.assertIsNone(score.candidate_rows("stall", "main thread idle in its message loop at x", rows),
+                          "no refusal logged: a stall names nothing")
+
+
 class DlsymScoring(unittest.TestCase):
     def test_a_name_a_lookup_by_handle_missed_is_named_by_the_row_listing_it(self) -> None:
         rows = ROWS + [{"id": "gl:gles3-by-handle", "verdict": "missing",

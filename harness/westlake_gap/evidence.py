@@ -337,6 +337,20 @@ def null_service_interfaces(*texts: str | None) -> list[str]:
     return sorted(found)
 
 
+_REFUSED = re.compile(r"UnsupportedOperationException: (OH user service does not implement \w+)")
+
+
+def service_refusals(*texts: str | None) -> list[str]:
+    """Calls an in-process service refused outright, from the exception messages in the app's logs,
+    caught or not: the user service throws for an IUserManager method it does not name (clauncher's
+    UserManager.getUserProfiles: getProfileIds), and the app went on without its answer."""
+    found: set[str] = set()
+    for text in texts:
+        if text:
+            found |= {match.group(1) for match in _REFUSED.finditer(text)}
+    return sorted(found)
+
+
 _REQUEST_FAILED = re.compile(r"NativeWindowRequestBuffer>: RequestBuffer ret:(-?\d+), uniqueId: (\d+)")
 
 

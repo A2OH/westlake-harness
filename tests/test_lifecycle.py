@@ -301,6 +301,14 @@ class Evidence(unittest.TestCase):
         lifecycle.add_evidence(s, text, None, None, hilog)
         self.assertNotEqual(s.blocker_category, "native-symbols", "on screen: the app went on without it")
 
+    def test_service_refusals_in_the_log(self) -> None:
+        """clauncher: the user service threw for getProfileIds, from UserManager.getUserProfiles."""
+        from westlake_gap import evidence
+        line = ("java.lang.UnsupportedOperationException: OH user service does not implement getProfileIds\n"
+                "\tat adapter.packagemanager.OHUserManager.lambda$install$0(Unknown Source:410)\n")
+        self.assertEqual(evidence.service_refusals(line, line), ["OH user service does not implement getProfileIds"])
+        self.assertEqual(evidence.service_refusals("UnsupportedOperationException: not supported\n", None), [])
+
     def test_null_platform_services_in_the_log(self) -> None:
         """wormhole2: Build.getSerial dereferenced a null IDeviceIdentifiersPolicyService, caught by
         its plugin's channel and logged; the app never drew."""

@@ -136,14 +136,18 @@ def null_service_rows(interfaces, rows):
     return found
 
 
-def candidate_rows(category, blocker, rows, cause=None, finished=None, dump=None, null_services=None):
+def candidate_rows(category, blocker, rows, cause=None, finished=None, dump=None, null_services=None,
+                   refusals=None):
     """Rows that would name this blocker; None if it is not one a gap map could name."""
     if category == "native-crash" and dump:
         return crash_rows(dump, rows)
     # A stall, or an activity that never drew, after the app dereferenced a null platform service
-    # (wormhole2's Build.getSerial; the launchers' LauncherApps): that service's row names it.
-    if null_services and category in ("stall", "no-frame"):
-        named = null_service_rows(null_services, rows)
+    # (wormhole2's Build.getSerial; the launchers' LauncherApps), or after an in-process service
+    # refused a call outright (clauncher's getProfileIds): that service's row names it.
+    if (null_services or refusals) and category in ("stall", "no-frame"):
+        named = null_service_rows(null_services or [], rows)
+        named += [r for r in rows if r not in named and any(symptom in refusal for symptom in r.get("symptoms") or []
+                                                             for refusal in refusals or [])]
         if named:
             return named + ([r for r in rows if r["id"] == "am:post-create"] if category == "no-frame" else [])
     key = platform_key(category, blocker)
@@ -212,7 +216,7 @@ def main():
             outcome, rows = "unscorable", []
         else:
             rows = candidate_rows(category, blocker, gap["rows"], entry.get("root_cause"), entry.get("self_finish"),
-                                  entry.get("crash_dump"), entry.get("null_services"))
+                                  entry.get("crash_dump"), entry.get("null_services"), entry.get("service_refusals"))
             if rows is None:
                 outcome, rows = "unscorable", []
             else:
