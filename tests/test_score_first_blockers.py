@@ -89,6 +89,18 @@ class WindowBuffersScoring(unittest.TestCase):
         self.assertEqual(score.outcome_of(score.candidate_rows("window-buffers", blocker, ROWS)), "not-named")
 
 
+class GlesCrashScoring(unittest.TestCase):
+    def test_a_gl_loader_row_names_only_a_call_through_null(self) -> None:
+        """supertuxkart: after r86 its libmain.so called a GL entry point that came back null; in r86
+        it crashed in musl's setjmp, which no GL lookup explains."""
+        rows = [{"id": "gl:gles3-by-handle", "verdict": "missing", "libraries": ["lib/arm64-v8a/libmain.so"],
+                 "crash_kinds": ["null-call"]}]
+        frame = {"library": "libmain.so", "path": "/data/local/tmp/asx/lib/arm64-v8a/libmain.so"}
+        self.assertEqual([r["id"] for r in score.crash_rows({"kind": "null-call", "frames": [frame]}, rows)],
+                         ["gl:gles3-by-handle"])
+        self.assertIsNone(score.crash_rows({"kind": "fault", "frames": [frame]}, rows))
+
+
 class RefusalScoring(unittest.TestCase):
     def test_a_stall_after_a_service_refused_a_call_is_named_by_its_row(self) -> None:
         rows = ROWS + [{"id": "svc:user-unanswered", "verdict": "missing", "symptoms": ["OH user service does not implement"]}]
