@@ -357,17 +357,26 @@ def buffer_request_failures(hilog: str) -> dict | None:
 
 
 _DLSYM_FAILED = re.compile(r"do_dlsym failed: Symbol not found: (\w+), version: \S+ so=(\S+)")
+_HILOG_DOMAIN = re.compile(r"^\d\d-\d\d \d\d:\d\d:\d\d\.\d+\s+\d+\s+\d+\s+[A-Z]\s+(C[0-9a-fA-F]{5})/")
 
 
 def dlsym_failures(*texts: str | None) -> list[dict]:
     """Lookups by handle that OH's dynamic linker refused, as the app logged them: a loader that
     passes dlsym's error on (Ebiten in aaaaxy: "gl: glGenVertexArrays is missing: do_dlsym failed:
     Symbol not found: glGenVertexArrays, version: null so=/system/lib64/ndk/libGLESv2.so"). A
-    lookup that returns null is otherwise silent. Each name once, in the order first seen."""
+    lookup that returns null is otherwise silent. Each name once, in the order first seen. Only
+    the Android side's hilog domain (C00f00) counts: OH's graphics HAL logs its own optional probes
+    (load_hdi: MapperImplRelease in /vendor/lib64/passthrough) in every app that draws."""
     seen: set[str] = set()
     found = []
     for text in texts:
-        for match in _DLSYM_FAILED.finditer(text or ""):
+        for line in (text or "").splitlines():
+            match = _DLSYM_FAILED.search(line)
+            if match is None:
+                continue
+            domain = _HILOG_DOMAIN.match(line)
+            if domain is not None and domain[1].lower() != "c00f00":
+                continue
             if match[1] not in seen:
                 seen.add(match[1])
                 found.append({"symbol": match[1], "library": match[2]})

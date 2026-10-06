@@ -285,7 +285,10 @@ class Evidence(unittest.TestCase):
                  "missing: do_dlsym failed: Symbol not found: glGenVertexArrays, version: null "
                  "so=/system/lib64/ndk/libGLESv2.so\n")
         found = [{"symbol": "glGenVertexArrays", "library": "/system/lib64/ndk/libGLESv2.so"}]
-        self.assertEqual(evidence.dlsym_failures(None, hilog + hilog), found)
+        hal = ("10-06 18:36:48.754 14462 14574 W C02510/load_hdi: OpenHdiServiceImpl failed to get symbol of "
+               "'MapperImplRelease', do_dlsym failed: Symbol not found: MapperImplRelease, version: null "
+               "so=/vendor/lib64/passthrough/libmapper_service_1.0.z.so\n")
+        self.assertEqual(evidence.dlsym_failures(None, hal + hilog + hilog), found, "OH's HAL probes are not the app's")
         text = "kRegJNI loop done\n[DIRECT-LAUNCH] bind done sBindAppDone=true\n"
         s = lifecycle.score("aaaaxy", text)
         s.screen = "host"
