@@ -2855,7 +2855,14 @@ def surfaceview_model(westlake_root: Path | None, manifest_root: Path | None,
                  "instanceof SurfaceViewWindow")
     created = has(westlake_root / "framework/window/java/WindowSessionAdapter.java" if westlake_root else None,
                   "new SurfaceViewWindow(")
-    return {"own_surface": bool(adapter and patch), "vulkan_android_surface": vulkan,
+    # Android composes an opaque SurfaceView's layer without blending; OH's render service blended
+    # PPSSPP's alpha-0 frames with the screen below. Marking the window's own node opaque
+    # (oh_rs_set_layer_opaque, through SurfaceControl.Transaction.setOpaque) changed nothing on the
+    # board; the frames go to the window's self-drawing content node. A mark on that node is the
+    # candidate left, untested while the window bridge cannot be rebuilt.
+    opaque = has(westlake_root / "framework/window/jni/oh_window_manager_client.cpp" if westlake_root else None,
+                 "wl_contentNode->SetSurfaceBufferOpaque(")
+    return {"own_surface": bool(adapter and patch), "vulkan_android_surface": vulkan, "opaque": opaque,
             "focus_group": bridge if bridge and created else None,
             "evidence": ", ".join(filter(None, [adapter, patch, "runtime libvulkan.so" if vulkan else None]))}
 
@@ -2908,7 +2915,33 @@ def engine_surface_rows(scan: dict[str, Any], model: dict[str, Any] | None = Non
         app_evidence="; ".join(evidence),
         engine_libraries=sorted(lib for lib in libraries if lib in ENGINE_LIBRARIES),
         shim="give each SurfaceView its own OH surface (a child RS node) instead of the activity's window",
-    )] + surfaceview_focus_rows(scan, libraries, model)
+    )] + surfaceview_focus_rows(scan, libraries, model) + surfaceview_opacity_rows(libraries, model)
+
+
+def surfaceview_opacity_rows(libraries: set[str], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """An engine's SurfaceView in an OH window of its own, composed over what lies below that window.
+    Android composes an opaque SurfaceView's layer (RGB_565 unless the app sets a format) without
+    blending; OH's render service blends a surface's alpha unless its buffers are marked opaque, and
+    a frame drawn with alpha 0 shows the screen below through it (PPSSPP, faint over the host screen)."""
+    engines = sorted({ENGINE_LIBRARIES[lib] for lib in libraries if lib in ENGINE_LIBRARIES})
+    if not model.get("own_surface") or not engines:
+        return []
+    supplied = bool(model.get("opaque"))
+    return [_row(
+        "window", "window:surfaceview-opacity", "An engine's SurfaceView composed over the screen below its window ("
+        + ", ".join(engines) + ")",
+        oh_touchpoint="render_service: a surface node's buffers blend unless marked opaque (SetSurfaceBufferOpaque)",
+        verdict="supplied" if supplied else "missing", shim_class="C0" if supplied else "C2",
+        effort="verify" if supplied else "S", confidence=STATIC,
+        provider=("an opaque SurfaceView's content node is marked opaque, as Android composes its layer" if supplied
+                  else "the SurfaceView's OH window blends its alpha: a frame drawn with alpha 0 shows the screen below. "
+                       "Marking the window's own node opaque does not reach the content node its frames go to"),
+        provider_source=model.get("opaque"),
+        app_evidence="packages " + ", ".join(engines),
+        engine_libraries=sorted(lib for lib in libraries if lib in ENGINE_LIBRARIES),
+        seen_blocking=["ppsspp (routed, after r86: its screen showed faintly over the host's)"],
+        shim="mark the content node of an opaque SurfaceView's OH window opaque (native window bridge)",
+    )]
 
 
 def surfaceview_focus_rows(scan: dict[str, Any], libraries: set[str], model: dict[str, Any]) -> list[dict[str, Any]]:
