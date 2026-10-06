@@ -1,0 +1,172 @@
+{
+ "counts": {
+  "named": 6,
+  "unscorable": 9,
+  "device": 1,
+  "supplied": 1,
+  "not-named": 1
+ },
+ "results": [
+  {
+   "app": "aaaaxy",
+   "stage": "bound",
+   "category": "native-loading",
+   "blocker": "Error relocating /data/local/tmp/asx/lib/arm64-v8a/libgojni.so: AInputEvent_getDeviceId: symbol not ",
+   "outcome": "named",
+   "rows": [
+    "ndk:weld:input=missing"
+   ]
+  },
+  {
+   "app": "cclauncher",
+   "stage": "view",
+   "category": "stall",
+   "blocker": "main thread idle in its message loop at android.os.MessageQueue.nativePollOnce(Native method)",
+   "outcome": "named",
+   "rows": [
+    "svc:launcherapps=inert"
+   ]
+  },
+  {
+   "app": "clauncher",
+   "stage": "view",
+   "category": "stall",
+   "blocker": "main thread idle in its message loop at android.os.MessageQueue.nativePollOnce(Native method)",
+   "outcome": "named",
+   "rows": [
+    "svc:user-unanswered=missing"
+   ]
+  },
+  {
+   "app": "emacs",
+   "stage": "activity",
+   "category": "app-framework",
+   "blocker": "instantiate activity: ClassNotFoundException: Didn't find class \".EmacsLauncherPreferencesActivity\" on pat",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "facebooknotifica",
+   "stage": "activity",
+   "category": "app-framework",
+   "blocker": "start activity: InflateException",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "flipboard",
+   "stage": "runtime-init",
+   "category": "app-framework",
+   "blocker": "bind: RuntimeException: Unable to get provider androidx.startup.InitializationProvider: eqb: java.lang.U",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "fmessages",
+   "stage": "view",
+   "category": "self-finish",
+   "blocker": "its last activity finished itself 6 ms after resuming, and nothing replaced it",
+   "outcome": "device",
+   "rows": [
+    "svc:role=supplied",
+    "am:task-root=supplied"
+   ]
+  },
+  {
+   "app": "insigno",
+   "stage": "bound",
+   "category": "native-crash",
+   "blocker": "SIGABRT on thread mali-cmar-backe: aborted from libGLES_mali.z.so",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "musekit",
+   "stage": "view",
+   "category": "app-framework",
+   "blocker": "process init: IllegalStateException: startRecording() called on an uninitialized AudioRecord.",
+   "outcome": "named",
+   "rows": [
+    "perm:host:ohos.permission.MICROPHONE=missing"
+   ]
+  },
+  {
+   "app": "nytimes",
+   "stage": "activity",
+   "category": "app-framework",
+   "blocker": "start activity: RuntimeException",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "opflashcontrol",
+   "stage": "view",
+   "category": "app-framework",
+   "blocker": "process init: IllegalStateException: Slider value(80.0) must be greater or equal to valueFrom(0.0), and lower or equa",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "osmand",
+   "stage": "view",
+   "category": "native-crash",
+   "blocker": "SIGABRT on thread Thread-78: aborted from libc++_shared.so",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "ppsspp",
+   "stage": "bound",
+   "category": "native-crash",
+   "blocker": "SIGSEGV on thread androidInit: in libhwui.so+0x6ba160",
+   "outcome": "named",
+   "rows": [
+    "load:interposed-by-runtime=missing"
+   ]
+  },
+  {
+   "app": "reddit",
+   "stage": "view",
+   "category": "no-frame",
+   "blocker": "the activity resumed 4.1 s after start and drew no frame",
+   "outcome": "supplied",
+   "rows": [
+    "am:post-create=supplied"
+   ]
+  },
+  {
+   "app": "shortcut",
+   "stage": "bound",
+   "category": "self-finish",
+   "blocker": "its last activity finished itself 0 ms after resuming, and nothing replaced it",
+   "outcome": "not-named",
+   "rows": []
+  },
+  {
+   "app": "supertuxkart",
+   "stage": "view",
+   "category": "native-crash",
+   "blocker": "SIGSEGV on thread SDLThread: in ld-musl-aarch64.so.1+0x96880",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "wormhole2",
+   "stage": "view",
+   "category": "no-frame",
+   "blocker": "the activity resumed 0.9 s after start and drew no frame",
+   "outcome": "named",
+   "rows": [
+    "svc:device_identifiers=null"
+   ]
+  },
+  {
+   "app": "zoom",
+   "stage": "bound",
+   "category": null,
+   "blocker": null,
+   "outcome": "unscorable",
+   "rows": []
+  }
+ ]
+}
