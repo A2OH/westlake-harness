@@ -751,14 +751,14 @@
    "corpus": "r86",
    "row": "svc:launcherapps",
    "symptom": "ILauncherApps.getUserProfiles on a null service: the launcher lists nothing",
-   "fixed_in": null
+   "fixed_in": "0cb69b0"
   },
   {
    "app": "clauncher",
    "corpus": "r86",
    "row": "svc:user-unanswered",
    "symptom": "UserManager.getUserProfiles: \"OH user service does not implement getProfileIds\"; the launcher lists nothing",
-   "fixed_in": null
+   "fixed_in": "0cb69b0"
   },
   {
    "app": "ppsspp",
@@ -808,6 +808,20 @@
    "row": "gl:gles3-by-handle",
    "symptom": "routed to the Android namespace, after r86: SDL's loader called a GL entry point that came back null from OH's NDK libGLESv2.so",
    "fixed_in": "ca4a0d7"
+  },
+  {
+   "app": "clauncher",
+   "corpus": "r86",
+   "row": null,
+   "symptom": "after r86, with LauncherApps answered: its home screen draws in a transparent window with windowShowWallpaper, over the screen below, as OH has no wallpaper behind an app's window",
+   "fixed_in": null
+  },
+  {
+   "app": "cclauncher",
+   "corpus": "r86",
+   "row": null,
+   "symptom": "after r86, with LauncherApps answered: nothing visible in its transparent windowShowWallpaper window, the screen below showing through",
+   "fixed_in": null
   }
  ]
 }
