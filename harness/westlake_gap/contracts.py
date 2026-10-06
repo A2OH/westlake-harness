@@ -566,6 +566,22 @@ def host_permission_model(westlake_root: Path) -> dict[str, Any]:
     return {"requested": requested, "mapping": mapping, "source": f"{host.relative_to(westlake_root)}:{line}"}
 
 
+def user_service_model(westlake_root: Path) -> dict[str, Any]:
+    """The IUserManager methods the in-process user service answers. It is a proxy over the OH account
+    service that throws UnsupportedOperationException for every method it does not name, where
+    system_server would have answered: clauncher's UserManager.getUserProfiles met "OH user service
+    does not implement getProfileIds"."""
+    path = westlake_root / "framework/package-manager/java/OHUserManager.java"
+    if not path.exists():
+        return {"answered": None, "source": None}
+    text = _strip_java_comments(path.read_text(errors="replace"))
+    answered = set(re.findall(r'\bname\.equals\("(\w+)"\)', text)) | set(re.findall(r'\bcase\s+"(\w+)"\s*:', text))
+    throws = re.search(r"throw new UnsupportedOperationException\(", text)
+    line = text.count("\n", 0, throws.start()) + 1 if throws else None
+    return {"answered": sorted(answered), "throws": throws is not None,
+            "source": f"{path.relative_to(westlake_root)}:{line}" if throws else None}
+
+
 def ce_storage_model(westlake_root: Path) -> dict[str, Any]:
     """Whether the in-process storage manager says the user's credential-encrypted storage is unlocked
     under Android 15's name for the call, isCeStorageUnlocked (it was isUserKeyUnlocked)."""

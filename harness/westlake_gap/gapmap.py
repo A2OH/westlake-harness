@@ -932,6 +932,64 @@ def am_default_census(aosp_root: Path | None) -> dict[str, list[dict[str, Any]]]
     return census
 
 
+def user_manager_census(aosp_root: Path | None) -> dict[str, list[str]]:
+    """UserManager method -> the IUserManager methods it reaches, through the other UserManager
+    methods it calls (getUserProfiles asks getProfileIds, which asks the service's). Methods that
+    reach the service only through a cache's field (isUserUnlocked) are not seen."""
+    if aosp_root is None:
+        return {}
+    path = aosp_root / "frameworks-base/core/java/android/os/UserManager.java"
+    if not path.exists():
+        return {}
+    text = contracts._strip_java_comments(path.read_text(errors="replace"))
+    direct: dict[str, set[str]] = defaultdict(set)
+    calls: dict[str, set[str]] = defaultdict(set)
+    heads = list(re.finditer(r"\b(?:public|private|protected|static)\s+(?:static\s+|final\s+|synchronized\s+)*"
+                             r"[\w.<>\[\], ?@]+?\s+(\w+)\s*\([^;{]*?\)\s*(?:throws [\w., ]+)?\{", text))
+    names = {head.group(1) for head in heads}
+    for head in heads:
+        body = contracts._braced_block(text, head.end() - 1)
+        direct[head.group(1)] |= set(re.findall(r"\bmService\s*\.\s*(\w+)\s*\(", body))
+        calls[head.group(1)] |= {name for name in re.findall(r"(?<![\w.])(\w+)\s*\(", body) if name in names}
+    census: dict[str, list[str]] = {}
+    for name in names:
+        reached, seen, frontier = set(direct[name]), {name}, set(calls[name])
+        for _ in range(3):
+            frontier -= seen
+            seen |= frontier
+            for other in frontier:
+                reached |= direct[other]
+            frontier = set().union(*(calls[other] for other in frontier)) if frontier else set()
+        if reached:
+            census[name] = sorted(reached)
+    return census
+
+
+def user_service_rows(scan: dict[str, Any], model: dict[str, Any], census: dict[str, list[str]]) -> list[dict[str, Any]]:
+    """UserManager calls the app makes that reach an IUserManager method the in-process user service
+    does not answer: it throws UnsupportedOperationException there, where system_server answers."""
+    if not model.get("throws") or not census:
+        return []
+    answered = set(model.get("answered") or [])
+    called = sorted(set(scan["inventory"].get("platform_method_names", {}).get("Landroid/os/UserManager;", [])))
+    open_ = [f"{method} ({', '.join(missing)})" for method in called
+             for missing in [[binder for binder in census.get(method, []) if binder not in answered]] if missing]
+    if not open_:
+        return []
+    return [_row(
+        "system-services", "svc:user-unanswered", f"UserManager calls the in-process user service does not answer ({len(open_)})",
+        oh_touchpoint="os_account: the user service is a proxy over OH's account service for the current user",
+        verdict="missing", shim_class="C9", effort="S", confidence=STATIC,
+        provider="the user service throws UnsupportedOperationException for IUserManager methods it does not name",
+        provider_source=model.get("source"), open_symbols=open_[:16],
+        app_evidence="app calls UserManager." + ", UserManager.".join(sorted({o.split(" ")[0] for o in open_})),
+        symptoms=["OH user service does not implement"],
+        seen_blocking=["clauncher (r86: UserManager.getUserProfiles met \"OH user service does not implement "
+                       "getProfileIds\")"],
+        shim="answer each method as UserManagerService answers an app about its own, only user",
+    )]
+
+
 def webview_process_model(aosp_root: Path | None, westlake_root: Path) -> dict[str, Any]:
     """Whether WebView will insist on its sandboxed renderer process, and whether anything hosts it.
 
@@ -3342,6 +3400,7 @@ def build_map(
     svc += device_identifier_rows(scan, westlake_services)
     rows = (java + svc + package_manager_rows(scan, facts, pm, pm_null_consequences(aosp_root))
             + am_default_rows(scan, contracts.direct_launch_am_model(westlake_root), am_default_census(aosp_root))
+            + user_service_rows(scan, contracts.user_service_model(westlake_root), user_manager_census(aosp_root))
             + app_framework_rows(scan, contracts.direct_launch_am_model(westlake_root),
                                  contracts.window_adapter_model(westlake_root),
                                  contracts.task_queries_model(westlake_root),

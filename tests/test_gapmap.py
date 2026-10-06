@@ -1928,6 +1928,55 @@ class HostPermissions(unittest.TestCase):
                                                          contracts.host_permission_model(root), root), [])
 
 
+class UserServiceAnswers(unittest.TestCase):
+    def test_user_manager_calls_reaching_a_method_the_user_service_throws_for(self) -> None:
+        """clauncher: UserManager.getUserProfiles asks getProfileIds, which the user service did not name."""
+        manager = """public class UserManager {
+    private final IUserManager mService;
+    public List<UserHandle> getUserProfiles() {
+        int[] userIds = getProfileIds(getContextUserIfAppropriate(), true /* enabledOnly */);
+        return convertUserIdsToUserHandles(userIds);
+    }
+    public @NonNull int[] getProfileIds(@UserIdInt int userId, boolean enabledOnly) {
+        try {
+            return mService.getProfileIds(userId, enabledOnly);
+        } catch (RemoteException re) {
+            throw re.rethrowFromSystemServer();
+        }
+    }
+    public boolean isManagedProfile() {
+        return isManagedProfile(0);
+    }
+    public boolean isManagedProfile(int userId) {
+        return "managed".equals(mService.getProfileType(userId));
+    }
+}
+"""
+        service = ("final class OHUserManager {\n    static Object answer(String name, Object[] arguments) {\n"
+                   "        if (name.equals(\"isUserRunning\")) return true;\n        switch (name) {\n"
+                   "            case \"getProfileType\":\n                return \"\";\n%s"
+                   "            default:\n                break;\n        }\n"
+                   "        throw new UnsupportedOperationException(\"OH user service does not implement \" + name);\n"
+                   "    }\n}\n")
+        scan = {"inventory": {"platform_method_names": {"Landroid/os/UserManager;": ["getUserProfiles", "isManagedProfile"]}}}
+        with tempfile.TemporaryDirectory() as temp:
+            aosp, westlake = Path(temp) / "aosp", Path(temp) / "westlake"
+            _write(aosp / "frameworks-base/core/java/android/os/UserManager.java", manager)
+            census = gapmap.user_manager_census(aosp)
+            self.assertEqual((census["getUserProfiles"], census["isManagedProfile"]), (["getProfileIds"], ["getProfileType"]))
+            _write(westlake / "framework/package-manager/java/OHUserManager.java", service % "")
+            model = contracts.user_service_model(westlake)
+            self.assertEqual((model["answered"], model["source"]),
+                             (["getProfileType", "isUserRunning"], "framework/package-manager/java/OHUserManager.java:10"))
+            rows = gapmap.user_service_rows(scan, model, census)
+            self.assertEqual([(r["id"], r["verdict"], r["open_symbols"]) for r in rows],
+                             [("svc:user-unanswered", "missing", ["getUserProfiles (getProfileIds)"])])
+            _write(westlake / "framework/package-manager/java/OHUserManager.java",
+                   service % "            case \"getProfileIds\":\n                return new int[] {0};\n")
+            self.assertEqual(gapmap.user_service_rows(scan, contracts.user_service_model(westlake), census), [])
+        self.assertEqual(gapmap.user_service_rows(scan, {"throws": True, "answered": []}, {}), [])
+
+
 class PostCreateCallbacks(unittest.TestCase):
     def test_the_activity_or_a_named_base_class_overrides(self) -> None:
         from westlake_gap.scanner import after_start_overrides
