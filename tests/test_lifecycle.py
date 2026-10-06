@@ -28,6 +28,31 @@ class ScreenshotDecides(unittest.TestCase):
             self.assertEqual(lifecycle.screen_state(over), "partial")
 
 
+class HostPages(unittest.TestCase):
+    def test_any_of_the_hosts_pages_is_the_host_screen(self) -> None:
+        """The host's page went from a title and a keyboard control to an empty black page: the
+        records made with either are classified against the page they were made with."""
+        try:
+            from PIL import Image
+        except ImportError:
+            self.skipTest("Pillow is required")
+        import tempfile
+        from unittest import mock
+        from westlake_gap import lifecycle
+        with tempfile.TemporaryDirectory() as temp:
+            black = Path(temp) / "host-screen-blank.png"
+            Image.new("L", (60, 90), 0).save(black)
+            shot = Path(temp) / "black.jpeg"
+            Image.new("RGB", (1200, 1920), (0, 0, 0)).save(shot, quality=95)
+            app = Path(temp) / "app.jpeg"
+            Image.new("RGB", (1200, 1920), (20, 90, 200)).save(app)
+            with mock.patch.object(lifecycle, "_HOST_SCREENS", [lifecycle._HOST_SCREEN, black]):
+                self.assertEqual(lifecycle.screen_state(shot), "host")
+                self.assertEqual(lifecycle.screen_state(app), "app")
+            with mock.patch.object(lifecycle, "_HOST_SCREENS", [lifecycle._HOST_SCREEN]):
+                self.assertEqual(lifecycle.screen_state(shot), "app", "the first page alone does not know it")
+
+
 class FirstBlocker(unittest.TestCase):
     def test_survived_upcall_miss_is_not_the_blocker(self) -> None:
         from westlake_gap import lifecycle

@@ -265,11 +265,15 @@ def score(app: str, text: str) -> Score:
 
 
 _HOST_SCREEN = Path(__file__).parent / "data" / "host-screen.png"
+# Every page the host has shown behind Android windows, each still in the records made with it: its
+# first page (a title and a keyboard control on light grey), then an empty black page.
+_HOST_SCREENS = sorted((Path(__file__).parent / "data").glob("host-screen*.png"))
 
 
 def screen_state(image: Path) -> str | None:
     """'host' when the screenshot is the board's launcher host screen, not the app; 'partial' when
-    it is the host screen with the app's content over part of it; else 'app'.
+    it is the host screen with the app's content over part of it; else 'app'. The host screen is
+    whichever of the host's pages the screenshot is closest to.
 
     The log can reach "drawing" and the app still not be on screen: it drew, then died or
     finished (Unciv, Shattered Pixel Dungeon, Fossify Messages). Four apps were scored "drawing"
@@ -282,12 +286,13 @@ def screen_state(image: Path) -> str | None:
         from PIL import Image
     except ImportError:
         return None
-    if not image.exists() or not _HOST_SCREEN.exists():
+    if not image.exists() or not _HOST_SCREENS:
         return None
     shot = Image.open(image).convert("L").resize((60, 96)).crop((0, 6, 60, 96))
-    ref = Image.open(_HOST_SCREEN).convert("L")
     get = lambda im: list(getattr(im, "get_flattened_data", im.getdata)())
-    diffs = [abs(x - y) for x, y in zip(get(shot), get(ref))]
+    pixels = get(shot)
+    diffs = min(([abs(x - y) for x, y in zip(pixels, get(Image.open(ref).convert("L")))] for ref in _HOST_SCREENS),
+                key=sum)
     if sum(diffs) / len(diffs) >= 2.0:
         return "app"
     # Resampling and JPEG noise stay under 32 here (a round trip of the reference reaches 26).
