@@ -27,7 +27,9 @@ An activity that finished itself on start (lifecycle's self-finish) needs the ro
 first: am:task-root, svc:bluetooth, am:own-implicit-intents, or a service row answering as a device
 without the feature, for a service the app called in process before it left. An activity that
 resumed and never drew (lifecycle's no-frame) needs a row for what holds its draws: am:post-create,
-its own onPostCreate that the provider never called.
+its own onPostCreate that the provider never called. A window whose buffer requests OH refused, with
+the host screen showing (lifecycle's window-buffers), needs window:buffers-geometry: the geometry an
+app library set on it in Android's terms.
 
 Usage: score_first_blockers.py <lifecycle.json> <map-root> [<map-root> ...] [--out report.json]
 """
@@ -76,6 +78,8 @@ def platform_key(category, blocker):
         return "exit", blocker
     if category == "no-frame":
         return "no-frame", blocker
+    if category == "window-buffers":
+        return "window-buffers", blocker
     return None  # a native crash or an app exception: a symptom no row type names
 
 
@@ -148,6 +152,8 @@ def candidate_rows(category, blocker, rows, cause=None, finished=None, dump=None
                 or (r.get("device_answer") and r["id"].startswith("svc:") and r["id"][4:] in called)]
     if kind == "no-frame":
         return [r for r in rows if r["id"] == "am:post-create"]
+    if kind == "window-buffers":
+        return [r for r in rows if r["id"] == "window:buffers-geometry"]
     return []  # a platform behaviour no row type covers yet
 
 

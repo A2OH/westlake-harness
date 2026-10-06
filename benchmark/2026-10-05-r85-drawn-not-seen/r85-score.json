@@ -1,0 +1,273 @@
+{
+ "counts": {
+  "named": 9,
+  "unscorable": 19,
+  "device": 1,
+  "not-named": 1
+ },
+ "results": [
+  {
+   "app": "aaaaxy",
+   "stage": "bound",
+   "category": "native-loading",
+   "blocker": "Error relocating /data/local/tmp/asx/lib/arm64-v8a/libgojni.so: AInputEvent_getDeviceId: symbol not ",
+   "outcome": "named",
+   "rows": [
+    "ndk:weld:input=missing"
+   ]
+  },
+  {
+   "app": "anarchre",
+   "stage": "view",
+   "category": "native-crash",
+   "blocker": "SIGABRT on thread RenderThread: aborted from libhwui.so",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "cclauncher",
+   "stage": "view",
+   "category": "stall",
+   "blocker": "main thread idle in its message loop at android.os.MessageQueue.nativePollOnce(Native method)",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "clauncher",
+   "stage": "view",
+   "category": "stall",
+   "blocker": "main thread idle in its message loop at android.os.MessageQueue.nativePollOnce(Native method)",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "diesimu",
+   "stage": "view",
+   "category": "native-crash",
+   "blocker": "SIGABRT on thread mali-cmar-backe: aborted from libGLES_mali.z.so",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "drawanywhere",
+   "stage": "view",
+   "category": "app-framework",
+   "blocker": "uncaught on Thread-2: IllegalArgumentException: Cannot coerce value to an empty range: maximum -460 is less than minimum 0.",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "duckrun",
+   "stage": "view",
+   "category": "native-crash",
+   "blocker": "SIGSEGV on thread GLThread 19: a null function pointer called from libgodot_android.so+0x3401cb4",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "econverter",
+   "stage": "bound",
+   "category": "native-crash",
+   "blocker": "SIGSEGV on thread com.econverter.: a null function pointer called from libpython3.11.so+0x499ba4",
+   "outcome": "named",
+   "rows": [
+    "load:written-needs-packaged=missing"
+   ]
+  },
+  {
+   "app": "elementx",
+   "stage": "runtime-init",
+   "category": "native-crash",
+   "blocker": "SIGSEGV on thread io.element.andr: in code past libmatrix_sdk_ffi.so's mappings, where the dump places it at +0x2948ca3f00: anonymous memory (generated or decrypted code), or an offset the dump got wrong",
+   "outcome": "named",
+   "rows": [
+    "jni:created-vms=missing"
+   ]
+  },
+  {
+   "app": "emacs",
+   "stage": "runtime-init",
+   "category": "app-framework",
+   "blocker": "bind: UnsatisfiedLinkError: Error relocating /data/local/tmp/asx/lib/arm64-v8a/libselinux_emacs.so: fts_open",
+   "outcome": "named",
+   "rows": [
+    "ndk:libc-abi=missing"
+   ]
+  },
+  {
+   "app": "facebooknotifica",
+   "stage": "activity",
+   "category": "app-framework",
+   "blocker": "start activity: InflateException",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "fennec",
+   "stage": "runtime-init",
+   "category": "native-crash",
+   "blocker": "SIGSEGV on thread Gecko: a fault inside musl's allocator: the heap was corrupt before this call, or it was handed memory its heap never allocated (allocating for libxul.so+0x2906cb09e0 (past its mappings))",
+   "outcome": "named",
+   "rows": [
+    "abi:versioned-import-clash=missing",
+    "egl:by-handle=missing"
+   ]
+  },
+  {
+   "app": "flipboard",
+   "stage": "runtime-init",
+   "category": "app-framework",
+   "blocker": "bind: RuntimeException: Unable to get provider androidx.startup.InitializationProvider: eqb: java.lang.U",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "fmessages",
+   "stage": "view",
+   "category": "self-finish",
+   "blocker": "its last activity finished itself 326 ms after resuming, and nothing replaced it",
+   "outcome": "device",
+   "rows": [
+    "svc:role=supplied",
+    "am:task-root=supplied"
+   ]
+  },
+  {
+   "app": "insigno",
+   "stage": "bound",
+   "category": "native-crash",
+   "blocker": "SIGABRT on thread mali-cmar-backe: aborted from libGLES_mali.z.so",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "linphone",
+   "stage": "view",
+   "category": "stall",
+   "blocker": "main thread idle in its message loop at android.os.MessageQueue.nativePollOnce(Native method)",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "musekit",
+   "stage": "view",
+   "category": "app-framework",
+   "blocker": "process init: IllegalStateException: startRecording() called on an uninitialized AudioRecord.",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "nytimes",
+   "stage": "activity",
+   "category": "app-framework",
+   "blocker": "start activity: RuntimeException",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "opflashcontrol",
+   "stage": "view",
+   "category": "app-framework",
+   "blocker": "process init: IllegalStateException: Slider value(80.0) must be greater or equal to valueFrom(0.0), and lower or equa",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "osmand",
+   "stage": "view",
+   "category": "native-crash",
+   "blocker": "SIGABRT on thread Thread (pooled): aborted from libc++_shared.so",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "playmaker",
+   "stage": "view",
+   "category": "native-crash",
+   "blocker": "SIGSEGV on thread GLThread 17: a null function pointer called from libgodot_android.so+0x3401cb4",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "ppsspp",
+   "stage": "bound",
+   "category": "native-crash",
+   "blocker": "SIGSEGV on thread androidInit: in libhwui.so+0x6ba160",
+   "outcome": "named",
+   "rows": [
+    "load:interposed-by-runtime=missing"
+   ]
+  },
+  {
+   "app": "shazam",
+   "stage": "view",
+   "category": "self-finish",
+   "blocker": "its last activity finished itself 0 ms after resuming, and nothing replaced it",
+   "outcome": "named",
+   "rows": [
+    "am:task-root=supplied",
+    "am:own-implicit-intents=missing"
+   ]
+  },
+  {
+   "app": "shortcut",
+   "stage": "view",
+   "category": "self-finish",
+   "blocker": "its last activity finished itself 0 ms after resuming, and nothing replaced it",
+   "outcome": "not-named",
+   "rows": []
+  },
+  {
+   "app": "supertuxkart",
+   "stage": "view",
+   "category": "native-crash",
+   "blocker": "SIGABRT on thread mali-cmar-backe: aborted from libGLES_mali.z.so",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "tiktok",
+   "stage": "runtime-init",
+   "category": "native-crash",
+   "blocker": "SIGSEGV on thread tp-io-2: in ld-musl-aarch64.so.1+0x13331c",
+   "outcome": "named",
+   "rows": [
+    "abi:thread-handle-order=missing"
+   ]
+  },
+  {
+   "app": "usp",
+   "stage": "view",
+   "category": "native-crash",
+   "blocker": "abort: drawRenderNode called on a context with no surface!",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "waze",
+   "stage": "view",
+   "category": "native-crash",
+   "blocker": "SIGABRT on thread Native Thread: aborted from libwaze.so",
+   "outcome": "named",
+   "rows": [
+    "load:packed-init-array=missing"
+   ]
+  },
+  {
+   "app": "werewolvesgame",
+   "stage": "bound",
+   "category": null,
+   "blocker": null,
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "wormhole2",
+   "stage": "view",
+   "category": "stall",
+   "blocker": "main thread idle in its message loop at android.os.MessageQueue.nativePollOnce(Native method)",
+   "outcome": "unscorable",
+   "rows": []
+  }
+ ]
+}

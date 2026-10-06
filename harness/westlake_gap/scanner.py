@@ -955,8 +955,20 @@ class DexInventory:
     native_methods: list[dict[str, Any]] = field(default_factory=list)
     superclasses: dict[str, str] = field(default_factory=dict)
     own_intent_names: set[str] = field(default_factory=set)
+    # Android's SQLite collations the app's SQL names (COLLATE UNICODE / LOCALIZED / PHONEBOOK).
+    sql_collations: set[str] = field(default_factory=set)
     # Classes defining one of AFTER_START_CALLBACKS, with which ones.
     after_start_callbacks: dict[str, set[str]] = field(default_factory=dict)
+
+
+_SQL_COLLATION = re.compile(r"\bCOLLATE\s+(UNICODE|LOCALIZED|PHONEBOOK)\b", re.I)
+
+
+def sql_collations(strings: Iterable[str]) -> set[str]:
+    """The collations Android registers on every SQLite connection that the app's SQL names:
+    Fossify Notes reads its notes "ORDER BY title COLLATE UNICODE"."""
+    return {m.group(1).upper() for text in strings if "OLLATE" in text.upper()
+            for m in _SQL_COLLATION.finditer(text)}
 
 
 def named_filter_targets(strings: Iterable[str], targets: dict[str, list[str]]) -> set[str]:
@@ -1027,11 +1039,13 @@ def inventory_dex(path: Path, filter_targets: dict[str, list[str]] | None = None
         dex = DEX(blob)
         dex_sha256 = sha256_bytes(blob)
         result.dex_entries.append({"name": dex_name, "sha256": dex_sha256, "bytes": len(blob)})
+        try:
+            strings = [str(text) for text in dex.get_strings()]
+        except Exception:
+            strings = []
         if filter_targets:
-            try:
-                result.own_intent_names |= named_filter_targets(map(str, dex.get_strings()), filter_targets)
-            except Exception:
-                pass
+            result.own_intent_names |= named_filter_targets(strings, filter_targets)
+        result.sql_collations |= sql_collations(strings)
         for c in dex.get_classes():
             result.defined_classes.add(str(c.get_name()))
             # Kept for the activity hierarchy: which engine base class a launch activity extends.
@@ -2132,6 +2146,7 @@ def scan_apk(
             "feature_queries": inventory.feature_queries,
             "nonnull_casts": inventory.nonnull_casts,
             "own_intent_names": sorted(inventory.own_intent_names),
+            "sql_collations": sorted(inventory.sql_collations),
             "after_start_overrides": after_start_overrides(identity.get("activity_names") or [],
                                                            inventory.superclasses, inventory.after_start_callbacks),
             "native_upcalls": native_upcalls if platform_members is not None else None,
