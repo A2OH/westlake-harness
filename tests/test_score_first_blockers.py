@@ -36,6 +36,17 @@ class RootCauseScoring(unittest.TestCase):
         self.assertIsNone(score.candidate_rows("app-framework", "start activity: ArithmeticException", ROWS, cause))
 
 
+class SymptomScoring(unittest.TestCase):
+    def test_an_app_exception_a_row_lists_as_its_symptom_is_named_by_it(self) -> None:
+        rows = ROWS + [{"id": "perm:host:ohos.permission.MICROPHONE", "verdict": "missing",
+                        "symptoms": ["uninitialized AudioRecord"]}]
+        blocker = "start activity: IllegalStateException: startRecording() called on an uninitialized AudioRecord."
+        named = score.candidate_rows("app-framework", blocker, rows)
+        self.assertEqual([r["id"] for r in named], ["perm:host:ohos.permission.MICROPHONE"])
+        self.assertEqual(score.outcome_of(named), "named")
+        self.assertIsNone(score.candidate_rows("app-framework", blocker, ROWS), "no row lists it: unscorable")
+
+
 class SelfFinishScoring(unittest.TestCase):
     def test_an_activity_closing_itself_needs_the_row_for_what_it_asked(self) -> None:
         rows = ROWS + [{"id": "am:task-root", "verdict": "missing"}]

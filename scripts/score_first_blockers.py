@@ -148,6 +148,11 @@ def candidate_rows(category, blocker, rows, cause=None, finished=None, dump=None
             return named + ([r for r in rows if r["id"] == "am:post-create"] if category == "no-frame" else [])
     key = platform_key(category, blocker)
     if key is None:
+        # An app exception that a row lists among the symptoms of its gap: MuseKit's uninitialized
+        # AudioRecord, from a host application without the microphone permission.
+        symptomatic = [r for r in rows if any(s in blocker for s in r.get("symptoms") or [])]
+        if symptomatic:
+            return symptomatic
         return root_cause_rows(cause, rows) if cause else None
     kind, value = key
     text = lambda row: json.dumps(row)

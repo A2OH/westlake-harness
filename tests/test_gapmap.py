@@ -1896,6 +1896,38 @@ class PermissionRequests(unittest.TestCase):
             self.assertFalse(contracts.permission_request_model(root)["answered"])
 
 
+class HostPermissions(unittest.TestCase):
+    def test_a_guarded_capability_needs_the_host_to_request_its_permission(self) -> None:
+        """musekit: AudioRecord stayed uninitialized while the host did not request the microphone."""
+        host = ('{"module": {"name": "entry",\n "requestPermissions": [\n  {"name": "ohos.permission.INTERNET"}%s\n]}}\n')
+        mapper = ('    addMapping("android.permission.RECORD_AUDIO",             "ohos.permission.MICROPHONE");\n'
+                  '    addMapping("android.permission.CAMERA", "ohos.permission.CAMERA");\n')
+        facts = {"permissions": ["android.permission.CAMERA", "android.permission.INTERNET",
+                                 "android.permission.RECORD_AUDIO"]}
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            self.assertEqual(gapmap.host_permission_rows(facts, contracts.host_permission_model(root), root), [])
+            _write(root / "apps/imehost/module.json", host % "")
+            _write(root / "framework/package-manager/java/PermissionMapper.java", mapper)
+            model = contracts.host_permission_model(root)
+            self.assertEqual((model["requested"], model["source"]), (["ohos.permission.INTERNET"], "apps/imehost/module.json:2"))
+            self.assertEqual(gapmap.host_permission_rows(facts, model, root), [],
+                             "no row while the provider makes no capture call: that gap is another row's")
+            _write(root / "framework/javacore-shim/audiorecord_natives.c",
+                   'static void f(void) {\n    S(generate, "OH_AudioStreamBuilder_GenerateCapturer");\n}\n')
+            rows = gapmap.host_permission_rows(facts, model, root)
+            self.assertEqual([(r["id"], r["verdict"]) for r in rows], [("perm:host:ohos.permission.MICROPHONE", "missing")],
+                             "the camera is not bridged, so its permission has no row")
+            self.assertEqual(rows[0]["provider_source"],
+                             "apps/imehost/module.json:2; framework/javacore-shim/audiorecord_natives.c:2")
+            self.assertIn("uninitialized AudioRecord", rows[0]["symptoms"])
+            _write(root / "apps/imehost/module.json", host % ',\n  {"name": "ohos.permission.MICROPHONE"}')
+            rows = gapmap.host_permission_rows(facts, contracts.host_permission_model(root), root)
+            self.assertEqual(rows[0]["verdict"], "supplied")
+            self.assertEqual(gapmap.host_permission_rows({"permissions": ["android.permission.INTERNET"]},
+                                                         contracts.host_permission_model(root), root), [])
+
+
 class PostCreateCallbacks(unittest.TestCase):
     def test_the_activity_or_a_named_base_class_overrides(self) -> None:
         from westlake_gap.scanner import after_start_overrides
@@ -2156,6 +2188,35 @@ class NativeEglWindow(unittest.TestCase):
             _write(source, "static void *westlake_egl_by_handle(const char *name)\n{\n    return 0;\n}\n")
             rows = gapmap.native_egl_window_rows(scan, native_egl_window_model(root))
             self.assertEqual([(r["id"], r["verdict"]) for r in rows], [("egl:by-handle", "supplied")])
+
+    def test_gles3_looked_up_by_name_needs_libglesv2_to_carry_it(self) -> None:
+        """aaaaxy: Ebiten looked glGenVertexArrays up in libGLESv2.so's handle, which on OH has GLES 2 only."""
+        from westlake_gap import scanner
+        from westlake_gap.contracts import native_egl_window_model
+        # Go packs its strings with no terminators; an extension's name is not the core one's.
+        raw = b"\x7fELF..\x00libGLESv2.so\x00glBindVertexArrayglGenVertexArraysglClear\x00glDrawBuffersEXT\x00"
+        self.assertEqual(scanner.gles3_lookups(raw, set()), {"gles3_lookups": ["glBindVertexArray", "glGenVertexArrays"]})
+        self.assertEqual(scanner.gles3_lookups(raw, {"glBindVertexArray", "glGenVertexArrays"}), {})
+        scan = {"inventory": {"elfs": [{"name": "lib/arm64-v8a/libgojni.so", "abi_matches_machine": True,
+                                        "gles3_lookups": ["glBindVertexArray", "glGenVertexArrays"]}]}}
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "framework/webview-shim/webview_bionic_shim.c"
+            webview_only = ('    if (basename != NULL && strcmp(basename, "libGLESv2.so") == 0 &&\n'
+                            '        caller_is_webview(caller, NULL)) {\n'
+                            '        actual_filename = "/system/lib64/platformsdk/libGLESv3.so";\n    }\n')
+            _write(source, "void *dlopen(const char *filename, int flags)\n{\n" + webview_only + "}\n")
+            rows = gapmap.native_egl_window_rows(scan, native_egl_window_model(root))
+            self.assertEqual([(r["id"], r["verdict"]) for r in rows], [("gl:gles3-by-handle", "missing")])
+            self.assertEqual(rows[0]["app_evidence"],
+                             "lib/arm64-v8a/libgojni.so names 2 without importing them (glBindVertexArray, glGenVertexArrays)")
+            _write(source, "void *dlopen(const char *filename, int flags)\n{\n"
+                   + webview_only.replace("caller_is_webview(caller, NULL)", "caller_is_android_dso(caller, &gles_caller)")
+                   + "}\n")
+            model = native_egl_window_model(root)
+            self.assertEqual(model["gles3_by_handle"], "framework/webview-shim/webview_bionic_shim.c:3")
+            self.assertEqual([(r["id"], r["verdict"]) for r in gapmap.native_egl_window_rows(scan, model)],
+                             [("gl:gles3-by-handle", "supplied")])
 
     def test_buffers_geometry_needs_androids_terms(self) -> None:
         """anarchre, diesimu: SDL's (0, 0, visual) reached OH as a 0x0 buffer size and CLUT1."""

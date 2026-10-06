@@ -1386,6 +1386,58 @@ def permission_request_rows(scan: dict[str, Any], model: dict[str, Any]) -> list
     )]
 
 
+# Capabilities the provider carries out in the host application's process through an OH call that
+# checks the caller's permission, by that OH permission: the provider source making the call, and what
+# an app sees when the host lacks the permission. A capability the provider does not bridge at all is
+# another row's gap, so a row appears only when the call is in the source.
+HOST_GUARDED_CAPABILITIES = {
+    "ohos.permission.MICROPHONE": {
+        "capability": "audio capture (AudioRecord, MediaRecorder) through OH's audio capturer",
+        "source": "framework/javacore-shim/audiorecord_natives.c", "call": "OH_AudioStreamBuilder_GenerateCapturer",
+        "symptoms": ["uninitialized AudioRecord", "OH refused the capturer"],
+    },
+}
+
+
+def host_permission_rows(facts: dict[str, Any], model: dict[str, Any], westlake_root: Path) -> list[dict[str, Any]]:
+    """Android permissions the app requests whose capability OH guards in the host application's
+    process. The app's grant in process is the host's grant (PermissionMapper), and OH checks the
+    host's token when the provider makes the call: unless the host requests the OH permission, both
+    say no. MuseKit's AudioRecord stayed uninitialized in r86 until the host requested
+    ohos.permission.MICROPHONE."""
+    if model.get("requested") is None:
+        return []
+    wanted: dict[str, list[str]] = defaultdict(list)
+    for permission in facts.get("permissions") or []:
+        oh = model["mapping"].get(permission)
+        if oh in HOST_GUARDED_CAPABILITIES:
+            wanted[oh].append(permission)
+    rows = []
+    for oh, android in sorted(wanted.items()):
+        info = HOST_GUARDED_CAPABILITIES[oh]
+        source = westlake_root / info["source"]
+        text = source.read_text(errors="replace") if source.exists() else ""
+        if info["call"] not in text:
+            continue
+        held = oh in model["requested"]
+        rows.append(_row(
+            "sandbox-policy", f"perm:host:{oh}", f"The host application's {oh}, for {info['capability']}",
+            oh_touchpoint="access_token: the host application's permissions, checked by the OH call",
+            verdict="supplied" if held else "missing", shim_class="C0" if held else "C1",
+            effort="verify" if held else "XS", confidence=STATIC,
+            provider=(f"the host requests {oh}; the user grant is the device owner's" if held else
+                      f"the host does not request {oh}: OH refuses the call, and the app is denied "
+                      + ", ".join(android) + " in process"),
+            provider_source=f"{model['source']}; {info['source']}:{text.count(chr(10), 0, text.index(info['call'])) + 1}",
+            app_evidence="the app requests " + ", ".join(android),
+            symptoms=info["symptoms"],
+            seen_blocking=["musekit (r86: \"startRecording() called on an uninitialized AudioRecord\"; it listens "
+                           "once the host requests the permission)"] if oh == "ohos.permission.MICROPHONE" else [],
+            shim=f"request {oh} in the host application's module.json, reinstall the host over itself and grant it",
+        ))
+    return rows
+
+
 def ce_storage_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
     """StrictMode's VM checks, which report a credential-protected data access while the user's storage
     is locked, each with a stack trace: an app that turns them on pays for every file it touches when
@@ -1489,6 +1541,32 @@ def native_egl_window_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[
             libraries=by_handle,
             seen_blocking=["anarchre (SDL: eglCreateWindowSurface refused, then hwui aborted with EGL_NOT_INITIALIZED)"],
             shim="answer dlopen(libEGL.so) with the runtime's EGL and dlsym of the shim's EGL overrides with its own",
+        ))
+    # GLES 3 named without being imported: a loader that dlopens libGLESv2.so and looks GLES 3 up in
+    # it, as Android's libGLESv2.so (the same library as its libGLESv3.so) carries it. A name may be
+    # looked up through eglGetProcAddress instead, so this names a lookup only by its shape.
+    gles3 = {elf.get("soname") or elf.get("name"): elf["gles3_lookups"] for elf in elfs if elf.get("gles3_lookups")}
+    if gles3:
+        supplied = bool(model.get("gles3_by_handle"))
+        names = sorted(gles3)
+        rows.append(_row(
+            "window", "gl:gles3-by-handle", "GLES 3 entry points looked up by name (" + ", ".join(names[:4]) + ")",
+            oh_touchpoint="graphic_2d: OH's NDK libGLESv2.so carries GLES 2 and its OES extensions; GLES 3 is in "
+                          "its libGLESv3.so",
+            verdict="supplied" if supplied else "missing", shim_class="C0" if supplied else "C2",
+            effort="verify" if supplied else "XS", confidence=STATIC,
+            provider=("the shim answers an Android dlopen of libGLESv2.so with OH's libGLESv3.so, which carries GLES 3 "
+                      "as Android's libGLESv2.so does" if supplied else
+                      "an Android dlopen of libGLESv2.so reaches OH's NDK library, where a GLES 3 lookup returns null"),
+            provider_source=model.get("gles3_by_handle"),
+            app_evidence="; ".join(f"{lib} names {len(gles3[lib])} without importing them ("
+                                   + ", ".join(gles3[lib][:3]) + (" ..." if len(gles3[lib]) > 3 else "") + ")"
+                                   for lib in names[:4]),
+            libraries=names,
+            symptoms=["do_dlsym failed: Symbol not found: gl"],
+            seen_blocking=["aaaaxy (after r86: Ebiten stopped on \"gl: glGenVertexArrays is missing\", looked up in "
+                           "libGLESv2.so's handle)"],
+            shim="answer an Android dlopen of libGLESv2.so with OH's libGLESv3.so",
         ))
     # ANativeWindow_setBuffersGeometry(window, 0, 0, format): the window's own size, on Android. SDL
     # sets its EGL config's visual that way before creating its surface, as the NDK documents.
@@ -3290,6 +3368,7 @@ def build_map(
             + own_intent_rows(scan, contracts.own_intent_model(westlake_root))
             + post_create_rows(scan, contracts.launch_start_model(westlake_root))
             + permission_request_rows(scan, contracts.permission_request_model(westlake_root))
+            + host_permission_rows(facts, contracts.host_permission_model(westlake_root), westlake_root)
             + ce_storage_rows(scan, contracts.ce_storage_model(westlake_root))
             + feature_rows(scan, contracts.feature_claims_model(westlake_root), aosp_services, westlake_services)
             + vulkan_feature_rows(scan, contracts.feature_claims_model(westlake_root), runtime_libraries)

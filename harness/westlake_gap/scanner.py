@@ -368,6 +368,26 @@ def egl_lookups(raw: bytes, imported: set[str]) -> dict[str, Any]:
     return {"egl_lookups": names} if names else {}
 
 
+_GLES3_NAMES = tuple(json.loads((Path(__file__).parent / "data" / "gles3-core-entry-points.json").read_text())["names"])
+# Longest first, so a name is never cut short by a shorter one it starts with (glGetString, glGetStringi).
+_GLES3_PATTERN = re.compile(rb"(" + b"|".join(re.escape(name.encode()) for name in
+                                              sorted(_GLES3_NAMES, key=len, reverse=True)) + rb")(?![A-Z0-9_])")
+
+
+def gles3_lookups(raw: bytes, imported: set[str]) -> dict[str, Any]:
+    """GLES 3 core entry points a library names as a string without importing them: a GL loader
+    that dlopens libGLESv2.so and looks each one up by handle, as Android's libGLESv2.so carries
+    them. Go packs its strings without terminators, so a name followed by more letters still
+    counts, but not one an upper-case letter, digit or underscore continues: glDrawBuffers inside
+    glDrawBuffersEXT is not a lookup of it. Each "gl" starts a candidate, as the next packed
+    string may begin right after a name."""
+    if b"gl" not in raw:
+        return {}
+    found = {match.decode() for match in _GLES3_PATTERN.findall(raw.replace(b"gl", b"\x00gl"))}
+    names = sorted(found - imported)
+    return {"gles3_lookups": names} if names else {}
+
+
 def vm_lookups(raw: bytes, imported: set[str], exported: set[str]) -> dict[str, Any]:
     """How a library finds the process's JavaVM without being handed one: JNI_GetCreatedJavaVMs,
     imported (the NDK's libnativehelper, API 31) or named for a dlsym (Element X's Rust library:
@@ -745,6 +765,7 @@ def read_elf(
             **art_internal_names(raw),
             **signal_lookups(raw, set(undefined) | set(undefined_weak)),
             **egl_lookups(raw, set(undefined) | set(undefined_weak)),
+            **gles3_lookups(raw, set(undefined) | set(undefined_weak)),
             **vm_lookups(raw, set(undefined) | set(undefined_weak), set(exports or ())),
             **bionic_static_mutexes(raw),
             **thread_handles_in_argument(raw),
