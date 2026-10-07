@@ -135,7 +135,7 @@ def _dump_frame(match: re.Match) -> dict:
 
 # musl's allocator entry points, and get_meta, mallocng's check of the chunk it is handed: Fennec's
 # libxul freed with musl's free what libmozglue's mozjemalloc had allocated, and faulted there.
-_ALLOCATOR = r"(__libc_malloc_impl|__libc_free|malloc|free|realloc|calloc|alloc_|get_meta)"
+_ALLOCATOR = r"(__libc_malloc_impl|__libc_malloc|__libc_realloc|__libc_calloc|__libc_free|malloc|free|realloc|calloc|alloc_|get_meta)"
 
 
 def _is_app(frame: dict) -> bool:

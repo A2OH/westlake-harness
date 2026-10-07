@@ -769,6 +769,25 @@ def thread_start_model(westlake_root: Path) -> dict[str, Any]:
                       if ordered else None}
 
 
+def passwd_lookup_model(westlake_root: Path) -> dict[str, Any]:
+    """Which of getpwnam, getpwuid, getgrnam and getgrgid the bionic shim answers with a result per
+    thread, as Bionic does: a definition whose body hands the lookup to a helper that keeps the
+    thread's buffer under a pthread key. Defined in the preloaded shim, it is every caller's."""
+    path = westlake_root / "framework/webview-shim/webview_bionic_shim.c"
+    if not path.exists():
+        return {"per_thread": [], "source": None}
+    text = _strip_java_comments(path.read_text(errors="replace"))
+    keyed = "pthread_getspecific(" in text and "pthread_key_create(" in text
+    found, first = [], None
+    for name in ("getpwnam", "getpwuid", "getgrnam", "getgrgid"):
+        match = re.search(rf"^struct\s+(?:passwd|group)\s*\*\s*{name}\s*\(", text, re.M)
+        if match and keyed and f"{name}_r" in text and "westlake_thread_" in _braced_block(text, match.start()):
+            found.append(name)
+            first = first if first is not None else match.start()
+    return {"per_thread": found,
+            "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, first) + 1}" if found else None}
+
+
 def libc_constant_model(westlake_root: Path) -> dict[str, Any]:
     """Whether the bionic shim translates those constants, and for which callers.
 

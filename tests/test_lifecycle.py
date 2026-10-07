@@ -228,6 +228,12 @@ class Evidence(unittest.TestCase):
                                     + "#01 pc 00000000000d5b40 /system/lib/ld-musl-aarch64.so.1(__libc_free+24)(ab)\n"
                                     + "#02 pc 0000000002906cb0 /data/local/tmp/asx/lib/arm64-v8a/libxul.so\n")
         self.assertEqual(foreign["kind"], "heap")
+        # Material Files: musl's realloc under getgrgid, two threads sharing its static line buffer.
+        grown = evidence.cppcrash(head % "SIGSEGV(SEGV_MAPERR)"
+                                  + "#00 pc 00000000000d7e80 /system/lib/ld-musl-aarch64.so.1(__libc_realloc+552)(ab)\n"
+                                  + "#01 pc 000000000011a164 /system/lib/ld-musl-aarch64.so.1(getdelim+268)(ab)\n"
+                                  + "#02 pc 000000000003928c /data/local/tmp/asx/lib/arm64-v8a/libsyscall.so\n")
+        self.assertEqual(grown["kind"], "heap")
         self.assertIn("handed memory its heap never allocated", foreign["summary"])
         abort = evidence.cppcrash(head % "SIGABRT(SI_TKILL)"
                                   + "#00 pc 0000000000111344 /system/lib/ld-musl-aarch64.so.1(raise+384)(ab)\n"

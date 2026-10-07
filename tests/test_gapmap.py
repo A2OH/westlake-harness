@@ -1562,6 +1562,19 @@ static jstring Runtime_nativeLoad(JNIEnv* env, jclass clazz, jstring filename,
                                               gapmap.launcher_namespace_option(launcher))
         targets = rows[0]["launch_args"][1::2]
         self.assertEqual(targets, ["libc++_shared.so", "libeffect_plugin.so"])
+        # Duolingo: libduolingounity.so and libmain.so both carry the SONAME libmain.so, and the one
+        # listed first must not stand for the file libmain.so that libunity.so needs.
+        scan = {"inventory": {"elfs": [
+            {"name": "lib/arm64-v8a/libc++_shared.so", "soname": "libc++_shared.so", "needed": ["libc.so"]},
+            {"name": "lib/arm64-v8a/libduolingounity.so", "soname": "libmain.so", "needed": ["libc.so"]},
+            {"name": "lib/arm64-v8a/libmain.so", "soname": "libmain.so", "needed": ["libc++_shared.so"]},
+            {"name": "lib/arm64-v8a/libunity.so", "soname": "libunity.so", "needed": ["libmain.so"]}]}}
+        with tempfile.TemporaryDirectory(prefix="westlake-ns-") as temp:
+            launcher = Path(temp)
+            _write(launcher / "tools/probe_source_app.py", "parser.add_argument('--android-native-target', action='append')")
+            rows = gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True}, board,
+                                              gapmap.launcher_namespace_option(launcher))
+        self.assertEqual(rows[0]["launch_args"][1::2], ["libc++_shared.so", "libmain.so", "libunity.so"])
 
 
 class LaunchArgsCheck(unittest.TestCase):
@@ -2216,6 +2229,59 @@ class Interposition(unittest.TestCase):
         self.assertEqual(gapmap.interposition_rows(scan, self.RUNTIME, routed)[0]["verdict"], "supplied")
         self.assertEqual(gapmap.interposition_rows({"inventory": {"elfs": [scan["inventory"]["elfs"][1]]}},
                                                    self.RUNTIME, []), [])
+
+
+    def test_a_launcher_that_routes_by_name_gets_the_routing_as_launch_args(self) -> None:
+        """libgame.so needs libmain.so, whose exports libhwui.so also has: both are routed, so
+        libmain.so never loads in the default namespace through its dependent. libSDL2.so, which
+        libmain.so needs, is not one of them."""
+        scan = {"inventory": {"elfs": [
+            {"name": "lib/arm64-v8a/libmain.so", "needed": ["libSDL2.so", "libc.so"],
+             "exported_symbols": ["vmaCreateAllocator", "vmaCreateBuffer", "vmaDestroyBuffer"]},
+            {"name": "lib/arm64-v8a/libSDL2.so", "needed": ["libc.so"], "exported_symbols": ["SDL_Init"]},
+            {"name": "lib/arm64-v8a/libgame.so", "needed": ["libmain.so"], "exported_symbols": ["Java_a_b_c"]}]}}
+        option = {"present": True, "source": "manifest/tools/probe_source_app.py:200"}
+        row = gapmap.interposition_rows(scan, self.RUNTIME, [], option)[0]
+        self.assertEqual((row["verdict"], row["open_symbols"]), ("supplied", []))
+        self.assertEqual(row["launch_args"], ["--android-native-target", "libgame.so",
+                                              "--android-native-target", "libmain.so"])
+        self.assertEqual(gapmap.interposition_rows(scan, self.RUNTIME, [])[0]["launch_args"], [],
+                         "no launcher option: nothing is routed")
+        # An app whose written libraries need packaged ones (Chaquopy) is not routed: they would load in
+        # the Android namespace, away from the default namespace's copies.
+        written_needs = [{"id": "load:written-needs-packaged", "launch_args": []}]
+        row = gapmap.interposition_rows(scan, self.RUNTIME, written_needs, option)[0]
+        self.assertEqual((row["verdict"], row["launch_args"]), ("missing", []))
+        self.assertIn("not routed", row["provider"])
+        # A library the app writes at run time cannot be named to the launcher.
+        written = {"inventory": {"elfs": [dict(scan["inventory"]["elfs"][0], origin="unpacked")]}}
+        row = gapmap.interposition_rows(written, self.RUNTIME, [], option)[0]
+        self.assertEqual((row["verdict"], row["launch_args"]), ("missing", []))
+
+
+class PasswdLookups(unittest.TestCase):
+    def test_a_static_result_is_a_risk_unless_the_shim_keeps_one_per_thread(self) -> None:
+        scan = {"inventory": {"elfs": [
+            {"name": "lib/arm64-v8a/libsyscall.so", "undefined_symbols": ["getgrgid", "getpwuid@LIBC", "open"]},
+            {"name": "lib/arm64-v8a/libplain.so", "undefined_symbols": ["open"]}]}}
+        row = gapmap.passwd_lookup_rows(scan, {"per_thread": [], "source": None})[0]
+        self.assertEqual((row["verdict"], row["open_symbols"], row["libraries"]),
+                         ("missing", ["getgrgid", "getpwuid"], ["libsyscall.so"]))
+        row = gapmap.passwd_lookup_rows(scan, {"per_thread": ["getgrgid", "getpwuid"], "source": "shim.c:1"})[0]
+        self.assertEqual(row["verdict"], "supplied")
+        self.assertEqual(gapmap.passwd_lookup_rows({"inventory": {"elfs": [scan["inventory"]["elfs"][1]]}}, {}), [])
+
+    def test_the_model_reads_the_shims_per_thread_definitions(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            shim = Path(temp) / "framework/webview-shim/webview_bionic_shim.c"
+            shim.parent.mkdir(parents=True)
+            shim.write_text("static void *key(void) { pthread_key_create(0, 0); return pthread_getspecific(0); }\n"
+                            "static int by_gid(void) { return getgrgid_r(0, 0, 0, 0, 0); }\n"
+                            "struct group *getgrgid(gid_t gid)\n{\n    return westlake_thread_gr(&gid, by_gid);\n}\n"
+                            "struct passwd *getpwuid(uid_t uid)\n{\n    return real(uid);\n}\n")
+            model = contracts.passwd_lookup_model(Path(temp))
+            self.assertEqual(model["per_thread"], ["getgrgid"])
+            self.assertTrue(model["source"].endswith(":3"))
 
 
 class TaskRoot(unittest.TestCase):
