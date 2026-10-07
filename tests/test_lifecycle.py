@@ -86,6 +86,29 @@ class HostPages(unittest.TestCase):
                                  "no bare host: every page")
 
 
+    def test_the_navigation_handle_is_left_out(self) -> None:
+        """Over the black page alone the navigation bar's handle is light; over cclauncher's
+        transparent window it is dark, and nothing else of cclauncher shows."""
+        try:
+            from PIL import Image
+        except ImportError:
+            self.skipTest("Pillow is required")
+        import tempfile
+        from unittest import mock
+        from westlake_gap import lifecycle
+        with tempfile.TemporaryDirectory() as temp:
+            black = Path(temp) / "host-screen-blank.png"
+            page = Image.new("L", (60, 90), 0)
+            page.paste(67, (24, 89, 36, 90))
+            page.save(black)
+            shot = Path(temp) / "cclauncher.jpeg"
+            screen = Image.new("RGB", (1200, 1920), (0, 0, 0))
+            screen.paste((29, 29, 29), (475, 1895, 725, 1907))
+            screen.save(shot, quality=95)
+            with mock.patch.object(lifecycle, "_HOST_SCREENS", [black]):
+                self.assertEqual(lifecycle.screen_state(shot), "host")
+
+
 class FirstBlocker(unittest.TestCase):
     def test_survived_upcall_miss_is_not_the_blocker(self) -> None:
         from westlake_gap import lifecycle

@@ -272,13 +272,13 @@ _HOST_SCREENS = sorted((Path(__file__).parent / "data").glob("host-screen*.png")
 
 def _thumbnail(image: Path) -> list[int]:
     from PIL import Image
-    shot = Image.open(image).convert("L").resize((60, 96)).crop((0, 6, 60, 96))
+    shot = Image.open(image).convert("L").resize((60, 96)).crop((0, 6, 60, 94))
     return list(getattr(shot, "get_flattened_data", shot.getdata)())
 
 
 def _page(path: Path) -> list[int]:
     from PIL import Image
-    page = Image.open(path).convert("L")
+    page = Image.open(path).convert("L").crop((0, 0, 60, 88))
     return list(getattr(page, "get_flattened_data", page.getdata)())
 
 
@@ -318,8 +318,9 @@ def screen_state(image: Path, hosts: list[Path] | None = None) -> str | None:
     The log can reach "drawing" and the app still not be on screen: it drew, then died or
     finished (Unciv, Shattered Pixel Dungeon, Fossify Messages). Four apps were scored "drawing"
     that way before the screenshot was read. The comparison crops the status bar, whose clock
-    changes; host screenshots match the reference exactly, app screens differ by 7 or more on
-    average. Draw Anywhere's toolbar is an overlay over whatever is underneath, the host here: the
+    changes, and the navigation bar's handle, whose shade follows the window under it (light over
+    the black page alone, dark over cclauncher's transparent window there); host screenshots match
+    the reference exactly, app screens differ by 7 or more on average. Draw Anywhere's toolbar is an overlay over whatever is underneath, the host here: the
     average barely moves, but a band of pixels differs from the host by far more than JPEG noise.
     """
     try:
