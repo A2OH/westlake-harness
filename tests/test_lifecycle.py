@@ -53,6 +53,39 @@ class HostPages(unittest.TestCase):
                 self.assertEqual(lifecycle.screen_state(shot), "app", "the first page alone does not know it")
 
 
+    def test_a_run_is_read_against_its_own_host_page(self) -> None:
+        """A dark app (spacebeam) is closest to the black page, as that page with something over it.
+        r87 ran over the first page, which its bare host screenshots show."""
+        try:
+            from PIL import Image
+        except ImportError:
+            self.skipTest("Pillow is required")
+        import tempfile
+        from unittest import mock
+        from westlake_gap import lifecycle
+        with tempfile.TemporaryDirectory() as temp:
+            black = Path(temp) / "host-screen-blank.png"
+            Image.new("L", (60, 90), 0).save(black)
+            first = Image.new("L", (60, 96), 0)
+            first.paste(Image.open(lifecycle._HOST_SCREEN).convert("L"), (0, 6))
+            bare = Path(temp) / "bare.jpeg"
+            first.resize((1200, 1920)).convert("RGB").save(bare, quality=95)
+            dark = Path(temp) / "dark.jpeg"
+            shot = Image.new("RGB", (1200, 1920), (0, 0, 0))
+            shot.paste((200, 200, 200), (100, 600, 400, 660))
+            shot.save(dark, quality=95)
+            with mock.patch.object(lifecycle, "_HOST_SCREENS", [lifecycle._HOST_SCREEN, black]):
+                self.assertEqual(lifecycle.screen_state(dark), "partial", "against every page")
+                hosts = lifecycle.run_host_screens([bare, dark])
+                self.assertEqual(hosts, [lifecycle._HOST_SCREEN])
+                self.assertEqual(lifecycle.screen_state(dark, hosts), "app")
+                over_black = Path(temp) / "black.jpeg"
+                Image.new("RGB", (1200, 1920), (0, 0, 0)).save(over_black, quality=95)
+                self.assertEqual(lifecycle.run_host_screens([over_black, dark]), [black])
+                self.assertEqual(lifecycle.run_host_screens([dark]), [lifecycle._HOST_SCREEN, black],
+                                 "no bare host: every page")
+
+
 class FirstBlocker(unittest.TestCase):
     def test_survived_upcall_miss_is_not_the_blocker(self) -> None:
         from westlake_gap import lifecycle

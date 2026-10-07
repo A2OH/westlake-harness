@@ -270,10 +270,50 @@ _HOST_SCREEN = Path(__file__).parent / "data" / "host-screen.png"
 _HOST_SCREENS = sorted((Path(__file__).parent / "data").glob("host-screen*.png"))
 
 
-def screen_state(image: Path) -> str | None:
+def _thumbnail(image: Path) -> list[int]:
+    from PIL import Image
+    shot = Image.open(image).convert("L").resize((60, 96)).crop((0, 6, 60, 96))
+    return list(getattr(shot, "get_flattened_data", shot.getdata)())
+
+
+def _page(path: Path) -> list[int]:
+    from PIL import Image
+    page = Image.open(path).convert("L")
+    return list(getattr(page, "get_flattened_data", page.getdata)())
+
+
+def _against(pixels: list[int], page: list[int]) -> str:
+    diffs = [abs(x - y) for x, y in zip(pixels, page)]
+    if sum(diffs) / len(diffs) >= 2.0:
+        return "app"
+    # Resampling and JPEG noise stay under 32 here (a round trip of the reference reaches 26).
+    return "partial" if sum(1 for d in diffs if d > 32) >= 8 else "host"
+
+
+def run_host_screens(images: list[Path]) -> list[Path]:
+    """The host page a run's screenshots were taken over: the one that most of them show bare. A dark
+    app is close to the black page (spacebeam's screen differs from it by 0.15 on average), so on the
+    grey page's runs it would read as that page with something over it. With no screenshot of a bare
+    host in the run, every page stays a candidate."""
+    try:
+        import PIL  # noqa: F401
+    except ImportError:
+        return _HOST_SCREENS
+    pages = {path: _page(path) for path in _HOST_SCREENS}
+    bare = dict.fromkeys(pages, 0)
+    for image in images:
+        if image.exists():
+            pixels = _thumbnail(image)
+            for path, page in pages.items():
+                bare[path] += _against(pixels, page) == "host"
+    most = max(bare.values(), default=0)
+    return [path for path in _HOST_SCREENS if bare[path] == most] if most else _HOST_SCREENS
+
+
+def screen_state(image: Path, hosts: list[Path] | None = None) -> str | None:
     """'host' when the screenshot is the board's launcher host screen, not the app; 'partial' when
     it is the host screen with the app's content over part of it; else 'app'. The host screen is
-    whichever of the host's pages the screenshot is closest to.
+    whichever of the host's pages (hosts, by default every one) the screenshot is closest to.
 
     The log can reach "drawing" and the app still not be on screen: it drew, then died or
     finished (Unciv, Shattered Pixel Dungeon, Fossify Messages). Four apps were scored "drawing"
@@ -283,20 +323,15 @@ def screen_state(image: Path) -> str | None:
     average barely moves, but a band of pixels differs from the host by far more than JPEG noise.
     """
     try:
-        from PIL import Image
+        import PIL  # noqa: F401
     except ImportError:
         return None
-    if not image.exists() or not _HOST_SCREENS:
+    hosts = _HOST_SCREENS if hosts is None else hosts
+    if not image.exists() or not hosts:
         return None
-    shot = Image.open(image).convert("L").resize((60, 96)).crop((0, 6, 60, 96))
-    get = lambda im: list(getattr(im, "get_flattened_data", im.getdata)())
-    pixels = get(shot)
-    diffs = min(([abs(x - y) for x, y in zip(pixels, get(Image.open(ref).convert("L")))] for ref in _HOST_SCREENS),
-                key=sum)
-    if sum(diffs) / len(diffs) >= 2.0:
-        return "app"
-    # Resampling and JPEG noise stay under 32 here (a round trip of the reference reaches 26).
-    return "partial" if sum(1 for d in diffs if d > 32) >= 8 else "host"
+    pixels = _thumbnail(image)
+    page = min((_page(path) for path in hosts), key=lambda page: sum(abs(x - y) for x, y in zip(pixels, page)))
+    return _against(pixels, page)
 
 
 def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str | None = None,
@@ -420,10 +455,11 @@ def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str 
 
 def score_paths(paths: list[Path]) -> list[Score]:
     scores = []
+    hosts = run_host_screens([path.with_suffix(".jpeg") for path in paths])
     for path in sorted(paths):
         text = path.read_text(errors="replace")
         s = score(path.stem, text)
-        s.screen = screen_state(path.with_suffix(".jpeg"))
+        s.screen = screen_state(path.with_suffix(".jpeg"), hosts)
         if s.screen == "host" and s.rung_name == "drawing":
             # The screenshot decides: it drew, and is no longer on screen.
             s.rung, s.rung_name, s.blocking = RUNGS.index("view"), "view", True
