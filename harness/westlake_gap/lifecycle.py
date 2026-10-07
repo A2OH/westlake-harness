@@ -472,6 +472,14 @@ def score_paths(paths: list[Path]) -> list[Score]:
         add_evidence(s, text, maps.read_text(errors="replace") if maps.exists() else None,
                      dump.read_text(errors="replace") if dump.exists() else None,
                      hilog.read_text(errors="replace") if hilog.exists() else None)
+        if s.screen in ("app", "partial") and s.rung_name != "drawing" and (s.blocker is None or not s.blocking):
+            # The screenshot shows the app's content and nothing stopped it: it drew, and its logs fell
+            # short of saying so. aaaaxy's Go runtime sends its output to hilog, and in r88 its hilog
+            # carried neither the adapter's first frame nor its timeout, among 494 lines of Go's own.
+            s.rung, s.rung_name, s.blocking = RUNGS.index("drawing"), "drawing", False
+            if s.anomaly is None:
+                s.anomaly = ("the screenshot shows the app, but its logs stop before the activity drew: "
+                             "neither the log nor the hilog reported a first frame")
         scores.append(s)
     return scores
 
