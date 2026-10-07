@@ -812,14 +812,14 @@
   {
    "app": "clauncher",
    "corpus": "r86",
-   "row": null,
+   "row": "wm:show-wallpaper",
    "symptom": "after r86, with LauncherApps answered: its home screen draws in a transparent window with windowShowWallpaper, over the screen below, as OH has no wallpaper behind an app's window",
    "fixed_in": null
   },
   {
    "app": "cclauncher",
    "corpus": "r86",
-   "row": null,
+   "row": "wm:show-wallpaper",
    "symptom": "after r86, with LauncherApps answered: nothing visible in its transparent windowShowWallpaper window, the screen below showing through",
    "fixed_in": null
   }
