@@ -2198,6 +2198,44 @@ def thread_handle_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict
     )]
 
 
+PASSWD_LOOKUPS = ("getpwnam", "getpwuid", "getgrnam", "getgrgid")
+
+
+def passwd_lookup_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """Libraries that call getpwnam, getpwuid, getgrnam or getgrgid. Bionic keeps their result in the
+    calling thread's TLS; musl keeps one static result, and a static line buffer that getdelim
+    reallocates while it reads /etc/group, for every thread. Two threads looking up at once corrupt
+    musl's heap: Material Files' poller thread died in realloc under getgrgid in a third of its
+    launches."""
+    found: dict[str, set[str]] = {}
+    for elf in ohresolve.target_elfs(scan):
+        names = {n.split("@")[0] for n in elf.get("undefined_symbols", []) + elf.get("undefined_weak_symbols", [])}
+        used = names & set(PASSWD_LOOKUPS)
+        if used:
+            found[elf.get("soname") or elf["name"].rsplit("/", 1)[-1]] = used
+    if not found:
+        return []
+    used = sorted(set().union(*found.values()))
+    open_ = [name for name in used if name not in set(model.get("per_thread") or [])]
+    return [_row(
+        "native-symbols", "abi:passwd-group-static-result",
+        f"passwd and group lookups with one result for all threads ({', '.join(used)}: "
+        f"{', '.join(sorted(found)[:4])}" + (" ..." if len(found) > 4 else "") + ")",
+        oh_touchpoint="OH musl: getpw*/getgr* return a static result read through a static line buffer, shared "
+                      "by every thread (Bionic keeps both per thread)",
+        verdict="missing" if open_ else "supplied", shim_class="C2", effort="S" if open_ else "verify",
+        confidence=STATIC, open_symbols=open_,
+        provider=("the bionic shim answers an Android caller through musl's _r function into a buffer kept per "
+                  "thread" if not open_ else "musl's: one result and one line buffer for every thread"),
+        provider_source=model.get("source"),
+        app_evidence="; ".join(f"{name}: " + ", ".join(sorted(calls)) for name, calls in sorted(found.items())[:6])
+                     + " (a risk: whether two threads look up at once is not seen)",
+        libraries=sorted(found), crash_symbols=r"^(getpw|getgr|__getpw|__getgr|getdelim)",
+        seen_blocking=["files (r83, and a test after r87: its poller thread died in musl's realloc under getgrgid)"],
+        shim="answer an Android caller through the _r function into a buffer kept per thread, as Bionic does",
+    )]
+
+
 def native_upcall_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
     """One row per library that calls back into Java: what it names, and what the runtime lacks."""
     rows = []
@@ -3560,6 +3598,7 @@ def build_map(
             + signal_abi_rows(scan, contracts.signal_abi_model(westlake_root))
             + static_mutex_rows(scan, contracts.static_mutex_model(westlake_root))
             + thread_handle_rows(scan, contracts.thread_start_model(westlake_root))
+            + passwd_lookup_rows(scan, contracts.passwd_lookup_model(westlake_root))
             + bionic_tls_rows(scan)
             + security_rows(scan, contracts.keystore_model(westlake_root))
             + webview_rows(scan, webview_process_model(aosp_root, westlake_root))

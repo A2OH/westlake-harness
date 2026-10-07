@@ -2246,6 +2246,31 @@ class Interposition(unittest.TestCase):
         self.assertEqual((row["verdict"], row["launch_args"]), ("missing", []))
 
 
+class PasswdLookups(unittest.TestCase):
+    def test_a_static_result_is_a_risk_unless_the_shim_keeps_one_per_thread(self) -> None:
+        scan = {"inventory": {"elfs": [
+            {"name": "lib/arm64-v8a/libsyscall.so", "undefined_symbols": ["getgrgid", "getpwuid@LIBC", "open"]},
+            {"name": "lib/arm64-v8a/libplain.so", "undefined_symbols": ["open"]}]}}
+        row = gapmap.passwd_lookup_rows(scan, {"per_thread": [], "source": None})[0]
+        self.assertEqual((row["verdict"], row["open_symbols"], row["libraries"]),
+                         ("missing", ["getgrgid", "getpwuid"], ["libsyscall.so"]))
+        row = gapmap.passwd_lookup_rows(scan, {"per_thread": ["getgrgid", "getpwuid"], "source": "shim.c:1"})[0]
+        self.assertEqual(row["verdict"], "supplied")
+        self.assertEqual(gapmap.passwd_lookup_rows({"inventory": {"elfs": [scan["inventory"]["elfs"][1]]}}, {}), [])
+
+    def test_the_model_reads_the_shims_per_thread_definitions(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            shim = Path(temp) / "framework/webview-shim/webview_bionic_shim.c"
+            shim.parent.mkdir(parents=True)
+            shim.write_text("static void *key(void) { pthread_key_create(0, 0); return pthread_getspecific(0); }\n"
+                            "static int by_gid(void) { return getgrgid_r(0, 0, 0, 0, 0); }\n"
+                            "struct group *getgrgid(gid_t gid)\n{\n    return westlake_thread_gr(&gid, by_gid);\n}\n"
+                            "struct passwd *getpwuid(uid_t uid)\n{\n    return real(uid);\n}\n")
+            model = contracts.passwd_lookup_model(Path(temp))
+            self.assertEqual(model["per_thread"], ["getgrgid"])
+            self.assertTrue(model["source"].endswith(":3"))
+
+
 class TaskRoot(unittest.TestCase):
     def test_a_constant_task_answer_is_a_gap_for_apps_that_ask(self) -> None:
         from westlake_gap.contracts import activity_client_model
