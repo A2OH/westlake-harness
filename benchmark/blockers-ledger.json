@@ -765,14 +765,14 @@
    "corpus": "r86",
    "row": "load:interposed-by-runtime",
    "symptom": "SIGSEGV in libhwui.so: its library's calls to its own exported functions bind to libhwui's copies (341 shared symbols); routed by hand, it runs",
-   "fixed_in": null
+   "fixed_in": "harness 84491af"
   },
   {
    "app": "supertuxkart",
    "corpus": "r86",
    "row": "load:interposed-by-runtime",
    "symptom": "SIGSEGV in musl's setjmp on SDL's thread: libmain.so's png_set_longjmp_fn bound to the runtime's libpng",
-   "fixed_in": null
+   "fixed_in": "harness 84491af"
   },
   {
    "app": "insigno",
@@ -822,6 +822,13 @@
    "row": "wm:show-wallpaper",
    "symptom": "after r86, with LauncherApps answered: nothing visible in its transparent windowShowWallpaper window, the screen below showing through",
    "fixed_in": null
+  },
+  {
+   "app": "files",
+   "corpus": "r83",
+   "row": "abi:passwd-group-static-result",
+   "symptom": "its poller thread (or an AsyncTask) died in musl's realloc, malloc or free under getgrgid, in about a third of its launches: another thread's lookup was reallocating musl's static line buffer",
+   "fixed_in": "06885ce"
   }
  ]
 }
