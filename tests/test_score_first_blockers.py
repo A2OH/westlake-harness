@@ -111,6 +111,19 @@ class RefusalScoring(unittest.TestCase):
                           "no refusal logged: a stall names nothing")
 
 
+class WallpaperScoring(unittest.TestCase):
+    def test_idle_over_the_host_with_a_wallpaper_launch_activity(self) -> None:
+        """cclauncher: LauncherApps answered, its main thread idle, and the host screen showing
+        through its transparent windowShowWallpaper window."""
+        rows = ROWS + [{"id": "wm:show-wallpaper", "verdict": "missing", "launch_activities": ["app.cclauncher.MainActivity"]}]
+        named = score.candidate_rows("stall", "main thread idle in its message loop at x", rows)
+        self.assertEqual([r["id"] for r in named], ["wm:show-wallpaper"])
+        settings = ROWS + [{"id": "wm:show-wallpaper", "verdict": "missing", "launch_activities": []}]
+        self.assertIsNone(score.candidate_rows("stall", "main thread idle in its message loop at x", settings),
+                          "only a launch activity that shows the wallpaper explains the first screen")
+        self.assertIsNone(score.candidate_rows("stall", "main thread waiting on a lock at x", rows))
+
+
 class DlsymScoring(unittest.TestCase):
     def test_a_name_a_lookup_by_handle_missed_is_named_by_the_row_listing_it(self) -> None:
         rows = ROWS + [{"id": "gl:gles3-by-handle", "verdict": "missing",

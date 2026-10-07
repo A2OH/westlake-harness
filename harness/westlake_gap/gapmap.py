@@ -2935,6 +2935,7 @@ def wallpaper_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
         provider="nothing is drawn under an Android window but the host's page: its transparent parts show that",
         app_evidence=(f"its launch activity {', '.join(short(a) for a in launch)} shows the wallpaper" if launch else
                       f"{len(activities)} of its activities show the wallpaper"),
+        launch_activities=launch,
         seen_blocking=["cclauncher, clauncher (after r86: their transparent windows showed the host's page)"],
         shim="draw OH's wallpaper under a window that asks for it (FLAG_SHOW_WALLPAPER)",
     )]

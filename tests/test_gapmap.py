@@ -587,6 +587,7 @@ class ShowWallpaper(unittest.TestCase):
         rows = gapmap.wallpaper_rows(scan)
         self.assertEqual([(r["id"], r["verdict"], r["app_evidence"]) for r in rows],
                          [("wm:show-wallpaper", "missing", "its launch activity MainActivity shows the wallpaper")])
+        self.assertEqual(rows[0]["launch_activities"], ["app.clauncher.MainActivity"])
         self.assertEqual(gapmap.wallpaper_rows({"apk": {"wallpaper_activities": []}}), [])
 
 
