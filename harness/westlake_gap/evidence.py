@@ -107,6 +107,7 @@ def main_thread(stderr: str) -> dict | None:
 
 
 _CPP_REASON = re.compile(r"^Reason:Signal:(\w+)\((\w+)\)@(?:0x)?([0-9a-fA-F]+)", re.M)
+_CPP_TIME = re.compile(r"^Timestamp:\d{4}-(\d\d-\d\d) (\d\d):(\d\d):(\d\d)\.(\d+)", re.M)
 _CPP_THREAD = re.compile(r"^Fault thread info:\s*\nTid:(\d+), Name:(.*)$", re.M)
 _CPP_FRAME = re.compile(r"^#(\d+) pc ([0-9a-f]+) (.*)$")
 # Westlake's runtime libraries: OH's dumper names the nearest exported symbol, which for these is
@@ -258,6 +259,24 @@ def cppcrash(text: str) -> dict | None:
 
 _SIGNAL_NAMES = {4: "SIGILL", 5: "SIGTRAP", 6: "SIGABRT", 7: "SIGBUS", 8: "SIGFPE", 11: "SIGSEGV"}
 _HILOG_TIME = re.compile(r"^\d\d-\d\d (\d\d):(\d\d):(\d\d)\.(\d+)\s+\d+\s+(\d+) ")
+_HILOG_STAMP = re.compile(r"^(\d\d-\d\d) (\d\d):(\d\d):(\d\d)\.(\d+)\s+\d+\s+\d+ ", re.M)
+
+
+def _stamp(match: re.Match) -> tuple[str, float]:
+    return match[1], int(match[2]) * 3600 + int(match[3]) * 60 + int(match[4]) + float("0." + match[5])
+
+
+def dump_predates_process(cppcrash_text: str, hilog: str) -> bool:
+    """Whether a crash dump was written before the process in the app's own hilog logged its first
+    line: the dump of an earlier process that had the same pid. A process logs before it dies, so its
+    own dump never comes first. Pids repeat within a corpus run, and the run looks dumps up by pid:
+    in r87, TikTok's launch (pid 9865) picked up the dump that PPSSPP's process, with the same pid,
+    had left 2 h 22 min earlier."""
+    written, started = _CPP_TIME.search(cppcrash_text), _HILOG_STAMP.search(hilog)
+    if written is None or started is None:
+        return False
+    (day, when), (start_day, start) = _stamp(written), _stamp(started)
+    return (day, when) < (start_day, start - 1)
 _PASSED_ON = re.compile(r"MUSL-SIGCHAIN: signal_chain_handler call usr sigaction for signal: (\d+)")
 _DFX_THREAD = re.compile(r"DFX_SignalHandler :: signo\((\d+)\), pid\(\d+\), processName\([^)]*\), threadName\(([^)]*)\)")
 

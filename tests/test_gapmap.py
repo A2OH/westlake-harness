@@ -557,6 +557,65 @@ class EngineSurface(unittest.TestCase):
                          (["window:engine-surface"], "sets a GLSurfaceView renderer"))
 
 
+class ShowWallpaper(unittest.TestCase):
+    def test_a_theme_that_shows_the_wallpaper(self) -> None:
+        """clauncher, cclauncher: their launch activities' themes inherit windowShowWallpaper."""
+        from westlake_gap import scanner
+
+        class Value:
+            def __init__(self, data, data_type=0x12):
+                self.data, self.data_type = data, data_type
+
+        class Entry:
+            def __init__(self, parent, items):
+                self.item = type("Complex", (), {"id_parent": parent, "items": items})()
+
+            def is_complex(self):
+                return True
+
+        styles = {0x7F110001: Entry(0x7F110002, []),                                   # AppTheme -> Base
+                  0x7F110002: Entry(0x0103005F, [(0x01010054, Value(0x7F080001, 0x01))]),  # Base -> Theme.Wallpaper.NoTitleBar
+                  0x7F110003: Entry(0x01030237, [(scanner._SHOW_WALLPAPER, Value(0xFFFFFFFF))]),
+                  0x7F110004: Entry(0x0103005E, [(scanner._SHOW_WALLPAPER, Value(0))])}  # says no, over a wallpaper theme
+        resources = type("Resources", (), {"get_res_configs": lambda self, rid: [(None, styles[rid])] if rid in styles else []})()
+        self.assertTrue(scanner._shows_wallpaper(resources, 0x7F110001, set()))
+        self.assertTrue(scanner._shows_wallpaper(resources, 0x7F110003, set()))
+        self.assertFalse(scanner._shows_wallpaper(resources, 0x7F110004, set()))
+        self.assertFalse(scanner._shows_wallpaper(resources, 0x01030237, set()), "Theme.Material.NoActionBar does not")
+        scan = {"apk": {"main_activities": ["app.clauncher.MainActivity"],
+                        "wallpaper_activities": ["app.clauncher.MainActivity", "app.clauncher.helper.FakeHomeActivity"]}}
+        rows = gapmap.wallpaper_rows(scan)
+        self.assertEqual([(r["id"], r["verdict"], r["app_evidence"]) for r in rows],
+                         [("wm:show-wallpaper", "missing", "its launch activity MainActivity shows the wallpaper")])
+        self.assertEqual(rows[0]["launch_activities"], ["app.clauncher.MainActivity"])
+        self.assertEqual(gapmap.wallpaper_rows({"apk": {"wallpaper_activities": []}}), [])
+
+
+class SurfaceViewOpacity(unittest.TestCase):
+    def test_an_engines_own_window_needs_marking_opaque(self) -> None:
+        """PPSSPP, routed: its SurfaceView's OH window blended alpha-0 frames with the host screen."""
+        gdx = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {"elfs": [
+            {"soname": "libgdx.so", "abi": "arm64-v8a"}], "launch_activity_chains": {}}}
+        own = {"own_surface": True, "evidence": "WindowSessionAdapter.java:557"}
+        rows = gapmap.engine_surface_rows(gdx, own)
+        self.assertEqual([(r["id"], r["verdict"]) for r in rows],
+                         [("window:engine-surface", "supplied"), ("window:surfaceview-opacity", "missing")])
+        rows = gapmap.engine_surface_rows(gdx, dict(own, opaque="WindowSessionAdapter.java:592"))
+        self.assertEqual(rows[1]["verdict"], "supplied")
+        self.assertEqual([r["id"] for r in gapmap.engine_surface_rows(gdx, {"own_surface": False})],
+                         ["window:engine-surface"], "a SurfaceView sharing its window has no window to mark")
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            # The window's own node marked opaque: no effect on the board, not counted.
+            _write(root / "framework/window/java/WindowSessionAdapter.java",
+                   "class W {\n    public static int attachSurfaceView(Object v, SurfaceControl blast) {\n"
+                   "        new SurfaceControl.Transaction().setOpaque(blast, true).apply();\n        return 0;\n    }\n}\n")
+            self.assertIsNone(gapmap.surfaceview_model(root, None, [])["opaque"])
+            _write(root / "framework/window/jni/oh_window_manager_client.cpp",
+                   "void f() {\n    wl_contentNode->SetSurfaceBufferOpaque(true);\n}\n")
+            self.assertEqual(gapmap.surfaceview_model(root, None, [])["opaque"], "oh_window_manager_client.cpp:2")
+
+
 class ObservedPath(unittest.TestCase):
     def test_engine_framework_natives_and_lookups(self) -> None:
         rows = [

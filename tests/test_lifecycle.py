@@ -28,6 +28,87 @@ class ScreenshotDecides(unittest.TestCase):
             self.assertEqual(lifecycle.screen_state(over), "partial")
 
 
+class HostPages(unittest.TestCase):
+    def test_any_of_the_hosts_pages_is_the_host_screen(self) -> None:
+        """The host's page went from a title and a keyboard control to an empty black page: the
+        records made with either are classified against the page they were made with."""
+        try:
+            from PIL import Image
+        except ImportError:
+            self.skipTest("Pillow is required")
+        import tempfile
+        from unittest import mock
+        from westlake_gap import lifecycle
+        with tempfile.TemporaryDirectory() as temp:
+            black = Path(temp) / "host-screen-blank.png"
+            Image.new("L", (60, 90), 0).save(black)
+            shot = Path(temp) / "black.jpeg"
+            Image.new("RGB", (1200, 1920), (0, 0, 0)).save(shot, quality=95)
+            app = Path(temp) / "app.jpeg"
+            Image.new("RGB", (1200, 1920), (20, 90, 200)).save(app)
+            with mock.patch.object(lifecycle, "_HOST_SCREENS", [lifecycle._HOST_SCREEN, black]):
+                self.assertEqual(lifecycle.screen_state(shot), "host")
+                self.assertEqual(lifecycle.screen_state(app), "app")
+            with mock.patch.object(lifecycle, "_HOST_SCREENS", [lifecycle._HOST_SCREEN]):
+                self.assertEqual(lifecycle.screen_state(shot), "app", "the first page alone does not know it")
+
+
+    def test_a_run_is_read_against_its_own_host_page(self) -> None:
+        """A dark app (spacebeam) is closest to the black page, as that page with something over it.
+        r87 ran over the first page, which its bare host screenshots show."""
+        try:
+            from PIL import Image
+        except ImportError:
+            self.skipTest("Pillow is required")
+        import tempfile
+        from unittest import mock
+        from westlake_gap import lifecycle
+        with tempfile.TemporaryDirectory() as temp:
+            black = Path(temp) / "host-screen-blank.png"
+            Image.new("L", (60, 90), 0).save(black)
+            first = Image.new("L", (60, 96), 0)
+            first.paste(Image.open(lifecycle._HOST_SCREEN).convert("L"), (0, 6))
+            bare = Path(temp) / "bare.jpeg"
+            first.resize((1200, 1920)).convert("RGB").save(bare, quality=95)
+            dark = Path(temp) / "dark.jpeg"
+            shot = Image.new("RGB", (1200, 1920), (0, 0, 0))
+            shot.paste((200, 200, 200), (100, 600, 400, 660))
+            shot.save(dark, quality=95)
+            with mock.patch.object(lifecycle, "_HOST_SCREENS", [lifecycle._HOST_SCREEN, black]):
+                self.assertEqual(lifecycle.screen_state(dark), "partial", "against every page")
+                hosts = lifecycle.run_host_screens([bare, dark])
+                self.assertEqual(hosts, [lifecycle._HOST_SCREEN])
+                self.assertEqual(lifecycle.screen_state(dark, hosts), "app")
+                over_black = Path(temp) / "black.jpeg"
+                Image.new("RGB", (1200, 1920), (0, 0, 0)).save(over_black, quality=95)
+                self.assertEqual(lifecycle.run_host_screens([over_black, dark]), [black])
+                self.assertEqual(lifecycle.run_host_screens([dark]), [lifecycle._HOST_SCREEN, black],
+                                 "no bare host: every page")
+
+
+    def test_the_navigation_handle_is_left_out(self) -> None:
+        """Over the black page alone the navigation bar's handle is light; over cclauncher's
+        transparent window it is dark, and nothing else of cclauncher shows."""
+        try:
+            from PIL import Image
+        except ImportError:
+            self.skipTest("Pillow is required")
+        import tempfile
+        from unittest import mock
+        from westlake_gap import lifecycle
+        with tempfile.TemporaryDirectory() as temp:
+            black = Path(temp) / "host-screen-blank.png"
+            page = Image.new("L", (60, 90), 0)
+            page.paste(67, (24, 89, 36, 90))
+            page.save(black)
+            shot = Path(temp) / "cclauncher.jpeg"
+            screen = Image.new("RGB", (1200, 1920), (0, 0, 0))
+            screen.paste((29, 29, 29), (475, 1895, 725, 1907))
+            screen.save(shot, quality=95)
+            with mock.patch.object(lifecycle, "_HOST_SCREENS", [black]):
+                self.assertEqual(lifecycle.screen_state(shot), "host")
+
+
 class FirstBlocker(unittest.TestCase):
     def test_survived_upcall_miss_is_not_the_blocker(self) -> None:
         from westlake_gap import lifecycle
@@ -199,6 +280,21 @@ class Evidence(unittest.TestCase):
         s = lifecycle.score("tiktok", text)
         lifecycle.add_evidence(s, text, None, self.DUMP)
         self.assertTrue(s.blocker.endswith(": a library constructor (INIT_ARRAY entry) is null: musl calls it, bionic skips it"))
+
+    def test_a_dump_older_than_the_process_is_another_processs(self) -> None:
+        """r87: TikTok's launch (pid 9865) picked up the dump that PPSSPP's process, with the same
+        pid, had left 2 h 22 min earlier."""
+        from westlake_gap import lifecycle
+        dump = self.DUMP.replace("Pid:6719\n", "Timestamp:2026-10-07 05:07:01.719\nPid:9865\n")
+        hilog = "10-07 07:29:35.406  9865  9865 I C00f00/AppSpawnX: Child process started, pid=<private>\n"
+        text = "kRegJNI loop done\n"
+        s = lifecycle.score("tiktok", text)
+        lifecycle.add_evidence(s, text, None, dump, hilog)
+        self.assertEqual((s.crash_dump, s.fatal), (None, 0))
+        # The process's own dump comes after its first line.
+        s = lifecycle.score("ppsspp", text)
+        lifecycle.add_evidence(s, text, None, dump, hilog.replace("07:29:35.406", "05:06:59.900"))
+        self.assertEqual((s.blocker_category, s.fatal), ("native-crash", 1))
 
     def test_a_signal_only_the_hilog_saw(self) -> None:
         from westlake_gap import evidence, lifecycle

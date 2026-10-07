@@ -30,7 +30,9 @@ resumed and never drew (lifecycle's no-frame) needs a row for what holds its dra
 its own onPostCreate that the provider never called. A window whose buffer requests OH refused, with
 the host screen showing (lifecycle's window-buffers), needs window:buffers-geometry: the geometry an
 app library set on it in Android's terms. An app that stalled or never drew after dereferencing a null
-platform service in its log (lifecycle's null_services) is named by that service's row too.
+platform service in its log (lifecycle's null_services) is named by that service's row too. One idle
+on the host screen whose launch activity shows the wallpaper is named by wm:show-wallpaper: its
+transparent window is up, with nothing but the host's page behind it.
 
 Usage: score_first_blockers.py <lifecycle.json> <map-root> [<map-root> ...] [--out report.json]
 """
@@ -150,6 +152,12 @@ def candidate_rows(category, blocker, rows, cause=None, finished=None, dump=None
                                                              for refusal in refusals or [])]
         if named:
             return named + ([r for r in rows if r["id"] == "am:post-create"] if category == "no-frame" else [])
+    # Idle on the host screen, with a launch activity that shows the wallpaper: its window is up and
+    # transparent, and nothing but the host's page is behind it (the launchers after r86).
+    if category == "stall" and "idle in its message loop" in blocker:
+        wallpaper = [r for r in rows if r["id"] == "wm:show-wallpaper" and r.get("launch_activities")]
+        if wallpaper:
+            return wallpaper
     key = platform_key(category, blocker)
     if key is None:
         # An app exception that a row lists among the symptoms of its gap: MuseKit's uninitialized
