@@ -7,6 +7,8 @@ env.sh
 *.jar
 *.jpeg
 *.png
+# The classifier's references for the host's pages (lifecycle.screen_state).
+!harness/westlake_gap/data/host-screen*.png
 out/
 scratch/
 __pycache__/
