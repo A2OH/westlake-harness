@@ -2424,7 +2424,12 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
     # The graph is by DT_NEEDED name (the SONAME), but the launcher routes files by name, and a name it
     # cannot find stops the launch: TikTok's libeffect_plugin.so is libeffect.so, and r77 and r82
     # never launched it ("Android namespace target is not a pinned APK DSO").
+    # A file's own name first: Duolingo packages libmain.so and libduolingounity.so, both with the
+    # SONAME libmain.so, and its libunity.so needs the file libmain.so.
     files: dict[str, str] = {}
+    for elf in packaged:
+        base = elf["name"].rsplit("/", 1)[-1]
+        files[base] = base
     for elf in packaged:
         base = elf["name"].rsplit("/", 1)[-1]
         files.setdefault(elf.get("soname") or base, base)

@@ -1562,6 +1562,19 @@ static jstring Runtime_nativeLoad(JNIEnv* env, jclass clazz, jstring filename,
                                               gapmap.launcher_namespace_option(launcher))
         targets = rows[0]["launch_args"][1::2]
         self.assertEqual(targets, ["libc++_shared.so", "libeffect_plugin.so"])
+        # Duolingo: libduolingounity.so and libmain.so both carry the SONAME libmain.so, and the one
+        # listed first must not stand for the file libmain.so that libunity.so needs.
+        scan = {"inventory": {"elfs": [
+            {"name": "lib/arm64-v8a/libc++_shared.so", "soname": "libc++_shared.so", "needed": ["libc.so"]},
+            {"name": "lib/arm64-v8a/libduolingounity.so", "soname": "libmain.so", "needed": ["libc.so"]},
+            {"name": "lib/arm64-v8a/libmain.so", "soname": "libmain.so", "needed": ["libc++_shared.so"]},
+            {"name": "lib/arm64-v8a/libunity.so", "soname": "libunity.so", "needed": ["libmain.so"]}]}}
+        with tempfile.TemporaryDirectory(prefix="westlake-ns-") as temp:
+            launcher = Path(temp)
+            _write(launcher / "tools/probe_source_app.py", "parser.add_argument('--android-native-target', action='append')")
+            rows = gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True}, board,
+                                              gapmap.launcher_namespace_option(launcher))
+        self.assertEqual(rows[0]["launch_args"][1::2], ["libc++_shared.so", "libmain.so", "libunity.so"])
 
 
 class LaunchArgsCheck(unittest.TestCase):
