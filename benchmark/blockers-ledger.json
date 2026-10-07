@@ -829,6 +829,13 @@
    "row": "abi:passwd-group-static-result",
    "symptom": "its poller thread (or an AsyncTask) died in musl's realloc, malloc or free under getgrgid, in about a third of its launches: another thread's lookup was reallocating musl's static line buffer",
    "fixed_in": "06885ce"
+  },
+  {
+   "app": "spacebeam",
+   "corpus": "r88",
+   "row": "window:engine-surface",
+   "symptom": "its GLSurfaceView, in an OH window of its own, shows nothing while its GL thread swaps frames: the screen has been black since r77, which the host's light page counted as drawing; a SurfaceView behind its activity's window, or its background layer, covers the frames",
+   "fixed_in": null
   }
  ]
 }
