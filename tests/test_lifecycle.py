@@ -109,6 +109,26 @@ class HostPages(unittest.TestCase):
                 self.assertEqual(lifecycle.screen_state(shot), "host")
 
 
+class ScreenshotConfirms(unittest.TestCase):
+    def test_an_app_on_screen_whose_logs_fell_short_drew(self) -> None:
+        """aaaaxy (r88): its log stops at bind, Go's output goes to hilog, and its hilog carried no
+        first frame; the screenshot shows its game."""
+        import tempfile
+        from unittest import mock
+        from westlake_gap import lifecycle
+        with tempfile.TemporaryDirectory() as temp:
+            log = Path(temp) / "aaaaxy.stderr"
+            log.write_text("kRegJNI loop done\n[DIRECT-LAUNCH] bind done sBindAppDone=true\n")
+            with mock.patch.object(lifecycle, "run_host_screens", return_value=[]), \
+                    mock.patch.object(lifecycle, "screen_state", return_value="app"):
+                s = lifecycle.score_paths([log])[0]
+            self.assertEqual((s.rung_name, s.blocking), ("drawing", False))
+            self.assertIn("the screenshot shows the app", s.anomaly)
+            with mock.patch.object(lifecycle, "run_host_screens", return_value=[]), \
+                    mock.patch.object(lifecycle, "screen_state", return_value="host"):
+                self.assertEqual(lifecycle.score_paths([log])[0].rung_name, "bound", "the host screen: nothing drew")
+
+
 class FirstBlocker(unittest.TestCase):
     def test_survived_upcall_miss_is_not_the_blocker(self) -> None:
         from westlake_gap import lifecycle
