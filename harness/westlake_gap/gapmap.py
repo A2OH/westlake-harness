@@ -1289,8 +1289,34 @@ def apply_probe_results(gap_map: dict[str, Any], results: dict[str, Any]) -> Non
                 row["provider"] = result["finding"]
 
 
+def packaged_dependents(scan: dict[str, Any], names: list[str]) -> list[str]:
+    """The packaged libraries among names, and every packaged library whose DT_NEEDED graph reaches
+    one, as file names: what a launcher routing names to the Android namespace must route together,
+    or a dependent left in the default namespace loads a second copy of the routed library there."""
+    packaged = ohresolve.packaged_elfs(scan)
+    files: dict[str, str] = {}
+    for elf in packaged:
+        base = elf["name"].rsplit("/", 1)[-1]
+        files[base] = base
+    for elf in packaged:
+        base = elf["name"].rsplit("/", 1)[-1]
+        files.setdefault(elf.get("soname") or base, base)
+    needed = {elf["name"].rsplit("/", 1)[-1]: {files.get(name, name) for name in elf.get("needed", [])}
+              for elf in packaged}
+    reach = {name for name in names if name in needed}
+    grew = True
+    while grew:
+        grew = False
+        for name, deps in needed.items():
+            if name not in reach and deps & reach:
+                reach.add(name)
+                grew = True
+    return sorted(reach)
+
+
 def interposition_rows(scan: dict[str, Any], runtime: dict[str, Any] | None,
-                       rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+                       rows: list[dict[str, Any]],
+                       namespace_option: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     """App libraries exporting symbols a runtime library also exports.
 
     Android shows an app's code only the NDK's public libraries; Westlake's runtime libraries are
@@ -1300,6 +1326,12 @@ def interposition_rows(scan: dict[str, Any], runtime: dict[str, Any] | None,
     Memory Allocator calls ran in libhwui.so's copy and crashed in CalcAllocationParams. A copy of
     HarfBuzz, FreeType or libpng in an app meets the runtime's libharfbuzz_ng, libft2 and libpng the
     same way. A library routed to the Android namespace does not see them.
+
+    With a launcher that routes libraries by name (namespace_option), the row routes the packaged
+    ones, with their packaged dependents, through its launch_args. On build 95, routing them in the
+    131 corpus apps that have them moved PPSSPP and supertuxkart to drawing, and the two Chaquopy
+    apps back (not routed since); Material Files and Zoom stopped on intermittent faults they also
+    meet unrouted, and start-up was unchanged.
     """
     if not runtime:
         return []
@@ -1322,23 +1354,47 @@ def interposition_rows(scan: dict[str, Any], runtime: dict[str, Any] | None,
     if not hits:
         return []
     exposed = sorted(name for name in hits if name not in routed)
+    option = namespace_option or {"present": False, "source": None}
+    # With an Android namespace in the launch, the libraries the app writes at run time load there
+    # (the bionic shim's westlake_load_app_library), away from the default namespace's copies of the
+    # packaged libraries they need: routed, econverter's Chaquopy modules met a second, uninitialized
+    # libpython3.11.so and its process died at bind. Such an app is not routed.
+    written = next((row for row in rows if row.get("id") == "load:written-needs-packaged"), None)
+    can_route = option["present"] and written is None
+    targets = [name for name in packaged_dependents(scan, exposed) if name not in routed] if can_route else []
+    unrouted = [name for name in exposed if name not in targets]
     evidence = "; ".join(f"{name}: " + ", ".join(f"{count} with {owner}" for owner, count in hits[name].most_common(2))
                          for name in sorted(hits, key=lambda n: -sum(hits[n].values()))[:4])
+    if not unrouted:
+        provider = ("routed to the Android namespace by the launch args, with "
+                    f"{len(targets) - len(exposed)} packaged dependents, where the runtime's libraries are not global"
+                    if targets else "routed to the Android namespace, where the runtime's libraries are not global")
+    elif written is not None and option["present"]:
+        provider = (f"{len(unrouted)} of {len(hits)} load in the default namespace: not routed, as the libraries the "
+                    "app writes at run time would then load in the Android namespace, away from the packaged ones "
+                    "they need")
+    elif option["present"]:
+        provider = (f"{len(unrouted)} of {len(hits)} load in the default namespace: the app writes them at run time, "
+                    "and the launcher routes only what the APK packages")
+    else:
+        provider = f"{len(unrouted)} of {len(hits)} load in the default namespace"
     return [_row(
         "native-loading", "load:interposed-by-runtime",
         f"App libraries whose own symbols a runtime library also exports ({', '.join(sorted(hits)[:4])}"
         + (" ..." if len(hits) > 4 else "") + ")",
         oh_touchpoint="the default namespace: Westlake's runtime libraries are global there, ahead of the app's",
-        verdict="missing" if exposed else "supplied", shim_class="C3", effort="S" if exposed else "verify",
-        confidence=STATIC, open_symbols=exposed[:12],
-        provider=("routed to the Android namespace, where the runtime's libraries are not global" if not exposed else
-                  f"{len(exposed)} of {len(hits)} load in the default namespace"),
+        verdict="missing" if unrouted else "supplied", shim_class="C3", effort="S" if unrouted else "verify",
+        confidence=STATIC, open_symbols=unrouted[:12], provider=provider,
+        provider_source=option["source"] if targets else None,
         app_evidence=evidence,
-        # A crash this explains runs in the runtime library's copy, called from the app's library.
+        # A crash this explains runs in the runtime library's copy, called from the app's library; one
+        # after the routing is the routing's to explain.
         libraries=exposed, crash_libraries=sorted({owner for name in exposed for owner in hits[name]}),
-        seen_blocking=["ppsspp (r83: its own VMA calls ran in libhwui.so's copy; SIGSEGV in CalcAllocationParams)"],
+        seen_blocking=["ppsspp (r83: its own VMA calls ran in libhwui.so's copy; SIGSEGV in CalcAllocationParams)",
+                       "supertuxkart (r86: libmain.so's png_set_longjmp_fn bound to the runtime's libpng)"],
         shim="route these libraries to the Android namespace (--android-native-target), or stop the runtime's "
              "libraries exporting what Android keeps private to the platform",
+        launch_args=[arg for name in targets for arg in ("--android-native-target", name)],
     )]
 
 
@@ -3514,9 +3570,11 @@ def build_map(
             + stub_native_rows(scan, stub_native_model(westlake_root.parent / "art-build", westlake_root))
             + runtime_resolved_rows(scan, ndk_cov)
             + sandbox_rows(scan, policy) + external_rows(facts, scan, refused_libraries(westlake_root)))
+    # The interposition row's routing first: the libraries it routes meet the Android namespace's
+    # libandroid.so too, which android_namespace_rows checks.
+    rows += interposition_rows(scan, runtime_index, rows, launcher_namespace_option(manifest_root))
     rows += android_namespace_rows(scan, rows, android_namespace_libs, runtime_index,
                                    bionic_shim_exports(westlake_root), ndk_cov)
-    rows += interposition_rows(scan, runtime_index, rows)
     if ledger:
         apply_ledger(rows, ledger)
     gap_map = {

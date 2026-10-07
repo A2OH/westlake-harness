@@ -2218,6 +2218,34 @@ class Interposition(unittest.TestCase):
                                                    self.RUNTIME, []), [])
 
 
+    def test_a_launcher_that_routes_by_name_gets_the_routing_as_launch_args(self) -> None:
+        """libgame.so needs libmain.so, whose exports libhwui.so also has: both are routed, so
+        libmain.so never loads in the default namespace through its dependent. libSDL2.so, which
+        libmain.so needs, is not one of them."""
+        scan = {"inventory": {"elfs": [
+            {"name": "lib/arm64-v8a/libmain.so", "needed": ["libSDL2.so", "libc.so"],
+             "exported_symbols": ["vmaCreateAllocator", "vmaCreateBuffer", "vmaDestroyBuffer"]},
+            {"name": "lib/arm64-v8a/libSDL2.so", "needed": ["libc.so"], "exported_symbols": ["SDL_Init"]},
+            {"name": "lib/arm64-v8a/libgame.so", "needed": ["libmain.so"], "exported_symbols": ["Java_a_b_c"]}]}}
+        option = {"present": True, "source": "manifest/tools/probe_source_app.py:200"}
+        row = gapmap.interposition_rows(scan, self.RUNTIME, [], option)[0]
+        self.assertEqual((row["verdict"], row["open_symbols"]), ("supplied", []))
+        self.assertEqual(row["launch_args"], ["--android-native-target", "libgame.so",
+                                              "--android-native-target", "libmain.so"])
+        self.assertEqual(gapmap.interposition_rows(scan, self.RUNTIME, [])[0]["launch_args"], [],
+                         "no launcher option: nothing is routed")
+        # An app whose written libraries need packaged ones (Chaquopy) is not routed: they would load in
+        # the Android namespace, away from the default namespace's copies.
+        written_needs = [{"id": "load:written-needs-packaged", "launch_args": []}]
+        row = gapmap.interposition_rows(scan, self.RUNTIME, written_needs, option)[0]
+        self.assertEqual((row["verdict"], row["launch_args"]), ("missing", []))
+        self.assertIn("not routed", row["provider"])
+        # A library the app writes at run time cannot be named to the launcher.
+        written = {"inventory": {"elfs": [dict(scan["inventory"]["elfs"][0], origin="unpacked")]}}
+        row = gapmap.interposition_rows(written, self.RUNTIME, [], option)[0]
+        self.assertEqual((row["verdict"], row["launch_args"]), ("missing", []))
+
+
 class TaskRoot(unittest.TestCase):
     def test_a_constant_task_answer_is_a_gap_for_apps_that_ask(self) -> None:
         from westlake_gap.contracts import activity_client_model
