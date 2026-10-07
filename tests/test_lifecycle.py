@@ -225,6 +225,21 @@ class Evidence(unittest.TestCase):
         lifecycle.add_evidence(s, text, None, self.DUMP)
         self.assertTrue(s.blocker.endswith(": a library constructor (INIT_ARRAY entry) is null: musl calls it, bionic skips it"))
 
+    def test_a_dump_older_than_the_process_is_another_processs(self) -> None:
+        """r87: TikTok's launch (pid 9865) picked up the dump that PPSSPP's process, with the same
+        pid, had left 2 h 22 min earlier."""
+        from westlake_gap import lifecycle
+        dump = self.DUMP.replace("Pid:6719\n", "Timestamp:2026-10-07 05:07:01.719\nPid:9865\n")
+        hilog = "10-07 07:29:35.406  9865  9865 I C00f00/AppSpawnX: Child process started, pid=<private>\n"
+        text = "kRegJNI loop done\n"
+        s = lifecycle.score("tiktok", text)
+        lifecycle.add_evidence(s, text, None, dump, hilog)
+        self.assertEqual((s.crash_dump, s.fatal), (None, 0))
+        # The process's own dump comes after its first line.
+        s = lifecycle.score("ppsspp", text)
+        lifecycle.add_evidence(s, text, None, dump, hilog.replace("07:29:35.406", "05:06:59.900"))
+        self.assertEqual((s.blocker_category, s.fatal), ("native-crash", 1))
+
     def test_a_signal_only_the_hilog_saw(self) -> None:
         from westlake_gap import evidence, lifecycle
         hilog = ("10-03 10:19:36.586  7402  7402 I C00f00/AppSpawnX: Child process started\n"

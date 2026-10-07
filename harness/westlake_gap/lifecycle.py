@@ -306,6 +306,8 @@ def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str 
     drawing and names no blocker, what its Java main thread was doing in the last thread dump."""
     from . import evidence
     dump = evidence.cppcrash(cppcrash_text) if cppcrash_text else None
+    if dump and hilog_text and evidence.dump_predates_process(cppcrash_text, hilog_text):
+        dump = None  # an earlier process's, with the same pid
     if dump:
         s.crash_dump = dump
         s.fatal = max(s.fatal, 1)
