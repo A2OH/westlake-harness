@@ -95,6 +95,18 @@ class NdkCoverage(unittest.TestCase):
         self.assertEqual(libc["covered_symbols"], ["__sF"], "a bionic-private name outside the NDK is still libc ABI")
         self.assertEqual(libc["open_symbols"], ["__FD_SET_chk"])
 
+    def test_a_weld_the_shim_exports_is_supplied(self) -> None:
+        # AAudio over OHAudio lives in the bionic shim: an import binds to its export even where the
+        # measured board's import resolution predates it.
+        cov = self._coverage()
+        scan = {"inventory": {"elfs": [
+            {"soname": "libapp.so", "name": "libapp.so", "undefined_symbols": ["ASensor_getName"]}]}}
+        missing = [{"symbol": "ASensor_getName"}]
+        row = gapmap.ndk_symbol_rows(scan, missing, {"ASensor_getName"}, cov)[0]
+        self.assertEqual((row["id"], row["verdict"], row["effort"]), ("ndk:weld:sensors", "supplied", "none"))
+        self.assertEqual((row["covered_symbols"], row["open_symbols"]), (["ASensor_getName"], []))
+        self.assertEqual(gapmap.ndk_symbol_rows(scan, missing, set(), cov)[0]["verdict"], "missing")
+
     def test_symbols_from_an_unshipped_library_are_not_libc(self) -> None:
         cov = self._coverage()
         scan = {"inventory": {"elfs": [
