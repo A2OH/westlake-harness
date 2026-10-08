@@ -2303,6 +2303,43 @@ public class VpnService {
             self.assertFalse(row.get("throws_in_framework"), "not the predictor's blocking signal")
 
 
+class BatchTwentyTwoRows(unittest.TestCase):
+    def test_interface_lookups_need_an_index_without_the_ioctl(self) -> None:
+        """yaacc: every if_nametoindex was refused, so getNetworkInterfaces came back null."""
+        scan = {"inventory": {"platform_method_names": {"Ljava/net/NetworkInterface;": ["getNetworkInterfaces", "getName"]},
+                              "elfs": [{"name": "lib/arm64-v8a/libtor.so", "undefined_symbols": ["if_nametoindex", "open"]}]}}
+        row = gapmap.interface_index_rows(scan, {"answered": False})[0]
+        self.assertEqual((row["id"], row["verdict"], row["libraries"]), ("abi:interface-index", "missing", ["libtor.so"]))
+        self.assertEqual(gapmap.interface_index_rows(scan, {"answered": True, "source": "shim.c:1"})[0]["verdict"], "supplied")
+        self.assertEqual(gapmap.interface_index_rows({"inventory": {}}, {}), [])
+        with tempfile.TemporaryDirectory() as temp:
+            shim = Path(temp) / "framework/webview-shim/webview_bionic_shim.c"
+            shim.parent.mkdir(parents=True)
+            shim.write_text("static unsigned int link_index(const char *name)\n{\n    getifaddrs(&head);\n    return 0;\n}\n"
+                            "unsigned int if_nametoindex(const char *name)\n{\n    return link_index(name);\n}\n")
+            self.assertTrue(contracts.interface_index_model(Path(temp))["answered"])
+
+    def test_the_legacy_key_pair_spec(self) -> None:
+        """gitling generated its pair with a KeyPairGeneratorSpec, which the provider refused."""
+        scan = {"inventory": {"platform_method_names": {"Landroid/security/KeyPairGeneratorSpec$Builder;": ["<init>", "build"]}}}
+        self.assertEqual(gapmap.legacy_keypair_rows(scan, {"accepted": False})[0]["verdict"], "missing")
+        self.assertEqual(gapmap.legacy_keypair_rows(scan, {"accepted": True})[0]["verdict"], "supplied")
+        with tempfile.TemporaryDirectory() as temp:
+            provider = Path(temp) / "framework/core/java/Keys.java"
+            provider.parent.mkdir(parents=True)
+            provider.write_text('public final class Keys extends Provider { Keys() { super("AndroidKeyStore", 1.0, ""); }\n'
+                                "  void init(Object p) { if (p instanceof android.security.KeyPairGeneratorSpec) { } } }\n")
+            self.assertTrue(contracts.legacy_keypair_model(Path(temp))["accepted"])
+
+    def test_a_shell_through_libsu(self) -> None:
+        """plusplusbattery: libsu's Shell.getShell threw NoShellException; OH refuses an app /system/bin/sh."""
+        row = gapmap.shell_rows({"inventory": {"library_markers": ["libsu"],
+                                               "platform_method_names": {"Ljava/lang/Runtime;": ["exec"]}}})[0]
+        self.assertEqual((row["id"], row["verdict"]), ("os:shell", "missing"))
+        self.assertIn("NoShellException: Unable to create a shell", row["symptoms"])
+        self.assertEqual(gapmap.shell_rows({"inventory": {"library_markers": []}}), [])
+
+
 class PasswdLookups(unittest.TestCase):
     def test_a_static_result_is_a_risk_unless_the_shim_keeps_one_per_thread(self) -> None:
         scan = {"inventory": {"elfs": [
