@@ -37,3 +37,50 @@ that fetches a service Westlake does not provide (`framework_fetch_throws`).
 | gitling | Gitling (Code & Forge) | draws | `svc:audio` (hollow), `svc:fingerprint` (null), `svc:grammatical_inflection` (null), `svc:jobscheduler` (hollow), `svc:profiling` (unresolved) | libconscrypt_jni.so |
 
 `predictions.json` is the predictor's output. The results are scored against it after launch.
+
+## Results
+
+The twenty were launched on build 97 with r88's bionic shim, each with its own map's launch args.
+
+- **Drawing:** 17 of 20. **The predictions:** 17 of 20 right. The three misses each stopped on a
+  platform difference no row modelled; each is a row now (below).
+- **Start-up:** 14 report a drawn first frame, median 1.54 s, the slowest at 4.3 s.
+
+| app | stop | cause |
+|---|---|---|
+| yaacc | its own service's listener null, in `onServiceConnected` | its `onStartCommand` threw first, on a null `NetworkInterface.getNetworkInterfaces()`. musl's `if_nametoindex` asks an ioctl that OH's policy refuses an app's domain (EACCES, measured in an app process: `getifaddrs` gives 54 entries, `if_nametoindex` fails for lo, wlan0 and eth0). libcore drops an interface whose index comes back 0, so the enumeration came back null. Westlake caught the service's exception, where Android's process would die, and the app went on without the listener |
+| gitling | its account manager null, in its first activity's view model | its Application's preferences helper generates an RSA pair with the legacy `KeyPairGeneratorSpec`, which Android's AndroidKeyStore provider still converts and the in-process one refused. The Application swallowed the exception |
+| plusplusbattery | `NoShellException: Unable to create a shell!` in its Application | libsu starts a shell. OH's policy refuses an app's domain `/system/bin/sh` (execute, read and open, checked on the board), and OH's toybox has no `sh` applet |
+
+Files: `b22-lifecycle.json` (the twenty classified) and `b22-score.json` (their stops scored
+against maps made with today's harness against build 97, with Westlake pinned to the provider they
+ran on): 2 of 3 named, plusplusbattery by `os:shell` and yaacc by `abi:interface-index`. gitling's
+stop is unscorable, as its refusal was swallowed and never logged.
+
+## What the harness learned
+
+| change | what it reads | what it names |
+|---|---|---|
+| `abi:interface-index` | network interface lookups: `NetworkInterface`'s, or a native import of `if_nametoindex`/`if_indextoname`. Supplied where the bionic shim answers the index from `getifaddrs` when the ioctl is refused | yaacc; 91 corpus apps make the Java calls, and the native libraries of 83 import the functions |
+| `jca:legacy-keypair-spec` | a `KeyPairGeneratorSpec`, against whether the in-process AndroidKeyStore accepts it | gitling |
+| `os:shell` | an app that runs a shell through libsu (the scanner records libraries by a marker class, `library_markers`) | plusplusbattery |
+| service failures | exceptions an app's own service threw in `onCreate`, `onStartCommand` or `onBind`, which Westlake's in-process services catch and log. A stop after one is named by a row that lists the exception among its symptoms | yaacc's onStartCommand. In r87 and r88 they also show four apps that draw with a broken service: Felicity (`libaaudio.so` would not load), NewPipe and Retro Music (`NameNotFoundException` for the package `android`), and Fennec (its content process) |
+
+The published r87 and r88 lifecycle records predate the service failures; read again, those four
+apps gain them, and nothing else changes.
+
+## The fixes
+
+Westlake answers both platform differences on its side (westlake 1b02ac5 and b97354c):
+- **the bionic shim:** if_nametoindex and if_indextoname fall back to `getifaddrs`' link entries
+  when the lookup fails;
+- **the software keystore:** converts a `KeyPairGeneratorSpec` as Android's provider does.
+
+Tested on build 98 with the new shim:
+- yaacc draws, and openhab's NullPointerException is gone;
+- gitling gets past its keystore and stops at the next gap, an unregistered
+  `sun.nio.fs.UnixNativeDispatcher.futimes`;
+- briar, KDE Connect, LocalSend, FluffyChat and the controls draw.
+
+plusplusbattery's shell is an OS boundary: a fix would mean a shell the runtime stages where an
+app's domain may execute it.

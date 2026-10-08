@@ -370,6 +370,24 @@ def service_refusals(*texts: str | None) -> list[str]:
     return sorted(found)
 
 
+def service_failures(hilog: str | None) -> list[str]:
+    """Exceptions an app's own service threw in onCreate, onStartCommand or onBind, which Westlake's
+    in-process services catch and log (OH_InProcSvc ... failed), where Android's process would die
+    on them: the app goes on with the service half made. yaacc's onStartCommand threw on a null
+    network interface enumeration, and its first activity stopped later on the listener it never
+    got."""
+    found: list[str] = []
+    lines = (hilog or "").splitlines()
+    for index, line in enumerate(lines):
+        if "OH_InProcSvc: in-process" not in line or " failed for " not in line:
+            continue
+        following = next((l for l in lines[index + 1:index + 4] if "OH_InProcSvc: " in l), "")
+        message = following.split("OH_InProcSvc: ", 1)[-1].strip()
+        if message and message not in found:
+            found.append(message[:300])
+    return found
+
+
 _REQUEST_FAILED = re.compile(r"NativeWindowRequestBuffer>: RequestBuffer ret:(-?\d+), uniqueId: (\d+)")
 
 

@@ -843,6 +843,34 @@
    "row": "svc:vpn_management",
    "symptom": "VpnService.prepare in its first activity's onCreate fetched vpn_management's binder itself and called it null: NullPointerException starting the activity",
    "fixed_in": "f57467d"
+  },
+  {
+   "app": "yaacc",
+   "corpus": "batch-22",
+   "row": "abi:interface-index",
+   "symptom": "its service's onStartCommand threw on a null NetworkInterface.getNetworkInterfaces(): musl's if_nametoindex was refused its ioctl, every index came back 0; the app went on without its listener and stopped on it",
+   "fixed_in": "1b02ac5"
+  },
+  {
+   "app": "gitling",
+   "corpus": "batch-22",
+   "row": "jca:legacy-keypair-spec",
+   "symptom": "the in-process AndroidKeyStore refused its KeyPairGeneratorSpec; the Application swallowed it and its account manager stayed null",
+   "fixed_in": "b97354c"
+  },
+  {
+   "app": "gitling",
+   "corpus": "batch-22",
+   "row": null,
+   "symptom": "after the keystore fix: UnsatisfiedLinkError for sun.nio.fs.UnixNativeDispatcher.futimes, which the runtime does not register",
+   "fixed_in": null
+  },
+  {
+   "app": "plusplusbattery",
+   "corpus": "batch-22",
+   "row": "os:shell",
+   "symptom": "libsu's Shell.getShell threw NoShellException: OH refuses an app's domain /system/bin/sh, and its toybox has no sh",
+   "fixed_in": null
   }
  ]
 }

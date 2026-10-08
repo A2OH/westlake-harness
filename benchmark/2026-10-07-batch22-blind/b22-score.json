@@ -1,0 +1,36 @@
+{
+ "counts": {
+  "unscorable": 1,
+  "named": 2
+ },
+ "results": [
+  {
+   "app": "gitling",
+   "stage": "activity",
+   "category": "app-framework",
+   "blocker": "start activity: RuntimeException",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "plusplusbattery",
+   "stage": "bound",
+   "category": "app-framework",
+   "blocker": "process init: NoShellException: Unable to create a shell!",
+   "outcome": "named",
+   "rows": [
+    "os:shell=missing"
+   ]
+  },
+  {
+   "app": "yaacc",
+   "stage": "bound",
+   "category": "app-framework",
+   "blocker": "process init: NullPointerException: Attempt to invoke InvokeType(2) method 'boolean de.yaacc.upnp.server.NetworkDevi",
+   "outcome": "named",
+   "rows": [
+    "abi:interface-index=missing"
+   ]
+  }
+ ]
+}
