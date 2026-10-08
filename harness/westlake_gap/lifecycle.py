@@ -150,6 +150,7 @@ class Score:
     null_services: list | None = None
     dlsym_failures: list | None = None
     service_refusals: list | None = None
+    service_failures: list | None = None
 
     def as_dict(self) -> dict:
         return {k: v for k, v in self.__dict__.items()
@@ -390,6 +391,9 @@ def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str 
     refusals = evidence.service_refusals(text, hilog_text)
     if refusals:
         s.service_refusals = refusals
+    broken = evidence.service_failures(hilog_text)
+    if broken:
+        s.service_failures = broken
     failures = evidence.buffer_request_failures(hilog_text) if hilog_text else None
     if failures:
         s.buffer_requests = failures

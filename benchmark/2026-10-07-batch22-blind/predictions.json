@@ -1,0 +1,82 @@
+{
+ "aihub": {
+  "expected": "draws",
+  "because": []
+ },
+ "run": {
+  "expected": "draws",
+  "because": []
+ },
+ "luxalarm": {
+  "expected": "draws",
+  "because": []
+ },
+ "soothingloop": {
+  "expected": "draws",
+  "because": []
+ },
+ "activitymanager": {
+  "expected": "draws",
+  "because": []
+ },
+ "izzyondroid": {
+  "expected": "draws",
+  "because": []
+ },
+ "homerplayer2": {
+  "expected": "draws",
+  "because": []
+ },
+ "plusplusbattery": {
+  "expected": "draws",
+  "because": []
+ },
+ "gnubg": {
+  "expected": "draws",
+  "because": []
+ },
+ "webstack": {
+  "expected": "draws",
+  "because": []
+ },
+ "browser": {
+  "expected": "draws",
+  "because": []
+ },
+ "unitto": {
+  "expected": "draws",
+  "because": []
+ },
+ "persiancalendar": {
+  "expected": "draws",
+  "because": []
+ },
+ "websocketcam": {
+  "expected": "draws",
+  "because": []
+ },
+ "solitaire": {
+  "expected": "draws",
+  "because": []
+ },
+ "yaacc": {
+  "expected": "draws",
+  "because": []
+ },
+ "bouncy": {
+  "expected": "draws",
+  "because": []
+ },
+ "binclockwidget": {
+  "expected": "draws",
+  "because": []
+ },
+ "liseur": {
+  "expected": "draws",
+  "because": []
+ },
+ "gitling": {
+  "expected": "draws",
+  "because": []
+ }
+}

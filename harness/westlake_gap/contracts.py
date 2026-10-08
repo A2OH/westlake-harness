@@ -788,6 +788,39 @@ def passwd_lookup_model(westlake_root: Path) -> dict[str, Any]:
             "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, first) + 1}" if found else None}
 
 
+def interface_index_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether the bionic shim answers if_nametoindex without the ioctl OH refuses an app's domain:
+    its definition falls back to getifaddrs, whose AF_PACKET entries carry each link's index.
+    Defined in the preloaded shim, it is every caller's."""
+    path = westlake_root / "framework/webview-shim/webview_bionic_shim.c"
+    if not path.exists():
+        return {"answered": False, "source": None}
+    text = _strip_java_comments(path.read_text(errors="replace"))
+    match = re.search(r"^unsigned\s+int\s+if_nametoindex\s*\(", text, re.M)
+    body = _braced_block(text, match.start()) if match else ""
+    helpers = [name for name in re.findall(r"\b(\w+)\s*\(", body)
+               if re.search(rf"^static\s+[\w ]+\b{name}\s*\([^)]*\)\s*\{{", text, re.M)]
+    answered = "getifaddrs" in body or any(
+        "getifaddrs" in _braced_block(text, re.search(rf"^static\s+[\w ]+\b{name}\s*\(", text, re.M).start())
+        for name in helpers)
+    return {"answered": answered,
+            "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, match.start()) + 1}" if answered else None}
+
+
+def legacy_keypair_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether the in-process AndroidKeyStore provider accepts the legacy KeyPairGeneratorSpec (API 18,
+    deprecated in 23), which Android's provider still converts to a KeyGenParameterSpec."""
+    framework = westlake_root / "framework"
+    for path in sorted(framework.rglob("*.java")) if framework.exists() else []:
+        text = _strip_java_comments(path.read_text(errors="replace"))
+        if '"AndroidKeyStore"' not in text or not re.search(r"\bextends\s+(?:java\.security\.)?Provider\b", text):
+            continue
+        match = re.search(r"instanceof\s+(?:android\.security\.)?KeyPairGeneratorSpec\b", text)
+        if match:
+            return {"accepted": True, "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, match.start()) + 1}"}
+    return {"accepted": False, "source": None}
+
+
 def libc_constant_model(westlake_root: Path) -> dict[str, Any]:
     """Whether the bionic shim translates those constants, and for which callers.
 

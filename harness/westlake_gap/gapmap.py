@@ -2365,6 +2365,89 @@ def passwd_lookup_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict
     )]
 
 
+INTERFACE_LOOKUPS = {"getNetworkInterfaces", "networkInterfaces", "getByName", "getByIndex", "getByInetAddress"}
+
+
+def interface_index_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """Network interface lookups, which need each interface's index. musl's if_nametoindex and
+    if_indextoname ask an ioctl OH's policy refuses an app's domain (EACCES); libcore's
+    NetworkInterface.getAll drops an interface whose index comes back 0, so every lookup came back
+    empty and getNetworkInterfaces null (yaacc's UPnP service failed on it at start, openhab's thread
+    threw). getifaddrs, over netlink, works."""
+    java = sorted(set((scan["inventory"].get("platform_method_names") or {}).get("Ljava/net/NetworkInterface;") or [])
+                  & INTERFACE_LOOKUPS)
+    native = sorted({elf.get("soname") or elf["name"].rsplit("/", 1)[-1] for elf in ohresolve.target_elfs(scan)
+                     if {"if_nametoindex", "if_indextoname"} & {n.split("@")[0] for n in
+                                                                elf.get("undefined_symbols", []) + elf.get("undefined_weak_symbols", [])}})
+    if not java and not native:
+        return []
+    answered = model.get("answered", False)
+    evidence = "; ".join(part for part in (
+        f"the app calls NetworkInterface.{', NetworkInterface.'.join(java)}" if java else "",
+        f"{', '.join(native[:4])}{' ...' if len(native) > 4 else ''} import if_nametoindex or if_indextoname" if native else "") if part)
+    return [_row(
+        "native-symbols", "abi:interface-index",
+        "Network interface lookups by index (" + ", ".join((java + native)[:4]) + ")",
+        oh_touchpoint="OH musl if_nametoindex/if_indextoname: SIOCGIFINDEX/SIOCGIFNAME, which OH's policy refuses an "
+                      "app's domain (Android's allows them)",
+        verdict="supplied" if answered else "missing", shim_class="C2", effort="verify" if answered else "S",
+        confidence=STATIC,
+        provider=("the bionic shim answers both from getifaddrs when the ioctl is refused" if answered else
+                  "musl's: every index comes back 0, and NetworkInterface.getNetworkInterfaces returns null"),
+        provider_source=model.get("source"), app_evidence=evidence,
+        libraries=native, symptoms=["'boolean java.util.Enumeration.hasMoreElements()' on a null object reference"],
+        seen_blocking=["yaacc (batch 22: its UPnP service's network listener failed on the null enumeration at start)",
+                       "openhab (its thread threw on the null enumeration; it drew)"],
+        shim="answer if_nametoindex and if_indextoname from getifaddrs' AF_PACKET entries when the ioctl is refused",
+    )]
+
+
+def legacy_keypair_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """KeyPairGenerator initialized with the legacy android.security.KeyPairGeneratorSpec (API 18,
+    deprecated in 23), which Android's AndroidKeyStore provider still accepts. An in-process provider
+    that refuses it throws InvalidAlgorithmParameterException where Android generates the pair."""
+    refs = scan["inventory"].get("platform_method_names") or {}
+    used = sorted(set(refs.get("Landroid/security/KeyPairGeneratorSpec$Builder;") or [])
+                  | set(refs.get("Landroid/security/KeyPairGeneratorSpec;") or []))
+    if not used:
+        return []
+    accepted = model.get("accepted", False)
+    return [_row(
+        "security", "jca:legacy-keypair-spec", "KeyPairGeneratorSpec (the legacy AndroidKeyStore key pair spec)",
+        oh_touchpoint="none: the in-process AndroidKeyStore provider",
+        verdict="supplied" if accepted else "missing", shim_class="C9", effort="verify" if accepted else "XS",
+        confidence=STATIC,
+        provider=("the in-process AndroidKeyStore converts it to a KeyGenParameterSpec, as Android's does" if accepted else
+                  "the in-process AndroidKeyStore accepts only KeyGenParameterSpec: InvalidAlgorithmParameterException"),
+        provider_source=model.get("source"),
+        app_evidence="the app builds a KeyPairGeneratorSpec (" + ", ".join(used[:5]) + ")",
+        symptoms=["Unsupported params class: android.security.KeyPairGeneratorSpec"],
+        seen_blocking=["gitling (batch 22: its Application swallowed the refusal and left its account manager null; "
+                       "its first activity's view model stopped on it)"],
+        shim="convert it to a KeyGenParameterSpec as Android's provider does",
+    )]
+
+
+def shell_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
+    """Apps that run a shell through libsu (com.topjohnwu.superuser). OH's policy refuses an app's domain
+    /system/bin/sh (execute, read and open, kernel-checked), and OH's toybox has no sh applet, so no
+    shell starts: libsu's Shell.getShell throws NoShellException ("Created process is not a shell"),
+    which Plus Plus Battery met in its Application. Android gives every app a non-root shell."""
+    if "libsu" not in (scan["inventory"].get("library_markers") or []):
+        return []
+    execs = sorted(set((scan["inventory"].get("platform_method_names") or {}).get("Ljava/lang/Runtime;") or []) & {"exec"})
+    return [_row(
+        "platform", "os:shell", "A shell for the app (libsu)",
+        oh_touchpoint="OH sepolicy: normal_hap may not execute or read sh_exec (/system/bin/sh); toybox has no sh",
+        verdict="missing", shim_class="C6", effort="L", confidence=STATIC,
+        provider="none: no shell an app's domain may execute",
+        app_evidence="libsu's Shell is in the app" + (" and it calls Runtime.exec" if execs else ""),
+        symptoms=["NoShellException: Unable to create a shell", "Created process is not a shell"],
+        seen_blocking=["plusplusbattery (batch 22: Shell.getShell threw NoShellException in its Application)"],
+        shim="ship a shell the app's domain may execute (a sh the runtime stages under a label the domain executes)",
+    )]
+
+
 def native_upcall_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
     """One row per library that calls back into Java: what it names, and what the runtime lacks."""
     rows = []
@@ -3734,6 +3817,9 @@ def build_map(
             + static_mutex_rows(scan, contracts.static_mutex_model(westlake_root))
             + thread_handle_rows(scan, contracts.thread_start_model(westlake_root))
             + passwd_lookup_rows(scan, contracts.passwd_lookup_model(westlake_root))
+            + interface_index_rows(scan, contracts.interface_index_model(westlake_root))
+            + legacy_keypair_rows(scan, contracts.legacy_keypair_model(westlake_root))
+            + shell_rows(scan)
             + bionic_tls_rows(scan)
             + security_rows(scan, contracts.keystore_model(westlake_root))
             + webview_rows(scan, webview_process_model(aosp_root, westlake_root))

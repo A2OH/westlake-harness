@@ -67,6 +67,10 @@ CONST_OPS = {
 }
 
 
+# Libraries an app carries whose behaviour depends on what the platform lets an app do, by a class
+# each keeps unrenamed: libsu starts a shell (OH refuses an app's domain one; see gapmap.shell_rows).
+LIBRARY_MARKERS = {"libsu": "Lcom/topjohnwu/superuser/Shell;"}
+
 def quiet_androguard() -> None:
     """Remove Androguard's per-item debug logging from CLI output."""
     logger.remove()
@@ -2215,6 +2219,7 @@ def scan_apk(
         "inventory": {
             "dex_entries": inventory.dex_entries,
             "defined_classes": len(defined),
+            "library_markers": sorted(name for name, marker in LIBRARY_MARKERS.items() if marker in defined),
             # Each launch activity's superclass chain, up to the first class the APK does not
             # define: which engine base class (libGDX, SDL, Flutter, NativeActivity...) it runs on.
             "launch_activity_chains": _activity_chains(identity.get("main_activities") or [], inventory.superclasses),

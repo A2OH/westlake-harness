@@ -149,7 +149,7 @@ def null_service_rows(interfaces, rows):
 
 
 def candidate_rows(category, blocker, rows, cause=None, finished=None, dump=None, null_services=None,
-                   refusals=None):
+                   refusals=None, service_failures=None):
     """Rows that would name this blocker; None if it is not one a gap map could name."""
     if category == "native-crash" and dump:
         return crash_rows(dump, rows)
@@ -172,7 +172,10 @@ def candidate_rows(category, blocker, rows, cause=None, finished=None, dump=None
     if key is None:
         # An app exception that a row lists among the symptoms of its gap: MuseKit's uninitialized
         # AudioRecord, from a host application without the microphone permission.
-        symptomatic = [r for r in rows if any(s in blocker for s in r.get("symptoms") or [])]
+        # Or one an in-process service of the app's threw first, which Westlake logged and the app
+        # went on without (yaacc's onStartCommand, on a null interface enumeration).
+        symptomatic = [r for r in rows if any(s in blocker or any(s in failure for failure in service_failures or [])
+                                              for s in r.get("symptoms") or [])]
         if symptomatic:
             return symptomatic
         return root_cause_rows(cause, rows) if cause else None
@@ -234,7 +237,8 @@ def main():
             outcome, rows = "unscorable", []
         else:
             rows = candidate_rows(category, blocker, gap["rows"], entry.get("root_cause"), entry.get("self_finish"),
-                                  entry.get("crash_dump"), entry.get("null_services"), entry.get("service_refusals"))
+                                  entry.get("crash_dump"), entry.get("null_services"), entry.get("service_refusals"),
+                                  entry.get("service_failures"))
             if rows is None:
                 outcome, rows = "unscorable", []
             else:
