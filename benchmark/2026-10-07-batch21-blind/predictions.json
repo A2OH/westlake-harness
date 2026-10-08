@@ -1,0 +1,82 @@
+{
+ "goodtime": {
+  "expected": "draws",
+  "because": []
+ },
+ "poetassistant": {
+  "expected": "draws",
+  "because": []
+ },
+ "minimalcurconv": {
+  "expected": "draws",
+  "because": []
+ },
+ "socks5": {
+  "expected": "draws",
+  "because": []
+ },
+ "duetto": {
+  "expected": "draws",
+  "because": []
+ },
+ "soundtoggle": {
+  "expected": "draws",
+  "because": []
+ },
+ "wallet": {
+  "expected": "draws",
+  "because": []
+ },
+ "floatdeck": {
+  "expected": "draws",
+  "because": []
+ },
+ "geoweather": {
+  "expected": "draws",
+  "because": []
+ },
+ "forkyz": {
+  "expected": "draws",
+  "because": []
+ },
+ "gymbott": {
+  "expected": "draws",
+  "because": []
+ },
+ "hammer": {
+  "expected": "draws",
+  "because": []
+ },
+ "aiyo": {
+  "expected": "draws",
+  "because": []
+ },
+ "fafarunner": {
+  "expected": "draws",
+  "because": []
+ },
+ "clock2": {
+  "expected": "draws",
+  "because": []
+ },
+ "ambio": {
+  "expected": "draws",
+  "because": []
+ },
+ "inure": {
+  "expected": "draws",
+  "because": []
+ },
+ "repostore": {
+  "expected": "draws",
+  "because": []
+ },
+ "audioanchor": {
+  "expected": "draws",
+  "because": []
+ },
+ "batterymonitor": {
+  "expected": "draws",
+  "because": []
+ }
+}

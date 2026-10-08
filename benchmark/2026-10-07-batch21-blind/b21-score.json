@@ -1,0 +1,17 @@
+{
+ "counts": {
+  "named": 1
+ },
+ "results": [
+  {
+   "app": "socks5",
+   "stage": "activity",
+   "category": "app-framework",
+   "blocker": "start activity: NullPointerException",
+   "outcome": "named",
+   "rows": [
+    "svc:vpn_management=inert"
+   ]
+  }
+ ]
+}

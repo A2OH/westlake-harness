@@ -836,6 +836,13 @@
    "row": "window:engine-surface",
    "symptom": "its GLSurfaceView, in an OH window of its own, shows nothing while its GL thread swaps frames: the screen has been black since r77, which the host's light page counted as drawing; a SurfaceView behind its activity's window, or its background layer, covers the frames",
    "fixed_in": null
+  },
+  {
+   "app": "socks5",
+   "corpus": "batch-21",
+   "row": "svc:vpn_management",
+   "symptom": "VpnService.prepare in its first activity's onCreate fetched vpn_management's binder itself and called it null: NullPointerException starting the activity",
+   "fixed_in": "f57467d"
   }
  ]
 }

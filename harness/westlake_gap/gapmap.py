@@ -18,6 +18,7 @@ failure already paid for on the device, did a row predict it?
 from __future__ import annotations
 
 import bisect
+import functools
 import json
 import re
 import sys
@@ -168,9 +169,13 @@ def java_api_rows(scan: dict[str, Any], api_levels: dict[tuple, str]) -> tuple[l
     return rows, dict(excluded)
 
 
-def service_rows(scan: dict[str, Any], aosp: dict[str, Any], westlake: dict[str, Any]) -> tuple[list[dict[str, Any]], int]:
+def service_rows(scan: dict[str, Any], aosp: dict[str, Any], westlake: dict[str, Any],
+                 implicit: list[dict[str, Any]] | None = None) -> tuple[list[dict[str, Any]], int]:
     inventory = scan["inventory"]
-    requests = inventory.get("service_requests", [])
+    requests = inventory.get("service_requests", []) + list(implicit or [])
+    by_framework: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for request in implicit or []:
+        by_framework[request["service"]].append(request)
     calls = {owner: set(names) for owner, names in inventory.get("platform_method_names", {}).items()}
     casts: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for cast in inventory.get("nonnull_casts") or []:
@@ -227,6 +232,22 @@ def service_rows(scan: dict[str, Any], aosp: dict[str, Any], westlake: dict[str,
             evidence = (f"throws inside {manager}: the app calls {', '.join(unwrapping[:4])}, which unwrap "
                         f"the binder's answer (getList()); a hollow binder's null throws there, not in app code")
             effort = "S" if effort in {"none", "verify"} else effort
+        # A framework method that fetches the binder itself and calls it unchecked: with no service,
+        # the NullPointerException is the framework's (socks5's VpnService.prepare in onCreate).
+        # What it fetches is the binder itself, so a manager's tolerance of a missing optional binder
+        # (inert) does not help: with no Westlake provision of that name, ServiceManager answers null.
+        fetching = sorted({r["framework_method"] for r in by_framework.get(entry["service"], [])
+                           if not r.get("null_checked_by_framework")}) \
+            if verdict in (services.NULL, services.INERT) and not westlake.get(entry["service"]) else []
+        binders = sorted({i for r in by_framework.get(entry["service"], []) for i in r.get("interfaces", [])})
+        if fetching:
+            evidence = (f"throws inside the framework: the app calls {', '.join(fetching[:3])}, which fetches "
+                        f"{entry['service']}'s binder ({', '.join(binders) or 'its interface'}) itself and calls it with "
+                        "no null check; with no service that is a NullPointerException no app code can catch, "
+                        "wherever the app makes the call")
+            effort = "S" if effort in {"none", "verify"} else effort
+        elif by_framework.get(entry["service"]) and evidence is None:
+            evidence = "reached through " + ", ".join(sorted({r["framework_method"] for r in by_framework[entry["service"]]})[:3])
         rows.append(_row(
             "system-services", f"svc:{entry['service']}", entry["service"],
             oh_touchpoint=analog or "none",
@@ -242,6 +263,9 @@ def service_rows(scan: dict[str, Any], aosp: dict[str, Any], westlake: dict[str,
             shim=shim, app_evidence=evidence, throws_if_null=len(throwing), throws_in_framework=unwrapping,
             throwing_sites=sorted({f"{c['owner'].strip('L;').replace('/', '.')}.{c['method']}" for c in throwing})[:40],
             device_answer=entry.get("device_answer"),
+            # Not throws_in_framework: whether the call is on the startup path is a trace question (on
+            # r88's corpus, 1 of the 7 apps that make such a call was blocked at its first screen).
+            framework_fetch_throws=fetching, binder_interfaces=binders,
         ))
     dynamic = sum(1 for r in requests if r.get("dynamic"))
     return rows, dynamic
@@ -930,6 +954,111 @@ def am_default_census(aosp_root: Path | None) -> dict[str, list[dict[str, Any]]]
             if entry not in calls:
                 calls.append(entry)
     return census
+
+
+_SM_FETCH = re.compile(r"ServiceManager\s*\.\s*(?:getService|getServiceOrThrow|checkService|waitForService)"
+                       r"\s*\(\s*([\w.\"]+)\s*\)")
+_SM_INTERFACE = re.compile(r"\b(I\w+)\s*\.\s*Stub\s*\.\s*asInterface\s*\(\s*ServiceManager\s*\.\s*\w+\s*\(\s*([\w.\"]+)\s*\)")
+_JAVA_METHOD = re.compile(r"\b((?:public|private|protected|static|final|synchronized)\s+)+[\w.<>\[\], ?@]+?\s+(\w+)\s*"
+                          r"\([^;{]*?\)\s*(?:throws [\w., ]+)?\{")
+
+
+@functools.lru_cache(maxsize=4)
+def _implicit_service_census(java_root: str) -> dict[str, dict[str, dict[str, Any]]]:
+    root = Path(java_root)
+    context = root / "android/content/Context.java"
+    constants = dict(re.findall(r'public static final String (\w+) = "([\w.]+)";',
+                                context.read_text(errors="replace"))) if context.exists() else {}
+    census: dict[str, dict[str, dict[str, Any]]] = {}
+    for path in sorted((root / "android").rglob("*.java")):
+        original = path.read_text(errors="replace")
+        if "ServiceManager" not in original:
+            continue
+        text = contracts._strip_java_comments(original)
+        local = dict(re.findall(r'static final String (\w+)\s*=\s*"([\w.]+)"\s*;', text))
+
+        def name_of(argument: str) -> str | None:
+            if argument.startswith('"'):
+                return argument.strip('"')
+            key = argument.rsplit(".", 1)[-1]
+            return constants.get(key) if argument.startswith("Context.") else local.get(key, constants.get(key))
+
+        heads = list(_JAVA_METHOD.finditer(text))
+        names = {head.group(2) for head in heads}
+        bodies = {}
+        direct: dict[str, set[str]] = defaultdict(set)
+        interfaces: dict[str, set[str]] = defaultdict(set)
+        calls: dict[str, set[str]] = defaultdict(set)
+        public: set[str] = set()
+        for head in heads:
+            method = head.group(2)
+            body = bodies[method] = bodies.get(method, "") + contracts._braced_block(text, head.end() - 1)
+            direct[method] |= {n for n in map(name_of, _SM_FETCH.findall(body)) if n}
+            interfaces[method] |= {interface for interface, argument in _SM_INTERFACE.findall(body) if name_of(argument)}
+            calls[method] |= {n for n in re.findall(r"(?<![\w.])(\w+)\s*\(", body) if n in names and n != method}
+            if re.match(r"(?:\w+\s+)*public\b", head.group(0)):
+                public.add(method)
+        # Checked: a variable that holds the binder (from ServiceManager or a fetching helper) is
+        # compared with null. A chain such as getService().prepareVpn(...) is not.
+        fetchers = "|".join(re.escape(m) for m in direct if direct[m]) or r"(?!)"
+        checked = {}
+        for method, body in bodies.items():
+            held = re.findall(rf"(\w+)\s*=\s*[^;]*(?:ServiceManager\s*\.|(?<![\w.])(?:{fetchers})\s*\()", body)
+            checked[method] = any(re.search(rf"(?<![\w.]){re.escape(var)}\s*[!=]=\s*null|null\s*[!=]=\s*{re.escape(var)}\b", body)
+                                  for var in held)
+        descriptor = "L" + str(path.relative_to(root).with_suffix("")).replace("\\", "/") + ";"
+        for method in sorted(public):
+            reached, seen, frontier, guarded = set(direct[method]), {method}, set(calls[method]), checked[method]
+            binders = set(interfaces[method])
+            for _ in range(3):
+                frontier -= seen
+                seen |= frontier
+                for other in frontier:
+                    if direct[other]:
+                        reached |= direct[other]
+                        binders |= interfaces[other]
+                        guarded = guarded or checked.get(other, False)
+                frontier = set().union(*(calls[other] for other in frontier)) if frontier else set()
+            if reached:
+                census.setdefault(descriptor, {})[method] = {"services": sorted(reached), "interfaces": sorted(binders),
+                                                             "null_checked": guarded}
+    return census
+
+
+def implicit_service_census(aosp_root: Path | None) -> dict[str, dict[str, dict[str, Any]]]:
+    """Public framework methods that fetch a system service's binder themselves, through
+    ServiceManager, instead of through a manager the app gets from getSystemService:
+    VpnService.prepare asks vpn_management (socks5 died on its null binder at its first activity),
+    Build.getSerial device_identifiers. Class descriptor -> method -> the services it reaches (in its
+    own body or through the class's own helpers, such as VpnService.getService) and whether it
+    checks a binder for null on the way."""
+    if aosp_root is None:
+        return {}
+    java = aosp_root / "frameworks-base/core/java"
+    return _implicit_service_census(str(java)) if java.exists() else {}
+
+
+def implicit_service_requests(scan: dict[str, Any], census: dict[str, dict[str, dict[str, Any]]],
+                              aosp: dict[str, Any]) -> list[dict[str, Any]]:
+    """The services the app reaches through framework methods that fetch them themselves, as service
+    requests: one per method called, for services the platform registers. A manager's own methods
+    are left to the manager's row, and core binders with no registered fetcher (package,
+    activity_task) to their own rows."""
+    managers = {entry.get("manager") for entry in aosp.values()}
+    called = scan["inventory"].get("platform_method_names") or {}
+    requests = []
+    for owner, methods in sorted(called.items()):
+        if owner in managers or owner not in census:
+            continue
+        for method in sorted(set(methods) & set(census[owner])):
+            info = census[owner][method]
+            for service in info["services"]:
+                if service in aosp:
+                    requests.append({"service": service, "api": "implicit", "implicit": True,
+                                     "owner": owner, "method": method, "interfaces": info.get("interfaces", []),
+                                     "framework_method": f"{owner.strip('L;').replace('/', '.')}.{method}",
+                                     "null_checked_by_framework": info["null_checked"], "dynamic": False})
+    return requests
 
 
 def user_manager_census(aosp_root: Path | None) -> dict[str, list[str]]:
@@ -3552,7 +3681,8 @@ def build_map(
     westlake_services = services.westlake_service_model(westlake_root)
     pm = contracts.pm_adapter_model(westlake_root)
     java, java_excluded = java_api_rows(scan, api_levels)
-    svc, dynamic = service_rows(scan, aosp_services, westlake_services)
+    svc, dynamic = service_rows(scan, aosp_services, westlake_services,
+                                implicit_service_requests(scan, implicit_service_census(aosp_root), aosp_services))
     svc += device_identifier_rows(scan, westlake_services)
     rows = (java + svc + package_manager_rows(scan, facts, pm, pm_null_consequences(aosp_root))
             + am_default_rows(scan, contracts.direct_launch_am_model(westlake_root), am_default_census(aosp_root))
