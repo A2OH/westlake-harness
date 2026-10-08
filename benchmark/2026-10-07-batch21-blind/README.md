@@ -37,3 +37,46 @@ Android namespace.
 | batterymonitor | Battery Monitor (Battery) | draws | `svc:audio` (hollow) | none |
 
 `predictions.json` is the predictor's output. The results are scored against it after launch.
+
+## Results
+
+The twenty were launched on r88's provider, each with its own map's launch args.
+
+- **Drawing:** 19 of 20. **The predictions:** 19 of 20 right; every app predicted to draw drew,
+  except socks5.
+- **Start-up:** 17 report a drawn first frame, median 1.75 s, the slowest Hammer at 2.9 s.
+- **socks5**, the miss, died starting its first activity. Its `onCreate` calls
+  `VpnService.prepare`, which fetches vpn_management's binder (`IVpnManager`) itself, through
+  `VpnService`'s own `getService`, and calls it with no null check. With no such service in
+  Westlake, that is a NullPointerException inside the framework. No `getSystemService` request
+  names the service, so no row of its map did.
+
+Files: `b21-lifecycle.json` (the twenty classified) and `b21-score.json` (their stops scored
+against their maps, with the change below).
+
+## What the harness learned
+
+- **Services framework methods fetch themselves** (`implicit_service_census`):
+  - The framework's sources are read for public methods that fetch a registered service's binder
+    through `ServiceManager`, in their own body or through their class's helpers: 52 classes,
+    387 methods.
+  - A call the app makes to one of them is a service request of its own. Where Westlake
+    provides no binder of that name and the method does not check it, the row lists the method
+    (`framework_fetch_throws`) and the binder interface.
+  - socks5's map now has `svc:vpn_management`, and its stop is named by it (the scorer names an
+    exception on a null binder interface by the row listing the interface).
+- **Not a blocking signal:** on r88's corpus, seven apps call `VpnService` with no vpn_management
+  behind it, and only socks5, calling `prepare` in `onCreate`, was blocked at its first screen.
+  Adaway, blockads, DuckDuckGo, Intra, Rethink and stable call it later or off the main thread
+  (blockads's VPN thread threw the same NullPointerException, and it drew). The predictor leaves
+  the row out of its rule, as it does the package manager's, and still predicts socks5 to draw.
+
+## The fix
+
+Westlake now answers vpn_management in process (f57467d), as on a device where the user has not
+yet consented to this app's VPN: `prepareVpn` answers false, so `VpnService.prepare` hands the app
+the consent Intent, and every other call answers its type's default. Tested on build 97:
+- socks5 draws its main screen ("Disconnected", a Connect button);
+- blockads no longer throws on its VPN thread (r88: the `IVpnManager` NullPointerException and
+  50 uncaught-exception lines);
+- Rethink, Intra, Adaway and stable draw, as do the controls.
