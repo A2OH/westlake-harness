@@ -36,6 +36,18 @@ class RootCauseScoring(unittest.TestCase):
         self.assertIsNone(score.candidate_rows("app-framework", "start activity: ArithmeticException", ROWS, cause))
 
 
+class NullBinderScoring(unittest.TestCase):
+    def test_a_call_on_a_null_binder_names_the_row_listing_its_interface(self) -> None:
+        """socks5: VpnService.prepare fetched vpn_management's binder itself, in onCreate."""
+        rows = ROWS + [{"id": "svc:vpn_management", "verdict": "inert", "binder_interfaces": ["IVpnManager"],
+                        "framework_fetch_throws": ["android.net.VpnService.prepare"]}]
+        cause = {"exception": "NullPointerException", "frame": "com.socks5.ui.MainActivity.onCreate",
+                 "message": "Attempt to invoke InvokeType(4) method 'boolean android.net.IVpnManager.prepareVpn("
+                            "java.lang.String, java.lang.String, int)' on a null object reference"}
+        named = score.candidate_rows("app-framework", "start activity: NullPointerException", rows, cause)
+        self.assertEqual([r["id"] for r in named], ["svc:vpn_management"])
+
+
 class SymptomScoring(unittest.TestCase):
     def test_an_app_exception_a_row_lists_as_its_symptom_is_named_by_it(self) -> None:
         rows = ROWS + [{"id": "perm:host:ohos.permission.MICROPHONE", "verdict": "missing",

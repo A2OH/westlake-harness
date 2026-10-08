@@ -2259,6 +2259,50 @@ class Interposition(unittest.TestCase):
         self.assertEqual((row["verdict"], row["launch_args"]), ("missing", []))
 
 
+class ImplicitServices(unittest.TestCase):
+    def test_framework_methods_that_fetch_a_binder_themselves(self) -> None:
+        """socks5 died in VpnService.prepare, which fetches vpn_management's binder itself (through its
+        own getService helper) and calls it unchecked; no getSystemService request names it."""
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            _write(root / "frameworks-base/core/java/android/content/Context.java",
+                   'public abstract class Context {\n    public static final String VPN_MANAGEMENT_SERVICE = "vpn_management";\n}\n')
+            _write(root / "frameworks-base/core/java/android/net/VpnService.java", """
+public class VpnService {
+    private static IVpnManager getService() {
+        return IVpnManager.Stub.asInterface(ServiceManager.getService(Context.VPN_MANAGEMENT_SERVICE));
+    }
+    public static Intent prepare(Context context) {
+        if (getService().prepareVpn(context.getPackageName(), null, 0)) { return null; }
+        return new Intent();
+    }
+    public boolean isAlwaysOn() {
+        IVpnManager vm = getService();
+        if (vm == null) { return false; }
+        return vm.isAlwaysOn();
+    }
+    public void onCreate() { }
+}
+""")
+            census = gapmap.implicit_service_census(root)
+            vpn = census["Landroid/net/VpnService;"]
+            self.assertEqual(vpn["prepare"], {"services": ["vpn_management"], "interfaces": ["IVpnManager"],
+                                              "null_checked": False})
+            self.assertTrue(vpn["isAlwaysOn"]["null_checked"])
+            self.assertNotIn("onCreate", vpn)
+            aosp = {"vpn_management": {"manager": "Landroid/net/VpnManager;", "binders": [{"name": "vpn_management", "required": False}],
+                                       "source": "SystemServiceRegistry.java:1", "fetcher_can_fail": False}}
+            scan = {"inventory": {"platform_method_names": {"Landroid/net/VpnService;": ["prepare", "onCreate"]},
+                                  "service_requests": []}}
+            requests = gapmap.implicit_service_requests(scan, census, aosp)
+            self.assertEqual([(r["service"], r["framework_method"]) for r in requests],
+                             [("vpn_management", "android.net.VpnService.prepare")])
+            row = next(r for r in gapmap.service_rows(scan, aosp, {}, requests)[0] if r["id"] == "svc:vpn_management")
+            self.assertEqual((row["framework_fetch_throws"], row["binder_interfaces"]),
+                             (["android.net.VpnService.prepare"], ["IVpnManager"]))
+            self.assertFalse(row.get("throws_in_framework"), "not the predictor's blocking signal")
+
+
 class PasswdLookups(unittest.TestCase):
     def test_a_static_result_is_a_risk_unless_the_shim_keeps_one_per_thread(self) -> None:
         scan = {"inventory": {"elfs": [

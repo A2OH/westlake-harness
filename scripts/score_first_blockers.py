@@ -89,11 +89,21 @@ def platform_key(category, blocker):
 _NONNULL_CAST = re.compile(r"null cannot be cast to non-null type (android\.[\w.$]+)")
 
 
+_NULL_BINDER = re.compile(r"Attempt to invoke [^']*'[^' ]+ ((?:[a-z]\w*\.)+I[A-Z]\w*)\.\w+\([^']*\)' on a null object reference")
+
+
 def root_cause_rows(cause, rows):
     """Service rows that name an app exception's root cause, or None if it names none: a Kotlin cast
     of a null manager names the manager's class; a compiled null check (getClass() on null) names
-    no type, but its frame is one of the throwing sites a service row lists."""
+    no type, but its frame is one of the throwing sites a service row lists; a call on a null binder
+    interface (socks5's IVpnManager, fetched by VpnService.prepare itself) names the row that lists
+    the interface."""
     message = cause.get("message") or ""
+    binder = _NULL_BINDER.search(message)
+    if cause.get("exception") == "NullPointerException" and binder:
+        named = null_service_rows([binder.group(1)], rows)
+        if named:
+            return named
     cast = _NONNULL_CAST.search(message)
     if cast:
         manager = "L" + cast.group(1).replace(".", "/") + ";"
