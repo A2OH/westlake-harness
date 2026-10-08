@@ -863,13 +863,34 @@
    "corpus": "batch-22",
    "row": null,
    "symptom": "after the keystore fix: UnsatisfiedLinkError for sun.nio.fs.UnixNativeDispatcher.futimes, which the runtime does not register",
-   "fixed_in": null
+   "fixed_in": "5056797"
   },
   {
    "app": "plusplusbattery",
    "corpus": "batch-22",
    "row": "os:shell",
    "symptom": "libsu's Shell.getShell threw NoShellException: OH refuses an app's domain /system/bin/sh, and its toybox has no sh",
+   "fixed_in": null
+  },
+  {
+   "app": "newpipe",
+   "corpus": "r87",
+   "row": null,
+   "symptom": "its player service failed in onCreate (the app drew): the media library's package validator asked getPackageInfo(\"android\") for the platform's signature, and the package manager knew no such package",
+   "fixed_in": "915d218"
+  },
+  {
+   "app": "retromusic",
+   "corpus": "r87",
+   "row": null,
+   "symptom": "its music service failed in onCreate (the app drew): the same package validator, getPackageInfo(\"android\") answered NameNotFoundException",
+   "fixed_in": "915d218"
+  },
+  {
+   "app": "felicity",
+   "corpus": "r87",
+   "row": "load:needed-missing",
+   "symptom": "its player service failed binding (the app drew): its audio engine needs libaaudio.so, which nothing provides",
    "fixed_in": null
   }
  ]
