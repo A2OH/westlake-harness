@@ -28,12 +28,21 @@ import android.widget.TextView;
  * Two more contracts ride on the same dialog: WMS centres it (its window's screen position is
  * logged and checked), and a touch on its button must reach the dialog in the dialog's own
  * coordinates ("dialog button clicked" is logged). The dim behind it is visible on screen only.
+ *
+ * For the per-build conformance run it also prints one line per gap-map row it measures, then
+ * "[WL-CONTRACT] done": wm:window-placement (both dialogs centred and on screen) and
+ * wm:dialog-stacking (the runner's tap at the button's logged position reaches the dialog, so the
+ * dialog is above its activity; no tap within 20 s fails it). wm:dim-behind has no line.
  */
 public final class MainActivity extends Activity implements View.OnClickListener, Runnable {
     private static final String TAG = "WL-DIALOG-ORDER";
     private View dialogDecor;
     private View alertDecor;
+    private AlertDialog alertDialog;
     private View button;
+    private String placement;
+    private boolean placed;
+    private boolean stackingDecided;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -84,6 +93,20 @@ public final class MainActivity extends Activity implements View.OnClickListener
     @Override
     public void onClick(View v) {
         report("dialog button clicked");
+        stacking(true, "the tap at the button's logged position reached the dialog's button");
+    }
+
+    private synchronized void stacking(boolean passed, String detail) {
+        if (stackingDecided) return;
+        stackingDecided = true;
+        contract("wm:dialog-stacking", passed ? "PASS" : "FAIL", detail);
+        contract("done", "", "");
+    }
+
+    private static void contract(String row, String outcome, String detail) {
+        String text = "[WL-CONTRACT] " + row + " " + outcome + " " + detail;
+        Log.i("WL-CONTRACT", text);
+        System.err.println(text);
     }
 
     @Override
@@ -102,6 +125,11 @@ public final class MainActivity extends Activity implements View.OnClickListener
         boolean fits = loc[0] >= 0 && loc[0] + dialogDecor.getWidth() <= screen;
         report("width=" + (fits ? "FITS" : "OVERFLOWS") + " right=" + (loc[0] + dialogDecor.getWidth())
                 + " screenWidth=" + screen);
+        if (placement == null) {
+            placed = centred && fits;
+            placement = "dialog at " + loc[0] + "," + loc[1] + " size " + dialogDecor.getWidth() + "x"
+                    + dialogDecor.getHeight() + " on a " + screen + " px screen (centred x=" + expected + ")";
+        }
         if (alertDecor == null) {
             // The shape that actually broke: a stock AlertDialog whose message is long enough that
             // its preferred width exceeds the display. McDonald's upgrade dialog came out 1282 px
@@ -114,6 +142,7 @@ public final class MainActivity extends Activity implements View.OnClickListener
                     .setPositiveButton("OK", null)
                     .create();
             alert.show();
+            alertDialog = alert;
             alertDecor = alert.getWindow().getDecorView();
             alertDecor.postDelayed(this, 1200);
             return;
@@ -123,6 +152,12 @@ public final class MainActivity extends Activity implements View.OnClickListener
         boolean alertFits = alertAt[0] >= 0 && alertAt[0] + alertDecor.getWidth() <= screen;
         report("alertWidth=" + (alertFits ? "FITS" : "OVERFLOWS") + " at " + alertAt[0]
                 + " right=" + (alertAt[0] + alertDecor.getWidth()) + " screenWidth=" + screen);
+        contract("wm:window-placement", placed && alertFits ? "PASS" : "FAIL", placement
+                + "; the alert at " + alertAt[0] + " to " + (alertAt[0] + alertDecor.getWidth()));
+        // The alert has been measured; dismissed, it cannot take the tap meant for the dialog.
+        alertDialog.dismiss();
+        dialogDecor.postDelayed(() -> stacking(false,
+                "no tap reached the dialog's button within 20 s of its position being logged"), 20000);
         // Where a tap must land to press the button: a runner delivering screen coordinates reads
         // it here instead of assuming a layout. Reported once the alert has been measured, so the
         // runner taps the probe's own button rather than the alert on top of it.

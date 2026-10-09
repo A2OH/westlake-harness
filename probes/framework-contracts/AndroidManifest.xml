@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.westlake.probe.contracts"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <uses-sdk android:minSdkVersion="28" android:targetSdkVersion="34" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <application
+        android:allowBackup="false"
+        android:label="Westlake Framework Contracts Probe"
+        android:theme="@android:style/Theme.Material.Light.NoActionBar">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- The answers the package manager's queries must find: one of each kind, by its own action. -->
+        <activity
+            android:name=".SecondActivity"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="org.westlake.probe.contracts.OPTION" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <receiver
+            android:name=".ProbeReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="org.westlake.probe.contracts.PING" />
+            </intent-filter>
+        </receiver>
+
+        <provider
+            android:name=".ProbeProvider"
+            android:authorities="org.westlake.probe.contracts.provider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="org.westlake.probe.contracts.PROVIDER" />
+            </intent-filter>
+        </provider>
+
+        <service
+            android:name=".ProbeJob"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+    </application>
+</manifest>
