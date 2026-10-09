@@ -1,0 +1,1524 @@
+{
+ "summary": {
+  "maps": 369,
+  "median_open_rows_per_app": 15,
+  "open_row_instances": 8253,
+  "measured_instances": 5235,
+  "measured_share": 0.634,
+  "provider_rows": 4
+ },
+ "queue": [
+  {
+   "row": "svc:audio",
+   "apps": 288,
+   "measured": "broken",
+   "effort": "S",
+   "category": "system-services",
+   "score": 144.0,
+   "finding": "the probe found it broken: FAIL answers Android would not give: maxVolume=0 volume=0 sampleRate=48000 framesPerBuffer=1024 outputs=0 focus=0 ringerMode=0"
+  },
+  {
+   "row": "pm:call:setComponentEnabledSetting",
+   "apps": 268,
+   "measured": "broken",
+   "effort": "S",
+   "category": "package-manager",
+   "score": 134.0,
+   "finding": "the probe found it broken: FAIL disabled activity still resolves (1 found)"
+  },
+  {
+   "row": "pm:call:getComponentEnabledSetting",
+   "apps": 261,
+   "measured": "broken",
+   "effort": "S",
+   "category": "package-manager",
+   "score": 130.5,
+   "finding": "the probe found it broken: FAIL read back 0 after disabling, not 2"
+  },
+  {
+   "row": "jni:android.view.KeyCharacterMap",
+   "apps": 246,
+   "measured": "broken",
+   "effort": "S",
+   "category": "framework-natives",
+   "score": 123.0,
+   "finding": "the probe found it broken: FAIL KEYCODE_A -> 0, events for \"ab\" 0"
+  },
+  {
+   "row": "svc:jobscheduler",
+   "apps": 216,
+   "measured": "broken",
+   "effort": "S",
+   "category": "system-services",
+   "score": 108.0,
+   "finding": "the probe found it broken: FAIL scheduled (pending=false) but never ran in 15 s"
+  },
+  {
+   "row": "wm:window-placement",
+   "apps": 318,
+   "measured": "broken",
+   "effort": "M",
+   "category": "app-framework",
+   "score": 79.5,
+   "finding": "the probe found it broken: FAIL dialog at 40,0 size 640x651 on a 1200 px screen (centred x=280); the alert at 0 to 1140"
+  },
+  {
+   "row": "pm:call:queryIntentContentProviders",
+   "apps": 313,
+   "measured": "broken",
+   "effort": "M",
+   "category": "package-manager",
+   "score": 78.2,
+   "finding": "the probe found it broken: FAIL no provider for its own filter ([])"
+  },
+  {
+   "row": "jni:android.media.MediaMetadataRetriever",
+   "apps": 282,
+   "measured": "broken",
+   "effort": "M",
+   "category": "framework-natives",
+   "score": 70.5,
+   "finding": "the probe found it broken: FAIL java.lang.UnsatisfiedLinkError: No implementation found for void android.media.MediaMetadataRetriever.native_init() (tried Java_"
+  },
+  {
+   "row": "pm:call:queryIntentActivityOptions",
+   "apps": 278,
+   "measured": "broken",
+   "effort": "M",
+   "category": "package-manager",
+   "score": 69.5,
+   "finding": "the probe found it broken: FAIL no activity for its own filter ([])"
+  },
+  {
+   "row": "svc:media_metrics",
+   "apps": 84,
+   "measured": "broken",
+   "effort": "S",
+   "category": "system-services",
+   "score": 42.0,
+   "finding": "the probe found it broken: FAIL no MediaMetricsManager"
+  },
+  {
+   "row": "svc:biometric",
+   "apps": 80,
+   "measured": "broken",
+   "effort": "S",
+   "category": "system-services",
+   "score": 40.0,
+   "finding": "the probe found it broken: FAIL no BiometricManager; Android always has one, even without a sensor"
+  },
+  {
+   "row": "wm:dim-behind",
+   "apps": 318,
+   "measured": "unmeasured",
+   "effort": "M",
+   "category": "app-framework",
+   "score": 39.8,
+   "finding": ""
+  },
+  {
+   "row": "pm:call:queryBroadcastReceivers",
+   "apps": 145,
+   "measured": "broken",
+   "effort": "M",
+   "category": "package-manager",
+   "score": 36.2,
+   "finding": "the probe found it broken: FAIL no receiver for its own filter ([])"
+  },
+  {
+   "row": "svc:grammatical_inflection",
+   "apps": 62,
+   "measured": "broken",
+   "effort": "S",
+   "category": "system-services",
+   "score": 31.0,
+   "finding": "the probe found it broken: FAIL no GrammaticalInflectionManager"
+  },
+  {
+   "row": "jni:android.media.ImageReader",
+   "apps": 115,
+   "measured": "broken",
+   "effort": "M",
+   "category": "framework-natives",
+   "score": 28.8,
+   "finding": "the probe found it broken: FAIL java.lang.UnsatisfiedLinkError: No implementation found for void android.media.ImageReader.nativeClassInit() (tried Java_android"
+  },
+  {
+   "row": "jni:android.media.PublicFormatUtils",
+   "apps": 115,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "framework-natives",
+   "score": 28.8,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.media.MediaExtractor",
+   "apps": 112,
+   "measured": "broken",
+   "effort": "M",
+   "category": "framework-natives",
+   "score": 28.0,
+   "finding": "the probe found it broken: FAIL java.lang.UnsatisfiedLinkError: No implementation found for void android.media.MediaExtractor.native_init() (tried Java_android_"
+  },
+  {
+   "row": "jni:android.media.MediaCodec",
+   "apps": 110,
+   "measured": "broken",
+   "effort": "M",
+   "category": "framework-natives",
+   "score": 27.5,
+   "finding": "the probe found it broken: FAIL java.lang.IllegalStateException: video/avc gave no input buffer in 1 s at org.westlake.probe.media.MainActivity.lambda$runAll$2("
+  },
+  {
+   "row": "policy:lnk_file",
+   "apps": 184,
+   "measured": "unmeasured",
+   "effort": "M",
+   "category": "sandbox-policy",
+   "score": 23.0,
+   "finding": ""
+  },
+  {
+   "row": "load:shadowed-by-board",
+   "apps": 45,
+   "measured": "unmeasured",
+   "effort": "XS",
+   "category": "native-loading",
+   "score": 22.5,
+   "finding": ""
+  },
+  {
+   "row": "java:Media store",
+   "apps": 125,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "java-api",
+   "score": 20.8,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.media.MediaCrypto",
+   "apps": 71,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "framework-natives",
+   "score": 17.8,
+   "finding": ""
+  },
+  {
+   "row": "window:surfaceview-opacity",
+   "apps": 59,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "window",
+   "score": 14.8,
+   "finding": ""
+  },
+  {
+   "row": "svc:download",
+   "apps": 58,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "system-services",
+   "score": 14.5,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.graphics.pdf.PdfDocument",
+   "apps": 57,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "framework-natives",
+   "score": 14.2,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.os.storage.StorageManager",
+   "apps": 55,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "framework-natives",
+   "score": 13.8,
+   "finding": ""
+  },
+  {
+   "row": "svc:print",
+   "apps": 73,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "system-services",
+   "score": 12.2,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.hardware.camera2.utils.SurfaceUtils",
+   "apps": 46,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "framework-natives",
+   "score": 11.5,
+   "finding": ""
+  },
+  {
+   "row": "svc:vibrator_manager",
+   "apps": 65,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "system-services",
+   "score": 10.8,
+   "finding": ""
+  },
+  {
+   "row": "svc:textservices",
+   "apps": 42,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "system-services",
+   "score": 10.5,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.drm.DrmManagerClient",
+   "apps": 75,
+   "measured": "unmeasured",
+   "effort": "M",
+   "category": "framework-natives",
+   "score": 9.4,
+   "finding": ""
+  },
+  {
+   "row": "wv:renderer-process",
+   "apps": 143,
+   "measured": "unmeasured",
+   "effort": "L",
+   "category": "app-framework",
+   "score": 8.9,
+   "finding": ""
+  },
+  {
+   "row": "sym:runtime-resolved:libandroid.so",
+   "apps": 71,
+   "measured": "unmeasured",
+   "effort": "M",
+   "category": "native-symbols",
+   "score": 8.9,
+   "finding": ""
+  },
+  {
+   "row": "svc:camera",
+   "apps": 68,
+   "measured": "unmeasured",
+   "effort": "M",
+   "category": "system-services",
+   "score": 8.5,
+   "finding": ""
+  },
+  {
+   "row": "svc:bluetooth",
+   "apps": 51,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "system-services",
+   "score": 8.5,
+   "finding": ""
+  },
+  {
+   "row": "svc:profiling",
+   "apps": 48,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "system-services",
+   "score": 8.0,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.media.MediaDrm",
+   "apps": 60,
+   "measured": "unmeasured",
+   "effort": "M",
+   "category": "framework-natives",
+   "score": 7.5,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.view.MotionEvent",
+   "apps": 28,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "framework-natives",
+   "score": 7.0,
+   "finding": ""
+  },
+  {
+   "row": "svc:input",
+   "apps": 41,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "system-services",
+   "score": 6.8,
+   "finding": ""
+  },
+  {
+   "row": "svc:telecom",
+   "apps": 27,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "system-services",
+   "score": 6.8,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.hardware.SyncFence",
+   "apps": 50,
+   "measured": "unmeasured",
+   "effort": "M",
+   "category": "framework-natives",
+   "score": 6.2,
+   "finding": ""
+  },
+  {
+   "row": "sym:runtime-resolved:libnativewindow.so",
+   "apps": 50,
+   "measured": "unmeasured",
+   "effort": "M",
+   "category": "native-symbols",
+   "score": 6.2,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.hardware.usb.UsbDevice",
+   "apps": 25,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "framework-natives",
+   "score": 6.2,
+   "finding": ""
+  },
+  {
+   "row": "java:Graphics",
+   "apps": 24,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "java-api",
+   "score": 6.0,
+   "finding": ""
+  },
+  {
+   "row": "pm:call:getInstalledApplications",
+   "apps": 24,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "package-manager",
+   "score": 6.0,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.hardware.camera2.impl.CameraMetadataNative",
+   "apps": 46,
+   "measured": "unmeasured",
+   "effort": "M",
+   "category": "framework-natives",
+   "score": 5.8,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.media.MediaParser",
+   "apps": 23,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "framework-natives",
+   "score": 5.8,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.media.ImageWriter",
+   "apps": 45,
+   "measured": "unmeasured",
+   "effort": "M",
+   "category": "framework-natives",
+   "score": 5.6,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.media.MediaMuxer",
+   "apps": 45,
+   "measured": "unmeasured",
+   "effort": "M",
+   "category": "framework-natives",
+   "score": 5.6,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.hardware.Camera",
+   "apps": 44,
+   "measured": "unmeasured",
+   "effort": "M",
+   "category": "framework-natives",
+   "score": 5.5,
+   "finding": ""
+  },
+  {
+   "row": "svc:media_projection",
+   "apps": 20,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "system-services",
+   "score": 5.0,
+   "finding": ""
+  },
+  {
+   "row": "dep:firebase-component-discovery:ComponentDiscoveryService",
+   "apps": 29,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "external-deps",
+   "score": 4.8,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.os.MemoryFile",
+   "apps": 19,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "framework-natives",
+   "score": 4.8,
+   "finding": ""
+  },
+  {
+   "row": "java:Other",
+   "apps": 26,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "java-api",
+   "score": 4.3,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.app.backup.FileBackupHelperBase",
+   "apps": 17,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "framework-natives",
+   "score": 4.2,
+   "finding": ""
+  },
+  {
+   "row": "pm:multiprocess",
+   "apps": 60,
+   "measured": "unmeasured",
+   "effort": "L",
+   "category": "package-manager",
+   "score": 3.8,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.media.MediaRecorder",
+   "apps": 28,
+   "measured": "unmeasured",
+   "effort": "M",
+   "category": "framework-natives",
+   "score": 3.5,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.app.backup.BackupDataInput",
+   "apps": 14,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "framework-natives",
+   "score": 3.5,
+   "finding": ""
+  },
+  {
+   "row": "wm:show-wallpaper",
+   "apps": 13,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "window",
+   "score": 3.2,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.renderscript.RenderScript",
+   "apps": 47,
+   "measured": "unmeasured",
+   "effort": "L",
+   "category": "framework-natives",
+   "score": 2.9,
+   "finding": ""
+  },
+  {
+   "row": "pm:call:getApplicationEnabledSetting",
+   "apps": 11,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "package-manager",
+   "score": 2.8,
+   "finding": ""
+  },
+  {
+   "row": "svc:telephony_subscription_service",
+   "apps": 16,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "system-services",
+   "score": 2.7,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.os.ServiceManager",
+   "apps": 10,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "framework-natives",
+   "score": 2.5,
+   "finding": ""
+  },
+  {
+   "row": "dep:firebase-component-discovery:MlKitComponentDiscoveryService",
+   "apps": 13,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "external-deps",
+   "score": 2.2,
+   "finding": ""
+  },
+  {
+   "row": "upcall:libsqlcipher.so",
+   "apps": 13,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "native-upcalls",
+   "score": 2.2,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.app.backup.BackupHelperDispatcher",
+   "apps": 9,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "framework-natives",
+   "score": 2.2,
+   "finding": ""
+  },
+  {
+   "row": "path:/system/etc/hosts",
+   "apps": 9,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "runtime-data",
+   "score": 2.2,
+   "finding": ""
+  },
+  {
+   "row": "svc:dropbox",
+   "apps": 9,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "system-services",
+   "score": 2.2,
+   "finding": ""
+  },
+  {
+   "row": "svc:statusbar",
+   "apps": 9,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "system-services",
+   "score": 2.2,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.hardware.camera2.DngCreator",
+   "apps": 17,
+   "measured": "unmeasured",
+   "effort": "M",
+   "category": "framework-natives",
+   "score": 2.1,
+   "finding": ""
+  },
+  {
+   "row": "load:needed-missing",
+   "apps": 14,
+   "measured": "unmeasured",
+   "effort": "M",
+   "category": "native-loading",
+   "score": 1.8,
+   "finding": ""
+  },
+  {
+   "row": "svc:wifip2p",
+   "apps": 14,
+   "measured": "unmeasured",
+   "effort": "M",
+   "category": "system-services",
+   "score": 1.8,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.app.backup.BackupDataOutput",
+   "apps": 7,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "framework-natives",
+   "score": 1.8,
+   "finding": ""
+  },
+  {
+   "row": "pm:call:checkSignatures",
+   "apps": 7,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "package-manager",
+   "score": 1.8,
+   "finding": ""
+  },
+  {
+   "row": "svc:systemhealth",
+   "apps": 7,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "system-services",
+   "score": 1.8,
+   "finding": ""
+  },
+  {
+   "row": "sym:runtime-resolved:libmediandk.so",
+   "apps": 13,
+   "measured": "unmeasured",
+   "effort": "M",
+   "category": "native-symbols",
+   "score": 1.6,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.media.FaceDetector",
+   "apps": 6,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "framework-natives",
+   "score": 1.5,
+   "finding": ""
+  },
+  {
+   "row": "ndk:libc-abi",
+   "apps": 6,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "native-symbols",
+   "score": 1.5,
+   "finding": ""
+  },
+  {
+   "row": "ndk:weak-api",
+   "apps": 6,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "native-symbols",
+   "score": 1.5,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.hardware.usb.UsbDeviceConnection",
+   "apps": 11,
+   "measured": "unmeasured",
+   "effort": "M",
+   "category": "framework-natives",
+   "score": 1.4,
+   "finding": ""
+  },
+  {
+   "row": "jni:com.android.internal.net.NetworkUtilsInternal",
+   "apps": 5,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "framework-natives",
+   "score": 1.2,
+   "finding": ""
+  },
+  {
+   "row": "pm:call:getSystemSharedLibraryNames",
+   "apps": 5,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "package-manager",
+   "score": 1.2,
+   "finding": ""
+  },
+  {
+   "row": "svc:restrictions",
+   "apps": 5,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "system-services",
+   "score": 1.2,
+   "finding": ""
+  },
+  {
+   "row": "sym:runtime-resolved:libnativehelper.so",
+   "apps": 5,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "native-symbols",
+   "score": 1.2,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.media.ToneGenerator",
+   "apps": 9,
+   "measured": "unmeasured",
+   "effort": "M",
+   "category": "framework-natives",
+   "score": 1.1,
+   "finding": ""
+  },
+  {
+   "row": "svc:permission_controller",
+   "apps": 6,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "system-services",
+   "score": 1.0,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.app.backup.FullBackup",
+   "apps": 4,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "framework-natives",
+   "score": 1.0,
+   "finding": ""
+  },
+  {
+   "row": "pm:call:getPackageGids",
+   "apps": 4,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "package-manager",
+   "score": 1.0,
+   "finding": ""
+  },
+  {
+   "row": "pm:call:isSafeMode",
+   "apps": 4,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "package-manager",
+   "score": 1.0,
+   "finding": ""
+  },
+  {
+   "row": "pm:call:setComponentEnabledSettings",
+   "apps": 4,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "package-manager",
+   "score": 1.0,
+   "finding": ""
+  },
+  {
+   "row": "os:shell",
+   "apps": 12,
+   "measured": "unmeasured",
+   "effort": "L",
+   "category": "platform",
+   "score": 0.8,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.os.PerformanceHintManager",
+   "apps": 6,
+   "measured": "unmeasured",
+   "effort": "M",
+   "category": "framework-natives",
+   "score": 0.8,
+   "finding": ""
+  },
+  {
+   "row": "svc:performance_hint",
+   "apps": 5,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "system-services",
+   "score": 0.8,
+   "finding": ""
+  },
+  {
+   "row": "java:Java library",
+   "apps": 3,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "java-api",
+   "score": 0.8,
+   "finding": ""
+  },
+  {
+   "row": "pm:call:getPackagesHoldingPermissions",
+   "apps": 3,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "package-manager",
+   "score": 0.8,
+   "finding": ""
+  },
+  {
+   "row": "pm:call:setApplicationEnabledSetting",
+   "apps": 3,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "package-manager",
+   "score": 0.8,
+   "finding": ""
+  },
+  {
+   "row": "sym:runtime-resolved:libjnigraphics.so",
+   "apps": 3,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "native-symbols",
+   "score": 0.8,
+   "finding": ""
+  },
+  {
+   "row": "java:App framework",
+   "apps": 4,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "java-api",
+   "score": 0.7,
+   "finding": ""
+  },
+  {
+   "row": "policy:fifo_file",
+   "apps": 19,
+   "measured": "unmeasured",
+   "effort": "OH",
+   "category": "sandbox-policy",
+   "score": 0.6,
+   "finding": ""
+  },
+  {
+   "row": "jni:com.android.internal.os.FuseAppLoop",
+   "apps": 5,
+   "measured": "unmeasured",
+   "effort": "M",
+   "category": "framework-natives",
+   "score": 0.6,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.media.AudioSystem",
+   "apps": 8,
+   "measured": "unmeasured",
+   "effort": "L",
+   "category": "framework-natives",
+   "score": 0.5,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.os.Debug",
+   "apps": 4,
+   "measured": "unmeasured",
+   "effort": "M",
+   "category": "framework-natives",
+   "score": 0.5,
+   "finding": ""
+  },
+  {
+   "row": "ndk:unshipped-library:libjsc.so",
+   "apps": 3,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "native-symbols",
+   "score": 0.5,
+   "finding": ""
+  },
+  {
+   "row": "svc:sms",
+   "apps": 3,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "system-services",
+   "score": 0.5,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.view.MotionPredictor",
+   "apps": 2,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "framework-natives",
+   "score": 0.5,
+   "finding": ""
+  },
+  {
+   "row": "jni:java.io.Console",
+   "apps": 2,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "framework-natives",
+   "score": 0.5,
+   "finding": ""
+  },
+  {
+   "row": "load:interposed-by-runtime",
+   "apps": 2,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "native-loading",
+   "score": 0.5,
+   "finding": ""
+  },
+  {
+   "row": "path:/system/usr/share/zoneinfo/",
+   "apps": 2,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "runtime-data",
+   "score": 0.5,
+   "finding": ""
+  },
+  {
+   "row": "pm:call:canonicalToCurrentPackageNames",
+   "apps": 2,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "package-manager",
+   "score": 0.5,
+   "finding": ""
+  },
+  {
+   "row": "pm:call:currentToCanonicalPackageNames",
+   "apps": 2,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "package-manager",
+   "score": 0.5,
+   "finding": ""
+  },
+  {
+   "row": "pm:call:getSuspendedPackageAppExtras",
+   "apps": 2,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "package-manager",
+   "score": 0.5,
+   "finding": ""
+  },
+  {
+   "row": "pm:call:getTargetSdkVersion",
+   "apps": 2,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "package-manager",
+   "score": 0.5,
+   "finding": ""
+  },
+  {
+   "row": "pm:call:setApplicationCategoryHint",
+   "apps": 2,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "package-manager",
+   "score": 0.5,
+   "finding": ""
+  },
+  {
+   "row": "pm:call:setInstallerPackageName",
+   "apps": 2,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "package-manager",
+   "score": 0.5,
+   "finding": ""
+  },
+  {
+   "row": "pm:call:verifyPendingInstall",
+   "apps": 2,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "package-manager",
+   "score": 0.5,
+   "finding": ""
+  },
+  {
+   "row": "svc:consumer_ir",
+   "apps": 2,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "system-services",
+   "score": 0.5,
+   "finding": ""
+  },
+  {
+   "row": "svc:user-unanswered",
+   "apps": 2,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "system-services",
+   "score": 0.5,
+   "finding": ""
+  },
+  {
+   "row": "svc:virtualdevice",
+   "apps": 2,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "system-services",
+   "score": 0.5,
+   "finding": ""
+  },
+  {
+   "row": "sym:runtime-resolved:libneuralnetworks.so",
+   "apps": 7,
+   "measured": "unmeasured",
+   "effort": "L",
+   "category": "native-symbols",
+   "score": 0.4,
+   "finding": ""
+  },
+  {
+   "row": "abi:bionic-tls-slots",
+   "apps": 6,
+   "measured": "unmeasured",
+   "effort": "L",
+   "category": "native-symbols",
+   "score": 0.4,
+   "finding": ""
+  },
+  {
+   "row": "art:internals",
+   "apps": 6,
+   "measured": "unmeasured",
+   "effort": "L",
+   "category": "native-symbols",
+   "score": 0.4,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.os.Process",
+   "apps": 3,
+   "measured": "unmeasured",
+   "effort": "M",
+   "category": "framework-natives",
+   "score": 0.4,
+   "finding": ""
+  },
+  {
+   "row": "java:Views & windows",
+   "apps": 2,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "java-api",
+   "score": 0.3,
+   "finding": ""
+  },
+  {
+   "row": "java:WiFi",
+   "apps": 2,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "java-api",
+   "score": 0.3,
+   "finding": ""
+  },
+  {
+   "row": "ndk:unshipped-library:libavcodec.so, libavdevice.so, libavfilter.so, libavformat.so, libavutil.so, libc++_shared.so, libpostproc.so, libswresample.so, libswscale.so",
+   "apps": 2,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "native-symbols",
+   "score": 0.3,
+   "finding": ""
+  },
+  {
+   "row": "upcall:libart_sym.so",
+   "apps": 2,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "native-upcalls",
+   "score": 0.3,
+   "finding": ""
+  },
+  {
+   "row": "upcall:libgodot_android.so",
+   "apps": 2,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "native-upcalls",
+   "score": 0.3,
+   "finding": ""
+  },
+  {
+   "row": "upcall:libjato.so",
+   "apps": 2,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "native-upcalls",
+   "score": 0.3,
+   "finding": ""
+  },
+  {
+   "row": "upcall:libsysoptimizer.so",
+   "apps": 2,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "native-upcalls",
+   "score": 0.3,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.hardware.usb.UsbRequest",
+   "apps": 2,
+   "measured": "unmeasured",
+   "effort": "M",
+   "category": "framework-natives",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.window.InputTransferToken",
+   "apps": 2,
+   "measured": "unmeasured",
+   "effort": "M",
+   "category": "framework-natives",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "abi:versioned-import-clash",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "native-symbols",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "java:Legacy HTTP",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "java-api",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "java:Networking",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "java-api",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "ndk:unshipped-library:libRealXBase.so",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "native-symbols",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "ndk:unshipped-library:libandroid-support.so, libpython3.11.so.1.0",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "native-symbols",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "ndk:unshipped-library:libandroid-support.so, libpython3.14.so",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "native-symbols",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "ndk:unshipped-library:libanimax.so",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "native-symbols",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "ndk:unshipped-library:libanimax.so, libskity.so",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "native-symbols",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "ndk:unshipped-library:libc++_shared.so, libcares.so, libgmp.so, libgnutls.so, libnettle.so.8, libxml2.so.16, libz.so.1",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "native-symbols",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "ndk:unshipped-library:libc++_shared.so, libcares.so, libgmp.so, libgnutls.so, libnettle.so.8, libxml2.so.2, libz.so.1",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "native-symbols",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "ndk:unshipped-library:libc++_shared.so, libfbunwindstack.so",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "native-symbols",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "ndk:unshipped-library:libgstreamer_android.so",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "native-symbols",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "ndk:unshipped-library:libhermes.so",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "native-symbols",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "ndk:unshipped-library:libkrypton.so",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "native-symbols",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "ndk:unshipped-library:libkrypton.so, liblynx.so",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "native-symbols",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "ndk:unshipped-library:liblynx.so",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "native-symbols",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "ndk:unshipped-library:libnapi_v8.so, libv8_libfull.cr.so",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "native-symbols",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "ndk:unshipped-library:libskity.so",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "native-symbols",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "path:/apex/com.android.tzdata/",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "runtime-data",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "pm:call:clearPackagePreferredActivities",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "package-manager",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "pm:call:getPreferredActivities",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "package-manager",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "pm:uses-library:android.test.runner",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "package-manager",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "svc:app_search",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "system-services",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "svc:blob_store",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "system-services",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "svc:companiondevice",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "system-services",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "svc:connectivity_diagnostics",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "system-services",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "svc:euicc",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "system-services",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "svc:game",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "system-services",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "svc:midi",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "system-services",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "svc:nfc",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "system-services",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "svc:translation",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "S",
+   "category": "system-services",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "upcall:libjni_latinime.so",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "native-upcalls",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "upcall:libse_loader.so",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "native-upcalls",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "upcall:libvlc.so",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "verify",
+   "category": "native-upcalls",
+   "score": 0.2,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.filterfw.core.GLEnvironment",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "M",
+   "category": "framework-natives",
+   "score": 0.1,
+   "finding": ""
+  },
+  {
+   "row": "jni:android.os.SELinux",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "M",
+   "category": "framework-natives",
+   "score": 0.1,
+   "finding": ""
+  },
+  {
+   "row": "sym:runtime-resolved:libcamera2ndk.so",
+   "apps": 1,
+   "measured": "unmeasured",
+   "effort": "L",
+   "category": "native-symbols",
+   "score": 0.1,
+   "finding": ""
+  }
+ ]
+}
