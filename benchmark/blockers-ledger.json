@@ -898,13 +898,20 @@
    "corpus": "r89",
    "row": null,
    "symptom": "its GLSurfaceView shares the activity's OH window (too small for one of its own), and its GL thread made the window's EGL surface before libhwui, which aborted at its first draw (drawRenderNode called on a context with no surface!); 3 of 5 launches on r89's provider, while libhwui won in r87 and r88",
-   "fixed_in": null
+   "fixed_in": "ad698e7"
   },
   {
    "app": "zoom",
    "corpus": "r89",
    "row": null,
    "symptom": "a SIGSEGV on its us.zoom.videome thread at bind, and OH's dump helper timed out (waitpid timeout) before Zoom's own handler could recover; intermittent, as in r86",
+   "fixed_in": null
+  },
+  {
+   "app": "usp",
+   "corpus": "build-100",
+   "row": null,
+   "symptom": "with a window of its own its GL thread renders continuously and the app draws, but the emulator's area shows black (before ad698e7 its frames never had a surface)",
    "fixed_in": null
   }
  ]
