@@ -28,6 +28,7 @@ from pathlib import Path
 from typing import Any
 
 from . import contracts, ohresolve, services
+from .aospbody import BodyShapes, patched_files
 
 CATEGORIES = [
     ("java-api", "Java framework API", "APK dex references − Westlake boot jars, filtered by API level"),
@@ -120,8 +121,19 @@ def _size_effort(count: int, small: str = "S", medium: str = "M", large: str = "
 # Category builders
 # --------------------------------------------------------------------------------------------
 
-def java_api_rows(scan: dict[str, Any], api_levels: dict[tuple, str]) -> tuple[list[dict[str, Any]], dict[str, int]]:
-    """Group missing, hollow and probed framework members by the subsystem that owns them."""
+def java_api_rows(scan: dict[str, Any], api_levels: dict[tuple, str],
+                  shapes: BodyShapes | None = None) -> tuple[list[dict[str, Any]], dict[str, int]]:
+    """Group missing, hollow and probed framework members by the subsystem that owns them.
+
+    A member the runtime gives a constant body is a gap only where AOSP's body does more: with
+    `shapes`, a body that is AOSP's own (InputStream.close, Drawable.getIntrinsicWidth) is no row
+    (counted under "aosp-trivial-body"), one AOSP gives work is hollow, and one the source cannot
+    settle stays a candidate. A probe (Class.forName) for a class Android does not ship either -- a
+    library's own class, or one Android's sources lack -- is answered alike on both: no row either.
+    Nor is a missing member Android's sources do not declare on the class or what it inherits: an
+    API a later release added, or an overload Android never had (the API-level index matches by
+    name, so setChecked(int) of Android 16 read as setChecked(boolean) of API 1).
+    """
     groups: dict[str, dict[str, Any]] = {}
     excluded: Counter[str] = Counter()
     for finding in scan["findings"]:
@@ -134,22 +146,49 @@ def java_api_rows(scan: dict[str, Any], api_levels: dict[tuple, str]) -> tuple[l
         if level in {"absent-from-platform", "newer-than-reference"}:
             excluded[level] += 1
             continue
+        if kind in {"missing_method", "missing_field"} and shapes is not None and shapes.declares(
+                dep["owner"], dep["name"], dep.get("signature"), field=kind == "missing_field") is False:
+            # Android's own sources do not declare it either: an API a later release added (the
+            # app guards it by SDK level), or an overload Android never had.
+            excluded["absent-on-android"] += 1
+            continue
+        if kind == "existence_probe" and shapes is not None:
+            # A probe for a class Android does not ship either is answered the same on both: a
+            # library's own class (layer V), or a platform class Android's sources lack.
+            if dep.get("layer") != "J":
+                excluded["not-a-platform-class"] += 1
+                continue
+            if shapes.on_android(dep["owner"]) is False:
+                excluded["absent-on-android"] += 1
+                continue
+        shape = None
+        if kind == "hollow_method" and shapes is not None:
+            shape = shapes.by_artifact(finding.get("artifact"), finding.get("resolved_owner") or dep["owner"],
+                                       dep["name"], dep["signature"])
+            if shape == "aosp-trivial":
+                excluded["aosp-trivial-body"] += 1
+                continue
         area, oh = _area(dep["owner"])
-        group = groups.setdefault(area, {"oh": oh, "missing": [], "hollow": [], "probe": []})
+        group = groups.setdefault(area, {"oh": oh, "missing": [], "hollowed": [], "hollow": [], "probe": []})
         member = dep["owner"].strip("L;").replace("/", ".") + (f".{dep['name']}" if dep.get("name") else "")
-        bucket = "hollow" if kind == "hollow_method" else "probe" if kind == "existence_probe" else "missing"
+        bucket = (("hollowed" if shape == "hollowed" else "hollow") if kind == "hollow_method"
+                  else "probe" if kind == "existence_probe" else "missing")
         group[bucket].append(member)
         group.setdefault("keys", []).append({"kind": kind, "owner": dep["owner"], "name": dep.get("name"),
-                                             "signature": dep.get("signature")})
+                                             "signature": dep.get("signature"),
+                                             **({"aosp_body": shape} if shape else {})})
 
     rows = []
-    for area, group in sorted(groups.items(), key=lambda kv: -len(kv[1]["missing"]) * 3 - len(kv[1]["hollow"])):
-        missing, hollow, probe = group["missing"], group["hollow"], group["probe"]
+    for area, group in sorted(groups.items(), key=lambda kv: -len(kv[1]["missing"]) * 3
+                              - len(kv[1]["hollowed"]) * 2 - len(kv[1]["hollow"])):
+        missing, hollowed, hollow, probe = group["missing"], group["hollowed"], group["hollow"], group["probe"]
         oh = group["oh"]
         mapped = bool(oh) and oh != "unmapped"
         if missing:
             verdict, shim = "missing", "C4" if mapped else "C1/C5"
             effort = _size_effort(len(missing), "S", "M", "L") if mapped else "S"
+        elif hollowed:
+            verdict, shim, effort = "hollow", "C9", _size_effort(len(hollowed), "S", "M", "L")
         elif hollow:
             verdict, shim, effort = "hollow-candidate", "C9", "verify"
         else:
@@ -158,12 +197,14 @@ def java_api_rows(scan: dict[str, Any], api_levels: dict[tuple, str]) -> tuple[l
             "java-api", f"java:{area}", area,
             oh_touchpoint=oh or "none (library code inside Westlake)",
             verdict=verdict, shim_class=shim, effort=effort, confidence=STATIC,
-            counts={"missing": len(missing), "hollow": len(hollow), "probe": len(probe)},
+            counts={"missing": len(missing), "hollowed": len(hollowed), "hollow": len(hollow), "probe": len(probe)},
             members=group.get("keys", []),
-            examples=sorted(set(missing))[:6] or sorted(set(hollow))[:6] or sorted(set(probe))[:6],
+            examples=(sorted(set(missing))[:6] or sorted(set(hollowed))[:6] or sorted(set(hollow))[:6]
+                      or sorted(set(probe))[:6]),
             shim=("implement the members over " + oh) if missing and mapped else
                  ("port from AOSP, or confirm the caller tolerates absence" if missing else
-                  "check each hollow body against AOSP" if hollow else
+                  "restore AOSP's bodies: the runtime's are constant placeholders where AOSP's do work" if hollowed else
+                  "check each hollow body against AOSP (no source settled it)" if hollow else
                   "confirm the probed class should (not) exist on this platform"),
         ))
     return rows, dict(excluded)
@@ -1314,6 +1355,7 @@ def silent_load_rows(scan: dict[str, Any], model: dict[str, Any],
                      f"not decidable from here; matched on {', '.join(sorted(runtime))}",
             provider_source=model["source"],
             app_evidence="a property of the runtime, not of this app: it holds for every app it launches",
+            scope="provider",
             shim="compare the staged library's methods against the tables the runtime's own stubs register "
                  "(art-build/stubs, registerNativesOrSkip) and ship any remainder under a name the filter "
                  "does not match. " + shim,
@@ -1410,7 +1452,32 @@ def apply_probe_results(gap_map: dict[str, Any], results: dict[str, Any]) -> Non
     later build says nothing about the provider under test.
     """
     commit = (gap_map["provider"]["westlake"].get("commit") or "")
+
+    def same_build(result: dict[str, Any]) -> bool:
+        return bool(commit) and (result["westlake_commit"].startswith(commit) or commit.startswith(result["westlake_commit"]))
+
+    # Contract probes name the row they measure (probes/run_suite.py): the last result for a row on
+    # this build decides it, whatever probe the row itself names.
+    contracts = {r["row"]: r for r in results.get("results", []) if r.get("row") and same_build(r)}
     for row in gap_map["rows"]:
+        result = contracts.get(row["id"])
+        if result is None:
+            continue
+        row["probe_result"] = {k: result[k] for k in ("probe", "outcome", "verdict", "passed", "date", "westlake_commit")
+                               if k in result}
+        row["confidence"] = PROBED
+        if result.get("outcome") == "absent":
+            row.update(verdict="absent", measured="absent", shim_class="C0", effort="none",
+                       provider="truthfully absent on the board, as on a device without it: " + result["verdict"])
+        elif result["passed"]:
+            row.update(verdict="supplied", measured="conformant", shim_class="C0", effort="none")
+        else:
+            row.update(measured="broken", provider="the probe found it broken: " + result["verdict"],
+                       verdict="missing" if row["verdict"] in {"supplied", "unverified", "hollow-candidate"} else row["verdict"],
+                       effort=row["effort"] if row["effort"] not in {"verify", "none"} else "M")
+    for row in gap_map["rows"]:
+        if row["id"] in contracts:
+            continue
         probe = (row.get("probe") or "").removeprefix("probes/")
         measured = [r for r in results.get("results", []) if r["probe"] == probe]
         if not measured:
@@ -2462,8 +2529,9 @@ def shell_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
     )]
 
 
-def native_upcall_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
-    """One row per library that calls back into Java: what it names, and what the runtime lacks."""
+def native_upcall_rows(scan: dict[str, Any], shapes: BodyShapes | None = None) -> list[dict[str, Any]]:
+    """One row per library that calls back into Java: what it names, and what the runtime lacks.
+    With `shapes`, a constant-bodied member whose body is AOSP's own is no gap (java_api_rows)."""
     rows = []
     for lib in scan["inventory"].get("native_upcalls") or []:
         name = lib.get("soname") or lib["elf"]
@@ -2472,6 +2540,11 @@ def native_upcall_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
         missing = [m for m in lib["members"] if m["state"] == "missing"]
         hollow = [m for m in lib["members"] if m["state"] == "hollow"]
         candidates = [m for m in lib["members"] if m["state"] == "hollow-candidate"]
+        if shapes is not None:
+            settled = {id(m): shapes.shape(f"L{m['owner']};", m["name"], m["descriptor"])
+                       for m in candidates if m["kind"] == "method"}
+            hollow += [m for m in candidates if settled.get(id(m)) == "hollowed"]
+            candidates = [m for m in candidates if settled.get(id(m), "unknown") == "unknown"]
         broken = missing + hollow + candidates
         label = lambda m: f"{m['owner'].replace('/', '.')}.{m['name']}" + (m["descriptor"] if m["kind"] == "method" else "")
         owners = [f"L{c};" for c in missing_classes] + [f"L{m['owner']};" for m in broken]
@@ -2493,7 +2566,7 @@ def native_upcall_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
             verdict=verdict, shim_class=shim_class, effort=effort, confidence=STATIC,
             provider=((f"missing classes {missing_classes}; " if missing_classes else "")
                      + (f"{len(missing)} missing; " if missing else "")
-                     + (f"{len(hollow)} hollow in Westlake adapter/stub jars; " if hollow else "")
+                     + (f"{len(hollow)} hollow (Westlake placeholders); " if hollow else "")
                      + (f"{len(candidates)} constant-bodied in framework.jar (may be AOSP's own); " if candidates else "")
                      + (f"names {len(unknown)} class{'es' if len(unknown) != 1 else ''} neither the SDK nor the runtime has "
                         f"({', '.join(unknown[:4])}): version-specific or runtime internals, a runtime-integrity risk "
@@ -3431,8 +3504,12 @@ def runtime_class_strings(directory: Path | None) -> set[str] | None:
     found: set[str] = set()
     for lib in directory.glob("*.so"):
         data = lib.read_bytes()
-        found.update(m.decode() for m in re.findall(rb"(?:android|com/android|sun/nio|java/nio|libcore)/[A-Za-z0-9_/$]+",
-                                                    data))
+        # java/ and dalvik/ too: ART and the runtime's own libraries register java.lang's and
+        # dalvik.system's natives (Object, String, Class, Thread, Math, VMRuntime), and with those
+        # prefixes left out every one of them read as unregistered -- 44 rows in every map, while
+        # every app's log showed the runtime binding them at startup.
+        found.update(m.decode() for m in re.findall(
+            rb"(?:android|com/android|sun/nio|java|dalvik|libcore)/[A-Za-z0-9_/$]+", data))
         found.update("#" + m.decode() for m in re.findall(rb"(?<=\x00)[A-Za-z_][A-Za-z0-9_]{1,80}(?=\x00)", data))
     return found
 
@@ -3634,6 +3711,11 @@ def lifecycle_native_rows(runtime: dict[str, Any] | None,
     if not runtime or class_strings is None:
         return []
     classes = runtime.get("classes", {})
+    # As framework_native_rows judges the app's own calls: a native a runtime library registers by
+    # table is bound, whether or not its class's name is also a string there.
+    registered = {(entry.get("name"), entry.get("signature"))
+                  for lib in runtime.get("bridge_libraries", []) + runtime.get("system_libraries", [])
+                  for entry in lib.get("jni_registration_entries") or []}
     reached: dict[str, set[str]] = defaultdict(set)
     for cls, prefixes in LIFECYCLE_ENTRY_POINTS.items():
         for method, targets in ((classes.get(cls) or {}).get("native_calls") or {}).items():
@@ -3642,6 +3724,8 @@ def lifecycle_native_rows(runtime: dict[str, Any] | None,
             for target in targets:
                 owner, native = target.split("->", 1)
                 name = native[:native.index("(")]
+                if (name, native[native.index("("):]) in registered:
+                    continue
                 if owner[1:-1] in class_strings and _names_string(class_strings, name):
                     continue
                 reached[target].add(f"{cls[1:-1].rsplit('/', 1)[-1]}.{method[:method.index('(')]}")
@@ -3654,7 +3738,7 @@ def lifecycle_native_rows(runtime: dict[str, Any] | None,
             f"{cls}.{native} unregistered, reached by the framework itself",
             oh_touchpoint="the JNI half of the framework class (libandroid_runtime in AOSP)",
             verdict="missing", shim_class="C3", effort="S", confidence=STATIC,
-            app_calls=[], open_symbols=[native],
+            app_calls=[], open_symbols=[native], scope="provider",
             app_evidence=f"reached from {', '.join(sorted(entries)[:3])} on every app, whatever the app calls",
             shim="register the native with AOSP's answer; most of these are hints or cleanup",
         ))
@@ -3809,7 +3893,14 @@ def build_map(
 ) -> dict[str, Any]:
     westlake_services = services.westlake_service_model(westlake_root)
     pm = contracts.pm_adapter_model(westlake_root)
-    java, java_excluded = java_api_rows(scan, api_levels)
+    runtime_classes = (runtime_index or {}).get("classes", {})
+    shapes = (BodyShapes(aosp_root, westlake_root, patched_files(manifest_root),
+                         parents=lambda c: [(runtime_classes.get(c) or {}).get("super"),
+                                            *((runtime_classes.get(c) or {}).get("interfaces") or [])])
+              if aosp_root else None)
+    java, java_excluded = java_api_rows(scan, api_levels, shapes)
+    settled_by_source = {k: java_excluded.pop(k) for k in ("aosp-trivial-body", "not-a-platform-class",
+                                                          "absent-on-android") if k in java_excluded}
     svc, dynamic = service_rows(scan, aosp_services, westlake_services,
                                 implicit_service_requests(scan, implicit_service_census(aosp_root), aosp_services))
     svc += device_identifier_rows(scan, westlake_services)
@@ -3828,7 +3919,7 @@ def build_map(
             + uses_library_rows(facts, runtime_data, westlake_root)
             + framework_native_rows(scan, runtime_index, runtime_class_paths)
             + lifecycle_native_rows(runtime_index, runtime_class_paths)
-            + native_upcall_rows(scan)
+            + native_upcall_rows(scan, shapes)
             + (ndk_symbol_rows(scan, [m for m in oh_missing if not m.get("version_mismatch")
                                       and not m.get("versioned_clash") and not m.get("weak")],
                                bionic_shim_exports(westlake_root), ndk_cov) if ndk_cov
@@ -3884,13 +3975,20 @@ def build_map(
                                    bionic_shim_exports(westlake_root), ndk_cov)
     if ledger:
         apply_ledger(rows, ledger)
+    # Rows that describe the provider rather than the app (scope "provider": the same for every
+    # app on a runtime) are kept beside the app's rows, not among them, so a map counts the app's
+    # gaps; the corpus reads them once per provider.
+    provider_rows = [row for row in rows if row.get("scope") == "provider"]
+    rows = [row for row in rows if row.get("scope") != "provider"]
     gap_map = {
         "app": {"package": facts["package"], "version": facts["version_name"], "target_sdk": facts["target_sdk"],
                 "apk_sha256": scan["apk"]["sha256"]},
         "provider": {"westlake": pm["provenance"], "oh_board": policy["oh"]["board"]},
-        "notes": {"java_excluded_by_api_level": java_excluded, "service_requests_with_computed_names": dynamic,
+        "notes": {"java_excluded_by_api_level": java_excluded, "java_settled_by_aosp_source": settled_by_source,
+                  "service_requests_with_computed_names": dynamic,
                   "native_upcalls_scanned": scan["inventory"].get("native_upcalls") is not None},
         "rows": rows,
+        "provider_rows": provider_rows,
         # Launch remedies the rows name, in row order: a runner applies exactly these, so a gap the
         # launcher can close is closed on the app's first launch.
         "launch_args": launch_args(rows),
@@ -4066,6 +4164,10 @@ def markdown(gap_map: dict[str, Any], backtest_results: list[dict[str, Any]] | N
         prof = ", ".join(f"{profile[e]}×{e}" for e in _EFFORT_ORDER if profile.get(e))
         out.append(f"| {title} | {how} | {len(cat)} | {len(gaps)} | {prof or '—'} |")
     out += ["", "Effort: " + "; ".join(f"**{k}** {v}" for k, v in EFFORT.items() if k != "none"), ""]
+    provider_open = [r for r in gap_map.get("provider_rows", []) if r["verdict"] != "supplied"]
+    if provider_open:
+        out += [f"{len(provider_open)} open rows describe the provider rather than this app (the same for every "
+                "app on this runtime): they are in `provider_rows`, not counted above.", ""]
     seen_rows = [r for r in gap_map["rows"] if r.get("seen_blocking")]
     if seen_rows:
         out += ["## Rows that have blocked an app at startup before", "",
@@ -4132,6 +4234,8 @@ def markdown(gap_map: dict[str, Any], backtest_results: list[dict[str, Any]] | N
     out += ["## Limits of this map", "",
             f"- {notes['service_requests_with_computed_names']} service requests use computed names and are not resolved statically.",
             f"- Java absences excluded by API level: {notes['java_excluded_by_api_level']}.",
+            f"- Java findings the AOSP source settles as no gap (a constant body that is AOSP's own, a probe "
+            f"for a class Android does not ship either): {notes.get('java_settled_by_aosp_source', {})}.",
             ("- Native code calling back into Java was matched from library strings against a reference android.jar; "
              "names built at runtime or encrypted are invisible." if notes.get("native_upcalls_scanned") else
              "- **Native code calling back into Java was not analysed**: rescan with `scan --platform-jar <android.jar>`."),

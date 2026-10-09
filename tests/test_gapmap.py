@@ -525,6 +525,26 @@ class LifecycleNatives(unittest.TestCase):
     def test_nothing_without_the_runtime_libraries(self) -> None:
         self.assertEqual(gapmap.lifecycle_native_rows(self.RUNTIME, None), [])
 
+    def test_a_native_registered_by_table_is_bound(self) -> None:
+        """java.lang.Math's natives read as unregistered in every map: their class path was no string
+        the scan collected, and the registration table that binds them was not consulted."""
+        runtime = {"bridge_libraries": [{"name": "libwl_missing_natives.so", "jni_registration_entries": [
+                       {"name": "ceil", "signature": "(D)D"}]}],
+                   "classes": {"Landroid/view/ViewRootImpl;": {"native_calls": {
+                       "setView(Landroid/view/View;)V": ["Ljava/lang/Math;->ceil(D)D", "Ljava/lang/Math;->floor(D)D"]}},
+                       "Ljava/lang/Math;": {"native_methods": ["ceil(D)D", "floor(D)D"]}}}
+        if "Landroid/view/ViewRootImpl;" not in gapmap.LIFECYCLE_ENTRY_POINTS:
+            self.skipTest("ViewRootImpl is not a lifecycle entry point in this harness")
+        rows = {r["id"]: r for r in gapmap.lifecycle_native_rows(runtime, set())}
+        self.assertEqual(set(rows), {"jni-lifecycle:java.lang.Math.floor"}, "ceil is registered by table")
+        self.assertEqual(rows["jni-lifecycle:java.lang.Math.floor"]["scope"], "provider")
+
+    def test_core_class_paths_are_collected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "libwl.so").write_bytes(b"\x00java/lang/Math\x00dalvik/system/VMRuntime\x00ceil\x00")
+            strings = gapmap.runtime_class_strings(Path(tmp))
+        self.assertTrue({"java/lang/Math", "dalvik/system/VMRuntime", "#ceil"} <= strings)
+
 
 class BlockersLedger(unittest.TestCase):
     def test_rows_that_blocked_an_app_are_marked(self) -> None:
@@ -1291,6 +1311,33 @@ class AppFrameworkContracts(unittest.TestCase):
         rows = {r["id"]: r for r in older["rows"]}
         self.assertEqual(rows["pm:providers"]["verdict"], "unverified", "a later build's result says nothing about this one")
         self.assertEqual(rows["pm:providers"]["probe_result"]["note"], "measured on other builds only")
+
+    def test_contract_results_decide_their_rows(self) -> None:
+        gap = {"provider": {"westlake": {"commit": "7667b339505a"}},
+               "rows": [{"id": "jni:android.media.MediaCodec", "verdict": "missing", "shim_class": "C3", "effort": "M",
+                         "confidence": "static"},
+                        {"id": "svc:vibrator", "verdict": "inert", "shim_class": "C2", "effort": "S", "confidence": "static"},
+                        {"id": "jni:android.media.MediaMetadataRetriever", "verdict": "missing", "shim_class": "C3",
+                         "effort": "M", "confidence": "static"},
+                        {"id": "svc:keyguard", "verdict": "inert", "shim_class": "C2", "effort": "M", "confidence": "static"}]}
+        results = {"results": [
+            {"probe": "media-contracts/jni:android.media.MediaCodec", "row": "jni:android.media.MediaCodec",
+             "outcome": "pass", "westlake_commit": "7667b339505a5178", "passed": True, "verdict": "decoder frames=3"},
+            {"probe": "framework-contracts/svc:vibrator", "row": "svc:vibrator", "outcome": "absent",
+             "westlake_commit": "7667b339505a5178", "passed": True, "verdict": "hasVibrator=false"},
+            {"probe": "media-contracts/jni:android.media.MediaMetadataRetriever", "row": "jni:android.media.MediaMetadataRetriever",
+             "outcome": "fail", "westlake_commit": "7667b339505a5178", "passed": False, "verdict": "UnsatisfiedLinkError"},
+            {"probe": "framework-contracts/svc:keyguard", "row": "svc:keyguard", "outcome": "pass",
+             "westlake_commit": "0231db6053cd", "passed": True, "verdict": "an older build"}]}
+        gapmap.apply_probe_results(gap, results)
+        rows = {r["id"]: r for r in gap["rows"]}
+        self.assertEqual((rows["jni:android.media.MediaCodec"]["verdict"], rows["jni:android.media.MediaCodec"]["measured"]),
+                         ("supplied", "conformant"))
+        self.assertEqual((rows["svc:vibrator"]["verdict"], rows["svc:vibrator"]["effort"]), ("absent", "none"))
+        broken = rows["jni:android.media.MediaMetadataRetriever"]
+        self.assertEqual((broken["verdict"], broken["measured"], broken["confidence"]), ("missing", "broken", gapmap.PROBED))
+        self.assertIn("UnsatisfiedLinkError", broken["provider"])
+        self.assertNotIn("measured", rows["svc:keyguard"], "a result on another build says nothing about this one")
 
 
 class StaticServiceAccessors(unittest.TestCase):
@@ -2725,3 +2772,65 @@ class AndroidNamespaceNdk(unittest.TestCase):
                              "ASensorManager_getSensorList"} <= exports)
             self.assertNotIn("ASensor_getType", exports, "a source the build does not compile defines nothing")
             self.assertNotIn("wl_helper", exports)
+
+
+class JavaConstantBodies(unittest.TestCase):
+    """A member the runtime gives a constant body is a gap only where AOSP's body does more."""
+
+    def test_aosps_own_bodies_are_no_row(self) -> None:
+        from test_aospbody import THING
+        from westlake_gap.aospbody import BodyShapes
+
+        def hollow(name: str, signature: str) -> dict:
+            return {"kind": "hollow_method", "artifact": "framework.jar",
+                    "dependency": {"owner": "Landroid/foo/Thing;", "name": name, "signature": signature}}
+
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "imports/frameworks-base/core/java/android/foo/Thing.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(THING)
+            shapes = BodyShapes(Path(tmp) / "imports")
+            scan = {"findings": [hollow("close", "()V"), hollow("getIntrinsicWidth", "()I")]}
+            rows, excluded = gapmap.java_api_rows(scan, {}, shapes)
+            self.assertEqual(rows, [])
+            self.assertEqual(excluded, {"aosp-trivial-body": 2})
+            scan["findings"] += [hollow("count", "()I"), hollow("notThere", "()V")]
+            rows, _ = gapmap.java_api_rows(scan, {}, shapes)
+            self.assertEqual([(r["verdict"], r["counts"]["hollowed"], r["counts"]["hollow"]) for r in rows],
+                             [("hollow", 1, 1)])
+            rows, _ = gapmap.java_api_rows(scan, {})
+            self.assertEqual([r["verdict"] for r in rows], ["hollow-candidate"], "without the source, as before")
+
+    def test_members_android_lacks_are_no_row(self) -> None:
+        from westlake_gap.aospbody import BodyShapes
+
+        def missing(name: str, signature: str) -> dict:
+            return {"kind": "missing_method", "dependency": {"owner": "Landroid/foo/Thing;", "name": name,
+                                                             "signature": signature}}
+
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "imports/frameworks-base/core/java/android/foo/Thing.java"
+            source.parent.mkdir(parents=True)
+            source.write_text("package android.foo; public class Thing { public void setChecked(boolean on) { } }")
+            shapes = BodyShapes(Path(tmp) / "imports")
+            scan = {"findings": [missing("setChecked", "(I)V"), missing("setChecked", "(Z)V")]}
+            rows, excluded = gapmap.java_api_rows(scan, {}, shapes)
+            self.assertEqual(excluded, {"absent-on-android": 1})
+            self.assertEqual([(r["verdict"], r["counts"]["missing"]) for r in rows], [("missing", 1)])
+
+    def test_probes_for_classes_android_lacks_are_no_row(self) -> None:
+        from westlake_gap.aospbody import BodyShapes
+
+        def probe(owner: str, layer: str) -> dict:
+            return {"kind": "existence_probe", "dependency": {"owner": owner, "layer": layer}}
+
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "imports/frameworks-base/core/java/android/foo/Thing.java"
+            source.parent.mkdir(parents=True)
+            source.write_text("package android.foo; public class Thing { public static class Inner { } }")
+            shapes = BodyShapes(Path(tmp) / "imports")
+            scan = {"findings": [probe("Ljava/lang/Module;", "J"), probe("Lcom/google/protobuf/ExtensionRegistry;", "V"),
+                                 probe("Landroid/foo/Thing$Inner;", "J")]}
+            rows, excluded = gapmap.java_api_rows(scan, {}, shapes)
+            self.assertEqual(excluded, {"absent-on-android": 1, "not-a-platform-class": 1})
+            self.assertEqual([(r["verdict"], r["counts"]["probe"]) for r in rows], [("probe-only", 1)])
