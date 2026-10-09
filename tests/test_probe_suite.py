@@ -41,14 +41,41 @@ class ProbeSuite(unittest.TestCase):
         lines = ["[WL-DIALOG-ORDER] placement=CENTRED at 280,634 size=640x651",
                  "[WL-DIALOG-ORDER] width=FITS right=920 screenWidth=1200",
                  "[WL-DIALOG-ORDER] alertWidth=FITS at 58 right=1141 screenWidth=1200",
+                 "[WL-CONTRACT] wm:window-placement PASS dialog at 280,634 size 640x651",
                  "[WL-DIALOG-ORDER] button center=600,1075"]
         self.assertEqual(run_suite.tap_target(lines, dialog), (600, 1075))
-        self.assertEqual(run_suite.evaluate(lines, dialog), "pending", "centred but not yet clicked")
-        self.assertEqual(run_suite.evaluate(lines + ["[WL-DIALOG-ORDER] dialog button clicked"], dialog), "pass")
-        # McDonald's upgrade dialog was centred and still unreachable: it ran off the right edge.
-        overflow = [lines[0], "[WL-DIALOG-ORDER] alertWidth=OVERFLOWS at 58 right=1141 screenWidth=1083", lines[3]]
-        self.assertEqual(run_suite.evaluate(overflow, dialog), "fail", "a window wider than the display")
+        self.assertEqual(run_suite.evaluate(lines, dialog), "pending", "placed, and the tap not yet in")
+        clicked = lines + ["[WL-DIALOG-ORDER] dialog button clicked",
+                           "[WL-CONTRACT] wm:dialog-stacking PASS the tap reached the dialog's button",
+                           "[WL-CONTRACT] done"]
+        self.assertEqual(run_suite.evaluate(clicked, dialog), "pass")
+        # Placement and stacking are rows of their own: a misplaced dialog (McDonald's upgrade dialog
+        # ran off the right edge) no longer ends the run before the tap that measures stacking.
+        misplaced = [line.replace(" PASS ", " FAIL ") if "window-placement" in line else line for line in clicked]
+        outcomes = {r["row"]: r["outcome"] for r in run_suite.contract_results(misplaced, dialog)}
+        self.assertEqual(outcomes, {"wm:window-placement": "fail", "wm:dialog-stacking": "pass"})
         self.assertIn("button center=", run_suite.markers(dialog))
+
+    def test_a_contract_probe_gives_a_result_per_row(self) -> None:
+        probe = {"name": "media-contracts", "pass": ["[WL-CONTRACT] done"],
+                 "contracts": {"prefix": "[WL-CONTRACT] "}}
+        lines = ["[WL-CONTRACT] jni:android.media.MediaCodec PASS decoded 30 frames",
+                 "[WL-CONTRACT] svc:vibrator ABSENT hasVibrator=false, vibrate() returned",
+                 "[WL-CONTRACT] jni:android.media.MediaMetadataRetriever FAIL UnsatisfiedLinkError native_init",
+                 "[WL-CONTRACT] not-a-result", "[WL-CONTRACT] done"]
+        results = {r["row"]: r for r in run_suite.contract_results(lines, probe)}
+        self.assertEqual(sorted(results), ["jni:android.media.MediaCodec", "jni:android.media.MediaMetadataRetriever",
+                                           "svc:vibrator"])
+        self.assertEqual((results["svc:vibrator"]["outcome"], results["svc:vibrator"]["passed"]), ("absent", True))
+        failed = results["jni:android.media.MediaMetadataRetriever"]
+        self.assertEqual((failed["outcome"], failed["passed"], failed["probe"]),
+                         ("fail", False, "media-contracts/jni:android.media.MediaMetadataRetriever"))
+        self.assertIn("[WL-CONTRACT] ", run_suite.markers(probe))
+        self.assertEqual(run_suite.evaluate(lines, probe), "pass", "the probe finished")
+        icu = {"name": "icu-data", "pass": ["[WL-ICU] done"], "contracts": {"prefix": "[WL-ICU] ", "ok": "ok=",
+                                                                              "fail": "FAILED"}}
+        icu_lines = ["[WL-ICU] zone.default ok=America/Los_Angeles", "[WL-ICU] locale.display FAILED NullPointerException"]
+        self.assertEqual([r["outcome"] for r in run_suite.contract_results(icu_lines, icu)], ["pass", "fail"])
 
     def test_merge_replaces_only_the_same_probe_and_commit(self) -> None:
         document = {"board": "b", "results": [

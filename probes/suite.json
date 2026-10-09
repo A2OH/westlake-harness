@@ -52,19 +52,15 @@
       "lock_key": "dialog-before-window-probe",
       "apk": "dialog-before-window/out/dialog-before-window-probe.apk",
       "pass": [
-        "placement=CENTRED",
-        "width=FITS",
-        "alertWidth=FITS",
-        "dialog button clicked"
+        "[WL-CONTRACT] done"
       ],
-      "fail": [
-        "placement=NOT_CENTRED",
-        "width=OVERFLOWS",
-        "alertWidth=OVERFLOWS"
-      ],
+      "fail": [],
       "tap": {
         "after": "button center=",
         "pattern": "button center=(\\d+),(\\d+)"
+      },
+      "contracts": {
+        "prefix": "[WL-CONTRACT] "
       }
     },
     {
@@ -106,6 +102,42 @@
       "fail_hilog": [
         "NativeWindowRequestBuffer>: RequestBuffer ret:"
       ]
+    },
+    {
+      "name": "media-contracts",
+      "lock_key": "media-contracts-probe",
+      "apk": "media-contracts/out/media-contracts-probe.apk",
+      "pass": [
+        "[WL-CONTRACT] done"
+      ],
+      "fail": [],
+      "contracts": {
+        "prefix": "[WL-CONTRACT] "
+      }
+    },
+    {
+      "name": "framework-contracts",
+      "lock_key": "framework-contracts-probe",
+      "apk": "framework-contracts/out/framework-contracts-probe.apk",
+      "pass": [
+        "[WL-CONTRACT] done"
+      ],
+      "fail": [],
+      "contracts": {
+        "prefix": "[WL-CONTRACT] "
+      }
+    },
+    {
+      "name": "icu-data",
+      "lock_key": "icu-data-probe",
+      "apk": "icu-data/out/icu-data-probe.apk",
+      "pass": [
+        "[WL-CONTRACT] done"
+      ],
+      "fail": [],
+      "contracts": {
+        "prefix": "[WL-CONTRACT] "
+      }
     }
   ]
 }

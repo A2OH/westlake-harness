@@ -30,3 +30,19 @@ once and return null the next time. Build with `./build.sh`.
   built without it. Rebuilt with the flag (Westlake `build_android_native.py`), all 15
   display-name calls succeed.
 - **Time zones:** the stage's `tzdata/` directory is empty, so nothing registers zones.
+
+## Contract lines (ADR-0001)
+
+For the per-build conformance run, the probe also prints one line for each gap-map row it
+measures, then `[WL-CONTRACT] done`:
+
+| row | passes when |
+|---|---|
+| `data:icu-locale-display` | `Locale.GERMANY.getDisplayName(Locale.US)` is "German (Germany)" three times in a row, and `ULocale` gives the same |
+| `data:tzdata` | `java.time` and ICU4J list zones, Europe/Paris has rules, and `TimeZone.getTimeZone("Europe/Paris")` keeps its ID with a +1 h raw offset |
+
+## 2026-10-09 result (build 100)
+
+Both rows pass: 635 `java.time` zones, 637 ICU zones, Paris at +01:00, and "German (Germany)" from
+both locale APIs. The two fixes above are in the build, so the gap map's `missing` for these rows,
+written from the framework 57 run, was stale; the conformance results now decide them.

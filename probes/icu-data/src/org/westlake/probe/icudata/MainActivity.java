@@ -70,9 +70,43 @@ public class MainActivity extends Activity {
                 return "exists=" + file.exists() + " readable=" + file.canRead() + " length=" + file.length();
             });
         }
+        // The conformance run's lines (ADR-0001), named by the gap-map rows they measure.
+        contract("data:icu-locale-display", () -> {
+            for (int i = 0; i < 3; i++) {
+                String name = Locale.GERMANY.getDisplayName(Locale.US);
+                if (!"German (Germany)".equals(name)) throw new IllegalStateException("Locale.GERMANY in US English: " + name);
+            }
+            String icu = android.icu.util.ULocale.GERMANY.getDisplayName(android.icu.util.ULocale.US);
+            if (!"German (Germany)".equals(icu)) throw new IllegalStateException("ULocale.GERMANY in US English: " + icu);
+            return "German (Germany) from Locale three times, and from ULocale";
+        });
+        contract("data:tzdata", () -> {
+            int zones = java.time.zone.ZoneRulesProvider.getAvailableZoneIds().size();
+            String rules = java.time.ZoneId.of("Europe/Paris").getRules().getStandardOffset(java.time.Instant.EPOCH).toString();
+            java.util.TimeZone paris = java.util.TimeZone.getTimeZone("Europe/Paris");
+            int icuZones = android.icu.util.TimeZone.getAvailableIDs().length;
+            String seen = zones + " java.time zones, " + icuZones + " ICU zones, Paris " + paris.getID()
+                    + " raw=" + paris.getRawOffset() + " standard=" + rules;
+            if (zones == 0 || icuZones == 0 || !"Europe/Paris".equals(paris.getID()) || paris.getRawOffset() != 3600000) {
+                throw new IllegalStateException(seen);
+            }
+            return seen;
+        });
+        System.err.println("[WL-CONTRACT] done");
         TextView view = new TextView(this);
         view.setText(shown);
         setContentView(view);
+    }
+
+    private void contract(String row, Callable<String> body) {
+        String line;
+        try {
+            line = "[WL-CONTRACT] " + row + " PASS " + body.call();
+        } catch (Throwable t) {
+            line = "[WL-CONTRACT] " + row + " FAIL " + t;
+        }
+        System.err.println(line);
+        shown.append(line).append('\n');
     }
 
     private void check(String name, Callable<String> body) {

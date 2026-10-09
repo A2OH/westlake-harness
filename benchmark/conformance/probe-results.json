@@ -1,0 +1,676 @@
+{
+ "results": [
+  {
+   "probe": "service-metadata",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "[WL-SERVICE-META] verdict=PASS_SERVICE_INFO_METADATA info=true metadata=2 registrar=org.westlake.probe.ComponentRegistrar second=second-value",
+   "passed": true
+  },
+  {
+   "probe": "provider-manifest",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "[WL-PROVIDER-PROBE] verdict=PASS_QUERY_EXCLUDED_REMOTE_FILTERED mainProviderCreates=1 remoteProviderCreates=0",
+   "passed": true
+  },
+  {
+   "probe": "running-app-processes",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "[WL-RUNNING-PROCS] phase=application verdict=PASS_SELF_VISIBLE manager=true listNull=false count=1 myPid=20841 myUid=20010054 pidSeen=true uidSeen=true nameSeen=true | [WL-RUNNING-PROCS] phase=activity verdict=PASS_SELF_VISIBLE manager=true listNull=false count=1 myPid=20841 myUid=20010054 pidSeen=true uidSeen=true nameSeen=true",
+   "passed": true
+  },
+  {
+   "probe": "signin-layout",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "[WL-SIGNIN-LAYOUT] verdict=PASS_SIGNIN_LAYOUT_DRAWN views=17 zeroSized=0 root=1200x1920 headerLines=1 fonts=true draw=ok nonWhiteSamples=7860",
+   "passed": true
+  },
+  {
+   "probe": "dialog-before-window",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "[WL-DIALOG-ORDER] placement=NOT_CENTRED at 40,0 size=640x651 screenWidth=1200 | [WL-DIALOG-ORDER] width=FITS right=680 screenWidth=1200 | [WL-DIALOG-ORDER] placement=NOT_CENTRED at 40,0 size=640x651 screenWidth=1200 | [WL-DIALOG-ORDER] width=FITS right=680 screenWidth=1200 | [WL-DIALOG-ORDER] alertWidth=FITS at 0 right=1140 screenWidth=1200",
+   "passed": false
+  },
+  {
+   "probe": "asset-list",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "[WL-ASSET-LIST] verdict=PASS_ASSETS_LISTED root=2 nested=1 bytes=39",
+   "passed": true
+  },
+  {
+   "probe": "webview-boundaries",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "[WL-WVB] phase=multiprocess verdict=PASS_SINGLE_PROCESS effective=false flagV2=false flagWrapper=false service=false | [WL-WVB] phase=searchpath verdict=OBSERVED_SHADOWING dirs=11 shadowed=3 libandroid.so=[first:/data/local/tmp/asx shadowed:/data/local/tmp/asx/webview-t-lib] libjnigraphics.so=[first:/data/local/tmp/asx shadowed:/data/local/tmp/asx/webview-t-lib] libc++_shared.so=[first:/system/lib",
+   "passed": true
+  },
+  {
+   "probe": "gl-contracts",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "[WL-GL-PROBE] verdict=ALL_PASS",
+   "passed": true
+  },
+  {
+   "probe": "framework-contracts",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "1 pass, 3 truthfully absent, 9 fail: am:start-unresolved, svc:audio, pm:call:queryIntentContentProviders, pm:call:queryIntentActivityOptions, pm:call:queryBroadcastReceivers, pm:call:setComponentEnabledSetting, pm:call:getComponentEnabledSetting, jni:android.view.KeyCharacterMap, svc:jobscheduler",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/am:start-unresolved",
+   "row": "am:start-unresolved",
+   "outcome": "fail",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "FAIL startActivity returned for an intent nothing handles; Android throws ActivityNotFoundException",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/svc:audio",
+   "row": "svc:audio",
+   "outcome": "fail",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "FAIL answers Android would not give: maxVolume=0 volume=0 sampleRate=48000 framesPerBuffer=1024 outputs=0 focus=0 ringerMode=0",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/pm:call:queryIntentContentProviders",
+   "row": "pm:call:queryIntentContentProviders",
+   "outcome": "fail",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "FAIL no provider for its own filter ([])",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/pm:call:queryIntentActivityOptions",
+   "row": "pm:call:queryIntentActivityOptions",
+   "outcome": "fail",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "FAIL no activity for its own filter ([])",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/pm:call:queryBroadcastReceivers",
+   "row": "pm:call:queryBroadcastReceivers",
+   "outcome": "fail",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "FAIL no receiver for its own filter ([])",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/pm:call:setComponentEnabledSetting",
+   "row": "pm:call:setComponentEnabledSetting",
+   "outcome": "fail",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "FAIL disabled activity still resolves (1 found)",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/pm:call:getComponentEnabledSetting",
+   "row": "pm:call:getComponentEnabledSetting",
+   "outcome": "fail",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "FAIL read back 0 after disabling, not 2",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/jni:android.view.KeyCharacterMap",
+   "row": "jni:android.view.KeyCharacterMap",
+   "outcome": "fail",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "FAIL KEYCODE_A -> 0, events for \"ab\" 0",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/svc:jobscheduler",
+   "row": "svc:jobscheduler",
+   "outcome": "fail",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "FAIL scheduled (pending=false) but never ran in 15 s",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/svc:vibrator",
+   "row": "svc:vibrator",
+   "outcome": "absent",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "ABSENT hasVibrator=false, and vibrate() returned",
+   "passed": true
+  },
+  {
+   "probe": "framework-contracts/svc:sensor",
+   "row": "svc:sensor",
+   "outcome": "absent",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "ABSENT no sensors listed, no accelerometer",
+   "passed": true
+  },
+  {
+   "probe": "framework-contracts/svc:phone",
+   "row": "svc:phone",
+   "outcome": "absent",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "ABSENT phoneType=0 simState=0 operator=",
+   "passed": true
+  },
+  {
+   "probe": "framework-contracts/svc:keyguard",
+   "row": "svc:keyguard",
+   "outcome": "pass",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "PASS locked=false secure=false",
+   "passed": true
+  },
+  {
+   "probe": "media-contracts",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "1 pass, 0 truthfully absent, 5 fail: jni:android.media.MediaMetadataRetriever, jni:android.media.MediaExtractor, jni:android.media.MediaCodec, media:decode-file, jni:android.media.ImageReader",
+   "passed": false
+  },
+  {
+   "probe": "media-contracts/jni:android.media.MediaMetadataRetriever",
+   "row": "jni:android.media.MediaMetadataRetriever",
+   "outcome": "fail",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "FAIL java.lang.UnsatisfiedLinkError: No implementation found for void android.media.MediaMetadataRetriever.native_init() (tried Java_android_media_MediaMetadataRetriever_native_1init and Java_android_media_MediaMetadataRetriever_native_1init__) - is the library loaded, e.g. System.loadLibrary? at an",
+   "passed": false
+  },
+  {
+   "probe": "media-contracts/jni:android.media.MediaExtractor",
+   "row": "jni:android.media.MediaExtractor",
+   "outcome": "fail",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "FAIL java.lang.UnsatisfiedLinkError: No implementation found for void android.media.MediaExtractor.native_init() (tried Java_android_media_MediaExtractor_native_1init and Java_android_media_MediaExtractor_native_1init__) - is the library loaded, e.g. System.loadLibrary? at android.media.MediaExtract",
+   "passed": false
+  },
+  {
+   "probe": "media-contracts/jni:android.media.MediaCodec",
+   "row": "jni:android.media.MediaCodec",
+   "outcome": "fail",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "FAIL java.lang.IllegalStateException: video/avc gave no input buffer in 1 s at org.westlake.probe.media.MainActivity.lambda$runAll$2(MainActivity.java:123)",
+   "passed": false
+  },
+  {
+   "probe": "media-contracts/media:decode-file",
+   "row": "media:decode-file",
+   "outcome": "fail",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "FAIL java.lang.NoClassDefFoundError: android.media.MediaExtractor at org.westlake.probe.media.MainActivity.decodeVideo(MainActivity.java:166)",
+   "passed": false
+  },
+  {
+   "probe": "media-contracts/jni:android.media.ImageReader",
+   "row": "jni:android.media.ImageReader",
+   "outcome": "fail",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "FAIL java.lang.UnsatisfiedLinkError: No implementation found for void android.media.ImageReader.nativeClassInit() (tried Java_android_media_ImageReader_nativeClassInit and Java_android_media_ImageReader_nativeClassInit__) - is the library loaded, e.g. System.loadLibrary? at android.media.ImageReader",
+   "passed": false
+  },
+  {
+   "probe": "media-contracts/jni:android.media.AudioTrack",
+   "row": "jni:android.media.AudioTrack",
+   "outcome": "pass",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "PASS minBuffer=9600B wrote=9600 samples",
+   "passed": true
+  },
+  {
+   "probe": "icu-data",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "2 pass, 0 truthfully absent, 0 fail",
+   "passed": true
+  },
+  {
+   "probe": "icu-data/data:icu-locale-display",
+   "row": "data:icu-locale-display",
+   "outcome": "pass",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "PASS German (Germany) from Locale three times, and from ULocale",
+   "passed": true
+  },
+  {
+   "probe": "icu-data/data:tzdata",
+   "row": "data:tzdata",
+   "outcome": "pass",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "PASS 635 java.time zones, 637 ICU zones, Paris Europe/Paris raw=3600000 standard=+01:00",
+   "passed": true
+  },
+  {
+   "probe": "dialog-before-window",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "1 pass, 0 truthfully absent, 1 fail: wm:window-placement",
+   "passed": false
+  },
+  {
+   "probe": "dialog-before-window/wm:window-placement",
+   "row": "wm:window-placement",
+   "outcome": "fail",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "FAIL dialog at 40,0 size 640x651 on a 1200 px screen (centred x=280); the alert at 0 to 1140",
+   "passed": false
+  },
+  {
+   "probe": "dialog-before-window/wm:dialog-stacking",
+   "row": "wm:dialog-stacking",
+   "outcome": "pass",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "PASS the tap at the button's logged position reached the dialog's button",
+   "passed": true
+  },
+  {
+   "probe": "framework-contracts",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "4 pass, 5 truthfully absent, 12 fail: am:start-unresolved, svc:audio, pm:call:queryIntentContentProviders, pm:call:queryIntentActivityOptions, pm:call:queryBroadcastReceivers, pm:call:setComponentEnabledSetting, pm:call:getComponentEnabledSetting, jni:android.view.KeyCharacterMap, svc:jobscheduler, svc:biometric, svc:media_metrics, svc:grammatical_inflection",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/am:start-unresolved",
+   "row": "am:start-unresolved",
+   "outcome": "fail",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "FAIL startActivity returned for an intent nothing handles; Android throws ActivityNotFoundException",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/svc:audio",
+   "row": "svc:audio",
+   "outcome": "fail",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "FAIL answers Android would not give: maxVolume=0 volume=0 sampleRate=48000 framesPerBuffer=1024 outputs=0 focus=0 ringerMode=0",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/pm:call:queryIntentContentProviders",
+   "row": "pm:call:queryIntentContentProviders",
+   "outcome": "fail",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "FAIL no provider for its own filter ([])",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/pm:call:queryIntentActivityOptions",
+   "row": "pm:call:queryIntentActivityOptions",
+   "outcome": "fail",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "FAIL no activity for its own filter ([])",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/pm:call:queryBroadcastReceivers",
+   "row": "pm:call:queryBroadcastReceivers",
+   "outcome": "fail",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "FAIL no receiver for its own filter ([])",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/pm:call:setComponentEnabledSetting",
+   "row": "pm:call:setComponentEnabledSetting",
+   "outcome": "fail",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "FAIL disabled activity still resolves (1 found)",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/pm:call:getComponentEnabledSetting",
+   "row": "pm:call:getComponentEnabledSetting",
+   "outcome": "fail",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "FAIL read back 0 after disabling, not 2",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/jni:android.view.KeyCharacterMap",
+   "row": "jni:android.view.KeyCharacterMap",
+   "outcome": "fail",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "FAIL KEYCODE_A -> 0, events for \"ab\" 0",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/svc:jobscheduler",
+   "row": "svc:jobscheduler",
+   "outcome": "fail",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "FAIL scheduled (pending=false) but never ran in 15 s",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/svc:vibrator",
+   "row": "svc:vibrator",
+   "outcome": "absent",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "ABSENT hasVibrator=false, and vibrate() returned",
+   "passed": true
+  },
+  {
+   "probe": "framework-contracts/svc:sensor",
+   "row": "svc:sensor",
+   "outcome": "absent",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "ABSENT no sensors listed, no accelerometer",
+   "passed": true
+  },
+  {
+   "probe": "framework-contracts/svc:phone",
+   "row": "svc:phone",
+   "outcome": "absent",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "ABSENT phoneType=0 simState=0 operator=",
+   "passed": true
+  },
+  {
+   "probe": "framework-contracts/svc:keyguard",
+   "row": "svc:keyguard",
+   "outcome": "pass",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "PASS locked=false secure=false",
+   "passed": true
+  },
+  {
+   "probe": "framework-contracts/svc:textclassification",
+   "row": "svc:textclassification",
+   "outcome": "absent",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "ABSENT the NO_OP classifier, as on a device without one",
+   "passed": true
+  },
+  {
+   "probe": "framework-contracts/svc:user",
+   "row": "svc:user",
+   "outcome": "pass",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "PASS unlocked=true profiles=[UserHandle{200}] serial=0 goat=false",
+   "passed": true
+  },
+  {
+   "probe": "framework-contracts/svc:fingerprint",
+   "row": "svc:fingerprint",
+   "outcome": "absent",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "ABSENT no FingerprintManager and no FEATURE_FINGERPRINT, as on a device without a sensor",
+   "passed": true
+  },
+  {
+   "probe": "framework-contracts/svc:biometric",
+   "row": "svc:biometric",
+   "outcome": "fail",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "FAIL no BiometricManager; Android always has one, even without a sensor",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/svc:captioning",
+   "row": "svc:captioning",
+   "outcome": "pass",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "PASS enabled=false locale=null fontScale=1.0",
+   "passed": true
+  },
+  {
+   "probe": "framework-contracts/svc:media_metrics",
+   "row": "svc:media_metrics",
+   "outcome": "fail",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "FAIL no MediaMetricsManager",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/svc:grammatical_inflection",
+   "row": "svc:grammatical_inflection",
+   "outcome": "fail",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "FAIL no GrammaticalInflectionManager",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/pm:call:getInstallerPackageName",
+   "row": "pm:call:getInstallerPackageName",
+   "outcome": "pass",
+   "westlake_commit": "7667b339505a5178c847c30ad94b5feacad60966",
+   "date": "2026-10-09",
+   "verdict": "PASS installer=null (as for an app installed from a file), install source answered",
+   "passed": true
+  },
+  {
+   "probe": "media-contracts",
+   "westlake_commit": "6291f9e91635677c998a88643be35c3a8cb042ea",
+   "date": "2026-10-09",
+   "verdict": "1 pass, 0 truthfully absent, 5 fail: jni:android.media.MediaMetadataRetriever, jni:android.media.MediaExtractor, jni:android.media.MediaCodec, media:decode-file, jni:android.media.ImageReader",
+   "passed": false
+  },
+  {
+   "probe": "media-contracts/jni:android.media.MediaMetadataRetriever",
+   "row": "jni:android.media.MediaMetadataRetriever",
+   "outcome": "fail",
+   "westlake_commit": "6291f9e91635677c998a88643be35c3a8cb042ea",
+   "date": "2026-10-09",
+   "verdict": "FAIL java.lang.UnsatisfiedLinkError: No implementation found for void android.media.MediaMetadataRetriever.native_init() (tried Java_android_media_MediaMetadataRetriever_native_1init and Java_android_media_MediaMetadataRetriever_native_1init__) - is the library loaded, e.g. System.loadLibrary? at an",
+   "passed": false
+  },
+  {
+   "probe": "media-contracts/jni:android.media.MediaExtractor",
+   "row": "jni:android.media.MediaExtractor",
+   "outcome": "fail",
+   "westlake_commit": "6291f9e91635677c998a88643be35c3a8cb042ea",
+   "date": "2026-10-09",
+   "verdict": "FAIL java.lang.UnsatisfiedLinkError: No implementation found for void android.media.MediaExtractor.native_init() (tried Java_android_media_MediaExtractor_native_1init and Java_android_media_MediaExtractor_native_1init__) - is the library loaded, e.g. System.loadLibrary? at android.media.MediaExtract",
+   "passed": false
+  },
+  {
+   "probe": "media-contracts/jni:android.media.MediaCodec",
+   "row": "jni:android.media.MediaCodec",
+   "outcome": "fail",
+   "westlake_commit": "6291f9e91635677c998a88643be35c3a8cb042ea",
+   "date": "2026-10-09",
+   "verdict": "FAIL java.lang.IllegalStateException: video/avc gave no input buffer in 1 s at org.westlake.probe.media.MainActivity.lambda$runAll$2(MainActivity.java:123)",
+   "passed": false
+  },
+  {
+   "probe": "media-contracts/media:decode-file",
+   "row": "media:decode-file",
+   "outcome": "fail",
+   "westlake_commit": "6291f9e91635677c998a88643be35c3a8cb042ea",
+   "date": "2026-10-09",
+   "verdict": "FAIL java.lang.NoClassDefFoundError: android.media.MediaExtractor at org.westlake.probe.media.MainActivity.decodeVideo(MainActivity.java:166)",
+   "passed": false
+  },
+  {
+   "probe": "media-contracts/jni:android.media.ImageReader",
+   "row": "jni:android.media.ImageReader",
+   "outcome": "fail",
+   "westlake_commit": "6291f9e91635677c998a88643be35c3a8cb042ea",
+   "date": "2026-10-09",
+   "verdict": "FAIL java.lang.UnsatisfiedLinkError: No implementation found for void android.media.ImageReader.nativeClassInit() (tried Java_android_media_ImageReader_nativeClassInit and Java_android_media_ImageReader_nativeClassInit__) - is the library loaded, e.g. System.loadLibrary? at android.media.ImageReader",
+   "passed": false
+  },
+  {
+   "probe": "media-contracts/jni:android.media.AudioTrack",
+   "row": "jni:android.media.AudioTrack",
+   "outcome": "pass",
+   "westlake_commit": "6291f9e91635677c998a88643be35c3a8cb042ea",
+   "date": "2026-10-09",
+   "verdict": "PASS minBuffer=9600B wrote=9600 samples",
+   "passed": true
+  },
+  {
+   "probe": "framework-contracts",
+   "westlake_commit": "6291f9e91635677c998a88643be35c3a8cb042ea",
+   "date": "2026-10-09",
+   "verdict": "2 pass, 3 truthfully absent, 8 fail: am:start-unresolved, pm:call:queryIntentContentProviders, pm:call:queryIntentActivityOptions, pm:call:queryBroadcastReceivers, pm:call:setComponentEnabledSetting, pm:call:getComponentEnabledSetting, jni:android.view.KeyCharacterMap, svc:jobscheduler",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/am:start-unresolved",
+   "row": "am:start-unresolved",
+   "outcome": "fail",
+   "westlake_commit": "6291f9e91635677c998a88643be35c3a8cb042ea",
+   "date": "2026-10-09",
+   "verdict": "FAIL startActivity returned for an intent nothing handles; Android throws ActivityNotFoundException",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/svc:audio",
+   "row": "svc:audio",
+   "outcome": "pass",
+   "westlake_commit": "6291f9e91635677c998a88643be35c3a8cb042ea",
+   "date": "2026-10-09",
+   "verdict": "PASS maxVolume=15 volume=5 sampleRate=48000 framesPerBuffer=1024 outputs=1 focus=1 ringerMode=2",
+   "passed": true
+  },
+  {
+   "probe": "framework-contracts/pm:call:queryIntentContentProviders",
+   "row": "pm:call:queryIntentContentProviders",
+   "outcome": "fail",
+   "westlake_commit": "6291f9e91635677c998a88643be35c3a8cb042ea",
+   "date": "2026-10-09",
+   "verdict": "FAIL no provider for its own filter ([])",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/pm:call:queryIntentActivityOptions",
+   "row": "pm:call:queryIntentActivityOptions",
+   "outcome": "fail",
+   "westlake_commit": "6291f9e91635677c998a88643be35c3a8cb042ea",
+   "date": "2026-10-09",
+   "verdict": "FAIL no activity for its own filter ([])",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/pm:call:queryBroadcastReceivers",
+   "row": "pm:call:queryBroadcastReceivers",
+   "outcome": "fail",
+   "westlake_commit": "6291f9e91635677c998a88643be35c3a8cb042ea",
+   "date": "2026-10-09",
+   "verdict": "FAIL no receiver for its own filter ([])",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/pm:call:setComponentEnabledSetting",
+   "row": "pm:call:setComponentEnabledSetting",
+   "outcome": "fail",
+   "westlake_commit": "6291f9e91635677c998a88643be35c3a8cb042ea",
+   "date": "2026-10-09",
+   "verdict": "FAIL disabled activity still resolves (1 found)",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/pm:call:getComponentEnabledSetting",
+   "row": "pm:call:getComponentEnabledSetting",
+   "outcome": "fail",
+   "westlake_commit": "6291f9e91635677c998a88643be35c3a8cb042ea",
+   "date": "2026-10-09",
+   "verdict": "FAIL read back 0 after disabling, not 2",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/jni:android.view.KeyCharacterMap",
+   "row": "jni:android.view.KeyCharacterMap",
+   "outcome": "fail",
+   "westlake_commit": "6291f9e91635677c998a88643be35c3a8cb042ea",
+   "date": "2026-10-09",
+   "verdict": "FAIL KEYCODE_A -> 0, events for \"ab\" 0",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/svc:jobscheduler",
+   "row": "svc:jobscheduler",
+   "outcome": "fail",
+   "westlake_commit": "6291f9e91635677c998a88643be35c3a8cb042ea",
+   "date": "2026-10-09",
+   "verdict": "FAIL scheduled (pending=false) but never ran in 15 s",
+   "passed": false
+  },
+  {
+   "probe": "framework-contracts/svc:vibrator",
+   "row": "svc:vibrator",
+   "outcome": "absent",
+   "westlake_commit": "6291f9e91635677c998a88643be35c3a8cb042ea",
+   "date": "2026-10-09",
+   "verdict": "ABSENT hasVibrator=false, and vibrate() returned",
+   "passed": true
+  },
+  {
+   "probe": "framework-contracts/svc:sensor",
+   "row": "svc:sensor",
+   "outcome": "absent",
+   "westlake_commit": "6291f9e91635677c998a88643be35c3a8cb042ea",
+   "date": "2026-10-09",
+   "verdict": "ABSENT no sensors listed, no accelerometer",
+   "passed": true
+  },
+  {
+   "probe": "framework-contracts/svc:phone",
+   "row": "svc:phone",
+   "outcome": "absent",
+   "westlake_commit": "6291f9e91635677c998a88643be35c3a8cb042ea",
+   "date": "2026-10-09",
+   "verdict": "ABSENT phoneType=0 simState=0 operator=",
+   "passed": true
+  },
+  {
+   "probe": "framework-contracts/svc:keyguard",
+   "row": "svc:keyguard",
+   "outcome": "pass",
+   "westlake_commit": "6291f9e91635677c998a88643be35c3a8cb042ea",
+   "date": "2026-10-09",
+   "verdict": "PASS locked=false secure=false",
+   "passed": true
+  }
+ ]
+}

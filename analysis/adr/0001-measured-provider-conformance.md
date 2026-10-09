@@ -72,8 +72,9 @@ spec, a shell. Each became a row only after it was seen.
   contracts when someone uses a feature, not at launch.
 
 **The tool for measuring them exists and is dormant.**
-- `probes/run_suite.py` runs 15 white-box probe apps against a build. It records verdicts keyed by
-  the Westlake commit, which `gap-map --probe-results` reads.
+- `probes/run_suite.py` runs the 8 probe apps listed in its suite against a build (5 more probe apps
+  sit outside it). It records verdicts keyed by the Westlake commit, which `gap-map --probe-results`
+  reads.
 - The only recorded results are from Sep 21 and 22, on Westlake commits of those days, with
   SELinux permissive. The per-round rescans do not pass `--probe-results`.
 - AAudio showed the cost. `ndk:weld:audio` read "missing" for weeks. Its effect surfaced only in
@@ -132,7 +133,7 @@ spec, a shell. Each became a row only after it was seen.
 | milestone | done when |
 |---|---|
 | M1: pruning | median open rows per app fall from 76 to 30 or fewer, and no blocker a row names in the ledger loses its row |
-| M2: revival | the 15 existing probes run on the current build under enforcing, and a baseline is recorded |
+| M2: revival | the suite's probes, and the other probe apps that still apply, run on the current build under enforcing, and a baseline is recorded |
 | M3: contract probes | the contracts behind the ten most widespread app-specific open rows have measured verdicts |
 | M4: ranking | the first ranked queue is published, and the next blind batch reports blocked-app recall |
 

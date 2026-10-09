@@ -28,3 +28,22 @@ With Westlake `5df440b`, which holds a dialog's OpenHarmony session back until i
 has one, the red dialog shows above the green activity. It sits at the top-left rather than centred:
 the window adapter lays every window out at (0,0) (`wm:window-placement`), and nothing is dimmed
 behind it (`wm:dim-behind`).
+
+## Contract lines (ADR-0001)
+
+For the per-build conformance run the probe also prints one line per gap-map row it measures, then
+`[WL-CONTRACT] done`:
+
+| row | passes when |
+|---|---|
+| `wm:window-placement` | both the dialog and the alert are centred and on screen |
+| `wm:dialog-stacking` | the runner's tap at the logged button position reaches the dialog's button within 20 s |
+
+The alert is dismissed once it has been measured, so it cannot take the tap. A misplaced dialog no
+longer ends the run before the tap: the suite reads these lines, not the probe-level markers.
+`wm:dim-behind` has no line, since the dim shows on screen only.
+
+## 2026-10-09 result (build 100)
+
+`wm:dialog-stacking` passes: the tap reaches the dialog's button. `wm:window-placement` fails: the
+dialog is at 40,0 rather than centred at x=280, on a 1200 px screen.

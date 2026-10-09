@@ -13,6 +13,16 @@ app-inputs.lock.json, stages it (prepare_app.py), launches it on the build under
 interaction (a tap at the coordinates the probe logs), then stops it. Results are merged into the
 probe-results file that `gap-map --probe-results` reads, keyed by the exact Westlake commit; a
 build from a dirty tree is recorded as "dirty-<commit>", which never matches a clean commit.
+
+--launch-args passes the provider's own launch arguments (the WebView input, the bionic shim build,
+runtime-library overrides), so a probe runs on the provider the corpus runs on. Before each probe
+the board is cleared of leftover launcher processes and app stages, as the corpus launches do.
+
+A contract probe ("contracts" in suite.json) exercises several contracts in one launch and prints
+one line per contract: <prefix><name> <ok|absent|fail token> <detail>. Each line becomes a result of
+its own, "<probe>/<name>", and its name is the gap-map row it measures (contract probes name rows by
+id), so the result lands on that row in every map that has it. The probe's own result passes when
+it finished and no contract failed.
 """
 
 from __future__ import annotations
@@ -22,6 +32,7 @@ import datetime
 import hashlib
 import json
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -62,10 +73,33 @@ def tap_target(lines: list[str], probe: dict[str, Any]) -> tuple[int, int] | Non
     return None
 
 
+def contract_results(lines: list[str], probe: dict[str, Any]) -> list[dict[str, Any]]:
+    """One result per contract line of a contract probe, the last line for a name winning."""
+    spec = probe.get("contracts")
+    if not spec:
+        return []
+    tokens = (("pass", spec.get("ok", "PASS")), ("absent", spec.get("absent", "ABSENT")),
+              ("fail", spec.get("fail", "FAIL")))
+    found: dict[str, dict[str, Any]] = {}
+    for line in lines:
+        at = line.find(spec["prefix"])
+        if at < 0:
+            continue
+        name, _, rest = line[at + len(spec["prefix"]):].strip().partition(" ")
+        outcome = next((kind for kind, token in tokens if rest.startswith(token)), None)
+        if not name or outcome is None:
+            continue
+        found[name] = {"probe": probe["name"] + "/" + name, "row": name, "outcome": outcome,
+                       "passed": outcome != "fail", "verdict": rest.strip()[:300]}
+    return list(found.values())
+
+
 def markers(probe: dict[str, Any]) -> list[str]:
     found = list(probe["pass"]) + list(probe.get("fail", []))
     if probe.get("tap"):
         found.append(probe["tap"]["after"])
+    if probe.get("contracts"):
+        found.append(probe["contracts"]["prefix"])
     return found
 
 
@@ -120,6 +154,10 @@ def run_probe(probe: dict[str, Any], args: argparse.Namespace, device: Device, l
     if sha256(apk) != pin.get("sha256"):
         return {**result, "verdict": "not run: APK differs from its pin in app-inputs.lock.json"}
     tools = args.manifest / "tools"
+    # As the corpus launches do: no leftover launcher, and no stale app stages filling /data.
+    device.shell('P=$(pidof appspawn-x); [ -n "$P" ] && kill $P; for d in /data/local/tmp/a2hlab-app-* '
+                 '/data/app/el2/100/base/org.westlake.imehost/files/a2hlab-source-*; do [ -e "$d" ] && rm -rf "$d"; done',
+                 timeout=300)
     prep = args.work / ("prep-" + probe["name"])
     run = args.work / ("run-" + probe["name"])
     for directory in (prep, run):
@@ -129,7 +167,7 @@ def run_probe(probe: dict[str, Any], args: argparse.Namespace, device: Device, l
     launch = subprocess.run([sys.executable, str(tools / "probe_source_app.py"), "--workspace", str(args.workspace),
                              "--westlake-source", str(args.westlake_source), "--framework-report", str(args.framework_report),
                              "--app-input", str(prep), "--app", probe["lock_key"], "--hdc", args.hdc,
-                             "--serial", args.serial, "--out", str(run)],
+                             "--serial", args.serial, "--out", str(run)] + shlex.split(args.launch_args),
                             cwd=args.manifest, capture_output=True, text=True, timeout=1200)
     report_path = run / "device-report.json"
     if launch.returncode != 0 or not report_path.exists():
@@ -161,7 +199,16 @@ def run_probe(probe: dict[str, Any], args: argparse.Namespace, device: Device, l
                 lines.append("(probe process exited)")
                 break
     finally:
+        (run / "child.stderr").write_text(device.shell(f"cat {log}", timeout=120))
         device.shell(f"kill -9 {child} {parent} 2>/dev/null")
+    contracts = contract_results(lines, probe)
+    if contracts:
+        failed = [c["row"] for c in contracts if not c["passed"]]
+        absent = sum(1 for c in contracts if c["outcome"] == "absent")
+        summary = (f"{len(contracts) - len(failed) - absent} pass, {absent} truthfully absent, {len(failed)} fail"
+                   + (": " + ", ".join(failed) if failed else ""))
+        return {**result, "passed": status == "pass" and not failed, "contracts": contracts,
+                "verdict": ("timeout: " if status == "pending" else "") + summary}
     verdict_lines = [line.strip() for line in lines if not (probe.get("tap") and probe["tap"]["after"] in line)]
     return {**result, "passed": status == "pass",
             "verdict": ("timeout: " if status == "pending" else "") + " | ".join(verdict_lines)[:400]}
@@ -180,6 +227,8 @@ def main() -> int:
     parser.add_argument("--results", required=True, type=Path, help="probe-results.json to merge into (created if absent)")
     parser.add_argument("--only", action="append", default=[], help="run only these probes; repeat")
     parser.add_argument("--timeout", type=int, default=120, help="seconds to wait for a probe's verdict")
+    parser.add_argument("--launch-args", default="",
+                        help="the provider's own launch arguments, passed to probe_source_app.py as given")
     args = parser.parse_args()
 
     suite = json.loads(args.suite.read_text())["probes"]
@@ -195,6 +244,8 @@ def main() -> int:
         outcome = run_probe(probe, args, device, lock)
         new.append({"probe": outcome["probe"], "westlake_commit": commit, "date": today,
                     "verdict": outcome["verdict"], "passed": outcome["passed"]})
+        new += [{"probe": c["probe"], "row": c["row"], "outcome": c["outcome"], "westlake_commit": commit,
+                 "date": today, "verdict": c["verdict"], "passed": c["passed"]} for c in outcome.get("contracts", [])]
         print(f"{'PASS' if outcome['passed'] else 'FAIL'} {probe['name']}: {outcome['verdict'][:160]}", flush=True)
     document = json.loads(args.results.read_text()) if args.results.exists() else {"results": []}
     args.results.write_text(dump(merge_results(document, new)))

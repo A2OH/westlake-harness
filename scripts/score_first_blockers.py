@@ -236,7 +236,7 @@ def main():
         elif not blocker:
             outcome, rows = "unscorable", []
         else:
-            rows = candidate_rows(category, blocker, gap["rows"], entry.get("root_cause"), entry.get("self_finish"),
+            rows = candidate_rows(category, blocker, gap["rows"] + gap.get("provider_rows", []), entry.get("root_cause"), entry.get("self_finish"),
                                   entry.get("crash_dump"), entry.get("null_services"), entry.get("service_refusals"),
                                   entry.get("service_failures"))
             if rows is None:
