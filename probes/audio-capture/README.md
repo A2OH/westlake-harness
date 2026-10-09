@@ -44,6 +44,26 @@ rest with silence.
 
 On Ball2Box itself, dropouts fell from 42% of 10 ms windows to 0 (median RMS 306 to 2219).
 
+## AAudio over OHAudio: `tone aa`, `aa16`, `aaw`, `aain`
+
+The AAudio modes open `libaaudio.so` and look its entry points up by handle, as Oboe does, so with
+the shim preloaded they reach Westlake's AAudio over OHAudio; without the shim the dlopen fails, as
+OH has no such library. Recorded the same way, 4 s from 1 s in, on the OH 6.1 board:
+
+| path | peak | silent 10 ms windows |
+|---|---|---|
+| OHAudio control, 48 kHz | 1000 Hz | 0% |
+| `aa`: data callback, float, 48 kHz | 1000 Hz | 0% |
+| `aa`: data callback, float, 44.1 kHz | 1000 Hz | 0% |
+| `aa16`: data callback of exactly 192 frames, 16-bit, 48 kHz | 1000 Hz | 0% |
+| `aaw`: blocking writes, 16-bit, 48 kHz | 1001 Hz | 0% |
+| `aaw`: blocking writes, 16-bit, 44.1 kHz | 998 Hz | 1% |
+
+- `aa16` ran 1788 callbacks, none of another size: OH asks for about 93 ms per callback (4458 frames
+  at 48 kHz in its normal latency mode), and the stream cuts and joins the app's buffers to fit.
+- The streams counted no underruns. Their timestamps were valid once playing, and invalid before.
+- `aain` read float frames from the microphone at room level (RMS 26.5 on the 16-bit scale).
+
 ## First use: MediaPlayer on OH AVPlayer (Doors of Doom)
 
 Recorded for 6 s while Doors of Doom played music1.mp3 through the new MediaPlayer port:
