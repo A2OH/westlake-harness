@@ -937,6 +937,28 @@ class NeededLibraries(unittest.TestCase):
         rows = gapmap.needed_library_rows(scan, ["/system/lib64/ndk/liblog.so"], ["libandroid.so"])
         self.assertEqual([r["open_symbols"] for r in rows], [["libmediandk.so"]])
         self.assertEqual(gapmap.needed_library_rows(scan, None, None), [], "no board listing, no claim")
+        staged = gapmap.needed_library_rows(scan, ["/system/lib64/ndk/liblog.so"], ["libandroid.so"], ["libmediandk.so"])
+        self.assertEqual(staged, [], "a library the shim's build stages beside it is provided")
+
+    def test_libraries_the_shim_stages_and_answers(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "tools").mkdir()
+            (root / "tools/build_bionic_shim.sh").write_text(
+                "clang -Wl,-soname,libwebview_bionic_shim.so -o $O/libwebview_bionic_shim.so\n"
+                "clang -Wl,-soname,libaaudio.so $O/as.o -o $O/libaaudio.so\n")
+            shim = root / "framework/webview-shim"
+            shim.mkdir(parents=True)
+            (shim / "webview_bionic_shim.c").write_text(
+                'void *dlopen(const char *filename, int flags)\n{\n'
+                '    if (basename != NULL && strcmp(basename, "libaaudio.so") == 0) {\n'
+                '        void *handle = real_dlopen(self.dli_fname, flags | RTLD_NOLOAD);\n    }\n'
+                '    if (basename != NULL && strcmp(basename, "libGLESv2.so") == 0 &&\n'
+                '        westlake_caller_wants_gles3(caller)) {\n'
+                '        return real_dlopen("libGLESv3.so", flags);\n    }\n}\n')
+            self.assertEqual(gapmap.bionic_shim_staged_libraries(root), ["libaaudio.so"])
+            self.assertEqual(list(gapmap.shim_answered_libraries(root)), ["libaaudio.so"],
+                             "a redirect to another library is not the shim answering")
 
 
 class OhEvents(unittest.TestCase):
@@ -1528,6 +1550,13 @@ static jstring Runtime_nativeLoad(JNIEnv* env, jclass clazz, jstring filename,
         self.assertIn("libengine.so", row["provider"])
         self.assertEqual(gapmap.runtime_resolved_rows(scan, None), [], "no NDK surface, no claim")
         self.assertEqual(gapmap.runtime_resolved_rows(scan, {"symbols": []}), [])
+        # A library whose dlopen the shim answers with its own handle: its exports are found by handle.
+        answered = gapmap.runtime_resolved_rows(scan, coverage, {"AMediaCodec_createDecoderByType"},
+                                                {"libmediandk.so": "webview_bionic_shim.c:1"})
+        self.assertEqual([r["id"] for r in answered], ["sym:runtime-resolved:libandroid.so"])
+        exported_elsewhere = gapmap.runtime_resolved_rows(scan, coverage, {"ASurfaceControl_createFromWindow"},
+                                                          {"libmediandk.so": "webview_bionic_shim.c:1"})
+        self.assertEqual(len(exported_elsewhere), 2, "a shim export helps only a library the shim answers for")
 
     def test_shadowed_libraries_and_their_importers(self) -> None:
         scan = {"inventory": {"elfs": [

@@ -504,11 +504,18 @@ def ndk_symbol_rows(
                 open_symbols=names[:20],
                 shim="compile the AOSP source (" + ", ".join(sorted({i['source'].rsplit('/', 1)[-1] for i in items if i.get('source')})) + ") and deploy it")
         elif group == "weld":
+            # The shim can weld an NDK library itself (AAudio over OHAudio): an import binds to its
+            # export, as it does for the libc ABI, even where the measured board predates it.
             info = model["welds"].get(weld, {})
+            covered = [n for n in names if n in shim_exports]
+            open_ = [n for n in names if n not in shim_exports]
             fields.update(
                 item=f"NDK weld · {weld}: {len(names)} symbols", oh_touchpoint=info.get("oh", ""),
-                verdict="missing", shim_class="C4", effort=info.get("effort", "M"),
-                provider="no Westlake provision on the measured board", open_symbols=names[:20],
+                verdict="supplied" if not open_ else "missing", shim_class="C0" if not open_ else "C4",
+                effort="none" if not open_ else info.get("effort", "M"),
+                provider=(f"{len(covered)} of {len(names)} exported by the Westlake bionic shim" if covered
+                          else "no Westlake provision on the measured board"),
+                open_symbols=open_[:20], covered_symbols=covered[:20],
                 shim=f"AOSP NDK source above, {info.get('oh', 'an OH subsystem')} below")
         elif group == "now-provided":
             fields.update(
@@ -1314,7 +1321,9 @@ def silent_load_rows(scan: dict[str, Any], model: dict[str, Any],
     return rows
 
 
-def runtime_resolved_rows(scan: dict[str, Any], ndk_cov: dict[str, Any] | None) -> list[dict[str, Any]]:
+def runtime_resolved_rows(scan: dict[str, Any], ndk_cov: dict[str, Any] | None,
+                          shim_exports: set[str] | None = None,
+                          answered: dict[str, str] | None = None) -> list[dict[str, Any]]:
     """Platform entry points an app reaches by name at runtime, which the provider does not supply.
 
     A dlopen/dlsym pair declares nothing: the name is a string, so the library never records that
@@ -1328,6 +1337,9 @@ def runtime_resolved_rows(scan: dict[str, Any], ndk_cov: dict[str, Any] | None) 
     public NDK surface are reported, which takes an engine from four thousand candidate strings to
     under a hundred real entry points, and even those stay `unresolved` until an on-device probe
     performs the lookup.
+
+    answered: libraries whose dlopen from app code the bionic shim answers with its own handle
+    (libOpenSLES.so, libaaudio.so), so a lookup by that handle finds what the shim exports.
     """
     if not ndk_cov:
         return []
@@ -1341,6 +1353,8 @@ def runtime_resolved_rows(scan: dict[str, Any], ndk_cov: dict[str, Any] | None) 
         for candidate in elf.get("runtime_symbol_candidates", []):
             entry = surface.get(candidate)
             if entry is None or entry.get("status") == "oh":
+                continue
+            if entry.get("library") in (answered or {}) and candidate in (shim_exports or set()):
                 continue
             by_library[entry.get("library", "unknown")].add(candidate)
             importers[entry.get("library", "unknown")].add(name)
@@ -2974,19 +2988,22 @@ def art_internal_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def needed_library_rows(scan: dict[str, Any], board_paths: list[str] | None,
-                        runtime_libraries: list[str] | None) -> list[dict[str, Any]]:
+                        runtime_libraries: list[str] | None,
+                        staged: list[str] | None = None) -> list[dict[str, Any]]:
     """Libraries an APK library lists in DT_NEEDED that nothing on the device provides.
 
     oh-resolve checks symbols, so a whole missing library looked like a few missing symbols,
     or like nothing at all when every symbol also exists elsewhere. The loader refuses the load
     before any symbol is looked at: Fennec's libxul.so needs libmediandk.so, which neither the
-    APK, the Westlake runtime nor the board ships.
+    APK, the Westlake runtime nor the board ships. staged: the libraries the bionic shim's build
+    puts beside it on the Android namespace's path (libaaudio.so).
     """
     if board_paths is None:
         return []
     elfs = ohresolve.target_elfs(scan)
     provided = ({(e.get("soname") or e.get("name")) for e in elfs} | {e.get("name") for e in elfs}
-                | {p.rsplit("/", 1)[-1] for p in board_paths} | set(runtime_libraries or []) | _LOADER_PROVIDED)
+                | {p.rsplit("/", 1)[-1] for p in board_paths} | set(runtime_libraries or [])
+                | set(staged or []) | _LOADER_PROVIDED)
     missing: dict[str, list[str]] = defaultdict(list)
     for elf in elfs:
         for needed in elf.get("needed", []):
@@ -3103,6 +3120,35 @@ def bionic_shim_sources(westlake_root: Path) -> list[Path]:
     names = re.findall(r"\$W/(\w+\.c)\b", build.read_text(errors="replace")) if build.exists() else []
     sources = [directory / "webview_bionic_shim.c"] + [directory / n for n in names if n != "webview_bionic_shim.c"]
     return [path for path in sources if path.exists()]
+
+
+def bionic_shim_staged_libraries(westlake_root: Path) -> list[str]:
+    """Libraries the shim's build stages beside it on the Android namespace's path, by the -soname
+    tools/build_bionic_shim.sh gives them: libaaudio.so, a name for DT_NEEDED whose entry points the
+    shim itself exports."""
+    build = westlake_root / "tools/build_bionic_shim.sh"
+    if not build.exists():
+        return []
+    names = set(re.findall(r"-soname,(lib[\w.+-]+\.so)", build.read_text(errors="replace")))
+    return sorted(names - {"libwebview_bionic_shim.so"})
+
+
+def shim_answered_libraries(westlake_root: Path) -> dict[str, str]:
+    """Libraries whose dlopen from app code the shim answers with its own handle, and where: a lookup
+    by that handle finds the shim's exports first (libOpenSLES.so's adapter, libaaudio.so's AAudio).
+    Other basename checks in the shim's dlopen redirect elsewhere and are not counted."""
+    shim = westlake_root / "framework/webview-shim/webview_bionic_shim.c"
+    if not shim.exists():
+        return {}
+    text = shim.read_text(errors="replace")
+    checks = list(re.finditer(r'if \(basename != NULL && strcmp\(basename, "(lib[\w.+-]+\.so)"\) == 0', text))
+    answered = {}
+    for index, check in enumerate(checks):
+        end = checks[index + 1].start() if index + 1 < len(checks) else check.end() + 2000
+        if "real_dlopen(self.dli_fname" in text[check.end():end]:
+            line = text.count("\n", 0, check.start()) + 1
+            answered[check.group(1)] = f"framework/webview-shim/webview_bionic_shim.c:{line}"
+    return answered
 
 
 def bionic_shim_exports(westlake_root: Path) -> set[str]:
@@ -3811,7 +3857,7 @@ def build_map(
                                   bionic_loader_model(westlake_root, manifest_root))
             + nio_rows(scan, runtime_class_paths)
             + art_internal_rows(scan)
-            + needed_library_rows(scan, board_paths, runtime_libraries)
+            + needed_library_rows(scan, board_paths, runtime_libraries, bionic_shim_staged_libraries(westlake_root))
             + libc_constant_rows(scan, contracts.libc_constant_model(westlake_root))
             + signal_abi_rows(scan, contracts.signal_abi_model(westlake_root))
             + static_mutex_rows(scan, contracts.static_mutex_model(westlake_root))
@@ -3828,7 +3874,8 @@ def build_map(
             + silent_load_rows(scan, native_load_short_circuit(westlake_root.parent / "art-build"),
                                runtime_libraries)
             + stub_native_rows(scan, stub_native_model(westlake_root.parent / "art-build", westlake_root))
-            + runtime_resolved_rows(scan, ndk_cov)
+            + runtime_resolved_rows(scan, ndk_cov, bionic_shim_exports(westlake_root),
+                                    shim_answered_libraries(westlake_root))
             + sandbox_rows(scan, policy) + external_rows(facts, scan, refused_libraries(westlake_root)))
     # The interposition row's routing first: the libraries it routes meet the Android namespace's
     # libandroid.so too, which android_namespace_rows checks.

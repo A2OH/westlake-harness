@@ -891,7 +891,7 @@
    "corpus": "r87",
    "row": "load:needed-missing",
    "symptom": "its player service failed binding (the app drew): its audio engine needs libaaudio.so, which nothing provides",
-   "fixed_in": null
+   "fixed_in": "1f3a4fe"
   },
   {
    "app": "usp",
