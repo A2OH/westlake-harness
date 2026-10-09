@@ -892,6 +892,20 @@
    "row": "load:needed-missing",
    "symptom": "its player service failed binding (the app drew): its audio engine needs libaaudio.so, which nothing provides",
    "fixed_in": null
+  },
+  {
+   "app": "usp",
+   "corpus": "r89",
+   "row": null,
+   "symptom": "its GLSurfaceView shares the activity's OH window (too small for one of its own), and its GL thread made the window's EGL surface before libhwui, which aborted at its first draw (drawRenderNode called on a context with no surface!); 3 of 5 launches on r89's provider, while libhwui won in r87 and r88",
+   "fixed_in": null
+  },
+  {
+   "app": "zoom",
+   "corpus": "r89",
+   "row": null,
+   "symptom": "a SIGSEGV on its us.zoom.videome thread at bind, and OH's dump helper timed out (waitpid timeout) before Zoom's own handler could recover; intermittent, as in r86",
+   "fixed_in": null
   }
  ]
 }

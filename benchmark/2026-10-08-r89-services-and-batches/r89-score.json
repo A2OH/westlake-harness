@@ -1,0 +1,121 @@
+{
+ "counts": {
+  "named": 2,
+  "unscorable": 9,
+  "device": 1,
+  "not-named": 1
+ },
+ "results": [
+  {
+   "app": "cclauncher",
+   "stage": "view",
+   "category": "stall",
+   "blocker": "main thread idle in its message loop at android.os.MessageQueue.nativePollOnce(Native method)",
+   "outcome": "named",
+   "rows": [
+    "wm:show-wallpaper=missing"
+   ]
+  },
+  {
+   "app": "facebooknotifica",
+   "stage": "activity",
+   "category": "app-framework",
+   "blocker": "start activity: InflateException",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "flipboard",
+   "stage": "runtime-init",
+   "category": "app-framework",
+   "blocker": "bind: RuntimeException: Unable to get provider androidx.startup.InitializationProvider: eqb: java.lang.U",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "fmessages",
+   "stage": "view",
+   "category": "self-finish",
+   "blocker": "its last activity finished itself 2 ms after resuming, and nothing replaced it",
+   "outcome": "device",
+   "rows": [
+    "svc:role=supplied",
+    "am:task-root=supplied"
+   ]
+  },
+  {
+   "app": "insigno",
+   "stage": "bound",
+   "category": "native-crash",
+   "blocker": "SIGABRT on thread mali-cmar-backe: aborted from libGLES_mali.z.so",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "nytimes",
+   "stage": "activity",
+   "category": "app-framework",
+   "blocker": "start activity: RuntimeException",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "opflashcontrol",
+   "stage": "view",
+   "category": "app-framework",
+   "blocker": "process init: IllegalStateException: Slider value(80.0) must be greater or equal to valueFrom(0.0), and lower or equa",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "osmand",
+   "stage": "view",
+   "category": "native-crash",
+   "blocker": "SIGABRT on thread Thread (pooled): aborted from libc++_shared.so",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "plusplusbattery",
+   "stage": "bound",
+   "category": "app-framework",
+   "blocker": "process init: NoShellException: Unable to create a shell!",
+   "outcome": "named",
+   "rows": [
+    "os:shell=missing"
+   ]
+  },
+  {
+   "app": "shortcut",
+   "stage": "bound",
+   "category": "self-finish",
+   "blocker": "its last activity finished itself 0 ms after resuming, and nothing replaced it",
+   "outcome": "not-named",
+   "rows": []
+  },
+  {
+   "app": "spacebeam",
+   "stage": "view",
+   "category": "stall",
+   "blocker": "main thread running at android.graphics.HardwareRenderer.nSyncAndDrawFrame(Native method)",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "usp",
+   "stage": "view",
+   "category": "native-crash",
+   "blocker": "abort: drawRenderNode called on a context with no surface!",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "zoom",
+   "stage": "bound",
+   "category": null,
+   "blocker": null,
+   "outcome": "unscorable",
+   "rows": []
+  }
+ ]
+}
