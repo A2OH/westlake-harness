@@ -1,0 +1,594 @@
+{
+  "description": "Calibration flows (probes/run_flows.py): what a user does in a few pinned apps, the checks that decide whether it worked, and what the gap map predicted. Tap positions are for the pinned APKs on the 1200x1920 board.",
+  "flows": [
+    {
+      "id": "noice-play",
+      "app": "noice",
+      "intent": "play a sound",
+      "prediction": {
+        "outcome": "works",
+        "rows": {
+          "svc:audio": "conformant since build 101 (before: focus refused)",
+          "jni:android.media.AudioTrack": "conformant"
+        }
+      },
+      "steps": [
+        {
+          "wait": 25
+        },
+        {
+          "tap": [
+            115,
+            1838
+          ],
+          "why": "skip the onboarding"
+        },
+        {
+          "wait": 6
+        },
+        {
+          "tap": [
+            324,
+            385
+          ],
+          "why": "play Birds"
+        },
+        {
+          "wait": 3
+        },
+        {
+          "record": [
+            12,
+            "audio"
+          ]
+        },
+        {
+          "shot": "playing"
+        }
+      ],
+      "checks": [
+        {
+          "audio": "audio",
+          "min_nonzero": 20000,
+          "why": "the board plays the sound"
+        },
+        {
+          "alive": true,
+          "why": "the app keeps running"
+        }
+      ]
+    },
+    {
+      "id": "mpv-play-file",
+      "app": "mpv",
+      "intent": "play a video picked in the app's file picker",
+      "prediction": {
+        "outcome": "works",
+        "rows": {
+          "(none)": "mpv decodes with its own libraries; no row names its path"
+        }
+      },
+      "steps": [
+        {
+          "wait": 22
+        },
+        {
+          "push": "probes/flows/calib-clip.mp4",
+          "to": "external/calib-clip.mp4"
+        },
+        {
+          "tap": [
+            326,
+            1525
+          ],
+          "why": "open the file picker (legacy)"
+        },
+        {
+          "wait": 5
+        },
+        {
+          "shot": "picker"
+        },
+        {
+          "tap": [
+            155,
+            433
+          ],
+          "why": "pick calib-clip.mp4"
+        },
+        {
+          "wait": 8
+        },
+        {
+          "shot": "after"
+        },
+        {
+          "record": [
+            8,
+            "audio"
+          ]
+        }
+      ],
+      "checks": [
+        {
+          "audio": "audio",
+          "min_nonzero": 20000,
+          "why": "the clip's 1 kHz tone plays"
+        }
+      ]
+    },
+    {
+      "id": "justplayer-choose",
+      "app": "justplayer",
+      "intent": "choose a video and play it",
+      "prediction": {
+        "outcome": "fails",
+        "rows": {
+          "jni:android.media.MediaCodec": "broken",
+          "jni:android.media.MediaExtractor": "broken",
+          "java:Media store": "unmeasured"
+        }
+      },
+      "steps": [
+        {
+          "wait": 22
+        },
+        {
+          "push": "probes/flows/calib-clip.mp4",
+          "to": "external/Movies/calib-clip.mp4"
+        },
+        {
+          "tap": [
+            802,
+            1850
+          ],
+          "why": "choose a video"
+        },
+        {
+          "wait": 6
+        },
+        {
+          "shot": "chooser"
+        },
+        {
+          "record": [
+            8,
+            "audio"
+          ]
+        }
+      ],
+      "checks": [
+        {
+          "audio": "audio",
+          "min_nonzero": 20000,
+          "why": "the clip plays"
+        }
+      ]
+    },
+    {
+      "id": "markor-type",
+      "app": "markor",
+      "intent": "type into a note",
+      "prediction": {
+        "outcome": "works",
+        "rows": {
+          "svc:input_method": "supplied",
+          "jni:android.view.KeyCharacterMap": "broken (hardware keys, not the soft keyboard)"
+        }
+      },
+      "steps": [
+        {
+          "wait": 22
+        },
+        {
+          "tap": [
+            1120,
+            1840
+          ],
+          "why": "intro, page 2"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "tap": [
+            1120,
+            1840
+          ],
+          "why": "intro, page 3"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "tap": [
+            1120,
+            1840
+          ],
+          "why": "intro, page 4"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "tap": [
+            1120,
+            1840
+          ],
+          "why": "intro, page 5"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "tap": [
+            1120,
+            1840
+          ],
+          "why": "finish the intro"
+        },
+        {
+          "wait": 4
+        },
+        {
+          "tap": [
+            749,
+            1860
+          ],
+          "why": "open QuickNote"
+        },
+        {
+          "wait": 4
+        },
+        {
+          "shot": "editor"
+        },
+        {
+          "tap": [
+            600,
+            600
+          ],
+          "why": "tap into the text"
+        },
+        {
+          "wait": 4
+        },
+        {
+          "shot": "focused"
+        }
+      ],
+      "checks": [
+        {
+          "changed": [
+            "editor",
+            "focused"
+          ],
+          "region": [
+            0,
+            1000,
+            1200,
+            1700
+          ],
+          "min_diff": 6,
+          "why": "a keyboard comes up over the lower screen"
+        }
+      ]
+    },
+    {
+      "id": "markor-preview",
+      "app": "markor",
+      "intent": "preview a note (WebView)",
+      "prediction": {
+        "outcome": "fails",
+        "rows": {
+          "wv:renderer-process": "missing: the first WebView kills the app"
+        }
+      },
+      "steps": [
+        {
+          "wait": 22
+        },
+        {
+          "tap": [
+            1120,
+            1840
+          ],
+          "why": "intro, page 2"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "tap": [
+            1120,
+            1840
+          ],
+          "why": "intro, page 3"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "tap": [
+            1120,
+            1840
+          ],
+          "why": "intro, page 4"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "tap": [
+            1120,
+            1840
+          ],
+          "why": "intro, page 5"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "tap": [
+            1120,
+            1840
+          ],
+          "why": "finish the intro"
+        },
+        {
+          "wait": 4
+        },
+        {
+          "tap": [
+            749,
+            1860
+          ],
+          "why": "open QuickNote"
+        },
+        {
+          "wait": 4
+        },
+        {
+          "tap": [
+            747,
+            1750
+          ],
+          "why": "insert a heading (H1)"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "tap": [
+            572,
+            1750
+          ],
+          "why": "insert bold markers"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "tap": [
+            999,
+            63
+          ],
+          "why": "open the preview"
+        },
+        {
+          "wait": 8
+        },
+        {
+          "shot": "preview"
+        }
+      ],
+      "checks": [
+        {
+          "alive": true,
+          "why": "the app survives its first WebView"
+        },
+        {
+          "dark": "preview",
+          "region": [
+            40,
+            150,
+            1160,
+            300
+          ],
+          "min_fraction": 0.004,
+          "why": "the rendered heading shows"
+        }
+      ]
+    },
+    {
+      "id": "fclock-timer",
+      "app": "fclock",
+      "intent": "a 5-minute timer rings when it ends",
+      "prediction": {
+        "outcome": "works",
+        "rows": {
+          "svc:alarm": "supplied (verify)",
+          "svc:notification": "supplied (verify)"
+        }
+      },
+      "steps": [
+        {
+          "wait": 20
+        },
+        {
+          "tap": [
+            1049,
+            1860
+          ],
+          "why": "the Timer tab"
+        },
+        {
+          "wait": 4
+        },
+        {
+          "tap": [
+            1113,
+            238
+          ],
+          "why": "start the timer"
+        },
+        {
+          "wait": 8
+        },
+        {
+          "shot": "running"
+        },
+        {
+          "wait": 290
+        },
+        {
+          "record": [
+            25,
+            "expiry"
+          ]
+        },
+        {
+          "shot": "expired"
+        }
+      ],
+      "checks": [
+        {
+          "audio": "expiry",
+          "min_nonzero": 20000,
+          "why": "the timer rings"
+        }
+      ]
+    },
+    {
+      "id": "fclock-menu",
+      "app": "fclock",
+      "intent": "open the overflow menu",
+      "prediction": {
+        "outcome": "works",
+        "rows": {
+          "(none)": "no row models popup windows"
+        }
+      },
+      "steps": [
+        {
+          "wait": 20
+        },
+        {
+          "tap": [
+            1049,
+            1860
+          ],
+          "why": "the Timer tab, which has no ticking clock"
+        },
+        {
+          "wait": 4
+        },
+        {
+          "shot": "before"
+        },
+        {
+          "tap": [
+            1153,
+            70
+          ],
+          "why": "the overflow menu"
+        },
+        {
+          "wait": 4
+        },
+        {
+          "shot": "menu"
+        }
+      ],
+      "checks": [
+        {
+          "changed": [
+            "before",
+            "menu"
+          ],
+          "region": [
+            800,
+            90,
+            1190,
+            230
+          ],
+          "min_diff": 6,
+          "why": "the menu draws under its button"
+        }
+      ]
+    },
+    {
+      "id": "fclock-dialog",
+      "app": "fclock",
+      "intent": "edit a timer in its dialog",
+      "prediction": {
+        "outcome": "fails",
+        "rows": {
+          "wm:window-placement": "broken (the probe's dialog sat at 40,0)",
+          "wm:dim-behind": "missing"
+        }
+      },
+      "steps": [
+        {
+          "wait": 20
+        },
+        {
+          "tap": [
+            1049,
+            1860
+          ],
+          "why": "the Timer tab"
+        },
+        {
+          "wait": 4
+        },
+        {
+          "shot": "before"
+        },
+        {
+          "tap": [
+            180,
+            238
+          ],
+          "why": "open the timer's dialog"
+        },
+        {
+          "wait": 4
+        },
+        {
+          "shot": "dialog"
+        }
+      ],
+      "checks": [
+        {
+          "changed": [
+            "before",
+            "dialog"
+          ],
+          "region": [
+            100,
+            640,
+            1100,
+            1280
+          ],
+          "min_diff": 6,
+          "why": "the dialog shows in the middle of the screen"
+        },
+        {
+          "changed": [
+            "before",
+            "dialog"
+          ],
+          "region": [
+            0,
+            400,
+            1200,
+            600
+          ],
+          "min_diff": 6,
+          "why": "what is behind it is dimmed"
+        }
+      ]
+    }
+  ]
+}

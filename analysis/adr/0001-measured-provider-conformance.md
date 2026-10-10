@@ -102,6 +102,10 @@ spec, a shell. Each became a row only after it was seen.
    - The conformance run goes with every build.
    - Full corpus rounds become a weekly regression check.
    - Blind batches continue, scored on precision and recall for blocked apps, not on accuracy.
+   - *Amended 2026-10-09:* full corpus rounds run only when a change reaches every app (the
+     runtime, the loader or shim, the window or input bridge) or a milestone is recorded. Each
+     build gets the conformance run, the apps that reach the contract it changed, and the
+     calibration flows (`benchmark/calibration/`).
 
 ## Consequences
 
