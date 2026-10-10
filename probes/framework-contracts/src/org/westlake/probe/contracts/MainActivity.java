@@ -332,9 +332,26 @@ public class MainActivity extends Activity {
             if (source == null) throw fail("getInstallSourceInfo returned null");
             return "installer=" + installer + " (as for an app installed from a file), install source answered";
         });
-        // Last, as it brings another activity up over this one: startActivityForResult to an
-        // activity of this app, which sets a result and finishes; Android delivers it to
-        // onActivityResult before this activity resumes.
+        // These two bring another activity up over this one, so they come last. An activity this app
+        // starts is created, started and resumed, and stays resumed while it is on top: a player
+        // that pauses in onPause (mpv) stays paused after an extra pause and resume.
+        check("am:launch-lifecycle", () -> {
+            runOnUiThread(() -> startActivity(new Intent(this, LifecycleActivity.class)));
+            if (!LifecycleActivity.RESUMED.await(10, TimeUnit.SECONDS)) {
+                throw fail("the started activity was not resumed in 10 s: " + LifecycleActivity.seen());
+            }
+            Thread.sleep(2000);
+            String seen = LifecycleActivity.seen();
+            LifecycleActivity started = LifecycleActivity.current;
+            if (started != null) runOnUiThread(started::finish);
+            LifecycleActivity.DESTROYED.await(5, TimeUnit.SECONDS);
+            if (!"onCreate onStart onResume".equals(seen)) {
+                throw fail("callbacks " + seen + " in 2 s on top; Android gives onCreate onStart onResume");
+            }
+            return "onCreate onStart onResume, and no pause in 2 s on top";
+        });
+        // startActivityForResult to an activity of this app, which sets a result and finishes;
+        // Android delivers it to onActivityResult before this activity resumes.
         check("am:activity-result", () -> {
             runOnUiThread(() -> startActivityForResult(new Intent(this, ResultActivity.class), RESULT_REQUEST));
             if (!resultArrived.await(10, TimeUnit.SECONDS)) {

@@ -1734,6 +1734,37 @@ def activity_result_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[di
     )]
 
 
+ACTIVITY_START_CALLS = {"startActivity", "startActivityForResult", "startActivities"}
+
+
+def launch_lifecycle_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """The lifecycle of an activity the app starts. Android creates, starts and resumes it, and pauses
+    it only when something covers it or it finishes. A provider that pauses and resumes it again
+    just after it started leaves whatever the activity stops in onPause stopped: mpv pauses its
+    player there, and the picked file opened at 0:00 and stayed there (calibration flow
+    mpv-play-file). Apps that declare one activity start none of their own."""
+    names = scan["inventory"].get("platform_method_names", {})
+    starts = any(ACTIVITY_START_CALLS & set(names.get(owner, []))
+                 for owner in ("Landroid/app/Activity;", "Landroid/content/Context;", "Landroid/content/ContextWrapper;"))
+    activities = scan.get("apk", {}).get("activities") or 0
+    if not starts or activities < 2 or model.get("once") is None:
+        return []
+    once = bool(model["once"])
+    return [_row(
+        "app-framework", "am:launch-lifecycle", "The lifecycle of an activity the app starts (onCreate, onStart, onResume, once)",
+        oh_touchpoint="none: the app's own activities, in its process",
+        verdict="supplied" if once else "missing", shim_class="C0" if once else "C9",
+        effort="verify" if once else "XS", confidence=STATIC,
+        provider=("the started activity is resumed once, in its launch transaction" if once else
+                  "the started activity is resumed in its launch and again in a transaction carrying an "
+                  "ActivityResultItem, which pauses it first: onPause and onResume just after it started"),
+        provider_source=model.get("source"),
+        app_evidence=f"the app declares {activities} activities and starts activities (startActivity)",
+        seen_blocking=["mpv (calibration flow mpv-play-file: the player opened the picked file at 0:00, paused and silent)"],
+        shim="resume an activity the app starts once, in its launch transaction",
+    )]
+
+
 # Capabilities the provider carries out in the host application's process through an OH call that
 # checks the caller's permission, by that OH permission: the provider source making the call, and what
 # an app sees when the host lacks the permission. A capability the provider does not bridge at all is
@@ -3960,6 +3991,7 @@ def build_map(
             + post_create_rows(scan, contracts.launch_start_model(westlake_root))
             + permission_request_rows(scan, contracts.permission_request_model(westlake_root))
             + activity_result_rows(scan, contracts.activity_result_model(westlake_root))
+            + launch_lifecycle_rows(scan, contracts.launch_lifecycle_model(westlake_root))
             + host_permission_rows(facts, contracts.host_permission_model(westlake_root), westlake_root)
             + ce_storage_rows(scan, contracts.ce_storage_model(westlake_root))
             + feature_rows(scan, contracts.feature_claims_model(westlake_root), aosp_services, westlake_services)

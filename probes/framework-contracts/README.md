@@ -33,6 +33,7 @@ The package manager's queries are asked for the probe's own components, declared
 | `svc:media_metrics` | a `MediaMetricsManager` that creates a playback session |
 | `svc:grammatical_inflection` | a `GrammaticalInflectionManager` that answers the app's grammatical gender |
 | `pm:call:getInstallerPackageName` | the installer's name (null, as for an app installed from a file) and the install source |
+| `am:launch-lifecycle` | the probe's own LifecycleActivity, started: its callbacks over 2 s on top are onCreate, onStart, onResume, with no pause |
 | `am:activity-result` | startActivityForResult to the probe's own ResultActivity, which sets a result and finishes: onActivityResult gets it |
 | `am:start-unresolved` | starting an activity nothing handles throws ActivityNotFoundException (no row yet) |
 
