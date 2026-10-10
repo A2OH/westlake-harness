@@ -1710,6 +1710,30 @@ def permission_request_rows(scan: dict[str, Any], model: dict[str, Any]) -> list
     )]
 
 
+def activity_result_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """startActivityForResult between the app's own activities. Android always answers: when the
+    started activity finishes, its result (RESULT_CANCELED with no data when it set none) reaches
+    the caller's onActivityResult before the caller resumes. androidx's ActivityResultLauncher
+    goes through the same call. Without it, pickers return nothing and flows that wait for a
+    sub-screen's answer stop: mpv's file picker in the calibration flows (benchmark/calibration)."""
+    called = set(scan["inventory"].get("platform_method_names", {}).get("Landroid/app/Activity;", []))
+    if "startActivityForResult" not in called or model.get("delivered") is None:
+        return []
+    supplied = bool(model["delivered"])
+    return [_row(
+        "app-framework", "am:activity-result", "Activity results (startActivityForResult, ActivityResultLauncher)",
+        oh_touchpoint="none: the app's own activities, in its process",
+        verdict="supplied" if supplied else "missing", shim_class="C0" if supplied else "C9",
+        effort="verify" if supplied else "S", confidence=STATIC,
+        provider=("the started activity's result is sent to its caller when it finishes" if supplied else
+                  "finishActivity drops the result: the caller's onActivityResult never runs"),
+        provider_source=model.get("source"),
+        app_evidence="the app calls Activity.startActivityForResult",
+        seen_blocking=["mpv (calibration flow mpv-play-file: the picked file never reached the player)"],
+        shim="send the result to the caller in an ActivityResultItem when the started activity finishes",
+    )]
+
+
 # Capabilities the provider carries out in the host application's process through an OH call that
 # checks the caller's permission, by that OH permission: the provider source making the call, and what
 # an app sees when the host lacks the permission. A capability the provider does not bridge at all is
@@ -3935,6 +3959,7 @@ def build_map(
             + own_intent_rows(scan, contracts.own_intent_model(westlake_root))
             + post_create_rows(scan, contracts.launch_start_model(westlake_root))
             + permission_request_rows(scan, contracts.permission_request_model(westlake_root))
+            + activity_result_rows(scan, contracts.activity_result_model(westlake_root))
             + host_permission_rows(facts, contracts.host_permission_model(westlake_root), westlake_root)
             + ce_storage_rows(scan, contracts.ce_storage_model(westlake_root))
             + feature_rows(scan, contracts.feature_claims_model(westlake_root), aosp_services, westlake_services)

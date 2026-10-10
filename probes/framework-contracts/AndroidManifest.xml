@@ -22,6 +22,7 @@
         </activity>
 
         <!-- The answers the package manager's queries must find: one of each kind, by its own action. -->
+        <activity android:name=".ResultActivity" android:exported="false" />
         <activity
             android:name=".SecondActivity"
             android:exported="false">
