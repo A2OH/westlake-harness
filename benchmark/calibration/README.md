@@ -69,21 +69,23 @@ Build 103 (Westlake #34) resumes a started activity once. The framework-contract
 `onCreate onStart onResume` on build 103. The gap map's `am:launch-lifecycle` row reads the
 provider's source; it reaches 280 of the 369 corpus apps (those that declare more than one activity
 and start activities). Build 102's twenty regression apps draw on build 103, and so do noice and
-linphone; reddit and toutiao stop on build 103 where they also stop on build 102.
+linphone (that run was under SELinux permissive); reddit and toutiao stop on build 103 where they
+also stop on build 102, under either mode.
 
 On build 103 `mpv-play-file` works: between the flow's two screenshots the clip's own clock moves
-from 00:00:01.533 to 00:00:04.600, and the recording holds 220,347 non-zero samples of its 1 kHz
+from 00:00:01.000 to 00:00:04.133, and the recording holds 234,285 non-zero samples of its 1 kHz
 tone. The flow now makes the app's `external/Android` folder before it opens the picker
 (a `mkdir` step): mpv makes the folder on its first start at a time of its own, and without it the
 clip is listed second rather than third.
 
-The eight flows on build 103 (`results-build103.json`): three confirmed, two false alarms, three
-misses (precision 0.33, recall 0.25); `mpv-play-file` moved from miss to confirmed.
+The eight flows on build 103 (`results-build103.json`, Westlake main 79ef37d, SELinux enforcing):
+three confirmed, two false alarms, three misses (precision 0.33, recall 0.25); `mpv-play-file` moved
+from miss to confirmed.
 
 | flow | predicted | observed | verdict | what decided it |
 |---|---|---|---|---|
-| `noice-play` | works | works | confirmed | 564,472 non-zero samples of sound in 12 s |
-| `mpv-play-file` | works | works | confirmed | the picture moves; 220,347 non-zero samples of the clip's tone |
+| `noice-play` | works | works | confirmed | 554,012 non-zero samples of sound in 12 s |
+| `mpv-play-file` | works | works | confirmed | the picture moves; 234,285 non-zero samples of the clip's tone |
 | `justplayer-choose` | fails | fails | confirmed | silence, and "No video files found" |
 | `markor-type` | works | fails | **miss** | no keyboard: the lower screen does not change when the editor is tapped |
 | `markor-preview` | fails | works | false alarm | the app lives, and the heading renders |
@@ -92,9 +94,8 @@ misses (precision 0.33, recall 0.25); `mpv-play-file` moved from miss to confirm
 | `fclock-dialog` | fails | works | false alarm | the dialog in the middle, the screen behind it dimmed |
 
 Activity results changed what Markor does after its intro, as on Android: the intro is started for
-a result, so when it finishes, Markor's main activity hears it and opens its changelog. The first
-run of the two Markor flows tapped into that dialog; both flows now close it first, and the
-re-runs are the ones recorded.
+a result, so when it finishes, Markor's main activity hears it and opens its changelog. Both Markor
+flows now close it first; without that step they tap into the dialog.
 
 ## What the calibration says about the gap map
 

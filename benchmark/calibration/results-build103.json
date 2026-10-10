@@ -1,6 +1,6 @@
 {
  "date": "2026-10-09",
- "westlake_commit": "da6b81dd9ec66bbc8b942c51c2c394b441efb14d",
+ "westlake_commit": "79ef37d8dbafdeed01328c7c3627475d1ed4a2da",
  "summary": {
   "flows": 8,
   "ran": 8,
@@ -29,7 +29,7 @@
     {
      "check": "the board plays the sound",
      "passed": true,
-     "seen": "564472 non-zero samples in audio"
+     "seen": "554012 non-zero samples in audio"
     },
     {
      "check": "the app keeps running",
@@ -60,12 +60,12 @@
     {
      "check": "the picture moves: the clip's clock and pattern advance",
      "passed": true,
-     "seen": "playing -> later differ by 14.8"
+     "seen": "playing -> later differ by 12.6"
     },
     {
      "check": "the clip's 1 kHz tone plays",
      "passed": true,
-     "seen": "220347 non-zero samples in audio"
+     "seen": "234285 non-zero samples in audio"
     }
    ],
    "evidence": [
@@ -126,8 +126,7 @@
    "evidence": [
     "editor.jpeg",
     "focused.jpeg"
-   ],
-   "note": "re-run with the step that closes Markor's changelog, which shows once the intro's result reaches MainActivity (builds 102 on)"
+   ]
   },
   {
    "id": "markor-preview",
@@ -156,8 +155,7 @@
    ],
    "evidence": [
     "preview.jpeg"
-   ],
-   "note": "re-run with the step that closes Markor's changelog, which shows once the intro's result reaches MainActivity (builds 102 on)"
+   ]
   },
   {
    "id": "fclock-timer",
