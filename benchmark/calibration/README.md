@@ -43,6 +43,17 @@ build's audio service answered every call with its type default, so a focus requ
 refused (on build 101 the log shows Noice asking for focus before it plays). On build 101 it
 plays: the fix taken from the top of the conformance queue is what a user hears.
 
+## Build 102: the first fix from the calibration
+
+Build 102 delivers activity results between the app's own activities (Westlake: the start records
+its caller, the launch binds it to the new activity, and finishActivity sends the result in an
+ActivityResultItem). The framework-contracts probe's new `am:activity-result` line passes
+(onActivityResult gets `RESULT_OK` and the answer), and the gap map's `am:activity-result` row reads
+the provider's source. In `mpv-play-file` the picked file now reaches mpv: its player opens and
+shows the clip's first frame. The flow still fails, one step further: playback stays at 0:00 and
+silent. mpv's audio renderer is created and its write thread starts, but its clock never moves.
+That is the flow's next blocker.
+
 ## What the calibration says about the gap map
 
 Each miss is a contract no row describes, or a row that reads supplied while the flow fails;

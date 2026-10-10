@@ -2834,3 +2834,41 @@ class JavaConstantBodies(unittest.TestCase):
             rows, excluded = gapmap.java_api_rows(scan, {}, shapes)
             self.assertEqual(excluded, {"absent-on-android": 1, "not-a-platform-class": 1})
             self.assertEqual([(r["verdict"], r["counts"]["probe"]) for r in rows], [("probe-only", 1)])
+
+
+class ActivityResults(unittest.TestCase):
+    """startActivityForResult's answer: the started activity's result reaches its caller."""
+
+    CONTROLLER = """package adapter.activity;
+public final class ActivityClientControllerAdapter {
+    public boolean finishActivity(IBinder token, int code, Intent data, int finishTask) {
+        %s
+        leaveTask(token);
+        return true;
+    }
+}
+"""
+
+    def model(self, finish_body: str, helper: str | None = None) -> dict:
+        with tempfile.TemporaryDirectory() as tmp:
+            java = Path(tmp) / "framework/activity/java"
+            java.mkdir(parents=True)
+            (java / "ActivityClientControllerAdapter.java").write_text(self.CONTROLLER % finish_body)
+            if helper:
+                (java / "ActivityResults.java").write_text(helper)
+            return contracts.activity_result_model(Path(tmp))
+
+    def test_a_result_sent_through_a_helper_is_delivered(self) -> None:
+        helper = ("final class ActivityResults { static void deliver(IBinder finishing, int code, Intent data) {"
+                  " transaction.addTransactionItem(ActivityResultItem.obtain(request.resultTo, list)); } }")
+        self.assertTrue(self.model("ActivityResults.deliver(token, code, data);", helper)["delivered"])
+        self.assertFalse(self.model("// the result is dropped")["delivered"])
+
+    def test_the_row_follows_the_app_and_the_model(self) -> None:
+        scan = {"inventory": {"platform_method_names": {"Landroid/app/Activity;": ["startActivityForResult"]}}}
+        missing = gapmap.activity_result_rows(scan, {"delivered": False, "source": "x:1"})
+        self.assertEqual([(r["id"], r["verdict"], r["effort"]) for r in missing], [("am:activity-result", "missing", "S")])
+        supplied = gapmap.activity_result_rows(scan, {"delivered": True, "source": "x:1"})
+        self.assertEqual(supplied[0]["verdict"], "supplied")
+        self.assertEqual(gapmap.activity_result_rows({"inventory": {"platform_method_names": {}}},
+                                                     {"delivered": False}), [])

@@ -549,6 +549,31 @@ def permission_request_model(westlake_root: Path) -> dict[str, Any]:
             "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, start.start()) + 1}"}
 
 
+def activity_result_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether startActivityForResult between the app's own activities gets its answer. Activity.finish
+    hands the result the activity set to IActivityClientController.finishActivity; the in-process
+    controller must send it to the caller, in an ActivityResultItem, as ActivityTaskManager does.
+    The item may be built in finishActivity or in a helper it calls (a class beside it)."""
+    path = westlake_root / "framework/activity/java/ActivityClientControllerAdapter.java"
+    text = _strip_java_comments(path.read_text(errors="replace")) if path.exists() else ""
+    start = re.search(r"public\s+boolean\s+finishActivity\s*\(", text)
+    if not start:
+        return {"delivered": None, "source": None}
+    body = _braced_block(text, start.start())
+    delivered = "ActivityResultItem.obtain(" in body
+    for owner, method in re.findall(r"\b([A-Z]\w*)\.(\w+)\s*\(", body):
+        if delivered:
+            break
+        helper_path = path.parent / f"{owner}.java"
+        if not helper_path.exists():
+            continue
+        helper = _strip_java_comments(helper_path.read_text(errors="replace"))
+        found = re.search(rf"\b{method}\s*\([^;{{]*\)\s*\{{", helper)
+        delivered = bool(found) and "ActivityResultItem.obtain(" in _braced_block(helper, found.start())
+    return {"delivered": delivered,
+            "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, start.start()) + 1}"}
+
+
 def host_permission_model(westlake_root: Path) -> dict[str, Any]:
     """The OH permissions the host application requests, and the OH permission each Android permission
     maps to. Android apps run in the host's process, so OH checks the host's access token: what the

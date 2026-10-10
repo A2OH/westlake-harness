@@ -113,6 +113,18 @@ public class MainActivity extends Activity {
         return new Outcome("ABSENT", detail);
     }
 
+    private static final int RESULT_REQUEST = 4243;
+    private final CountDownLatch resultArrived = new CountDownLatch(1);
+    private volatile String resultSeen;
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode != RESULT_REQUEST) return;
+        resultSeen = "resultCode=" + resultCode + " answer=" + (data == null ? "no data" : data.getIntExtra("answer", -1));
+        resultArrived.countDown();
+    }
+
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
@@ -319,6 +331,17 @@ public class MainActivity extends Activity {
             InstallSourceInfo source = pm.getInstallSourceInfo(getPackageName());
             if (source == null) throw fail("getInstallSourceInfo returned null");
             return "installer=" + installer + " (as for an app installed from a file), install source answered";
+        });
+        // Last, as it brings another activity up over this one: startActivityForResult to an
+        // activity of this app, which sets a result and finishes; Android delivers it to
+        // onActivityResult before this activity resumes.
+        check("am:activity-result", () -> {
+            runOnUiThread(() -> startActivityForResult(new Intent(this, ResultActivity.class), RESULT_REQUEST));
+            if (!resultArrived.await(10, TimeUnit.SECONDS)) {
+                throw fail("the started activity set a result and finished; onActivityResult never ran in 10 s");
+            }
+            if (!("resultCode=" + RESULT_OK + " answer=42").equals(resultSeen)) throw fail("wrong result: " + resultSeen);
+            return "onActivityResult got " + resultSeen;
         });
         line("done", "", "");
     }
