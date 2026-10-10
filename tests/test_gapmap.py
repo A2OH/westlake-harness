@@ -2872,3 +2872,57 @@ public final class ActivityClientControllerAdapter {
         self.assertEqual(supplied[0]["verdict"], "supplied")
         self.assertEqual(gapmap.activity_result_rows({"inventory": {"platform_method_names": {}}},
                                                      {"delivered": False}), [])
+
+
+class LaunchLifecycle(unittest.TestCase):
+    """An activity the app starts is resumed once: no pause and resume just after it started."""
+
+    BRIDGE = """package adapter.activity;
+public final class AppSchedulerBridge {
+    public static void nativeOnScheduleLaunchAbility(Object a, String p, String n, int abilityRecordId,
+            String i, String w, long ohTokenAddr) {
+        IBinder token = OhTokenRegistry.acquireAndroidToken(abilityRecordId, ohTokenAddr);
+        transaction.addTransactionItem(LaunchActivityItem.obtain(token, intent));
+        if (ohTokenAddr == 0L) {
+            transaction.addTransactionItem(ResumeActivityItem.obtain(token, true, false));
+            %s
+        } else {
+            transaction.addTransactionItem(StartActivityItem.obtain(token, null));
+        }
+    }
+}
+"""
+    NATIVE = """static void wl_dl2_resume(JNIEnv* env, int rec) {
+    jclass resultCls = env->FindClass("android/app/servertransaction/%s");
+}
+static int startAbility(JNIEnv* env) {
+    wl_dl2_resume(env, rec);
+    return 0;
+}
+"""
+
+    def model(self, in_process: str, callback: str = "ActivityResultItem") -> dict:
+        with tempfile.TemporaryDirectory() as tmp:
+            java = Path(tmp) / "framework/activity/java"
+            jni = Path(tmp) / "framework/activity/jni"
+            java.mkdir(parents=True)
+            jni.mkdir(parents=True)
+            (java / "AppSchedulerBridge.java").write_text(self.BRIDGE % in_process)
+            (jni / "activity_task_manager_adapter.cpp").write_text(self.NATIVE % callback)
+            return contracts.launch_lifecycle_model(Path(tmp))
+
+    def test_a_second_resume_with_a_result_item_pauses_the_started_activity(self) -> None:
+        self.assertFalse(self.model("// the native start resumes it again")["once"])
+        self.assertTrue(self.model("OhTokenRegistry.forgetRecord(abilityRecordId);")["once"])
+        self.assertTrue(self.model("", callback="TopResumedActivityChangeItem")["once"],
+                        "a second resume without a result item does not pause the activity")
+
+    def test_the_row_follows_the_app_and_the_model(self) -> None:
+        scan = {"apk": {"activities": 5},
+                "inventory": {"platform_method_names": {"Landroid/content/Context;": ["startActivity"]}}}
+        broken = gapmap.launch_lifecycle_rows(scan, {"once": False, "source": "x:1"})
+        self.assertEqual([(r["id"], r["verdict"], r["effort"]) for r in broken], [("am:launch-lifecycle", "missing", "XS")])
+        self.assertEqual(gapmap.launch_lifecycle_rows(scan, {"once": True, "source": "x:1"})[0]["verdict"], "supplied")
+        single = {**scan, "apk": {"activities": 1}}
+        self.assertEqual(gapmap.launch_lifecycle_rows(single, {"once": False}), [], "one activity starts none of its own")
+        self.assertEqual(gapmap.launch_lifecycle_rows({"apk": {"activities": 5}, "inventory": {}}, {"once": False}), [])

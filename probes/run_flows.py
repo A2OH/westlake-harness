@@ -225,6 +225,10 @@ def run_flow(flow: dict[str, Any], args: argparse.Namespace, board: Board) -> di
                 dest = f"/proc/{child}/root/data/data/{package}/{step['to']}"
                 board.shell(f"U=$(stat -c %u /proc/{child}); mkdir -p $(dirname {dest}); cp {staged} {dest} && "
                             f"chown $U:$U {dest} $(dirname {dest}) && chmod 644 {dest}")
+            elif "mkdir" in step:
+                # A folder the app makes for itself, made first so a listing does not depend on when.
+                dest = f"/proc/{child}/root/data/data/{package}/{step['mkdir']}"
+                board.shell(f"U=$(stat -c %u /proc/{child}); mkdir -p {dest} && chown $U:$U {dest}")
             elif "shot" in step:
                 path = out / (step["shot"] + ".jpeg")
                 if board.screenshot(path):

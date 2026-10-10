@@ -147,6 +147,14 @@ fix) the probe passes: max volume 15, volume 5, one output, focus granted, ringe
 that ask for focus, devices or volumes all draw, as in r89. The build 101 results are in
 `probe-results.json` under the fix's commit.
 
+**Two fixes from the calibration flows** ([calibration](../calibration/README.md)): build 102
+(Westlake #33) delivers activity results between the app's own activities, and build 103 (Westlake
+#34) resumes an activity the app starts once. Each added a line to framework-contracts:
+`am:activity-result` passes on build 102, and `am:launch-lifecycle` reads `onCreate onStart onResume
+onPause onResume` on build 102 and `onCreate onStart onResume` on build 103. Their results are in
+`probe-results.json` under each fix's commit; every other framework-contracts line reads as on
+build 101.
+
 ## Running it
 
 On a new build, run the suite with that build's provider flags, merging into this file:

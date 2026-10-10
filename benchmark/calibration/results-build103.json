@@ -1,0 +1,246 @@
+{
+ "date": "2026-10-09",
+ "westlake_commit": "da6b81dd9ec66bbc8b942c51c2c394b441efb14d",
+ "summary": {
+  "flows": 8,
+  "ran": 8,
+  "confirmed": 3,
+  "false_alarms": 2,
+  "misses": 3,
+  "precision": 0.33,
+  "recall": 0.25
+ },
+ "flows": [
+  {
+   "id": "noice-play",
+   "app": "noice",
+   "intent": "play a sound",
+   "predicted": "works",
+   "prediction": {
+    "outcome": "works",
+    "rows": {
+     "svc:audio": "conformant since build 101 (before: focus refused)",
+     "jni:android.media.AudioTrack": "conformant"
+    }
+   },
+   "observed": "works",
+   "verdict": "confirmed",
+   "checks": [
+    {
+     "check": "the board plays the sound",
+     "passed": true,
+     "seen": "564472 non-zero samples in audio"
+    },
+    {
+     "check": "the app keeps running",
+     "passed": true,
+     "seen": "process alive"
+    }
+   ],
+   "evidence": [
+    "audio.wav",
+    "playing.jpeg"
+   ]
+  },
+  {
+   "id": "mpv-play-file",
+   "app": "mpv",
+   "intent": "play a video picked in the app's file picker",
+   "predicted": "works",
+   "prediction": {
+    "outcome": "works",
+    "rows": {
+     "am:activity-result": "conformant since build 102 (the picked file reaches the player)",
+     "am:launch-lifecycle": "conformant since build 103 (before: the player paused itself in onPause)"
+    }
+   },
+   "observed": "works",
+   "verdict": "confirmed",
+   "checks": [
+    {
+     "check": "the picture moves: the clip's clock and pattern advance",
+     "passed": true,
+     "seen": "playing -> later differ by 14.8"
+    },
+    {
+     "check": "the clip's 1 kHz tone plays",
+     "passed": true,
+     "seen": "220347 non-zero samples in audio"
+    }
+   ],
+   "evidence": [
+    "audio.wav",
+    "later.jpeg",
+    "picker.jpeg",
+    "playing.jpeg"
+   ]
+  },
+  {
+   "id": "justplayer-choose",
+   "app": "justplayer",
+   "intent": "choose a video and play it",
+   "predicted": "fails",
+   "prediction": {
+    "outcome": "fails",
+    "rows": {
+     "jni:android.media.MediaCodec": "broken",
+     "jni:android.media.MediaExtractor": "broken",
+     "java:Media store": "unmeasured"
+    }
+   },
+   "observed": "fails",
+   "verdict": "confirmed",
+   "checks": [
+    {
+     "check": "the clip plays",
+     "passed": false,
+     "seen": "0 non-zero samples in audio"
+    }
+   ],
+   "evidence": [
+    "audio.wav",
+    "chooser.jpeg"
+   ]
+  },
+  {
+   "id": "markor-type",
+   "app": "markor",
+   "intent": "type into a note",
+   "predicted": "works",
+   "prediction": {
+    "outcome": "works",
+    "rows": {
+     "svc:input_method": "supplied",
+     "jni:android.view.KeyCharacterMap": "broken (hardware keys, not the soft keyboard)"
+    }
+   },
+   "observed": "fails",
+   "verdict": "miss",
+   "checks": [
+    {
+     "check": "a keyboard comes up over the lower screen",
+     "passed": false,
+     "seen": "editor -> focused differ by 0.0"
+    }
+   ],
+   "evidence": [
+    "editor.jpeg",
+    "focused.jpeg"
+   ],
+   "note": "re-run with the step that closes Markor's changelog, which shows once the intro's result reaches MainActivity (builds 102 on)"
+  },
+  {
+   "id": "markor-preview",
+   "app": "markor",
+   "intent": "preview a note (WebView)",
+   "predicted": "fails",
+   "prediction": {
+    "outcome": "fails",
+    "rows": {
+     "wv:renderer-process": "missing: the first WebView kills the app"
+    }
+   },
+   "observed": "works",
+   "verdict": "false alarm",
+   "checks": [
+    {
+     "check": "the app survives its first WebView",
+     "passed": true,
+     "seen": "process alive"
+    },
+    {
+     "check": "the rendered heading shows",
+     "passed": true,
+     "seen": "0.008 of the region dark in preview"
+    }
+   ],
+   "evidence": [
+    "preview.jpeg"
+   ],
+   "note": "re-run with the step that closes Markor's changelog, which shows once the intro's result reaches MainActivity (builds 102 on)"
+  },
+  {
+   "id": "fclock-timer",
+   "app": "fclock",
+   "intent": "a 5-minute timer rings when it ends",
+   "predicted": "works",
+   "prediction": {
+    "outcome": "works",
+    "rows": {
+     "svc:alarm": "supplied (verify)",
+     "svc:notification": "supplied (verify)"
+    }
+   },
+   "observed": "fails",
+   "verdict": "miss",
+   "checks": [
+    {
+     "check": "the timer rings",
+     "passed": false,
+     "seen": "0 non-zero samples in expiry"
+    }
+   ],
+   "evidence": [
+    "expired.jpeg",
+    "expiry.wav",
+    "running.jpeg"
+   ]
+  },
+  {
+   "id": "fclock-menu",
+   "app": "fclock",
+   "intent": "open the overflow menu",
+   "predicted": "works",
+   "prediction": {
+    "outcome": "works",
+    "rows": {
+     "(none)": "no row models popup windows"
+    }
+   },
+   "observed": "fails",
+   "verdict": "miss",
+   "checks": [
+    {
+     "check": "the menu draws under its button",
+     "passed": false,
+     "seen": "before -> menu differ by 0.0"
+    }
+   ],
+   "evidence": [
+    "before.jpeg",
+    "menu.jpeg"
+   ]
+  },
+  {
+   "id": "fclock-dialog",
+   "app": "fclock",
+   "intent": "edit a timer in its dialog",
+   "predicted": "fails",
+   "prediction": {
+    "outcome": "fails",
+    "rows": {
+     "wm:window-placement": "broken (the probe's dialog sat at 40,0)",
+     "wm:dim-behind": "missing"
+    }
+   },
+   "observed": "works",
+   "verdict": "false alarm",
+   "checks": [
+    {
+     "check": "the dialog shows in the middle of the screen",
+     "passed": true,
+     "seen": "before -> dialog differ by 21.6"
+    },
+    {
+     "check": "what is behind it is dimmed",
+     "passed": true,
+     "seen": "before -> dialog differ by 81.0"
+    }
+   ],
+   "evidence": [
+    "before.jpeg",
+    "dialog.jpeg"
+   ]
+  }
+ ]
+}

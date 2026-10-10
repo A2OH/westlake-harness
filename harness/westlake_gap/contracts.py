@@ -574,6 +574,31 @@ def activity_result_model(westlake_root: Path) -> dict[str, Any]:
             "source": f"{path.relative_to(westlake_root)}:{text.count(chr(10), 0, start.start()) + 1}"}
 
 
+def launch_lifecycle_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether an activity the app starts is resumed once. The in-process start resumes it in its
+    launch transaction (AppSchedulerBridge, a launch with no OH token behind it); the native start
+    then resumes it again, in a transaction of its own whose callback is an ActivityResultItem, by the
+    record it looks up in OhTokenRegistry. ActivityThread pauses a resumed activity before it
+    delivers results, so that second resume is an onPause and an onResume, unless the launch forgot
+    the record."""
+    bridge = westlake_root / "framework/activity/java/AppSchedulerBridge.java"
+    native = westlake_root / "framework/activity/jni/activity_task_manager_adapter.cpp"
+    java = _strip_java_comments(bridge.read_text(errors="replace")) if bridge.exists() else ""
+    launch = re.search(r"public\s+static\s+void\s+nativeOnScheduleLaunchAbility\s*\(", java)
+    if not launch or not native.exists():
+        return {"once": None, "source": None}
+    body = _braced_block(java, launch.start())
+    branch = re.search(r"if\s*\(\s*ohTokenAddr\s*==\s*0L?\s*\)\s*\{", body)
+    in_process = _braced_block(body, branch.start()) if branch else ""
+    cpp = _strip_java_comments(native.read_text(errors="replace"))
+    second = re.search(r"static\s+void\s+wl_dl2_resume\s*\(", cpp)
+    resumed_again = (second is not None and "ActivityResultItem" in _braced_block(cpp, second.start())
+                     and len(re.findall(r"\bwl_dl2_resume\s*\(", cpp)) > 1)
+    once = not ("ResumeActivityItem.obtain(" in in_process and resumed_again) or "forgetRecord(" in in_process
+    return {"once": once,
+            "source": f"{bridge.relative_to(westlake_root)}:{java.count(chr(10), 0, launch.start()) + 1}"}
+
+
 def host_permission_model(westlake_root: Path) -> dict[str, Any]:
     """The OH permissions the host application requests, and the OH permission each Android permission
     maps to. Android apps run in the host's process, so OH checks the host's access token: what the

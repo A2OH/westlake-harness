@@ -65,12 +65,17 @@
       "prediction": {
         "outcome": "works",
         "rows": {
-          "(none)": "mpv decodes with its own libraries; no row names its path"
+          "am:activity-result": "conformant since build 102 (the picked file reaches the player)",
+          "am:launch-lifecycle": "conformant since build 103 (before: the player paused itself in onPause)"
         }
       },
       "steps": [
         {
           "wait": 22
+        },
+        {
+          "mkdir": "external/Android",
+          "why": "the folder mpv makes on its first start, so the picker lists the clip third"
         },
         {
           "push": "probes/flows/calib-clip.mp4",
@@ -94,22 +99,42 @@
             155,
             433
           ],
-          "why": "pick calib-clip.mp4"
+          "why": "pick calib-clip.mp4, under .. and Android"
         },
         {
-          "wait": 8
+          "wait": 3
         },
         {
-          "shot": "after"
+          "shot": "playing"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "shot": "later"
         },
         {
           "record": [
-            8,
+            5,
             "audio"
           ]
         }
       ],
       "checks": [
+        {
+          "changed": [
+            "playing",
+            "later"
+          ],
+          "region": [
+            0,
+            640,
+            1200,
+            1280
+          ],
+          "min_diff": 6,
+          "why": "the picture moves: the clip's clock and pattern advance"
+        },
         {
           "audio": "audio",
           "min_nonzero": 20000,
@@ -232,6 +257,16 @@
         },
         {
           "tap": [
+            1080,
+            1827
+          ],
+          "why": "close the changelog, which Markor shows once its intro's result reaches it (builds 102 on)"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "tap": [
             749,
             1860
           ],
@@ -337,6 +372,16 @@
         },
         {
           "wait": 4
+        },
+        {
+          "tap": [
+            1080,
+            1827
+          ],
+          "why": "close the changelog, which Markor shows once its intro's result reaches it (builds 102 on)"
+        },
+        {
+          "wait": 2
         },
         {
           "tap": [
