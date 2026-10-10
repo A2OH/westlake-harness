@@ -151,9 +151,9 @@ that ask for focus, devices or volumes all draw, as in r89. The build 101 result
 (Westlake #33) delivers activity results between the app's own activities, and build 103 (Westlake
 #34) resumes an activity the app starts once. Each added a line to framework-contracts:
 `am:activity-result` passes on build 102, and `am:launch-lifecycle` reads `onCreate onStart onResume
-onPause onResume` on build 102 and `onCreate onStart onResume` on build 103. Their results are in
-`probe-results.json` under each fix's commit; every other framework-contracts line reads as on
-build 101.
+onPause onResume` on build 102 and `onCreate onStart onResume` on build 103, both under SELinux
+enforcing. Their results are in `probe-results.json` under each fix's commit; every other
+framework-contracts line reads as on build 101.
 
 ## Running it
 

@@ -878,8 +878,17 @@
    "passed": true
   },
   {
+   "probe": "framework-contracts/am:launch-lifecycle",
+   "row": "am:launch-lifecycle",
+   "outcome": "fail",
+   "westlake_commit": "a8c4fc1d94981fb25bdebf4ae06b05358c9bc19c",
+   "date": "2026-10-09",
+   "verdict": "FAIL callbacks onCreate onStart onResume onPause onResume in 2 s on top; Android gives onCreate onStart onResume",
+   "passed": false
+  },
+  {
    "probe": "framework-contracts",
-   "westlake_commit": "da6b81dd9ec66bbc8b942c51c2c394b441efb14d",
+   "westlake_commit": "79ef37d8dbafdeed01328c7c3627475d1ed4a2da",
    "date": "2026-10-09",
    "verdict": "7 pass, 5 truthfully absent, 11 fail: am:start-unresolved, pm:call:queryIntentContentProviders, pm:call:queryIntentActivityOptions, pm:call:queryBroadcastReceivers, pm:call:setComponentEnabledSetting, pm:call:getComponentEnabledSetting, jni:android.view.KeyCharacterMap, svc:jobscheduler, svc:biometric, svc:media_metrics, svc:grammatical_inflection",
    "passed": false
@@ -888,7 +897,7 @@
    "probe": "framework-contracts/am:start-unresolved",
    "row": "am:start-unresolved",
    "outcome": "fail",
-   "westlake_commit": "da6b81dd9ec66bbc8b942c51c2c394b441efb14d",
+   "westlake_commit": "79ef37d8dbafdeed01328c7c3627475d1ed4a2da",
    "date": "2026-10-09",
    "verdict": "FAIL startActivity returned for an intent nothing handles; Android throws ActivityNotFoundException",
    "passed": false
@@ -897,7 +906,7 @@
    "probe": "framework-contracts/svc:audio",
    "row": "svc:audio",
    "outcome": "pass",
-   "westlake_commit": "da6b81dd9ec66bbc8b942c51c2c394b441efb14d",
+   "westlake_commit": "79ef37d8dbafdeed01328c7c3627475d1ed4a2da",
    "date": "2026-10-09",
    "verdict": "PASS maxVolume=15 volume=5 sampleRate=48000 framesPerBuffer=1024 outputs=1 focus=1 ringerMode=2",
    "passed": true
@@ -906,7 +915,7 @@
    "probe": "framework-contracts/pm:call:queryIntentContentProviders",
    "row": "pm:call:queryIntentContentProviders",
    "outcome": "fail",
-   "westlake_commit": "da6b81dd9ec66bbc8b942c51c2c394b441efb14d",
+   "westlake_commit": "79ef37d8dbafdeed01328c7c3627475d1ed4a2da",
    "date": "2026-10-09",
    "verdict": "FAIL no provider for its own filter ([])",
    "passed": false
@@ -915,7 +924,7 @@
    "probe": "framework-contracts/pm:call:queryIntentActivityOptions",
    "row": "pm:call:queryIntentActivityOptions",
    "outcome": "fail",
-   "westlake_commit": "da6b81dd9ec66bbc8b942c51c2c394b441efb14d",
+   "westlake_commit": "79ef37d8dbafdeed01328c7c3627475d1ed4a2da",
    "date": "2026-10-09",
    "verdict": "FAIL no activity for its own filter ([])",
    "passed": false
@@ -924,7 +933,7 @@
    "probe": "framework-contracts/pm:call:queryBroadcastReceivers",
    "row": "pm:call:queryBroadcastReceivers",
    "outcome": "fail",
-   "westlake_commit": "da6b81dd9ec66bbc8b942c51c2c394b441efb14d",
+   "westlake_commit": "79ef37d8dbafdeed01328c7c3627475d1ed4a2da",
    "date": "2026-10-09",
    "verdict": "FAIL no receiver for its own filter ([])",
    "passed": false
@@ -933,7 +942,7 @@
    "probe": "framework-contracts/pm:call:setComponentEnabledSetting",
    "row": "pm:call:setComponentEnabledSetting",
    "outcome": "fail",
-   "westlake_commit": "da6b81dd9ec66bbc8b942c51c2c394b441efb14d",
+   "westlake_commit": "79ef37d8dbafdeed01328c7c3627475d1ed4a2da",
    "date": "2026-10-09",
    "verdict": "FAIL disabled activity still resolves (1 found)",
    "passed": false
@@ -942,7 +951,7 @@
    "probe": "framework-contracts/pm:call:getComponentEnabledSetting",
    "row": "pm:call:getComponentEnabledSetting",
    "outcome": "fail",
-   "westlake_commit": "da6b81dd9ec66bbc8b942c51c2c394b441efb14d",
+   "westlake_commit": "79ef37d8dbafdeed01328c7c3627475d1ed4a2da",
    "date": "2026-10-09",
    "verdict": "FAIL read back 0 after disabling, not 2",
    "passed": false
@@ -951,7 +960,7 @@
    "probe": "framework-contracts/jni:android.view.KeyCharacterMap",
    "row": "jni:android.view.KeyCharacterMap",
    "outcome": "fail",
-   "westlake_commit": "da6b81dd9ec66bbc8b942c51c2c394b441efb14d",
+   "westlake_commit": "79ef37d8dbafdeed01328c7c3627475d1ed4a2da",
    "date": "2026-10-09",
    "verdict": "FAIL KEYCODE_A -> 0, events for \"ab\" 0",
    "passed": false
@@ -960,7 +969,7 @@
    "probe": "framework-contracts/svc:jobscheduler",
    "row": "svc:jobscheduler",
    "outcome": "fail",
-   "westlake_commit": "da6b81dd9ec66bbc8b942c51c2c394b441efb14d",
+   "westlake_commit": "79ef37d8dbafdeed01328c7c3627475d1ed4a2da",
    "date": "2026-10-09",
    "verdict": "FAIL scheduled (pending=false) but never ran in 15 s",
    "passed": false
@@ -969,7 +978,7 @@
    "probe": "framework-contracts/svc:vibrator",
    "row": "svc:vibrator",
    "outcome": "absent",
-   "westlake_commit": "da6b81dd9ec66bbc8b942c51c2c394b441efb14d",
+   "westlake_commit": "79ef37d8dbafdeed01328c7c3627475d1ed4a2da",
    "date": "2026-10-09",
    "verdict": "ABSENT hasVibrator=false, and vibrate() returned",
    "passed": true
@@ -978,7 +987,7 @@
    "probe": "framework-contracts/svc:sensor",
    "row": "svc:sensor",
    "outcome": "absent",
-   "westlake_commit": "da6b81dd9ec66bbc8b942c51c2c394b441efb14d",
+   "westlake_commit": "79ef37d8dbafdeed01328c7c3627475d1ed4a2da",
    "date": "2026-10-09",
    "verdict": "ABSENT no sensors listed, no accelerometer",
    "passed": true
@@ -987,7 +996,7 @@
    "probe": "framework-contracts/svc:phone",
    "row": "svc:phone",
    "outcome": "absent",
-   "westlake_commit": "da6b81dd9ec66bbc8b942c51c2c394b441efb14d",
+   "westlake_commit": "79ef37d8dbafdeed01328c7c3627475d1ed4a2da",
    "date": "2026-10-09",
    "verdict": "ABSENT phoneType=0 simState=0 operator=",
    "passed": true
@@ -996,7 +1005,7 @@
    "probe": "framework-contracts/svc:keyguard",
    "row": "svc:keyguard",
    "outcome": "pass",
-   "westlake_commit": "da6b81dd9ec66bbc8b942c51c2c394b441efb14d",
+   "westlake_commit": "79ef37d8dbafdeed01328c7c3627475d1ed4a2da",
    "date": "2026-10-09",
    "verdict": "PASS locked=false secure=false",
    "passed": true
@@ -1005,7 +1014,7 @@
    "probe": "framework-contracts/svc:textclassification",
    "row": "svc:textclassification",
    "outcome": "absent",
-   "westlake_commit": "da6b81dd9ec66bbc8b942c51c2c394b441efb14d",
+   "westlake_commit": "79ef37d8dbafdeed01328c7c3627475d1ed4a2da",
    "date": "2026-10-09",
    "verdict": "ABSENT the NO_OP classifier, as on a device without one",
    "passed": true
@@ -1014,7 +1023,7 @@
    "probe": "framework-contracts/svc:user",
    "row": "svc:user",
    "outcome": "pass",
-   "westlake_commit": "da6b81dd9ec66bbc8b942c51c2c394b441efb14d",
+   "westlake_commit": "79ef37d8dbafdeed01328c7c3627475d1ed4a2da",
    "date": "2026-10-09",
    "verdict": "PASS unlocked=true profiles=[UserHandle{200}] serial=0 goat=false",
    "passed": true
@@ -1023,7 +1032,7 @@
    "probe": "framework-contracts/svc:fingerprint",
    "row": "svc:fingerprint",
    "outcome": "absent",
-   "westlake_commit": "da6b81dd9ec66bbc8b942c51c2c394b441efb14d",
+   "westlake_commit": "79ef37d8dbafdeed01328c7c3627475d1ed4a2da",
    "date": "2026-10-09",
    "verdict": "ABSENT no FingerprintManager and no FEATURE_FINGERPRINT, as on a device without a sensor",
    "passed": true
@@ -1032,7 +1041,7 @@
    "probe": "framework-contracts/svc:biometric",
    "row": "svc:biometric",
    "outcome": "fail",
-   "westlake_commit": "da6b81dd9ec66bbc8b942c51c2c394b441efb14d",
+   "westlake_commit": "79ef37d8dbafdeed01328c7c3627475d1ed4a2da",
    "date": "2026-10-09",
    "verdict": "FAIL no BiometricManager; Android always has one, even without a sensor",
    "passed": false
@@ -1041,7 +1050,7 @@
    "probe": "framework-contracts/svc:captioning",
    "row": "svc:captioning",
    "outcome": "pass",
-   "westlake_commit": "da6b81dd9ec66bbc8b942c51c2c394b441efb14d",
+   "westlake_commit": "79ef37d8dbafdeed01328c7c3627475d1ed4a2da",
    "date": "2026-10-09",
    "verdict": "PASS enabled=false locale=null fontScale=1.0",
    "passed": true
@@ -1050,7 +1059,7 @@
    "probe": "framework-contracts/svc:media_metrics",
    "row": "svc:media_metrics",
    "outcome": "fail",
-   "westlake_commit": "da6b81dd9ec66bbc8b942c51c2c394b441efb14d",
+   "westlake_commit": "79ef37d8dbafdeed01328c7c3627475d1ed4a2da",
    "date": "2026-10-09",
    "verdict": "FAIL no MediaMetricsManager",
    "passed": false
@@ -1059,7 +1068,7 @@
    "probe": "framework-contracts/svc:grammatical_inflection",
    "row": "svc:grammatical_inflection",
    "outcome": "fail",
-   "westlake_commit": "da6b81dd9ec66bbc8b942c51c2c394b441efb14d",
+   "westlake_commit": "79ef37d8dbafdeed01328c7c3627475d1ed4a2da",
    "date": "2026-10-09",
    "verdict": "FAIL no GrammaticalInflectionManager",
    "passed": false
@@ -1068,7 +1077,7 @@
    "probe": "framework-contracts/pm:call:getInstallerPackageName",
    "row": "pm:call:getInstallerPackageName",
    "outcome": "pass",
-   "westlake_commit": "da6b81dd9ec66bbc8b942c51c2c394b441efb14d",
+   "westlake_commit": "79ef37d8dbafdeed01328c7c3627475d1ed4a2da",
    "date": "2026-10-09",
    "verdict": "PASS installer=null (as for an app installed from a file), install source answered",
    "passed": true
@@ -1077,7 +1086,7 @@
    "probe": "framework-contracts/am:launch-lifecycle",
    "row": "am:launch-lifecycle",
    "outcome": "pass",
-   "westlake_commit": "da6b81dd9ec66bbc8b942c51c2c394b441efb14d",
+   "westlake_commit": "79ef37d8dbafdeed01328c7c3627475d1ed4a2da",
    "date": "2026-10-09",
    "verdict": "PASS onCreate onStart onResume, and no pause in 2 s on top",
    "passed": true
@@ -1086,19 +1095,10 @@
    "probe": "framework-contracts/am:activity-result",
    "row": "am:activity-result",
    "outcome": "pass",
-   "westlake_commit": "da6b81dd9ec66bbc8b942c51c2c394b441efb14d",
+   "westlake_commit": "79ef37d8dbafdeed01328c7c3627475d1ed4a2da",
    "date": "2026-10-09",
    "verdict": "PASS onActivityResult got resultCode=-1 answer=42",
    "passed": true
-  },
-  {
-   "probe": "framework-contracts/am:launch-lifecycle",
-   "row": "am:launch-lifecycle",
-   "outcome": "fail",
-   "westlake_commit": "a8c4fc1d94981fb25bdebf4ae06b05358c9bc19c",
-   "date": "2026-10-09",
-   "verdict": "FAIL callbacks onCreate onStart onResume onPause onResume in 2 s on top; Android gives onCreate onStart onResume",
-   "passed": false
   }
  ]
 }
