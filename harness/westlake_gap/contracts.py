@@ -660,6 +660,11 @@ def window_adapter_model(westlake_root: Path) -> dict[str, Any]:
             text, r"WindowLayout\(\)\s*\.computeFrames\(|Gravity\.apply|attrs\.gravity", path, westlake_root),
         # Android: FLAG_DIM_BEHIND puts a dim layer of dimAmount under the window.
         "dim_behind": _evidence(text, r"FLAG_DIM_BEHIND|dimAmount", path, westlake_root),
+        # Android: a sub-window (a PopupWindow's panel, FIRST_SUB_WINDOW to LAST_SUB_WINDOW) shows over
+        # its parent. The board refuses an OH main window for it, so the adapter must ask for its
+        # session as an application window, as for a dialog. Read in code, not comments.
+        "sub_windows_shown": _evidence(_strip_java_comments(text),
+                                       r"FIRST_SUB_WINDOW[\s\S]{0,300}?TYPE_APPLICATION\b", path, westlake_root),
     }
 
 

@@ -511,7 +511,7 @@
       "prediction": {
         "outcome": "works",
         "rows": {
-          "(none)": "no row models popup windows"
+          "wm:popup-window": "supplied since build 105 (before: the popup's window got no OH session and was never shown)"
         }
       },
       "steps": [

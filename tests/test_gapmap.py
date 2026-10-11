@@ -1286,6 +1286,38 @@ class AppFrameworkContracts(unittest.TestCase):
             self.assertTrue(wm["placement_from_gravity"]["present"], "a call to Android's WindowLayout places windows")
             self.assertTrue(wm["dim_behind"]["present"])
 
+    def test_popup_windows_need_a_session_of_their_own(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="westlake-wm-") as temp:
+            root = Path(temp)
+            adapter = root / "framework/window/java/WindowSessionAdapter.java"
+            # Naming the sub-window range in a comment is not asking for a session for it.
+            _write(adapter, """class WindowSessionAdapter {
+                // sub-windows (FIRST_SUB_WINDOW..LAST_SUB_WINDOW) should ask as TYPE_APPLICATION
+                int addToDisplay() { return nativeCreateSession(window, attrs.type); }
+            }""")
+            wm = window_adapter_model(root)
+            self.assertFalse(wm["sub_windows_shown"]["present"])
+            popups = {"inventory": {"platform_method_names": {"Landroid/widget/PopupWindow;": ["showAsDropDown"],
+                                                              "Landroid/widget/Spinner;": ["setAdapter"]}}}
+            bare = {"proxy_stub": False, "answered": [], "source": None}
+            row = next(r for r in gapmap.app_framework_rows(popups, bare, wm) if r["id"] == "wm:popup-window")
+            self.assertEqual((row["verdict"], row["effort"]), ("missing", "S"))
+            self.assertIn("PopupWindow, Spinner", row["app_evidence"])
+
+            _write(adapter, """class WindowSessionAdapter {
+                static int sessionTypeFor(int type) {
+                    return type >= WindowManager.LayoutParams.FIRST_SUB_WINDOW
+                            && type <= WindowManager.LayoutParams.LAST_SUB_WINDOW
+                            ? WindowManager.LayoutParams.TYPE_APPLICATION : type;
+                }
+            }""")
+            wm = window_adapter_model(root)
+            self.assertTrue(wm["sub_windows_shown"]["present"])
+            row = next(r for r in gapmap.app_framework_rows(popups, bare, wm) if r["id"] == "wm:popup-window")
+            self.assertEqual(row["verdict"], "supplied")
+            self.assertFalse([r for r in gapmap.app_framework_rows({"inventory": {"platform_method_names": {}}}, bare, wm)
+                              if r["id"] == "wm:popup-window"], "an app that shows no popup has no row")
+
     def test_probe_results_apply_only_to_their_commit(self) -> None:
         def fresh():
             return {"provider": {"westlake": {"commit": "f4e0366953002a33"}},
