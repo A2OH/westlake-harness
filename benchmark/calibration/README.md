@@ -97,6 +97,26 @@ Activity results changed what Markor does after its intro, as on Android: the in
 a result, so when it finishes, Markor's main activity hears it and opens its changelog. Both Markor
 flows now close it first; without that step they tap into the dialog.
 
+## Build 105: popup windows shown
+
+Fossify Clock's overflow menu took taps and showed nothing. Westlake asked OH for a popup's window
+(an Android sub-window, here type 1002) as an OH main window, which the board refuses (1005), so the
+window drew into a surface node with no session, which nothing shows. Build 105 (Westlake #35) asks
+for a sub-window's session as an application window, as for a dialog, and its OH window spans the
+display, as a dialog's does; the popup's content is still placed at its own frame. Build 104 had the
+session but the popup's own width: its OH window was 392 pixels wide at x 0, and the menu's content,
+placed at x 788, fell outside it.
+
+The gap map's `wm:popup-window` row reads the provider's source; it reaches 311 of the 369 corpus
+apps (those that show a `PopupWindow`, a menu or a dropdown). Only the screen shows a popup, so the
+flow `fclock-menu` is the row's measurement: on build 105 the menu draws under its button, and
+tapping About closes it and opens the About screen.
+
+The eight flows on build 105 (`results-build105.json`, SELinux enforcing): four confirmed, two false
+alarms, two misses (precision 0.33, recall 0.33); `fclock-menu` moved from miss to confirmed. Every
+line of the probe suite has the outcome of its last run. Build 103's
+regression set draws as on build 103: 22 of 24, with reddit and toutiao stopping where they did.
+
 ## What the calibration says about the gap map
 
 Each miss is a contract no row describes, or a row that reads supplied while the flow fails;
@@ -109,7 +129,7 @@ whose scans reference the API behind the contract.
 | **A started activity is paused and resumed as it starts.** mpv pauses its player in `onPause`; the extra pause and resume left the picked file at 0:00, silent | nothing: no row for a started activity's lifecycle | 280 declare more than one activity and start activities | done in build 103: the row `am:launch-lifecycle`, a contract line, and the fix |
 | **No keyboard comes up.** Tapping Markor's editor focuses it, and no soft keyboard appears: there is no way to type | `svc:input_method` supplied | 306 use `EditText` | a contract line (a focused field gets an input connection and the OH keyboard), and the IME bridge |
 | **A timer ends silently.** Fossify Clock counts down to 00:00 and posts its notification; no sound and no alert, as `getRingtonePlayer` answers null and notifications reach no OH service | `svc:alarm`, `svc:notification` supplied | 283 post notifications; 20 play ringtones | contract lines for notification delivery and ringtone playback |
-| **Popup menus are not drawn.** The overflow menu's window exists and takes taps (a blind tap opened the FAQ), but nothing shows | nothing: no row for popup windows | 298 show `PopupWindow`s | a row and a contract line (a popup's window is drawn where Android puts it) |
+| **Popup menus are not drawn.** The overflow menu's window exists and takes taps (a blind tap opened the FAQ), but nothing shows | nothing: no row for popup windows | 311 show popups (`PopupWindow`, menus, dropdowns) | done in build 105: the row `wm:popup-window` and the fix; only the screen shows it, so the flow is its measurement |
 | **The media store is empty.** Just Player lists videos from MediaStore and finds none, with the video in `Movies/`; the flow stops before decoding, so the `MediaCodec` prediction was right for another reason | `java:Media store` unmeasured | 125 | a contract line (a file in shared storage is indexed) |
 | **WebView renders.** Markor's preview draws the note in a WebView and the app lives | `wv:renderer-process` missing: the first WebView kills the app | 143 | read the webview-boundaries probe, which passes: the build answers single-process |
 | **Ordinary dialogs are placed and dimmed.** Fossify Clock's timer dialog is centred and the screen behind it dimmed | `wm:window-placement` broken, `wm:dim-behind` missing | 318 | the probe's failing case is a dialog shown before its activity's window exists; name that row for it, and measure dim-behind on screen |

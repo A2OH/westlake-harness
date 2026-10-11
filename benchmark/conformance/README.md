@@ -155,6 +155,11 @@ onPause onResume` on build 102 and `onCreate onStart onResume` on build 103, bot
 enforcing. Their results are in `probe-results.json` under each fix's commit; every other
 framework-contracts line reads as on build 101.
 
+**Build 105** (Westlake #35) shows popup windows: a sub-window gets an OH session of its own. The whole
+suite, run under its commit, gives each line the outcome of its last run (builds 100 to 103); the fix
+shows only on screen, in the calibration flow `fclock-menu`, which is the measurement of the gap map's
+`wm:popup-window` row.
+
 ## Running it
 
 On a new build, run the suite with that build's provider flags, merging into this file:

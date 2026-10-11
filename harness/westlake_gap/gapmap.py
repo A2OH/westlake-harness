@@ -785,7 +785,37 @@ def app_framework_rows(scan: dict[str, Any], am: dict[str, Any], wm: dict[str, A
                 else "no dim layer is drawn",
                 provider_source=check.get("source"),
                 app_evidence="app shows dialogs (Dialog.show referenced)", shim=shim))
+    shown = sorted(owner[len("Landroid/widget/"):-1] for owner, calls in POPUP_CALLS.items()
+                   if calls & set(names.get(owner, [])))
+    if shown:
+        check = (wm or {}).get("sub_windows_shown", {})
+        present = bool(check.get("present"))
+        rows.append(_row(
+            "app-framework", "wm:popup-window", "Popup windows (menus, dropdowns) shown over their window",
+            oh_touchpoint="window_manager (a sub-window session above the parent's)",
+            verdict="supplied" if present else "missing", shim_class="C0" if present else "C6",
+            effort="verify" if present else "S", confidence=STATIC,
+            provider=("a popup's window gets an OH sub-window session spanning the display, its content placed at "
+                      "its frame" if present else
+                      "a popup's window is asked for as an OH main window, which the board refuses: it draws into a "
+                      "surface node nothing shows, and still takes taps"),
+            provider_source=check.get("source"),
+            app_evidence="app shows popups (" + ", ".join(shown) + ")",
+            seen_blocking=["fclock (calibration flow fclock-menu: the overflow menu took taps and was never drawn)"],
+            shim="ask for a sub-window's OH session as an application window, display-sized, and place its content "
+                 "at its frame"))
     return rows
+
+
+# Calls that put up a popup window (a sub-window): PopupWindow itself, and the platform widgets that
+# open one, a menu or a dropdown, when shown or given their items.
+POPUP_CALLS = {
+    "Landroid/widget/PopupWindow;": {"showAsDropDown", "showAtLocation"},
+    "Landroid/widget/ListPopupWindow;": {"show"},
+    "Landroid/widget/PopupMenu;": {"show"},
+    "Landroid/widget/Spinner;": {"setAdapter"},
+    "Landroid/widget/AutoCompleteTextView;": {"setAdapter", "showDropDown"},
+}
 
 
 # Fixed Android paths code reads without asking the framework, with where a runtime that supplies
