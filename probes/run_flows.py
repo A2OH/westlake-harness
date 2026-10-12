@@ -218,6 +218,9 @@ def run_flow(flow: dict[str, Any], args: argparse.Namespace, board: Board) -> di
                 board.tap(" ".join(str(v) for v in step["drag"]))
             elif "back" in step:
                 board.tap("back")
+            elif "touch" in step:
+                # A touch through OH's own input, for windows not the app's: the board's keyboard.
+                board.shell("uinput -T -c " + " ".join(str(v) for v in step["touch"]))
             elif "push" in step:
                 local = (HERE.parent / step["push"]).resolve()
                 staged = f"{STAGE}/{local.name}"

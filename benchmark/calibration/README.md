@@ -143,6 +143,32 @@ of its last run. Build 103's regression set draws as on build 105: 22 of 24. The
 the two contracts no row describes: the soft keyboard (`markor-type`) and the timer's sound
 (`fclock-timer`).
 
+## Build 107: the keyboard
+
+The keyboard bridge was there and worked. The framework-contracts probe's new `svc:input_method` line
+starts an activity whose focused EditText asks for the keyboard: on build 106 the input method manager
+serves it, the board's keyboard comes up, and the window's insets report 826 px of it. Markor's editor
+sat under its changelog, which had just closed. OH sends the app's sessions no focus when a window
+closes (they are created not focusable), so the window under the dialog never had window focus again,
+and Android's input method manager, which serves only the focused window's editor, ignored the editor's
+`showSoftInput` ("not served").
+
+Build 107 (Westlake #37) hands window focus to the topmost remaining window when a focused one is
+removed, as WMS does. The probe's `wm:focus-handoff` line (a dialog over the editor takes focus;
+once closed, the activity's window gets it back) fails on build 106 and passes on build 107. The gap
+map's `wm:focus-handoff` row reaches 296 of the 369 corpus apps (text fields, and dialogs or popups).
+
+`markor-type` now types: the flow taps three keys on the board's keyboard through OH's own input (a
+`touch` step: the keyboard is an OH window the app's tap channel cannot reach), and "qwe" shows in the
+note. The eight flows on build 107 (`results-build107.json`, SELinux enforcing): seven confirmed, no
+false alarms, one miss (precision 1.0, recall 0.5). Build 103's regression set draws as on build
+106: 22 of 24. The miss left is the timer's sound (`fclock-timer`), a contract no row describes yet.
+
+One line failed in this run for a reason older than this build: `wm:window-placement`, because the
+second dialog, a stock AlertDialog with a long message, measured 1282 px wide on the 1200 px screen.
+Its first layout comes out that wide and a later one fits it (30 to 1170), and the probe measures it
+1.2 s after it shows; it caught the wide layout on build 105 as well. The first dialog stays centred.
+
 ## What the calibration says about the gap map
 
 Each miss is a contract no row describes, or a row that reads supplied while the flow fails;
@@ -153,7 +179,7 @@ whose scans reference the API behind the contract.
 |---|---|---|---|
 | **Activity results are dropped.** mpv's file picker returns the chosen file with `setResult` and finishes; Westlake's `finishActivity` ignores the result, so `onActivityResult` never runs and nothing plays | nothing: no row for activity results | 346 call `startActivityForResult` | done in build 102: the row `am:activity-result`, a contract line, and the fix |
 | **A started activity is paused and resumed as it starts.** mpv pauses its player in `onPause`; the extra pause and resume left the picked file at 0:00, silent | nothing: no row for a started activity's lifecycle | 280 declare more than one activity and start activities | done in build 103: the row `am:launch-lifecycle`, a contract line, and the fix |
-| **No keyboard comes up.** Tapping Markor's editor focuses it, and no soft keyboard appears: there is no way to type | `svc:input_method` supplied | 306 use `EditText` | a contract line (a focused field gets an input connection and the OH keyboard), and the IME bridge |
+| **No keyboard comes up.** Tapping Markor's editor focuses it, and no soft keyboard appears: there is no way to type | `svc:input_method` supplied | 306 use `EditText` | done in build 107: the keyboard bridge worked in a window that kept focus (`svc:input_method`, now a contract line); Markor's editor sat under its closed changelog, whose window never handed focus back. The row `wm:focus-handoff`, a contract line, and the fix |
 | **A timer ends silently.** Fossify Clock counts down to 00:00 and posts its notification; no sound and no alert, as `getRingtonePlayer` answers null and notifications reach no OH service | `svc:alarm`, `svc:notification` supplied | 283 post notifications; 20 play ringtones | contract lines for notification delivery and ringtone playback |
 | **Popup menus are not drawn.** The overflow menu's window exists and takes taps (a blind tap opened the FAQ), but nothing shows | nothing: no row for popup windows | 311 show popups (`PopupWindow`, menus, dropdowns) | done in build 105: the row `wm:popup-window` and the fix; only the screen shows it, so the flow is its measurement |
 | **The media store is empty.** Just Player lists videos from MediaStore and finds none, with the video in `Movies/`; the flow stops before decoding, so the `MediaCodec` prediction was right for another reason | `java:Media store` unmeasured | 125 | a contract line (a file in shared storage is indexed) |

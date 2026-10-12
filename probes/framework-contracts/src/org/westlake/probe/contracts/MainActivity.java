@@ -360,6 +360,20 @@ public class MainActivity extends Activity {
             if (!("resultCode=" + RESULT_OK + " answer=42").equals(resultSeen)) throw fail("wrong result: " + resultSeen);
             return "onActivityResult got " + resultSeen;
         });
+        // A focused editor gets the soft keyboard: the input method manager serves it, and the
+        // window's insets report the keyboard. Last, as its activity stays up over this one.
+        check("svc:input_method", () -> {
+            runOnUiThread(() -> startActivity(new Intent(this, KeyboardActivity.class)));
+            if (!KeyboardActivity.KEYBOARD.await(15, TimeUnit.SECONDS)) throw fail(KeyboardActivity.keyboardDetail);
+            if (!KeyboardActivity.keyboardPassed) throw fail(KeyboardActivity.keyboardDetail);
+            return KeyboardActivity.keyboardDetail;
+        });
+        // Then a dialog over that editor, closed: WMS gives window focus back to the window under it.
+        check("wm:focus-handoff", () -> {
+            if (!KeyboardActivity.HANDOFF.await(15, TimeUnit.SECONDS)) throw fail(KeyboardActivity.handoffDetail);
+            if (!KeyboardActivity.handoffPassed) throw fail(KeyboardActivity.handoffDetail);
+            return KeyboardActivity.handoffDetail;
+        });
         line("done", "", "");
     }
 }

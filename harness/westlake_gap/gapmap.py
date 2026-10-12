@@ -804,6 +804,25 @@ def app_framework_rows(scan: dict[str, Any], am: dict[str, Any], wm: dict[str, A
             seen_blocking=["fclock (calibration flow fclock-menu: the overflow menu took taps and was never drawn)"],
             shim="ask for a sub-window's OH session as an application window, display-sized, and place its content "
                  "at its frame"))
+    covers = sorted(({"Dialog"} if "show" in names.get("Landroid/app/Dialog;", []) else set()) | set(shown))
+    if names.get("Landroid/widget/EditText;") and covers:
+        check = (wm or {}).get("focus_handoff", {})
+        present = bool(check.get("present"))
+        rows.append(_row(
+            "app-framework", "wm:focus-handoff",
+            "Window focus back to the window under a closed dialog or popup (its editors get the keyboard)",
+            oh_touchpoint="window_manager (focus: the app's sessions are not focusable, so OH sends no handoff)",
+            verdict="supplied" if present else "missing", shim_class="C0" if present else "C6",
+            effort="verify" if present else "S", confidence=STATIC,
+            provider=("a removed window's focus goes to the topmost remaining window, as WMS moves it" if present else
+                      "OH sends the app's sessions no focus when a window closes: the window under a closed dialog "
+                      "keeps none, and its editor's showSoftInput is ignored (\"not served\")"),
+            provider_source=check.get("source"),
+            app_evidence="app has text fields (EditText) and shows " + ", ".join(covers),
+            seen_blocking=["markor (calibration flow markor-type: after its changelog closed, the editor brought up "
+                           "no keyboard)"],
+            shim="when a window that has focus is removed, deliver window focus to the topmost remaining focusable "
+                 "window"))
     return rows
 
 

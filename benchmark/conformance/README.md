@@ -165,6 +165,12 @@ display's bounds. `wm:window-placement` passes for the first time (the dialog at
 and `wm:dialog-stacking` with it. `wv:renderer-process` has a result of its own from this build on:
 webview-boundaries' multiprocess line, mapped onto the row (`rows` in `probes/suite.json`).
 
+**Build 107** (Westlake #37) hands window focus on when a window closes. framework-contracts gains
+`svc:input_method` (a focused editor is served and the keyboard shown: passes on builds 106 and 107)
+and `wm:focus-handoff` (fails on build 106, passes on build 107). `wm:window-placement` failed in this
+run on the AlertDialog's first, 1282 px wide layout, which a later layout fits; it caught that on
+build 105 as well (see the calibration record).
+
 ## Running it
 
 On a new build, run the suite with that build's provider flags, merging into this file:
