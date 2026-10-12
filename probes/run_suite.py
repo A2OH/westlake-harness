@@ -22,7 +22,8 @@ A contract probe ("contracts" in suite.json) exercises several contracts in one 
 one line per contract: <prefix><name> <ok|absent|fail token> <detail>. Each line becomes a result of
 its own, "<probe>/<name>", and its name is the gap-map row it measures (contract probes name rows by
 id), so the result lands on that row in every map that has it. The probe's own result passes when
-it finished and no contract failed.
+it finished and no contract failed. An older probe whose line already measures a row names it under
+"rows" (row id -> pass and fail markers), and that line becomes the row's result the same way.
 """
 
 from __future__ import annotations
@@ -91,6 +92,20 @@ def contract_results(lines: list[str], probe: dict[str, Any]) -> list[dict[str, 
             continue
         found[name] = {"probe": probe["name"] + "/" + name, "row": name, "outcome": outcome,
                        "passed": outcome != "fail", "verdict": rest.strip()[:300]}
+    return list(found.values())
+
+
+def row_results(lines: list[str], probe: dict[str, Any]) -> list[dict[str, Any]]:
+    """Rows an older probe measures in a line of its own format ("rows" in suite.json: row id ->
+    {"pass": marker, "fail": marker}), so its measurement lands on the row as a contract line's
+    does. The last line carrying either marker decides the row."""
+    found: dict[str, dict[str, Any]] = {}
+    for row, spec in (probe.get("rows") or {}).items():
+        for line in lines:
+            outcome = next((kind for kind in ("pass", "fail") if spec.get(kind) and spec[kind] in line), None)
+            if outcome:
+                found[row] = {"probe": probe["name"] + "/" + row, "row": row, "outcome": outcome,
+                              "passed": outcome == "pass", "verdict": line.strip()[:300]}
     return list(found.values())
 
 
@@ -210,7 +225,8 @@ def run_probe(probe: dict[str, Any], args: argparse.Namespace, device: Device, l
         return {**result, "passed": status == "pass" and not failed, "contracts": contracts,
                 "verdict": ("timeout: " if status == "pending" else "") + summary}
     verdict_lines = [line.strip() for line in lines if not (probe.get("tap") and probe["tap"]["after"] in line)]
-    return {**result, "passed": status == "pass",
+    rows = row_results(lines, probe)
+    return {**result, "passed": status == "pass", **({"contracts": rows} if rows else {}),
             "verdict": ("timeout: " if status == "pending" else "") + " | ".join(verdict_lines)[:400]}
 
 

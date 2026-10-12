@@ -314,9 +314,9 @@
       "app": "markor",
       "intent": "preview a note (WebView)",
       "prediction": {
-        "outcome": "fails",
+        "outcome": "works",
         "rows": {
-          "wv:renderer-process": "missing: the first WebView kills the app"
+          "wv:renderer-process": "conformant: WebView runs in process (webview-boundaries' multiprocess line, builds 100 on)"
         }
       },
       "steps": [
@@ -567,10 +567,10 @@
       "app": "fclock",
       "intent": "edit a timer in its dialog",
       "prediction": {
-        "outcome": "fails",
+        "outcome": "works",
         "rows": {
-          "wm:window-placement": "broken (the probe's dialog sat at 40,0)",
-          "wm:dim-behind": "missing"
+          "wm:window-placement": "conformant since build 106 (before: drawn centred, but the app was told its dialog sat at the top left)",
+          "wm:dim-behind": "supplied: the window adapter draws a dim layer (on screen only)"
         }
       },
       "steps": [

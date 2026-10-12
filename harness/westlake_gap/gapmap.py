@@ -1455,23 +1455,32 @@ def runtime_resolved_rows(scan: dict[str, Any], ndk_cov: dict[str, Any] | None,
 
 
 def webview_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """WebView renders in process, or in its sandboxed renderer service. WebViewDelegate decides, and
+    with an update-service flag on it says multiprocess without asking IWebViewUpdateService; then the
+    renderer service must be hosted, and direct launch hosts none (Burger King: the bind failed and
+    Chromium aborted). Whether the flag is on belongs to the provider's framework build, which its
+    source does not show, so unless the renderer is hosted the row waits for probes/webview-boundaries,
+    whose multiprocess line is this row's result on each build. A false reading here cost the
+    calibration flow markor-preview a false alarm: the build ran WebView single-process all along."""
     called = scan["inventory"].get("platform_method_names", {}).get("Landroid/webkit/WebView;", [])
     if "<init>" not in called:
         return []
     forced, hosted = model["multiprocess_forced"], model["renderer_hosted"]
     return [_row(
-        "app-framework", "wv:renderer-process", "WebView's renderer runs in an isolated service process",
+        "app-framework", "wv:renderer-process", "WebView renders: in process, or with its renderer service hosted",
         oh_touchpoint="process spawn (appspawn): an isolated Android service process with its own sandbox",
-        verdict="supplied" if hosted["present"] else "missing", shim_class="C0" if hosted["present"] else "C4",
-        effort="verify" if hosted["present"] else "L", confidence=STATIC,
+        verdict="supplied" if hosted["present"] else "unverified", shim_class="C0" if hosted["present"] else "CU",
+        effort="verify" if hosted["present"] else "L", confidence=STATIC, probe="probes/webview-boundaries",
         provider=("the runtime hosts WebView's sandboxed renderer service" if hosted["present"] else
-                  "direct launch starts no isolated service processes: binding the renderer fails and Chromium aborts"
-                  + (f"; answering isMultiProcessEnabled()=false does not help, WebViewDelegate returns true while "
-                     f"{forced['flag']} is on" if forced["present"] else "")),
+                  "direct launch starts no isolated service processes, so WebView works only in process: "
+                  + (f"WebViewDelegate says multiprocess without asking while {forced['flag']} is on, and the "
+                     "provider's framework build decides that flag" if forced["present"] else
+                     "IWebViewUpdateService's isMultiProcessEnabled answer decides")
+                  + "; probes/webview-boundaries measures which"),
         provider_source=hosted["source"] or forced["source"],
         app_evidence=f"app constructs WebViews and calls {len(called)} WebView methods",
-        shim="host the renderer: spawn an isolated child and bind Chromium's SandboxedProcessService over a local "
-             "channel; or build the framework with the update-service flag off so WebView runs single-process",
+        shim="build the framework with the update-service flags off so WebView runs in process, or host the "
+             "renderer: spawn an isolated child and bind Chromium's SandboxedProcessService over a local channel",
     )]
 
 

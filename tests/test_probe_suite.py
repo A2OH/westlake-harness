@@ -77,6 +77,19 @@ class ProbeSuite(unittest.TestCase):
         icu_lines = ["[WL-ICU] zone.default ok=America/Los_Angeles", "[WL-ICU] locale.display FAILED NullPointerException"]
         self.assertEqual([r["outcome"] for r in run_suite.contract_results(icu_lines, icu)], ["pass", "fail"])
 
+    def test_an_older_probe_line_can_be_a_rows_result(self) -> None:
+        suite = json.loads((Path(__file__).parents[1] / "probes" / "suite.json").read_text())
+        webview = next(p for p in suite["probes"] if p["name"] == "webview-boundaries")
+        single = ["[WL-WVB] phase=multiprocess verdict=PASS_SINGLE_PROCESS effective=false flagV2=false",
+                  "[WL-WVB] phase=searchpath verdict=OBSERVED_SHADOWING dirs=11 shadowed=3"]
+        results = run_suite.row_results(single, webview)
+        self.assertEqual([(r["row"], r["outcome"], r["probe"]) for r in results],
+                         [("wv:renderer-process", "pass", "webview-boundaries/wv:renderer-process")])
+        multi = ["[WL-WVB] phase=multiprocess verdict=FAIL_MULTIPROCESS effective=true flagV2=true"]
+        self.assertEqual([r["passed"] for r in run_suite.row_results(multi, webview)], [False])
+        self.assertEqual(run_suite.row_results(["[WL-WVB] phase=windowcontext verdict=PASS_ANSWERED"], webview), [],
+                         "no line for the row, no result")
+
     def test_merge_replaces_only_the_same_probe_and_commit(self) -> None:
         document = {"board": "b", "results": [
             {"probe": "a", "westlake_commit": "c1", "passed": False},
