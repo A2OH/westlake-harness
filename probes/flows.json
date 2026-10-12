@@ -197,8 +197,8 @@
       "prediction": {
         "outcome": "works",
         "rows": {
-          "svc:input_method": "supplied",
-          "jni:android.view.KeyCharacterMap": "broken (hardware keys, not the soft keyboard)"
+          "svc:input_method": "conformant: a focused editor is served and the board's keyboard shown (framework-contracts)",
+          "wm:focus-handoff": "conformant since build 107 (before: the window under Markor's closed changelog never got focus back, so its editor was not served)"
         }
       },
       "steps": [
@@ -290,6 +290,39 @@
         },
         {
           "shot": "focused"
+        },
+        {
+          "touch": [
+            80,
+            1348
+          ],
+          "why": "type q on the board's keyboard (an OH window: a real touch)"
+        },
+        {
+          "wait": 1
+        },
+        {
+          "touch": [
+            193,
+            1348
+          ],
+          "why": "type w"
+        },
+        {
+          "wait": 1
+        },
+        {
+          "touch": [
+            306,
+            1348
+          ],
+          "why": "type e"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "shot": "typed"
         }
       ],
       "checks": [
@@ -306,6 +339,17 @@
           ],
           "min_diff": 6,
           "why": "a keyboard comes up over the lower screen"
+        },
+        {
+          "dark": "typed",
+          "region": [
+            0,
+            150,
+            300,
+            210
+          ],
+          "min_fraction": 0.008,
+          "why": "the typed letters show in the note"
         }
       ]
     },

@@ -665,7 +665,31 @@ def window_adapter_model(westlake_root: Path) -> dict[str, Any]:
         # session as an application window, as for a dialog. Read in code, not comments.
         "sub_windows_shown": _evidence(_strip_java_comments(text),
                                        r"FIRST_SUB_WINDOW[\s\S]{0,300}?TYPE_APPLICATION\b", path, westlake_root),
+        # Android: when the focused window goes (a dialog dismissed, an activity finished), WMS gives
+        # window focus to the next window, and the input method manager serves that window's editor.
+        # In code: the adapter's remove hands focus on, through a helper that delivers
+        # windowFocusChanged to another window.
+        "focus_handoff": _focus_handoff(westlake_root),
     }
+
+
+def _focus_handoff(westlake_root: Path) -> dict[str, Any]:
+    window = westlake_root / "framework/window/java"
+    adapter = window / "WindowSessionAdapter.java"
+    text = _strip_java_comments(adapter.read_text(errors="replace")) if adapter.exists() else ""
+    remove = re.search(r"public\s+void\s+remove\s*\(\s*IWindow\s+\w+\s*\)", text)
+    if not remove:
+        return {"present": False, "source": None}
+    for owner, method in re.findall(r"\b([A-Z]\w*)\.(\w+)\s*\(", _braced_block(text, remove.start())):
+        helper_path = window / f"{owner}.java"
+        if not helper_path.exists():
+            continue
+        helper = _strip_java_comments(helper_path.read_text(errors="replace"))
+        found = re.search(rf"\b{method}\s*\([^;{{]*\)\s*\{{", helper)
+        if found and "windowFocusChanged" in _braced_block(helper, found.start()):
+            return {"present": True,
+                    "source": f"{helper_path.relative_to(westlake_root)}:{helper.count(chr(10), 0, found.start()) + 1}"}
+    return {"present": False, "source": f"{adapter.relative_to(westlake_root)}:{text.count(chr(10), 0, remove.start()) + 1}"}
 
 
 # JCA providers only Android's zygote installs (AndroidKeyStoreProvider.install), not libcore's defaults.

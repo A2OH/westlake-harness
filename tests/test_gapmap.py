@@ -1318,6 +1318,44 @@ class AppFrameworkContracts(unittest.TestCase):
             self.assertFalse([r for r in gapmap.app_framework_rows({"inventory": {"platform_method_names": {}}}, bare, wm)
                               if r["id"] == "wm:popup-window"], "an app that shows no popup has no row")
 
+    def test_focus_goes_back_to_the_window_under_a_closed_one(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="westlake-wm-") as temp:
+            root = Path(temp)
+            window = root / "framework/window/java"
+            _write(window / "WindowSessionAdapter.java", """class WindowSessionAdapter {
+                public void remove(IWindow window) throws RemoteException {
+                    InputEventBridge.getInstance().destroyInputChannel(window.asBinder());
+                    %s
+                }
+            }""" % "")
+            _write(window / "WindowCallbackBridge.java", """class WindowCallbackBridge {
+                static void windowRemoved(IWindow removed) { next.windowFocusChanged(true); }
+            }""")
+            self.assertFalse(window_adapter_model(root)["focus_handoff"]["present"], "a helper nobody calls on remove")
+            _write(window / "WindowSessionAdapter.java", """class WindowSessionAdapter {
+                public void remove(IWindow window) throws RemoteException {
+                    // WindowCallbackBridge.windowRemoved(window) would hand focus on
+                    InputEventBridge.getInstance().destroyInputChannel(window.asBinder());
+                }
+            }""")
+            self.assertFalse(window_adapter_model(root)["focus_handoff"]["present"], "a comment is not a call")
+            _write(window / "WindowSessionAdapter.java", """class WindowSessionAdapter {
+                public void remove(IWindow window) throws RemoteException {
+                    WindowCallbackBridge.windowRemoved(window);
+                }
+            }""")
+            wm = window_adapter_model(root)
+            self.assertTrue(wm["focus_handoff"]["present"])
+            bare = {"proxy_stub": False, "answered": [], "source": None}
+            editor_and_dialog = {"inventory": {"platform_method_names": {"Landroid/widget/EditText;": ["getText"],
+                                                                         "Landroid/app/Dialog;": ["show"]}}}
+            row = next(r for r in gapmap.app_framework_rows(editor_and_dialog, bare, wm) if r["id"] == "wm:focus-handoff")
+            self.assertEqual(row["verdict"], "supplied")
+            self.assertIn("Dialog", row["app_evidence"])
+            dialogs_only = {"inventory": {"platform_method_names": {"Landroid/app/Dialog;": ["show"]}}}
+            self.assertFalse([r for r in gapmap.app_framework_rows(dialogs_only, bare, wm) if r["id"] == "wm:focus-handoff"],
+                             "no text field, no keyboard to lose")
+
     def test_probe_results_apply_only_to_their_commit(self) -> None:
         def fresh():
             return {"provider": {"westlake": {"commit": "f4e0366953002a33"}},
