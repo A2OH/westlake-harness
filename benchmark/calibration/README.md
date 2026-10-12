@@ -117,6 +117,32 @@ alarms, two misses (precision 0.33, recall 0.33); `fclock-menu` moved from miss 
 line of the probe suite has the outcome of its last run. Build 103's
 regression set draws as on build 103: 22 of 24, with reddit and toutiao stopping where they did.
 
+## Build 106: the two false alarms
+
+Each false alarm was a row reading broken where the flow works, and each was checked against what
+the row actually measures.
+
+- **`wv:renderer-process` (markor-preview).** The row inferred from AOSP's `WebViewDelegate` that
+  WebView must run multiprocess, but that depends on update-service flags whose value belongs to
+  the provider's framework build, which the source does not show. This build has them off, and
+  WebView runs in process. The row is now `unverified` unless the renderer service is hosted, and
+  webview-boundaries' multiprocess line is its result on each build (`rows` in `probes/suite.json`
+  maps an older probe's line onto a row). It has passed in every run, builds 100, 105 and 106.
+- **`wm:window-placement` (fclock-dialog).** On screen, dialogs were centred and dimmed, the held-back
+  dialog included. The probe's line failed on where the app was told its dialog sat
+  (`getLocationOnScreen`: the top left). Westlake gave each window a configuration with the
+  window's own size as its bounds, and ViewRootImpl laid the window out inside it. Build 106
+  (Westlake #36) gives every window the display's bounds, as WMS does, and the line passes for the
+  first time: the dialog at 280,634, and the runner's tap at the reported button centre clicks it.
+  `wm:dim-behind` was drawn already; the prediction read it from maps older than the dim layer.
+
+The eight flows on build 106 (`results-build106.json`, SELinux enforcing): six confirmed, no false
+alarms, two misses (precision 1.0, recall 0.33). The probe suite passes 27 of 45 lines;
+the changes are the placement line and the new WebView row, and every other line has the outcome
+of its last run. Build 103's regression set draws as on build 105: 22 of 24. The misses left are
+the two contracts no row describes: the soft keyboard (`markor-type`) and the timer's sound
+(`fclock-timer`).
+
 ## What the calibration says about the gap map
 
 Each miss is a contract no row describes, or a row that reads supplied while the flow fails;
@@ -131,8 +157,8 @@ whose scans reference the API behind the contract.
 | **A timer ends silently.** Fossify Clock counts down to 00:00 and posts its notification; no sound and no alert, as `getRingtonePlayer` answers null and notifications reach no OH service | `svc:alarm`, `svc:notification` supplied | 283 post notifications; 20 play ringtones | contract lines for notification delivery and ringtone playback |
 | **Popup menus are not drawn.** The overflow menu's window exists and takes taps (a blind tap opened the FAQ), but nothing shows | nothing: no row for popup windows | 311 show popups (`PopupWindow`, menus, dropdowns) | done in build 105: the row `wm:popup-window` and the fix; only the screen shows it, so the flow is its measurement |
 | **The media store is empty.** Just Player lists videos from MediaStore and finds none, with the video in `Movies/`; the flow stops before decoding, so the `MediaCodec` prediction was right for another reason | `java:Media store` unmeasured | 125 | a contract line (a file in shared storage is indexed) |
-| **WebView renders.** Markor's preview draws the note in a WebView and the app lives | `wv:renderer-process` missing: the first WebView kills the app | 143 | read the webview-boundaries probe, which passes: the build answers single-process |
-| **Ordinary dialogs are placed and dimmed.** Fossify Clock's timer dialog is centred and the screen behind it dimmed | `wm:window-placement` broken, `wm:dim-behind` missing | 318 | the probe's failing case is a dialog shown before its activity's window exists; name that row for it, and measure dim-behind on screen |
+| **WebView renders.** Markor's preview draws the note in a WebView and the app lives | `wv:renderer-process` missing: the first WebView kills the app | 143 | done: the row waits for the webview-boundaries probe, whose multiprocess line is its result (WebView in process on every build since 100) |
+| **Ordinary dialogs are placed and dimmed.** Fossify Clock's timer dialog is centred and the screen behind it dimmed | `wm:window-placement` broken, `wm:dim-behind` missing | 318 | done in build 106: the probe's failure was where the app was told its dialog sat (the top left), not where it was drawn; each window's configuration now has the display's bounds and the line passes. The dim was drawn already: the prediction read `wm:dim-behind` from maps older than the dim layer |
 
 
 

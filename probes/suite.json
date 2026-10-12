@@ -1,5 +1,5 @@
 {
-  "description": "The white-box probes run on every build by probes/run_suite.py. Markers are fixed strings looked for in the probe child's log; all 'pass' markers must appear, any 'fail' marker ends the probe, and so does any 'fail_hilog' marker in the probe process's hilog once it passes. A 'tap' action writes the coordinates a probe logs into the tap channel.",
+  "description": "The white-box probes run on every build by probes/run_suite.py. Markers are fixed strings looked for in the probe child's log; all 'pass' markers must appear, any 'fail' marker ends the probe, and so does any 'fail_hilog' marker in the probe process's hilog once it passes. A 'tap' action writes the coordinates a probe logs into the tap channel. A 'rows' map names the gap-map rows an older probe's own line measures (row id -> its pass and fail markers); the line becomes that row's result, as a contract line does.",
   "probes": [
     {
       "name": "service-metadata",
@@ -87,7 +87,13 @@
         "phase=multiprocess verdict=FAIL",
         "phase=searchpath verdict=FAIL",
         "phase=windowcontext verdict=FAIL"
-      ]
+      ],
+      "rows": {
+        "wv:renderer-process": {
+          "pass": "phase=multiprocess verdict=PASS_SINGLE_PROCESS",
+          "fail": "phase=multiprocess verdict=FAIL"
+        }
+      }
     },
     {
       "name": "gl-contracts",

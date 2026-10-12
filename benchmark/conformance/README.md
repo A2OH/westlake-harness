@@ -160,6 +160,11 @@ suite, run under its commit, gives each line the outcome of its last run (builds
 shows only on screen, in the calibration flow `fclock-menu`, which is the measurement of the gap map's
 `wm:popup-window` row.
 
+**Build 106** (Westlake #36) tells an app where its windows are: each window's configuration has the
+display's bounds. `wm:window-placement` passes for the first time (the dialog at 280,634, centred),
+and `wm:dialog-stacking` with it. `wv:renderer-process` has a result of its own from this build on:
+webview-boundaries' multiprocess line, mapped onto the row (`rows` in `probes/suite.json`).
+
 ## Running it
 
 On a new build, run the suite with that build's provider flags, merging into this file:

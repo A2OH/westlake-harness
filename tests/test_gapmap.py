@@ -1555,9 +1555,26 @@ class KeystoreAndLoaderOrder(unittest.TestCase):
 }""")
             model = gapmap.webview_process_model(root / "aosp", root / "westlake")
             row = gapmap.webview_rows(scan, model)[0]
-            self.assertEqual((row["verdict"], row["effort"]), ("missing", "L"))
+            # The flag's value belongs to the provider's framework build: the probe decides.
+            self.assertEqual((row["verdict"], row["effort"], row["probe"]),
+                             ("unverified", "L", "probes/webview-boundaries"))
             self.assertIn("Flags.updateServiceV2()", row["provider"])
             self.assertEqual(gapmap.webview_rows({"inventory": {"platform_method_names": {}}}, model), [])
+
+            def measured(passed: bool) -> dict:
+                gap = {"provider": {"westlake": {"commit": "5ea7245"}}, "rows": gapmap.webview_rows(scan, model)}
+                gapmap.apply_probe_results(gap, {"results": [
+                    {"probe": "webview-boundaries", "westlake_commit": "5ea724541b096990", "passed": True,
+                     "verdict": "phase=searchpath verdict=OBSERVED_SHADOWING"},
+                    {"probe": "webview-boundaries/wv:renderer-process", "row": "wv:renderer-process",
+                     "outcome": "pass" if passed else "fail", "passed": passed, "westlake_commit": "5ea724541b096990",
+                     "verdict": "phase=multiprocess verdict=" + ("PASS_SINGLE_PROCESS" if passed else "FAIL_MULTIPROCESS")}]})
+                return gap["rows"][0]
+            single = measured(True)
+            self.assertEqual((single["verdict"], single["measured"]), ("supplied", "conformant"))
+            multi = measured(False)
+            self.assertEqual((multi["verdict"], multi["effort"], multi["measured"]), ("missing", "L", "broken"),
+                             "the probe-level pass does not hide the row's own failing line")
 
     def test_a_load_that_reports_success_without_opening_the_library(self) -> None:
         with tempfile.TemporaryDirectory(prefix="westlake-load-") as temp:
