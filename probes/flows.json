@@ -1324,14 +1324,24 @@
           "why": "Later (the device settings the app asks for)"
         },
         {
-          "wait": 10
+          "wait": 24
         },
         {
           "tap": [
             1020,
             1256
           ],
-          "why": "OK on the developer's notice"
+          "why": "OK on the developer's notice (the app recreates its activity as it starts, and the notice shows again)"
+        },
+        {
+          "wait": 4
+        },
+        {
+          "tap": [
+            1020,
+            1256
+          ],
+          "why": "OK again if the notice came back; on the clock screen the spot is empty"
         },
         {
           "wait": 2

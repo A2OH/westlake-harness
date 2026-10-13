@@ -178,6 +178,13 @@ are allowed and gone once cancelled): it fails on build 107 (the channel created
 from OH's per-application notification switch, allowed for the board's host application in OH
 Settings. `wm:window-placement` passed in this run (the AlertDialog at 30 to 1170).
 
+**Build 109** (Westlake #39) relaunches an activity that calls recreate(). framework-contracts gains
+`am:recreate`: the probe's own activity calls recreate() once resumed, and a new instance must come
+up within 10 s with the state the first saved. It fails on build 108 (no new instance) and passes on
+build 109; every other line reads as on build 108. On build 109 before its native was added, the
+relaunch ran and the probe died in it: the relaunched window's first draw needed
+`SurfaceControl.nativeAddTransactionCompletedListener`, which no library registered.
+
 ## Running it
 
 On a new build, run the suite with that build's provider flags, merging into this file:

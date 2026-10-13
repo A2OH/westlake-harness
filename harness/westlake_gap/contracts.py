@@ -599,6 +599,25 @@ def launch_lifecycle_model(westlake_root: Path) -> dict[str, Any]:
             "source": f"{bridge.relative_to(westlake_root)}:{java.count(chr(10), 0, launch.start()) + 1}"}
 
 
+def recreate_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether Activity.recreate() relaunches an in-process activity. ActivityThread schedules the
+    relaunch only for a token the system knows: it skips a token that is a local Binder (an activity
+    an ActivityGroup embeds), so recreate() does nothing while the provider hands its activities
+    Binder tokens (OhTokenRegistry.acquireAndroidToken)."""
+    registry = westlake_root / "framework/core/java/OhTokenRegistry.java"
+    java = _strip_java_comments(registry.read_text(errors="replace")) if registry.exists() else ""
+    head = re.search(r"public\s+static\s+IBinder\s+acquireAndroidToken\s*\(", java)
+    made = re.findall(r"\bnew\s+([\w.]+)\s*\(", _braced_block(java, head.start())) if head else []
+    if not made:
+        return {"relaunched": None, "source": None}
+    token = made[0].rsplit(".", 1)[-1]
+    local = token == "Binder" or any(
+        re.search(rf"class\s+{token}\s+extends\s+(?:android\.os\.)?Binder\b", _strip_java_comments(path.read_text(errors="replace")))
+        for path in (westlake_root / "framework").rglob(f"{token}.java"))
+    return {"relaunched": not local, "token": token,
+            "source": f"{registry.relative_to(westlake_root)}:{java.count(chr(10), 0, head.start()) + 1}"}
+
+
 def host_permission_model(westlake_root: Path) -> dict[str, Any]:
     """The OH permissions the host application requests, and the OH permission each Android permission
     maps to. Android apps run in the host's process, so OH checks the host's access token: what the

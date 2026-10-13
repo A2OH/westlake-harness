@@ -389,6 +389,20 @@ public class MainActivity extends Activity {
             if (!("resultCode=" + RESULT_OK + " answer=42").equals(resultSeen)) throw fail("wrong result: " + resultSeen);
             return "onActivityResult got " + resultSeen;
         });
+        // An activity that calls recreate() is destroyed and a new instance brought up with the
+        // state it saved, as when an app applies a new theme or language.
+        check("am:recreate", () -> {
+            runOnUiThread(() -> startActivity(new Intent(this, RecreateActivity.class)));
+            boolean recreated = RecreateActivity.SECOND.await(10, TimeUnit.SECONDS);
+            RecreateActivity open = RecreateActivity.current;
+            if (open != null) runOnUiThread(open::finish);
+            RecreateActivity.FINISHED.await(5, TimeUnit.SECONDS);
+            if (!recreated) {
+                throw fail("recreate() brought no new instance up in 10 s (" + RecreateActivity.instances + " created)");
+            }
+            if (RecreateActivity.savedSeen != 42) throw fail("a new instance came up without the state the first saved");
+            return "a new instance came up with the state the first saved";
+        });
         // A focused editor gets the soft keyboard: the input method manager serves it, and the
         // window's insets report the keyboard. Last, as its activity stays up over this one.
         check("svc:input_method", () -> {

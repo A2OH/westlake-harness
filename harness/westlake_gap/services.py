@@ -350,6 +350,8 @@ def westlake_service_model(westlake_root: Path) -> dict[str, list[dict[str, Any]
         model[match.group(1)][-1]["empty_lists"] = "ParceledListSlice.emptyList" in local_src
     for name, (detail, offset) in device_answers(local_src).items():
         add(name, "device-answer", detail, local, local_src, offset)
+    for name, (detail, offset) in undelivered(local_src).items():
+        add(name, "hollow-proxy", detail, local, local_src, offset)
     return dict(model)
 
 
@@ -381,6 +383,33 @@ def device_answers(source: str) -> dict[str, tuple[str, int]]:
         # that keep the framework's plumbing quiet (audio's player registry) are not a device's.
         if re.search(r"\b(?:no|none|without|off)\b", sentence, re.I):
             found[name] = (sentence, match.start(2))
+    return found
+
+
+# Services whose contract is something done later, not an answer. Answered with the type default
+# for every call, the call is accepted and the thing never happens: Chrono's timer expired in
+# silence, as its expiry is an alarm.
+DELIVERED_LATER = {
+    "alarm": "every AlarmManager call answers the type default: an alarm is accepted and never delivered",
+}
+
+
+def undelivered(source: str) -> dict[str, tuple[str, int]]:
+    """Services LocalServiceBinders answers with the type default for every call whose contract is a
+    later delivery (DELIVERED_LATER): name -> (what the app gets, offset)."""
+    found: dict[str, tuple[str, int]] = {}
+    case = re.compile(r'case "([^"]+)":\s*binder = proxy\(name, "[^"]+",\s*'
+                      r'(?:LocalServiceBinders::(\w+)|\(method, args\) -> DEFAULT)\);')
+    for match in case.finditer(source):
+        name, handler = match.group(1), match.group(2)
+        if name not in DELIVERED_LATER:
+            continue
+        if handler:
+            body = re.search(rf"private static Object {handler}\(String method, Object\[\] args\)\s*\{{([^{{}}]*)\}}",
+                             source, re.S)
+            if not body or re.sub(r"//[^\n]*|\s+", "", body.group(1)) != "returnDEFAULT;":
+                continue
+        found[name] = (DELIVERED_LATER[name], match.start(1))
     return found
 
 

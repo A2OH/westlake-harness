@@ -1066,10 +1066,16 @@ def _implicit_service_census(java_root: str) -> dict[str, dict[str, dict[str, An
     context = root / "android/content/Context.java"
     constants = dict(re.findall(r'public static final String (\w+) = "([\w.]+)";',
                                 context.read_text(errors="replace"))) if context.exists() else {}
+    # A static helper that takes a Context and fetches a manager reaches the manager's service just as
+    # well: TileService.requestListeningState gets StatusBarManager, whose null binder killed Chrono.
+    registry = root / "android/app/SystemServiceRegistry.java"
+    managed = {cls: constants.get(const) for const, cls in re.findall(
+        r"registerService\(\s*Context\.(\w+)\s*,\s*(\w+)\.class", registry.read_text(errors="replace"))} \
+        if registry.exists() else {}
     census: dict[str, dict[str, dict[str, Any]]] = {}
     for path in sorted((root / "android").rglob("*.java")):
         original = path.read_text(errors="replace")
-        if "ServiceManager" not in original:
+        if "ServiceManager" not in original and "getSystemService(" not in original:
             continue
         text = contracts._strip_java_comments(original)
         local = dict(re.findall(r'static final String (\w+)\s*=\s*"([\w.]+)"\s*;', text))
@@ -1095,6 +1101,11 @@ def _implicit_service_census(java_root: str) -> dict[str, dict[str, dict[str, An
             calls[method] |= {n for n in re.findall(r"(?<![\w.])(\w+)\s*\(", body) if n in names and n != method}
             if re.match(r"(?:\w+\s+)*public\b", head.group(0)):
                 public.add(method)
+                if re.search(r"\bstatic\b", head.group(0)) and re.search(r"\bContext\s+\w+\s*[,)]", head.group(0)):
+                    direct[method] |= {n for n in (managed.get(cls) for cls in
+                                                   re.findall(r"getSystemService\(\s*(\w+)\.class\s*\)", body)) if n}
+                    direct[method] |= {n for n in (constants.get(c) for c in
+                                                   re.findall(r"getSystemService\(\s*Context\.(\w+)\s*\)", body)) if n}
         # Checked: a variable that holds the binder (from ServiceManager or a fetching helper) is
         # compared with null. A chain such as getService().prepareVpn(...) is not.
         fetchers = "|".join(re.escape(m) for m in direct if direct[m]) or r"(?!)"
@@ -1820,6 +1831,30 @@ def launch_lifecycle_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[d
         app_evidence=f"the app declares {activities} activities and starts activities (startActivity)",
         seen_blocking=["mpv (calibration flow mpv-play-file: the player opened the picked file at 0:00, paused and silent)"],
         shim="resume an activity the app starts once, in its launch transaction",
+    )]
+
+
+def recreate_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """Activity.recreate(): apps call it to apply a new theme or language, and Android destroys the
+    activity and brings a new instance up with the state it saved. ActivityThread skips the relaunch
+    for an activity whose token is a local Binder, so a provider that hands its in-process
+    activities Binder tokens makes recreate() do nothing: AntennaPod's dark theme stayed light
+    (calibration flow antennapod-theme)."""
+    called = set(scan["inventory"].get("platform_method_names", {}).get("Landroid/app/Activity;", []))
+    if "recreate" not in called or model.get("relaunched") is None:
+        return []
+    relaunched = bool(model["relaunched"])
+    return [_row(
+        "app-framework", "am:recreate", "Recreating an activity (Activity.recreate: a new theme or language)",
+        oh_touchpoint="none: the app's own activities, in its process",
+        verdict="supplied" if relaunched else "missing", shim_class="C0" if relaunched else "C9",
+        effort="verify" if relaunched else "S", confidence=STATIC,
+        provider=("activity tokens are not local Binders, so ActivityThread relaunches the activity" if relaunched else
+                  "activity tokens are local Binders: ActivityThread skips the relaunch, and recreate() does nothing"),
+        provider_source=model.get("source"),
+        app_evidence="the app calls Activity.recreate",
+        seen_blocking=["antennapod (calibration flow antennapod-theme: the dark theme was chosen and the screens stayed light)"],
+        shim="give in-process activities tokens that are not local Binders",
     )]
 
 
@@ -4050,6 +4085,7 @@ def build_map(
             + permission_request_rows(scan, contracts.permission_request_model(westlake_root))
             + activity_result_rows(scan, contracts.activity_result_model(westlake_root))
             + launch_lifecycle_rows(scan, contracts.launch_lifecycle_model(westlake_root))
+            + recreate_rows(scan, contracts.recreate_model(westlake_root))
             + host_permission_rows(facts, contracts.host_permission_model(westlake_root), westlake_root)
             + ce_storage_rows(scan, contracts.ce_storage_model(westlake_root))
             + feature_rows(scan, contracts.feature_claims_model(westlake_root), aosp_services, westlake_services)
