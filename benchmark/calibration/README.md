@@ -242,6 +242,36 @@ What decided the failures:
 The batch adds a `press` step to `run_flows.py`, and a `max_fraction` bound for a region that must
 not be dark (a camera preview).
 
+## Build 109: activities recreated
+
+AntennaPod's dark theme now applies: build 109 relaunches an activity that calls recreate(). Of
+the seventeen flows, thirteen are confirmed, with no false alarms and four misses (precision 1.0,
+recall 0.56; `results-build109.json`, SELinux enforcing). Build 103's regression set draws 23 of 24;
+Reddit drew this run, as it does on some runs.
+
+ActivityThread does not relaunch an activity whose token is a local Binder, which it takes for one
+the system does not know, and Westlake's activity tokens were Binders. Westlake #39 gives in-process
+activities a token of their own and adds the completed-listener native that a relaunched window's
+first draw needs. It also answers the status-bar service in process. The framework-contracts
+probe's new `am:recreate` line fails on build 108 (no new instance) and passes on build 109.
+
+- `antennapod-theme` works: 95% of the settings screen is dark once Dark is chosen.
+- `chrono-timer` still fails, for two newer reasons. The app no longer dies when its timer starts,
+  and the timer counts down, but at its end the app counts overtime in silence. Its ringing starts
+  from an alarm, and Westlake's alarm service accepts every alarm and delivers none. In the flow,
+  the app's first-run notice could not be dismissed: it is drawn centred, reports its position as
+  the top left of the screen, and a tap on its OK lands outside it. A tap where OK would be at the
+  top left dismisses it, on build 108 as well. Before build 109 the flow got past the notice only
+  when its tap came before the notice showed; the app now recreates its activity as it starts,
+  which shows the notice later.
+
+The map gains three rules from these misses: the row `am:recreate`, from the token type the
+provider hands out (267 corpus apps call `Activity.recreate`); static framework helpers in the
+implicit-service census, so `TileService.requestListeningState` reaches `svc:statusbar` (12 apps);
+and `svc:alarm` reading hollow when every alarm call answers the type default. Rebuilt against
+build 108 with these rules, the batch-2 plan, unchanged, predicts the failures of
+`antennapod-theme` and `chrono-timer`: 6 of the 9 failures, in sample.
+
 ## What the calibration says about the gap map
 
 Each miss is a contract no row describes, or a row that reads supplied while the flow fails;
@@ -262,8 +292,10 @@ whose scans reference the API behind the contract.
 | **No long press.** Text cannot be selected, so nothing is copied | `svc:clipboard` supplied; no row for how touch reaches the app | 280 set long-press listeners | stream a held finger in tap mode (the touch forwarder); a row for the launch's touch mode |
 | **Starts go nowhere.** A web link, a share and the system picker report success and open nothing | no rows for other apps' activities (the plan's layer 1 is not built) | 274 call `Intent.createChooser`; 217 use `DocumentsContract` | answer `ActivityNotFoundException` when nothing handles a start (plan gap 1); the picker and share mapped to OH's (gap 2) |
 | **Android executables cannot run.** Termux's bootstrap fails | nothing: no row for an app's own programs | 146 start processes | a row for executables that need Android's linker |
-| **No status-bar service.** Chrono dies when its timer starts | nothing: no status-bar row | 17 use Quick Settings tiles or `StatusBarManager` | answer the status-bar service in process; a row from the implicit-service census |
-| **Activities are not recreated.** AntennaPod's theme does not apply | nothing: no row for recreation | 267 call `Activity.recreate` | a contract line (recreate brings a new instance up) and the relaunch |
+| **No status-bar service.** Chrono dies when its timer starts | nothing: no status-bar row | 17 use Quick Settings tiles or `StatusBarManager` | done in build 109: the service answered in process, and `svc:statusbar` from the census's static helpers (12 call `TileService.requestListeningState`) |
+| **Activities are not recreated.** AntennaPod's theme does not apply | nothing: no row for recreation | 267 call `Activity.recreate` | done in build 109: the row `am:recreate`, a contract line, and the relaunch |
+| **Alarms are never delivered.** Chrono's timer reaches its end and counts overtime in silence | `svc:alarm` supplied | 242 schedule alarms | `svc:alarm` reads hollow from build 109's harness; deliver alarms in process while the app runs (plan gap 5) |
+| **A dialog's touch area is not where it is drawn.** Chrono's notice is centred, reports the top left as its position, and a tap on its OK misses | `wm:window-placement` passes (the probe's AlertDialog reports its place) | not counted | find which dialogs report the top left; a contract line for one like this |
 
 
 
