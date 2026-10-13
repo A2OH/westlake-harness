@@ -1,0 +1,123 @@
+{
+ "note": "Second calibration batch, fixed before the maps' verdicts were read and before any board run. Each flow names the contracts its function needs as row ids or id prefixes (ending in *); the prediction is read mechanically from the app's build-108 map: the rule below (no matching row = no known gap, works).",
+ "rule": "fails when a matching row's verdict is in the harness's HARD_GAPS (gapmap.py: missing, null, inert, hollow, strict, denied, stub, absent), as the startup backtest counts; works otherwise",
+ "flows": [
+  {
+   "id": "fnotes-newline",
+   "app": "fnotes",
+   "intent": "type two lines in a note (Enter between them)",
+   "works_when": "the second line's text shows below the first",
+   "rows": [
+    "svc:input_method",
+    "wm:focus-handoff",
+    "jni:android.view.KeyCharacterMap",
+    "jni:android.view.KeyEvent"
+   ]
+  },
+  {
+   "id": "fnotes-copy-paste",
+   "app": "fnotes",
+   "intent": "copy a word and paste it",
+   "works_when": "the pasted word shows where it was pasted",
+   "rows": [
+    "svc:clipboard",
+    "wm:popup-window",
+    "svc:input_method"
+   ]
+  },
+  {
+   "id": "fnotes-link",
+   "app": "fnotes",
+   "intent": "open a web link from the About screen",
+   "works_when": "a web page opens",
+   "rows": [
+    "am:own-implicit-intents",
+    "svc:android.intent.action.VIEW",
+    "intent:*",
+    "am:start-*",
+    "pm:call:queryIntentActivities",
+    "pm:call:resolveActivity"
+   ]
+  },
+  {
+   "id": "markor-share",
+   "app": "markor",
+   "intent": "share a note",
+   "works_when": "a share sheet shows where to send it",
+   "rows": [
+    "am:own-implicit-intents",
+    "svc:android.intent.action.SEND",
+    "intent:*",
+    "am:start-*",
+    "pm:call:queryIntentActivityOptions",
+    "pm:call:queryIntentActivities"
+   ]
+  },
+  {
+   "id": "termux-command",
+   "app": "termux",
+   "intent": "run a command in the terminal",
+   "works_when": "the command's output shows",
+   "rows": [
+    "os:*",
+    "sepolicy:*",
+    "svc:input_method",
+    "jni:android.view.KeyCharacterMap",
+    "jni:android.view.KeyEvent",
+    "exec:*"
+   ]
+  },
+  {
+   "id": "chrono-timer",
+   "app": "chrono",
+   "intent": "a 30-second timer rings when it ends",
+   "works_when": "the board plays the timer's alarm at its end",
+   "rows": [
+    "svc:alarm",
+    "svc:notification",
+    "svc:audio",
+    "svc:power"
+   ]
+  },
+  {
+   "id": "keepassdx-open",
+   "app": "keepassdx",
+   "intent": "open a database file picked in the system file picker",
+   "works_when": "the app asks for the picked database's password",
+   "rows": [
+    "am:activity-result",
+    "am:own-implicit-intents",
+    "intent:*",
+    "am:start-*",
+    "pm:providers",
+    "storage:*",
+    "svc:storage"
+   ]
+  },
+  {
+   "id": "opencamera-photo",
+   "app": "opencamera",
+   "intent": "take a photo",
+   "works_when": "the preview shows the camera's picture and the shutter saves a photo",
+   "rows": [
+    "svc:camera",
+    "jni:android.hardware.camera2.*",
+    "jni:android.hardware.Camera",
+    "java:Camera",
+    "feature:*"
+   ]
+  },
+  {
+   "id": "antennapod-theme",
+   "app": "antennapod",
+   "intent": "switch the app to its dark theme",
+   "works_when": "the app's screens turn dark",
+   "rows": [
+    "svc:uimode",
+    "am:relaunch",
+    "am:recreate",
+    "am:launch-lifecycle"
+   ]
+  }
+ ]
+}

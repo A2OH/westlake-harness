@@ -108,8 +108,31 @@ def _check(spec: dict[str, Any], evidence: dict[str, Any]) -> tuple[bool, str]:
         if shot is None:
             return False, f"no screenshot {spec['dark']}"
         share = dark_fraction(shot, spec["region"])
+        if "max_fraction" in spec:  # a picture over the region, not a black one (a camera preview)
+            return share <= spec["max_fraction"], f"{share:.3f} of the region dark in {spec['dark']}"
         return share >= spec.get("min_fraction", 0.005), f"{share:.3f} of the region dark in {spec['dark']}"
     raise ValueError(f"unknown check {spec}")
+
+
+def touch_mode(launch_args: list[str]) -> str:
+    """The launch's --touch-mode (probe_source_app.py), the last one given; stream by default, as there."""
+    mode = "stream"
+    for i, arg in enumerate(launch_args):
+        if arg == "--touch-mode" and i + 1 < len(launch_args):
+            mode = launch_args[i + 1]
+        elif arg.startswith("--touch-mode="):
+            mode = arg.split("=", 1)[1]
+    return mode
+
+
+def press_commands(mode: str, x: int, y: int, ms: int) -> list[tuple[float, str]]:
+    """A finger held still at (x, y) for ms, as the touch forwarder (westlake native/touchfwd.c) replays
+    it: (seconds to wait first, tap-channel command) pairs. Streaming, it is a press, a hold and a
+    release, then the hit-tested click the forwarder adds after a stationary gesture; in tap mode the
+    forwarder sends one tap when the finger lifts, so the app never sees the hold."""
+    if mode == "tap":
+        return [(ms / 1000, f"{x} {y}")]
+    return [(0.0, f"d {x} {y}"), (ms / 1000, f"u {x} {y}"), (0.1, f"c {x} {y}")]
 
 
 def score(predicted: str, observed: str) -> str:
@@ -218,6 +241,12 @@ def run_flow(flow: dict[str, Any], args: argparse.Namespace, board: Board) -> di
                 board.tap(" ".join(str(v) for v in step["drag"]))
             elif "back" in step:
                 board.tap("back")
+            elif "press" in step:
+                # A long press, through the same translation a finger gets on this launch.
+                x, y, ms = step["press"]
+                for pause, command in press_commands(touch_mode(shlex.split(args.launch_args)), x, y, ms):
+                    time.sleep(pause)
+                    board.tap(command)
             elif "touch" in step:
                 # A touch through OH's own input, for windows not the app's: the board's keyboard.
                 board.shell("uinput -T -c " + " ".join(str(v) for v in step["touch"]))

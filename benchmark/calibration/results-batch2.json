@@ -1,0 +1,342 @@
+{
+ "date": "2026-10-12",
+ "westlake_commit": "353109aaa49d025644eaaa22d1139a614aabc08a",
+ "summary": {
+  "flows": 9,
+  "ran": 9,
+  "confirmed": 4,
+  "false_alarms": 0,
+  "misses": 5,
+  "precision": 1.0,
+  "recall": 0.44
+ },
+ "flows": [
+  {
+   "id": "fnotes-newline",
+   "app": "fnotes",
+   "intent": "type two lines in a note (Enter between them)",
+   "predicted": "fails",
+   "prediction": {
+    "outcome": "fails",
+    "rows": {
+     "svc:input_method": "supplied, measured conformant",
+     "wm:focus-handoff": "supplied, measured conformant",
+     "jni:android.view.KeyCharacterMap": "missing, measured broken"
+    },
+    "no_row": [
+     "jni:android.view.KeyEvent"
+    ],
+    "source": "batch 2, scripts/predict_flows.py on the build-108 maps, before any run"
+   },
+   "observed": "fails",
+   "verdict": "confirmed",
+   "checks": [
+    {
+     "check": "the first line's text shows",
+     "passed": true,
+     "seen": "0.018 of the region dark in typed"
+    },
+    {
+     "check": "text shows on a line below the first",
+     "passed": false,
+     "seen": "0.000 of the region dark in typed"
+    },
+    {
+     "check": "the app keeps running",
+     "passed": true,
+     "seen": "process alive"
+    }
+   ],
+   "evidence": [
+    "start.jpeg",
+    "typed.jpeg"
+   ]
+  },
+  {
+   "id": "fnotes-copy-paste",
+   "app": "fnotes",
+   "intent": "copy a word and paste it",
+   "predicted": "works",
+   "prediction": {
+    "outcome": "works",
+    "rows": {
+     "svc:clipboard": "supplied",
+     "wm:popup-window": "supplied",
+     "svc:input_method": "supplied, measured conformant"
+    },
+    "source": "batch 2, scripts/predict_flows.py on the build-108 maps, before any run"
+   },
+   "observed": "fails",
+   "verdict": "miss",
+   "checks": [
+    {
+     "check": "the pasted word shows after the text",
+     "passed": false,
+     "seen": "0.000 of the region dark in pasted"
+    },
+    {
+     "check": "the app keeps running",
+     "passed": true,
+     "seen": "process alive"
+    }
+   ],
+   "evidence": [
+    "pasted.jpeg",
+    "selected.jpeg",
+    "typed.jpeg"
+   ]
+  },
+  {
+   "id": "fnotes-link",
+   "app": "fnotes",
+   "intent": "open a web link from the About screen",
+   "predicted": "works",
+   "prediction": {
+    "outcome": "works",
+    "rows": {},
+    "no_row": [
+     "am:own-implicit-intents",
+     "svc:android.intent.action.VIEW",
+     "intent:*",
+     "am:start-*",
+     "pm:call:queryIntentActivities",
+     "pm:call:resolveActivity"
+    ],
+    "source": "batch 2, scripts/predict_flows.py on the build-108 maps, before any run"
+   },
+   "observed": "fails",
+   "verdict": "miss",
+   "checks": [
+    {
+     "check": "a web page opens over the About screen",
+     "passed": false,
+     "seen": "about -> link differ by 0.0"
+    }
+   ],
+   "evidence": [
+    "about.jpeg",
+    "link.jpeg"
+   ]
+  },
+  {
+   "id": "markor-share",
+   "app": "markor",
+   "intent": "share a note",
+   "predicted": "fails",
+   "prediction": {
+    "outcome": "fails",
+    "rows": {
+     "pm:call:queryIntentActivityOptions": "stub, measured broken"
+    },
+    "no_row": [
+     "am:own-implicit-intents",
+     "svc:android.intent.action.SEND",
+     "intent:*",
+     "am:start-*",
+     "pm:call:queryIntentActivities"
+    ],
+    "source": "batch 2, scripts/predict_flows.py on the build-108 maps, before any run"
+   },
+   "observed": "fails",
+   "verdict": "confirmed",
+   "checks": [
+    {
+     "check": "a share sheet shows where to send the note",
+     "passed": false,
+     "seen": "note -> shared differ by 0.0"
+    }
+   ],
+   "evidence": [
+    "note.jpeg",
+    "shared.jpeg"
+   ]
+  },
+  {
+   "id": "termux-command",
+   "app": "termux",
+   "intent": "run a command in the terminal",
+   "predicted": "fails",
+   "prediction": {
+    "outcome": "fails",
+    "rows": {
+     "svc:input_method": "supplied, measured conformant",
+     "jni:android.view.KeyCharacterMap": "missing, measured broken"
+    },
+    "no_row": [
+     "os:*",
+     "sepolicy:*",
+     "jni:android.view.KeyEvent",
+     "exec:*"
+    ],
+    "source": "batch 2, scripts/predict_flows.py on the build-108 maps, before any run"
+   },
+   "observed": "fails",
+   "verdict": "confirmed",
+   "checks": [
+    {
+     "check": "the terminal, not the bootstrap error, is on screen",
+     "passed": false,
+     "seen": "0.047 of the region dark in terminal"
+    },
+    {
+     "check": "the shell answers the command",
+     "passed": false,
+     "seen": "terminal -> ran differ by 0.0"
+    },
+    {
+     "check": "the app keeps running",
+     "passed": true,
+     "seen": "process alive"
+    }
+   ],
+   "evidence": [
+    "ran.jpeg",
+    "terminal.jpeg"
+   ]
+  },
+  {
+   "id": "chrono-timer",
+   "app": "chrono",
+   "intent": "a 30-second timer rings when it ends",
+   "predicted": "works",
+   "prediction": {
+    "outcome": "works",
+    "rows": {
+     "svc:alarm": "supplied",
+     "svc:notification": "supplied, measured conformant",
+     "svc:audio": "supplied, measured conformant",
+     "svc:power": "supplied"
+    },
+    "source": "batch 2, scripts/predict_flows.py on the build-108 maps, before any run"
+   },
+   "observed": "fails",
+   "verdict": "miss",
+   "checks": [
+    {
+     "check": "the timer rings",
+     "passed": false,
+     "seen": "0 non-zero samples in expiry"
+    },
+    {
+     "check": "the app keeps running",
+     "passed": false,
+     "seen": "process exited"
+    }
+   ],
+   "evidence": [
+    "expired.jpeg",
+    "expiry.wav",
+    "running.jpeg",
+    "set.jpeg"
+   ]
+  },
+  {
+   "id": "keepassdx-open",
+   "app": "keepassdx",
+   "intent": "open a database file picked in the system file picker",
+   "predicted": "works",
+   "prediction": {
+    "outcome": "works",
+    "rows": {
+     "am:activity-result": "supplied, measured conformant",
+     "pm:providers": "supplied"
+    },
+    "no_row": [
+     "am:own-implicit-intents",
+     "intent:*",
+     "am:start-*",
+     "storage:*",
+     "svc:storage"
+    ],
+    "source": "batch 2, scripts/predict_flows.py on the build-108 maps, before any run"
+   },
+   "observed": "fails",
+   "verdict": "miss",
+   "checks": [
+    {
+     "check": "the system file picker shows (picking the database in it is added once one shows)",
+     "passed": false,
+     "seen": "home -> picker differ by 0.0"
+    }
+   ],
+   "evidence": [
+    "home.jpeg",
+    "picker.jpeg"
+   ]
+  },
+  {
+   "id": "opencamera-photo",
+   "app": "opencamera",
+   "intent": "take a photo",
+   "predicted": "fails",
+   "prediction": {
+    "outcome": "fails",
+    "rows": {
+     "svc:camera": "inert",
+     "jni:android.hardware.camera2.DngCreator": "missing",
+     "jni:android.hardware.camera2.impl.CameraMetadataNative": "missing",
+     "jni:android.hardware.camera2.utils.SurfaceUtils": "missing",
+     "jni:android.hardware.Camera": "missing"
+    },
+    "no_row": [
+     "java:Camera",
+     "feature:*"
+    ],
+    "source": "batch 2, scripts/predict_flows.py on the build-108 maps, before any run"
+   },
+   "observed": "fails",
+   "verdict": "confirmed",
+   "checks": [
+    {
+     "check": "the preview shows the camera's picture",
+     "passed": false,
+     "seen": "0.989 of the region dark in camera"
+    },
+    {
+     "check": "the shutter saves a photo: its thumbnail shows",
+     "passed": false,
+     "seen": "camera -> taken differ by 0.0"
+    }
+   ],
+   "evidence": [
+    "camera.jpeg",
+    "taken.jpeg"
+   ]
+  },
+  {
+   "id": "antennapod-theme",
+   "app": "antennapod",
+   "intent": "switch the app to its dark theme",
+   "predicted": "works",
+   "prediction": {
+    "outcome": "works",
+    "rows": {
+     "svc:uimode": "supplied",
+     "am:launch-lifecycle": "supplied, measured conformant"
+    },
+    "no_row": [
+     "am:relaunch",
+     "am:recreate"
+    ],
+    "source": "batch 2, scripts/predict_flows.py on the build-108 maps, before any run"
+   },
+   "observed": "fails",
+   "verdict": "miss",
+   "checks": [
+    {
+     "check": "the app's screens turn dark",
+     "passed": false,
+     "seen": "0.038 of the region dark in dark"
+    }
+   ],
+   "evidence": [
+    "dark.jpeg",
+    "light.jpeg"
+   ]
+  }
+ ],
+ "runs": [
+  "the nine flows ran once (2026-10-12, 23:40); the board's network link dropped during termux-command, which lost its screenshots, and the four flows after it did not launch: those four ran again (23:50)",
+  "fnotes-link's About tap was placed for a note with text; a fresh note's menu is shorter, so the flow never reached About: corrected, it ran again with termux-command (23:57)"
+ ]
+}

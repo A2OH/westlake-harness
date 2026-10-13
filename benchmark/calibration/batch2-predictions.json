@@ -1,0 +1,175 @@
+{
+ "rule": "fails when a matching row's verdict is in gapmap.HARD_GAPS",
+ "flows": [
+  {
+   "id": "fnotes-newline",
+   "app": "fnotes",
+   "intent": "type two lines in a note (Enter between them)",
+   "works_when": "the second line's text shows below the first",
+   "westlake_commit": "353109aaa49d025644eaaa22d1139a614aabc08a",
+   "prediction": {
+    "outcome": "fails",
+    "rows": {
+     "svc:input_method": "supplied, measured conformant",
+     "wm:focus-handoff": "supplied, measured conformant",
+     "jni:android.view.KeyCharacterMap": "missing, measured broken"
+    },
+    "no_row": [
+     "jni:android.view.KeyEvent"
+    ]
+   }
+  },
+  {
+   "id": "fnotes-copy-paste",
+   "app": "fnotes",
+   "intent": "copy a word and paste it",
+   "works_when": "the pasted word shows where it was pasted",
+   "westlake_commit": "353109aaa49d025644eaaa22d1139a614aabc08a",
+   "prediction": {
+    "outcome": "works",
+    "rows": {
+     "svc:clipboard": "supplied",
+     "wm:popup-window": "supplied",
+     "svc:input_method": "supplied, measured conformant"
+    },
+    "no_row": []
+   }
+  },
+  {
+   "id": "fnotes-link",
+   "app": "fnotes",
+   "intent": "open a web link from the About screen",
+   "works_when": "a web page opens",
+   "westlake_commit": "353109aaa49d025644eaaa22d1139a614aabc08a",
+   "prediction": {
+    "outcome": "works",
+    "rows": {},
+    "no_row": [
+     "am:own-implicit-intents",
+     "svc:android.intent.action.VIEW",
+     "intent:*",
+     "am:start-*",
+     "pm:call:queryIntentActivities",
+     "pm:call:resolveActivity"
+    ]
+   }
+  },
+  {
+   "id": "markor-share",
+   "app": "markor",
+   "intent": "share a note",
+   "works_when": "a share sheet shows where to send it",
+   "westlake_commit": "353109aaa49d025644eaaa22d1139a614aabc08a",
+   "prediction": {
+    "outcome": "fails",
+    "rows": {
+     "pm:call:queryIntentActivityOptions": "stub, measured broken"
+    },
+    "no_row": [
+     "am:own-implicit-intents",
+     "svc:android.intent.action.SEND",
+     "intent:*",
+     "am:start-*",
+     "pm:call:queryIntentActivities"
+    ]
+   }
+  },
+  {
+   "id": "termux-command",
+   "app": "termux",
+   "intent": "run a command in the terminal",
+   "works_when": "the command's output shows",
+   "westlake_commit": "353109aaa49d025644eaaa22d1139a614aabc08a",
+   "prediction": {
+    "outcome": "fails",
+    "rows": {
+     "svc:input_method": "supplied, measured conformant",
+     "jni:android.view.KeyCharacterMap": "missing, measured broken"
+    },
+    "no_row": [
+     "os:*",
+     "sepolicy:*",
+     "jni:android.view.KeyEvent",
+     "exec:*"
+    ]
+   }
+  },
+  {
+   "id": "chrono-timer",
+   "app": "chrono",
+   "intent": "a 30-second timer rings when it ends",
+   "works_when": "the board plays the timer's alarm at its end",
+   "westlake_commit": "353109aaa49d025644eaaa22d1139a614aabc08a",
+   "prediction": {
+    "outcome": "works",
+    "rows": {
+     "svc:alarm": "supplied",
+     "svc:notification": "supplied, measured conformant",
+     "svc:audio": "supplied, measured conformant",
+     "svc:power": "supplied"
+    },
+    "no_row": []
+   }
+  },
+  {
+   "id": "keepassdx-open",
+   "app": "keepassdx",
+   "intent": "open a database file picked in the system file picker",
+   "works_when": "the app asks for the picked database's password",
+   "westlake_commit": "353109aaa49d025644eaaa22d1139a614aabc08a",
+   "prediction": {
+    "outcome": "works",
+    "rows": {
+     "am:activity-result": "supplied, measured conformant",
+     "pm:providers": "supplied"
+    },
+    "no_row": [
+     "am:own-implicit-intents",
+     "intent:*",
+     "am:start-*",
+     "storage:*",
+     "svc:storage"
+    ]
+   }
+  },
+  {
+   "id": "opencamera-photo",
+   "app": "opencamera",
+   "intent": "take a photo",
+   "works_when": "the preview shows the camera's picture and the shutter saves a photo",
+   "westlake_commit": "353109aaa49d025644eaaa22d1139a614aabc08a",
+   "prediction": {
+    "outcome": "fails",
+    "rows": {
+     "svc:camera": "inert",
+     "jni:android.hardware.camera2.DngCreator": "missing",
+     "jni:android.hardware.camera2.impl.CameraMetadataNative": "missing",
+     "jni:android.hardware.camera2.utils.SurfaceUtils": "missing",
+     "jni:android.hardware.Camera": "missing"
+    },
+    "no_row": [
+     "java:Camera",
+     "feature:*"
+    ]
+   }
+  },
+  {
+   "id": "antennapod-theme",
+   "app": "antennapod",
+   "intent": "switch the app to its dark theme",
+   "works_when": "the app's screens turn dark",
+   "westlake_commit": "353109aaa49d025644eaaa22d1139a614aabc08a",
+   "prediction": {
+    "outcome": "works",
+    "rows": {
+     "svc:uimode": "supplied",
+     "am:launch-lifecycle": "supplied, measured conformant"
+    },
+    "no_row": [
+     "am:relaunch",
+     "am:recreate"
+    ]
+   }
+  }
+ ]
+}
