@@ -169,6 +169,31 @@ second dialog, a stock AlertDialog with a long message, measured 1282 px wide on
 Its first layout comes out that wide and a later one fits it (30 to 1170), and the probe measures it
 1.2 s after it shows; it caught the wide layout on build 105 as well. The first dialog stays centred.
 
+## Build 108: the timer rings
+
+Fossify Clock rings an expired timer as Android expects: it posts a notification on a channel whose
+sound is the alarm (`content://settings/system/alarm_alert`, alarm usage, insistent), and the
+notification service plays it until the notification is cancelled. Westlake's in-process notification
+service dropped posts and channels, the board has no ringtone files, and `POST_NOTIFICATIONS` was
+mapped to an OH system permission no application holds, so it read as denied for every app.
+
+Build 108 (Westlake #38, with a rebuilt libwl_missing_natives) keeps an app's channels and posts and
+plays a post's sound as NotificationManagerService does: the channel's sound, importance DEFAULT and
+above, looping when insistent, stopped by cancel. It writes default alarm, notification and ringtone
+sounds and opens them for the settings URIs that stand for them. `POST_NOTIFICATIONS` and
+`areNotificationsEnabled` answer from OH's per-application notification switch, the host's. That
+switch is the user's: with it off the post is dropped, as Android drops it, and the timer stays
+silent; the board's host application now has notifications allowed in OH Settings (see Running it).
+
+The framework-contracts probe's new `svc:notification` line (a channel kept, the two notification
+answers agreeing, a post listed and cancelled) passes on build 108. At the timer's expiry the board
+plays the alarm, four 880 Hz beeps and a pause, looping (367,216 non-zero samples in the flow's
+25 s), and resetting the timer stops it.
+
+The eight flows on build 108 (`results-build108.json`, SELinux enforcing): all eight confirmed, no
+false alarms, no misses (precision 1.0, recall 1.0). Build 103's regression set draws as on build
+107: 22 of 24.
+
 ## What the calibration says about the gap map
 
 Each miss is a contract no row describes, or a row that reads supplied while the flow fails;
@@ -180,7 +205,7 @@ whose scans reference the API behind the contract.
 | **Activity results are dropped.** mpv's file picker returns the chosen file with `setResult` and finishes; Westlake's `finishActivity` ignores the result, so `onActivityResult` never runs and nothing plays | nothing: no row for activity results | 346 call `startActivityForResult` | done in build 102: the row `am:activity-result`, a contract line, and the fix |
 | **A started activity is paused and resumed as it starts.** mpv pauses its player in `onPause`; the extra pause and resume left the picked file at 0:00, silent | nothing: no row for a started activity's lifecycle | 280 declare more than one activity and start activities | done in build 103: the row `am:launch-lifecycle`, a contract line, and the fix |
 | **No keyboard comes up.** Tapping Markor's editor focuses it, and no soft keyboard appears: there is no way to type | `svc:input_method` supplied | 306 use `EditText` | done in build 107: the keyboard bridge worked in a window that kept focus (`svc:input_method`, now a contract line); Markor's editor sat under its closed changelog, whose window never handed focus back. The row `wm:focus-handoff`, a contract line, and the fix |
-| **A timer ends silently.** Fossify Clock counts down to 00:00 and posts its notification; no sound and no alert, as `getRingtonePlayer` answers null and notifications reach no OH service | `svc:alarm`, `svc:notification` supplied | 283 post notifications; 20 play ringtones | contract lines for notification delivery and ringtone playback |
+| **A timer ends silently.** Fossify Clock counts down to 00:00 and posts its notification; no sound and no alert, as `getRingtonePlayer` answers null and notifications reach no OH service | `svc:alarm`, `svc:notification` supplied | 283 post notifications; 20 play ringtones | done in build 108: the notification service keeps channels and posts and plays a post's sound; the defaults resolve; `POST_NOTIFICATIONS` is OH's per-app switch; a contract line (`svc:notification`) |
 | **Popup menus are not drawn.** The overflow menu's window exists and takes taps (a blind tap opened the FAQ), but nothing shows | nothing: no row for popup windows | 311 show popups (`PopupWindow`, menus, dropdowns) | done in build 105: the row `wm:popup-window` and the fix; only the screen shows it, so the flow is its measurement |
 | **The media store is empty.** Just Player lists videos from MediaStore and finds none, with the video in `Movies/`; the flow stops before decoding, so the `MediaCodec` prediction was right for another reason | `java:Media store` unmeasured | 125 | a contract line (a file in shared storage is indexed) |
 | **WebView renders.** Markor's preview draws the note in a WebView and the app lives | `wv:renderer-process` missing: the first WebView kills the app | 143 | done: the row waits for the webview-boundaries probe, whose multiprocess line is its result (WebView in process on every build since 100) |
@@ -198,4 +223,8 @@ whose scans reference the API behind the contract.
 
 `probes/audio-capture`'s `oh_record` must be on the board (`--recorder`). The fixed tap positions
 belong to the pinned APK versions on the 1200x1920 board: a new pin, or another screen, needs them
-found again (a screenshot after each step shows where).
+found again (a screenshot after each step shows where). The board's own keyboard takes `touch`
+steps (OH input) at the positions of its default input method. Notifications must be allowed for
+the host application in OH Settings (Notifications and status bar, Westlake IME host), as a
+user allows an app's notifications: until then `POST_NOTIFICATIONS` reads denied and a post is
+dropped, so `fclock-timer` stays silent.

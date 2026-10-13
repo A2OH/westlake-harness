@@ -2,6 +2,9 @@ package org.westlake.probe.contracts;
 
 import android.app.Activity;
 import android.app.KeyguardManager;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
 import android.content.ActivityNotFoundException;
@@ -28,6 +31,7 @@ import android.os.UserHandle;
 import android.os.UserManager;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.service.notification.StatusBarNotification;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.KeyCharacterMap;
@@ -331,6 +335,31 @@ public class MainActivity extends Activity {
             InstallSourceInfo source = pm.getInstallSourceInfo(getPackageName());
             if (source == null) throw fail("getInstallSourceInfo returned null");
             return "installer=" + installer + " (as for an app installed from a file), install source answered";
+        });
+        // The notification service keeps the app's channels and its posts, and answers whether the
+        // user allows them the same way it answers POST_NOTIFICATIONS. LOW importance: no sound.
+        check("svc:notification", () -> {
+            NotificationManager nm = getSystemService(NotificationManager.class);
+            nm.createNotificationChannel(new NotificationChannel("wl-probe", "Probe", NotificationManager.IMPORTANCE_LOW));
+            NotificationChannel kept = nm.getNotificationChannel("wl-probe");
+            if (kept == null) throw fail("the channel created is not kept (getNotificationChannel null)");
+            boolean enabled = nm.areNotificationsEnabled();
+            boolean permitted = checkSelfPermission("android.permission.POST_NOTIFICATIONS") == PackageManager.PERMISSION_GRANTED;
+            if (enabled != permitted) {
+                throw fail("areNotificationsEnabled=" + enabled + " but POST_NOTIFICATIONS " + (permitted ? "granted" : "denied"));
+            }
+            nm.notify(4244, new Notification.Builder(this, "wl-probe")
+                    .setSmallIcon(android.R.drawable.ic_dialog_info).setContentTitle("probe").build());
+            boolean listed = false;
+            for (StatusBarNotification posted : nm.getActiveNotifications()) listed |= posted.getId() == 4244;
+            nm.cancel(4244);
+            boolean gone = true;
+            for (StatusBarNotification posted : nm.getActiveNotifications()) gone &= posted.getId() != 4244;
+            if (enabled && !listed) throw fail("posted with notifications allowed, and not among the active notifications");
+            if (!enabled && listed) throw fail("listed though the user has not allowed notifications");
+            if (!gone) throw fail("still active after cancel");
+            return "channel kept; notifications " + (enabled ? "allowed (POST_NOTIFICATIONS granted): the post listed, then cancelled"
+                    : "not allowed by the user (POST_NOTIFICATIONS denied): the post dropped, as Android drops it");
         });
         // These two bring another activity up over this one, so they come last. An activity this app
         // starts is created, started and resumed, and stays resumed while it is on top: a player
