@@ -194,6 +194,54 @@ The eight flows on build 108 (`results-build108.json`, SELinux enforcing): all e
 false alarms, no misses (precision 1.0, recall 1.0). Build 103's regression set draws as on build
 107: 22 of 24.
 
+## Batch 2: nine flows predicted blind (build 108)
+
+All nine new flows fail on build 108. The gap map predicted four of the failures, and all four
+failed (precision 1.0), but it predicted only four of the nine (recall 0.44), and its rows named the
+cause once, for the camera. The other failures are contracts no row describes yet.
+
+With all eight earlier flows confirmed, they no longer tested the map. Batch 2 covers the plan's core
+functions not yet calibrated, in seven apps. Before the board was touched, `batch2-plan.json` fixed
+each flow's function, what counts as working, and the contracts it needs (row ids or prefixes).
+`scripts/predict_flows.py` then read the predictions from maps rebuilt against build 108 with this
+harness and the build's probe results. A flow is predicted to fail when a matching row is a hard
+gap, the startup backtest's rule (`batch2-predictions.json`, committed before any run). The steps
+were found on the board afterwards (`results-batch2.json`, SELinux enforcing).
+
+| flow | what the user does | predicted, from | observed | verdict |
+|---|---|---|---|---|
+| `fnotes-newline` | type two lines in Fossify Notes | fails: `jni:android.view.KeyCharacterMap` broken | the keyboard's Enter (确认) closes the keyboard; no new line | confirmed, another cause |
+| `fnotes-copy-paste` | copy a word and paste it | works: clipboard, popups, keyboard supplied | nothing is selected: in the corpus launch's tap touch mode a held finger arrives as one tap when it lifts, so no long press reaches the app | **miss** |
+| `fnotes-link` | open a web link from About | works: no row | nothing opens: the board has no browser, and the start reports success | **miss** |
+| `markor-share` | share a note | fails: `pm:call:queryIntentActivityOptions` a stub | no share sheet: the chooser's start goes nowhere | confirmed, another cause |
+| `termux-command` | run a command | fails: `jni:android.view.KeyCharacterMap` broken | "Unable to install bootstrap": Termux's programs cannot run | confirmed, another cause |
+| `chrono-timer` | a 30-second timer rings | works: alarm, notification, audio supplied | the app dies on Start: a null status-bar service | **miss** |
+| `keepassdx-open` | open a database through the system picker | works: no row | no picker shows; the start reports success | **miss** |
+| `opencamera-photo` | take a photo | fails: `svc:camera` inert, camera2 natives missing | "Failed to open camera" | confirmed |
+| `antennapod-theme` | switch to the dark theme | works: `svc:uimode` supplied | Dark is selected and the screens stay light: the activity is not recreated | **miss** |
+
+What decided the failures:
+
+- **The keyboard's Enter key.** The bridge receives it as "hide the keyboard": the IME session detaches
+  and no newline or editor action reaches the app.
+- **Long press.** Streamed through the tap channel (`d`, a hold, `u`), the same press selects the word,
+  and the toolbar's Copy and Paste work. The flow's `press` step replays a held finger as the
+  touch forwarder does for the launch's touch mode, so it measures what a user gets.
+- **Starts that go nowhere.** The GitHub link (VIEW), Markor's share (a chooser) and KeePassDX's Open
+  (OPEN_DOCUMENT) all report success, and nothing opens. OH has a file picker (`com.ohos.filepicker`),
+  but no browser on this board. The only caller of the stub the share prediction read is androidx's
+  `MenuBuilder.addIntentOptions`, not the share.
+- **Android executables.** Termux's packages are Android programs whose interpreter,
+  `/system/bin/linker64`, OH does not have. In one diagnostic run under permissive SELinux the
+  packages extract and the second stage exits 127.
+- **The status bar.** Chrono's Start calls `TileService.requestListeningState`, which reaches
+  `StatusBarManager` with no status-bar service: a NullPointerException on the main thread.
+- **Recreation.** AntennaPod recreates its activities to apply a theme, and on Westlake they are not
+  recreated.
+
+The batch adds a `press` step to `run_flows.py`, and a `max_fraction` bound for a region that must
+not be dark (a camera preview).
+
 ## What the calibration says about the gap map
 
 Each miss is a contract no row describes, or a row that reads supplied while the flow fails;
@@ -210,6 +258,12 @@ whose scans reference the API behind the contract.
 | **The media store is empty.** Just Player lists videos from MediaStore and finds none, with the video in `Movies/`; the flow stops before decoding, so the `MediaCodec` prediction was right for another reason | `java:Media store` unmeasured | 125 | a contract line (a file in shared storage is indexed) |
 | **WebView renders.** Markor's preview draws the note in a WebView and the app lives | `wv:renderer-process` missing: the first WebView kills the app | 143 | done: the row waits for the webview-boundaries probe, whose multiprocess line is its result (WebView in process on every build since 100) |
 | **Ordinary dialogs are placed and dimmed.** Fossify Clock's timer dialog is centred and the screen behind it dimmed | `wm:window-placement` broken, `wm:dim-behind` missing | 318 | done in build 106: the probe's failure was where the app was told its dialog sat (the top left), not where it was drawn; each window's configuration now has the display's bounds and the line passes. The dim was drawn already: the prediction read `wm:dim-behind` from maps older than the dim layer |
+| **Enter closes the keyboard.** Fossify Notes gets no new line: the board keyboard's Enter reaches the bridge as "hide" | `jni:android.view.KeyCharacterMap` broken (another cause) | 154 handle the keyboard's action key; 306 use `EditText` | a contract line (the action key reaches the editor as a newline or an editor action) and the bridge's Enter |
+| **No long press.** Text cannot be selected, so nothing is copied | `svc:clipboard` supplied; no row for how touch reaches the app | 280 set long-press listeners | stream a held finger in tap mode (the touch forwarder); a row for the launch's touch mode |
+| **Starts go nowhere.** A web link, a share and the system picker report success and open nothing | no rows for other apps' activities (the plan's layer 1 is not built) | 274 call `Intent.createChooser`; 217 use `DocumentsContract` | answer `ActivityNotFoundException` when nothing handles a start (plan gap 1); the picker and share mapped to OH's (gap 2) |
+| **Android executables cannot run.** Termux's bootstrap fails | nothing: no row for an app's own programs | 146 start processes | a row for executables that need Android's linker |
+| **No status-bar service.** Chrono dies when its timer starts | nothing: no status-bar row | 17 use Quick Settings tiles or `StatusBarManager` | answer the status-bar service in process; a row from the implicit-service census |
+| **Activities are not recreated.** AntennaPod's theme does not apply | nothing: no row for recreation | 267 call `Activity.recreate` | a contract line (recreate brings a new instance up) and the relaunch |
 
 
 
@@ -223,7 +277,10 @@ whose scans reference the API behind the contract.
 
 `probes/audio-capture`'s `oh_record` must be on the board (`--recorder`). The fixed tap positions
 belong to the pinned APK versions on the 1200x1920 board: a new pin, or another screen, needs them
-found again (a screenshot after each step shows where). The board's own keyboard takes `touch`
+found again (a screenshot after each step shows where). The board keyboard keeps its mode (pinyin or
+English) and layout between launches, so flows that type tap keys that show text in any state.
+OH's own input (`touch`) reaches only OH windows such as the keyboard; the app's windows get taps
+through the tap channel. A `press` follows the launch's touch mode, as a finger does. The board's own keyboard takes `touch`
 steps (OH input) at the positions of its default input method. Notifications must be allowed for
 the host application in OH Settings (Notifications and status bar, Westlake IME host), as a
 user allows an app's notifications: until then `POST_NOTIFICATIONS` reads denied and a post is

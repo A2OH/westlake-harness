@@ -68,6 +68,14 @@ class Checks(unittest.TestCase):
         self.assertFalse(flows.check({"dark": "page", "region": [0, 10, 120, 40]}, evidence)[0])
         self.assertTrue(flows.check({"dark": "heading", "region": [0, 10, 120, 40]}, evidence)[0])
 
+    def test_a_picture_over_a_region_is_not_black(self) -> None:
+        black = _image(self.dir / "black.jpeg", 0)
+        preview = _image(self.dir / "preview.jpeg", 160, box=(10, 20, 60, 30), ink=0)
+        evidence = {"files": {"black": black, "preview": preview}, "alive": True, "log": ""}
+        spec = {"region": [0, 0, 120, 192], "max_fraction": 0.9}
+        self.assertFalse(flows.check({"dark": "black", **spec}, evidence)[0])
+        self.assertTrue(flows.check({"dark": "preview", **spec}, evidence)[0])
+
     def test_unreadable_evidence_fails_its_check(self) -> None:
         broken = self.dir / "broken.wav"
         broken.write_bytes(b"\0" * 64)
@@ -98,6 +106,16 @@ class Scoring(unittest.TestCase):
         self.assertEqual((result["ran"], result["confirmed"], result["false_alarms"], result["misses"]), (5, 2, 1, 2))
         self.assertEqual(result["precision"], 0.5)
         self.assertEqual(result["recall"], 0.33)
+
+
+class Press(unittest.TestCase):
+    def test_the_launch_touch_mode_decides_how_a_held_finger_arrives(self) -> None:
+        self.assertEqual(flows.touch_mode([]), "stream")
+        self.assertEqual(flows.touch_mode(["--input-cache", "--touch-mode", "tap"]), "tap")
+        self.assertEqual(flows.touch_mode(["--touch-mode=tap", "--touch-mode", "stream"]), "stream")
+        self.assertEqual(flows.press_commands("tap", 60, 202, 1200), [(1.2, "60 202")])
+        self.assertEqual(flows.press_commands("stream", 60, 202, 1200),
+                         [(0.0, "d 60 202"), (1.2, "u 60 202"), (0.1, "c 60 202")])
 
 
 if __name__ == "__main__":

@@ -678,6 +678,960 @@
           "why": "what is behind it is dimmed"
         }
       ]
+    },
+    {
+      "id": "fnotes-newline",
+      "app": "fnotes",
+      "intent": "type two lines in a note (Enter between them)",
+      "prediction": {
+        "outcome": "fails",
+        "rows": {
+          "svc:input_method": "supplied, measured conformant",
+          "wm:focus-handoff": "supplied, measured conformant",
+          "jni:android.view.KeyCharacterMap": "missing, measured broken"
+        },
+        "no_row": [
+          "jni:android.view.KeyEvent"
+        ],
+        "source": "batch 2, scripts/predict_flows.py on the build-108 maps, before any run"
+      },
+      "steps": [
+        {
+          "wait": 22
+        },
+        {
+          "tap": [
+            600,
+            600
+          ],
+          "why": "focus the note (the keyboard comes up)"
+        },
+        {
+          "wait": 3
+        },
+        {
+          "shot": "start"
+        },
+        {
+          "touch": [
+            85,
+            1348
+          ],
+          "why": "the keyboard's top row: q, or 1 on its digit layout"
+        },
+        {
+          "wait": 1
+        },
+        {
+          "touch": [
+            199,
+            1348
+          ],
+          "why": "w, or 2"
+        },
+        {
+          "wait": 1
+        },
+        {
+          "touch": [
+            1073,
+            1740
+          ],
+          "why": "Enter (确认); in pinyin mode it first commits the candidate"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "touch": [
+            1073,
+            1740
+          ],
+          "why": "Enter again"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "touch": [
+            313,
+            1348
+          ],
+          "why": "e, or 3, on the next line"
+        },
+        {
+          "wait": 1
+        },
+        {
+          "touch": [
+            428,
+            1348
+          ],
+          "why": "r, or 4"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "shot": "typed"
+        }
+      ],
+      "checks": [
+        {
+          "dark": "typed",
+          "region": [
+            20,
+            170,
+            600,
+            228
+          ],
+          "min_fraction": 0.008,
+          "why": "the first line's text shows"
+        },
+        {
+          "dark": "typed",
+          "region": [
+            20,
+            240,
+            600,
+            360
+          ],
+          "min_fraction": 0.008,
+          "why": "text shows on a line below the first"
+        },
+        {
+          "alive": true,
+          "why": "the app keeps running"
+        }
+      ]
+    },
+    {
+      "id": "fnotes-copy-paste",
+      "app": "fnotes",
+      "intent": "copy a word and paste it",
+      "prediction": {
+        "outcome": "works",
+        "rows": {
+          "svc:clipboard": "supplied",
+          "wm:popup-window": "supplied",
+          "svc:input_method": "supplied, measured conformant"
+        },
+        "source": "batch 2, scripts/predict_flows.py on the build-108 maps, before any run"
+      },
+      "steps": [
+        {
+          "wait": 22
+        },
+        {
+          "tap": [
+            600,
+            600
+          ],
+          "why": "focus the note (the keyboard comes up)"
+        },
+        {
+          "wait": 3
+        },
+        {
+          "touch": [
+            85,
+            1348
+          ],
+          "why": "type: q, or 1"
+        },
+        {
+          "wait": 1
+        },
+        {
+          "touch": [
+            199,
+            1348
+          ],
+          "why": "w, or 2"
+        },
+        {
+          "wait": 1
+        },
+        {
+          "touch": [
+            593,
+            1740
+          ],
+          "why": "space: commits the pinyin candidate, or a space"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "shot": "typed"
+        },
+        {
+          "press": [
+            60,
+            202,
+            1200
+          ],
+          "why": "long-press the first word to select it"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "shot": "selected"
+        },
+        {
+          "tap": [
+            183,
+            113
+          ],
+          "why": "Copy, on the selection's toolbar"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "tap": [
+            600,
+            202
+          ],
+          "why": "the cursor to the end of the line"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "press": [
+            600,
+            202,
+            1200
+          ],
+          "why": "long-press after the text: the toolbar offers Paste"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "tap": [
+            100,
+            113
+          ],
+          "why": "Paste"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "shot": "pasted"
+        }
+      ],
+      "checks": [
+        {
+          "dark": "pasted",
+          "region": [
+            110,
+            178,
+            600,
+            222
+          ],
+          "min_fraction": 0.008,
+          "why": "the pasted word shows after the text"
+        },
+        {
+          "alive": true,
+          "why": "the app keeps running"
+        }
+      ]
+    },
+    {
+      "id": "fnotes-link",
+      "app": "fnotes",
+      "intent": "open a web link from the About screen",
+      "prediction": {
+        "outcome": "works",
+        "rows": {},
+        "no_row": [
+          "am:own-implicit-intents",
+          "svc:android.intent.action.VIEW",
+          "intent:*",
+          "am:start-*",
+          "pm:call:queryIntentActivities",
+          "pm:call:resolveActivity"
+        ],
+        "source": "batch 2, scripts/predict_flows.py on the build-108 maps, before any run"
+      },
+      "steps": [
+        {
+          "wait": 22
+        },
+        {
+          "tap": [
+            1150,
+            70
+          ],
+          "why": "the overflow menu"
+        },
+        {
+          "wait": 3
+        },
+        {
+          "tap": [
+            865,
+            751
+          ],
+          "why": "About (an empty note's menu has no Share or Delete)"
+        },
+        {
+          "wait": 8
+        },
+        {
+          "shot": "about"
+        },
+        {
+          "tap": [
+            164,
+            1148
+          ],
+          "why": "GitHub: a web link"
+        },
+        {
+          "wait": 8
+        },
+        {
+          "shot": "link"
+        }
+      ],
+      "checks": [
+        {
+          "changed": [
+            "about",
+            "link"
+          ],
+          "region": [
+            0,
+            150,
+            1200,
+            1780
+          ],
+          "min_diff": 6,
+          "why": "a web page opens over the About screen"
+        }
+      ]
+    },
+    {
+      "id": "markor-share",
+      "app": "markor",
+      "intent": "share a note",
+      "prediction": {
+        "outcome": "fails",
+        "rows": {
+          "pm:call:queryIntentActivityOptions": "stub, measured broken"
+        },
+        "no_row": [
+          "am:own-implicit-intents",
+          "svc:android.intent.action.SEND",
+          "intent:*",
+          "am:start-*",
+          "pm:call:queryIntentActivities"
+        ],
+        "source": "batch 2, scripts/predict_flows.py on the build-108 maps, before any run"
+      },
+      "steps": [
+        {
+          "wait": 22
+        },
+        {
+          "tap": [
+            1120,
+            1840
+          ],
+          "why": "intro, page 2"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "tap": [
+            1120,
+            1840
+          ],
+          "why": "intro, page 3"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "tap": [
+            1120,
+            1840
+          ],
+          "why": "intro, page 4"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "tap": [
+            1120,
+            1840
+          ],
+          "why": "intro, page 5"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "tap": [
+            1120,
+            1840
+          ],
+          "why": "finish the intro"
+        },
+        {
+          "wait": 4
+        },
+        {
+          "tap": [
+            1080,
+            1827
+          ],
+          "why": "close the changelog"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "tap": [
+            749,
+            1860
+          ],
+          "why": "open QuickNote"
+        },
+        {
+          "wait": 4
+        },
+        {
+          "shot": "note"
+        },
+        {
+          "tap": [
+            1155,
+            62
+          ],
+          "why": "the overflow menu"
+        },
+        {
+          "wait": 3
+        },
+        {
+          "tap": [
+            920,
+            160
+          ],
+          "why": "Share"
+        },
+        {
+          "wait": 3
+        },
+        {
+          "tap": [
+            948,
+            256
+          ],
+          "why": "Plain Text"
+        },
+        {
+          "wait": 6
+        },
+        {
+          "shot": "shared"
+        }
+      ],
+      "checks": [
+        {
+          "changed": [
+            "note",
+            "shared"
+          ],
+          "region": [
+            0,
+            200,
+            1200,
+            1690
+          ],
+          "min_diff": 6,
+          "why": "a share sheet shows where to send the note"
+        }
+      ]
+    },
+    {
+      "id": "termux-command",
+      "app": "termux",
+      "intent": "run a command in the terminal",
+      "prediction": {
+        "outcome": "fails",
+        "rows": {
+          "svc:input_method": "supplied, measured conformant",
+          "jni:android.view.KeyCharacterMap": "missing, measured broken"
+        },
+        "no_row": [
+          "os:*",
+          "sepolicy:*",
+          "jni:android.view.KeyEvent",
+          "exec:*"
+        ],
+        "source": "batch 2, scripts/predict_flows.py on the build-108 maps, before any run"
+      },
+      "steps": [
+        {
+          "wait": 40
+        },
+        {
+          "shot": "terminal"
+        },
+        {
+          "touch": [
+            85,
+            1348
+          ],
+          "why": "type a command: q, or 1"
+        },
+        {
+          "wait": 1
+        },
+        {
+          "touch": [
+            199,
+            1348
+          ],
+          "why": "w, or 2"
+        },
+        {
+          "wait": 1
+        },
+        {
+          "touch": [
+            1073,
+            1740
+          ],
+          "why": "Enter (确认); in pinyin mode it first commits the candidate"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "touch": [
+            1073,
+            1740
+          ],
+          "why": "Enter again"
+        },
+        {
+          "wait": 3
+        },
+        {
+          "shot": "ran"
+        }
+      ],
+      "checks": [
+        {
+          "dark": "terminal",
+          "region": [
+            80,
+            820,
+            1120,
+            1000
+          ],
+          "min_fraction": 0.5,
+          "why": "the terminal, not the bootstrap error, is on screen"
+        },
+        {
+          "changed": [
+            "terminal",
+            "ran"
+          ],
+          "region": [
+            0,
+            80,
+            1200,
+            760
+          ],
+          "min_diff": 0.5,
+          "why": "the shell answers the command"
+        },
+        {
+          "alive": true,
+          "why": "the app keeps running"
+        }
+      ]
+    },
+    {
+      "id": "chrono-timer",
+      "app": "chrono",
+      "intent": "a 30-second timer rings when it ends",
+      "prediction": {
+        "outcome": "works",
+        "rows": {
+          "svc:alarm": "supplied",
+          "svc:notification": "supplied, measured conformant",
+          "svc:audio": "supplied, measured conformant",
+          "svc:power": "supplied"
+        },
+        "source": "batch 2, scripts/predict_flows.py on the build-108 maps, before any run"
+      },
+      "steps": [
+        {
+          "wait": 22
+        },
+        {
+          "drag": [
+            600,
+            1600,
+            600,
+            300
+          ],
+          "why": "scroll the first-run page"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "drag": [
+            600,
+            1600,
+            600,
+            300
+          ]
+        },
+        {
+          "wait": 2
+        },
+        {
+          "drag": [
+            600,
+            1600,
+            600,
+            300
+          ]
+        },
+        {
+          "wait": 3
+        },
+        {
+          "tap": [
+            149,
+            1843
+          ],
+          "why": "Later (the device settings the app asks for)"
+        },
+        {
+          "wait": 10
+        },
+        {
+          "tap": [
+            1020,
+            1256
+          ],
+          "why": "OK on the developer's notice"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "tap": [
+            688,
+            1856
+          ],
+          "why": "the Timer tab"
+        },
+        {
+          "wait": 3
+        },
+        {
+          "tap": [
+            810,
+            698
+          ],
+          "why": "3"
+        },
+        {
+          "wait": 1
+        },
+        {
+          "tap": [
+            600,
+            1328
+          ],
+          "why": "0: thirty seconds"
+        },
+        {
+          "wait": 2
+        },
+        {
+          "shot": "set"
+        },
+        {
+          "tap": [
+            600,
+            1697
+          ],
+          "why": "start"
+        },
+        {
+          "wait": 4
+        },
+        {
+          "shot": "running"
+        },
+        {
+          "wait": 22
+        },
+        {
+          "record": [
+            20,
+            "expiry"
+          ]
+        },
+        {
+          "shot": "expired"
+        }
+      ],
+      "checks": [
+        {
+          "audio": "expiry",
+          "min_nonzero": 20000,
+          "why": "the timer rings"
+        },
+        {
+          "alive": true,
+          "why": "the app keeps running"
+        }
+      ]
+    },
+    {
+      "id": "keepassdx-open",
+      "app": "keepassdx",
+      "intent": "open a database file picked in the system file picker",
+      "prediction": {
+        "outcome": "works",
+        "rows": {
+          "am:activity-result": "supplied, measured conformant",
+          "pm:providers": "supplied"
+        },
+        "no_row": [
+          "am:own-implicit-intents",
+          "intent:*",
+          "am:start-*",
+          "storage:*",
+          "svc:storage"
+        ],
+        "source": "batch 2, scripts/predict_flows.py on the build-108 maps, before any run"
+      },
+      "steps": [
+        {
+          "wait": 22
+        },
+        {
+          "tap": [
+            900,
+            700
+          ],
+          "why": "dismiss the first-run hint"
+        },
+        {
+          "wait": 3
+        },
+        {
+          "shot": "home"
+        },
+        {
+          "tap": [
+            900,
+            1848
+          ],
+          "why": "Open existing vault"
+        },
+        {
+          "wait": 8
+        },
+        {
+          "shot": "picker"
+        }
+      ],
+      "checks": [
+        {
+          "changed": [
+            "home",
+            "picker"
+          ],
+          "region": [
+            0,
+            300,
+            1200,
+            1780
+          ],
+          "min_diff": 6,
+          "why": "the system file picker shows (picking the database in it is added once one shows)"
+        }
+      ]
+    },
+    {
+      "id": "opencamera-photo",
+      "app": "opencamera",
+      "intent": "take a photo",
+      "prediction": {
+        "outcome": "fails",
+        "rows": {
+          "svc:camera": "inert",
+          "jni:android.hardware.camera2.DngCreator": "missing",
+          "jni:android.hardware.camera2.impl.CameraMetadataNative": "missing",
+          "jni:android.hardware.camera2.utils.SurfaceUtils": "missing",
+          "jni:android.hardware.Camera": "missing"
+        },
+        "no_row": [
+          "java:Camera",
+          "feature:*"
+        ],
+        "source": "batch 2, scripts/predict_flows.py on the build-108 maps, before any run"
+      },
+      "steps": [
+        {
+          "wait": 22
+        },
+        {
+          "tap": [
+            1032,
+            1148
+          ],
+          "why": "OK on the first-run hint"
+        },
+        {
+          "wait": 4
+        },
+        {
+          "shot": "camera"
+        },
+        {
+          "tap": [
+            600,
+            1850
+          ],
+          "why": "the shutter"
+        },
+        {
+          "wait": 4
+        },
+        {
+          "shot": "taken"
+        }
+      ],
+      "checks": [
+        {
+          "dark": "camera",
+          "region": [
+            100,
+            300,
+            1100,
+            1500
+          ],
+          "max_fraction": 0.9,
+          "why": "the preview shows the camera's picture"
+        },
+        {
+          "changed": [
+            "camera",
+            "taken"
+          ],
+          "region": [
+            1040,
+            1760,
+            1160,
+            1880
+          ],
+          "min_diff": 6,
+          "why": "the shutter saves a photo: its thumbnail shows"
+        }
+      ]
+    },
+    {
+      "id": "antennapod-theme",
+      "app": "antennapod",
+      "intent": "switch the app to its dark theme",
+      "prediction": {
+        "outcome": "works",
+        "rows": {
+          "svc:uimode": "supplied",
+          "am:launch-lifecycle": "supplied, measured conformant"
+        },
+        "no_row": [
+          "am:relaunch",
+          "am:recreate"
+        ],
+        "source": "batch 2, scripts/predict_flows.py on the build-108 maps, before any run"
+      },
+      "steps": [
+        {
+          "wait": 25
+        },
+        {
+          "tap": [
+            1079,
+            1860
+          ],
+          "why": "More"
+        },
+        {
+          "wait": 3
+        },
+        {
+          "tap": [
+            900,
+            1730
+          ],
+          "why": "Settings"
+        },
+        {
+          "wait": 4
+        },
+        {
+          "tap": [
+            400,
+            330
+          ],
+          "why": "User interface"
+        },
+        {
+          "wait": 4
+        },
+        {
+          "shot": "light"
+        },
+        {
+          "tap": [
+            988,
+            520
+          ],
+          "why": "the Dark theme"
+        },
+        {
+          "wait": 6
+        },
+        {
+          "shot": "dark"
+        }
+      ],
+      "checks": [
+        {
+          "dark": "dark",
+          "region": [
+            0,
+            800,
+            1200,
+            1700
+          ],
+          "min_fraction": 0.5,
+          "why": "the app's screens turn dark"
+        }
+      ]
     }
   ]
 }
