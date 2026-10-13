@@ -171,6 +171,13 @@ and `wm:focus-handoff` (fails on build 106, passes on build 107). `wm:window-pla
 run on the AlertDialog's first, 1282 px wide layout, which a later layout fits; it caught that on
 build 105 as well (see the calibration record).
 
+**Build 108** (Westlake #38) gives the in-process notification service the app's channels and posts,
+and plays a post's sound. framework-contracts gains `svc:notification` (a channel created is kept,
+`areNotificationsEnabled` answers as `POST_NOTIFICATIONS` does, a post is listed while notifications
+are allowed and gone once cancelled): it fails on build 107 (the channel created is not kept) and passes on build 108, whose answers come
+from OH's per-application notification switch, allowed for the board's host application in OH
+Settings. `wm:window-placement` passed in this run (the AlertDialog at 30 to 1170).
+
 ## Running it
 
 On a new build, run the suite with that build's provider flags, merging into this file:

@@ -496,8 +496,8 @@
       "prediction": {
         "outcome": "works",
         "rows": {
-          "svc:alarm": "supplied (verify)",
-          "svc:notification": "supplied (verify)"
+          "svc:notification": "conformant since build 108: channels kept, a post plays its channel's sound (the board's host app allowed notifications in OH Settings)",
+          "svc:alarm": "supplied: the timer's own countdown posts at expiry"
         }
       },
       "steps": [
