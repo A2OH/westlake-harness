@@ -30,13 +30,16 @@ import android.widget.TextView;
  * coordinates ("dialog button clicked" is logged). The dim behind it is visible on screen only.
  *
  * For the per-build conformance run it also prints one line per gap-map row it measures, then
- * "[WL-CONTRACT] done": wm:window-placement (both dialogs centred and on screen) and
+ * "[WL-CONTRACT] done": wm:window-placement (both dialogs centred and on screen, the first still
+ * centred after its window relaid out with its own attributes) and
  * wm:dialog-stacking (the runner's tap at the button's logged position reaches the dialog, so the
  * dialog is above its activity; no tap within 20 s fails it). wm:dim-behind has no line.
  */
 public final class MainActivity extends Activity implements View.OnClickListener, Runnable {
     private static final String TAG = "WL-DIALOG-ORDER";
     private View dialogDecor;
+    private Window dialogWindow;
+    private int[] firstAt;
     private View alertDecor;
     private AlertDialog alertDialog;
     private View button;
@@ -86,7 +89,8 @@ public final class MainActivity extends Activity implements View.OnClickListener
         WindowManager.LayoutParams lp = dialog.getWindow().getAttributes();
         System.err.println("[" + TAG + "] dialogType=" + lp.type + " activityType="
                 + getWindow().getAttributes().type);
-        dialogDecor = dialog.getWindow().getDecorView();
+        dialogWindow = dialog.getWindow();
+        dialogDecor = dialogWindow.getDecorView();
         dialogDecor.postDelayed(this, 1500);
     }
 
@@ -126,11 +130,17 @@ public final class MainActivity extends Activity implements View.OnClickListener
         report("width=" + (fits ? "FITS" : "OVERFLOWS") + " right=" + (loc[0] + dialogDecor.getWidth())
                 + " screenWidth=" + screen);
         if (placement == null) {
+            firstAt = loc.clone();
             placed = centred && fits;
             placement = "dialog at " + loc[0] + "," + loc[1] + " size " + dialogDecor.getWidth() + "x"
                     + dialogDecor.getHeight() + " on a " + screen + " px screen (centred x=" + expected + ")";
         }
         if (alertDecor == null) {
+            // The dialog relays itself out with its own attributes, unchanged, as a window does when
+            // an app sets them again; ViewRootImpl lays such a pass out itself. Chrono's notice took
+            // its position from a pass like this as the top left, while it was drawn centred, so a
+            // tap on its OK missed. Measured again with the alert below.
+            dialogWindow.setAttributes(dialogWindow.getAttributes());
             // The shape that actually broke: a stock AlertDialog whose message is long enough that
             // its preferred width exceeds the display. McDonald's upgrade dialog came out 1282 px
             // wide on a 1200 px screen and put its OK button where no finger could reach it.
@@ -149,11 +159,17 @@ public final class MainActivity extends Activity implements View.OnClickListener
         }
         int[] alertAt = new int[2];
         alertDecor.getLocationOnScreen(alertAt);
-        boolean alertFits = alertAt[0] >= 0 && alertAt[0] + alertDecor.getWidth() <= screen;
-        report("alertWidth=" + (alertFits ? "FITS" : "OVERFLOWS") + " at " + alertAt[0]
+        boolean alertFits = alertAt[0] >= 0 && alertAt[0] + alertDecor.getWidth() <= screen
+                && Math.abs(alertAt[0] - (screen - alertDecor.getWidth()) / 2) <= 2 && alertAt[1] > 0;
+        report("alertWidth=" + (alertFits ? "FITS" : "OVERFLOWS") + " at " + alertAt[0] + "," + alertAt[1]
                 + " right=" + (alertAt[0] + alertDecor.getWidth()) + " screenWidth=" + screen);
-        contract("wm:window-placement", placed && alertFits ? "PASS" : "FAIL", placement
-                + "; the alert at " + alertAt[0] + " to " + (alertAt[0] + alertDecor.getWidth()));
+        int[] again = new int[2];
+        dialogDecor.getLocationOnScreen(again);
+        boolean stays = again[0] == firstAt[0] && again[1] == firstAt[1];
+        report("relaidOut=" + (stays ? "STAYS" : "MOVED") + " at " + again[0] + "," + again[1]);
+        contract("wm:window-placement", placed && alertFits && stays ? "PASS" : "FAIL", placement
+                + "; the alert at " + alertAt[0] + " to " + (alertAt[0] + alertDecor.getWidth()) + ", top " + alertAt[1]
+                + "; relaid out, the dialog at " + again[0] + "," + again[1]);
         // The alert has been measured; dismissed, it cannot take the tap meant for the dialog.
         alertDialog.dismiss();
         dialogDecor.postDelayed(() -> stacking(false,

@@ -185,6 +185,13 @@ build 109; every other line reads as on build 108. On build 109 before its nativ
 relaunch ran and the probe died in it: the relaunched window's first draw needed
 `SurfaceControl.nativeAddTransactionCompletedListener`, which no library registered.
 
+**Build 110** (Westlake #40) places dialogs where they are drawn. dialog-before-window's
+`wm:window-placement` line now also relays the dialog out with its own attributes and checks that
+it stays put, and checks that the alert is centred, not only that it fits. On build 109 the
+relaid-out dialog moved to (40,0): the window adapter gave every window an attached frame of its
+own size, and ViewRootImpl lays a dialog out inside its attached frame. On build 110 it stays at
+(280,634); every other line reads as on build 109.
+
 ## Running it
 
 On a new build, run the suite with that build's provider flags, merging into this file:

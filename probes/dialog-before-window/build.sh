@@ -18,7 +18,7 @@ mkdir -p "$OUT/classes" "$OUT/dex"
 
 javac -source 8 -target 8 -Xlint:-options -cp "$ANDROID_JAR" \
     -d "$OUT/classes" \
-    "$ROOT/src/org/westlake/probe/dialogorder/MainActivity.java"
+    "$ROOT"/src/org/westlake/probe/dialogorder/*.java
 
 jar cf "$OUT/classes.jar" -C "$OUT/classes" .
 "$TOOLS/d8" --min-api 28 --output "$OUT/dex" "$OUT/classes.jar"
