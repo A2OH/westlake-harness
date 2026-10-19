@@ -36,7 +36,7 @@ For the per-build conformance run the probe also prints one line per gap-map row
 
 | row | passes when |
 |---|---|
-| `wm:window-placement` | both the dialog and the alert are centred and on screen |
+| `wm:window-placement` | both the dialog and the alert are centred (the alert's left edge within 2 px of centre, below the top) and on screen, and the dialog stays where it is when its window relays out with its own attributes (Chrono's notice moved to the top left in such a pass) |
 | `wm:dialog-stacking` | the runner's tap at the logged button position reaches the dialog's button within 20 s |
 
 The alert is dismissed once it has been measured, so it cannot take the tap. A misplaced dialog no

@@ -272,6 +272,30 @@ and `svc:alarm` reading hollow when every alarm call answers the type default. R
 build 108 with these rules, the batch-2 plan, unchanged, predicts the failures of
 `antennapod-theme` and `chrono-timer`: 6 of the 9 failures, in sample.
 
+## Build 110: dialogs placed where they are drawn
+
+Chrono's notice can be dismissed: a tap on its OK reaches it. The flow now sets its timer, runs it
+and reaches the end, where the app counts overtime in silence. The alarm that starts the ringing
+is never delivered, which the map's `svc:alarm` row now reads as hollow. The seventeen flows score
+as on build 109: thirteen confirmed, no false alarms, four misses (precision 1.0, recall 0.56;
+`results-build110.json`, SELinux enforcing). Build 103's regression set draws 22 of 24:
+Toutiao stops as always, and Reddit is back to the stop it shows on most runs.
+
+The notice was drawn centred while its window's position read as the top left, so a tap at the
+button's place on screen reached the window outside its bounds. Westlake gave every window an
+attached frame of its own size, and ViewRootImpl lays a window that is not laid out in screen, a
+dialog, inside its attached frame. When it laid the dialog out itself, in a relayout that moved
+nothing but its position (Android 15 does those locally), the centred dialog came out at the top
+left of its own frame, while the OH layer stayed where Westlake's placement had put it. Westlake #40
+gives an attached frame only to child windows, the parent's as WMS does, and none to others. An
+empty rect is not none to ViewRootImpl but a frame of no size, which put every dialog at the top
+left in the first attempt; WMS's invalid `(0,0,-1,-1)` is.
+
+The dialog-before-window probe's `wm:window-placement` passed on build 109, because its dialogs
+had not laid themselves out. The line now relays the dialog out with its own attributes and checks
+the alert is centred: it fails on build 109 (the dialog moves to 40,0) and passes on build 110. 333
+corpus apps show dialogs.
+
 ## What the calibration says about the gap map
 
 Each miss is a contract no row describes, or a row that reads supplied while the flow fails;
@@ -295,7 +319,7 @@ whose scans reference the API behind the contract.
 | **No status-bar service.** Chrono dies when its timer starts | nothing: no status-bar row | 17 use Quick Settings tiles or `StatusBarManager` | done in build 109: the service answered in process, and `svc:statusbar` from the census's static helpers (12 call `TileService.requestListeningState`) |
 | **Activities are not recreated.** AntennaPod's theme does not apply | nothing: no row for recreation | 267 call `Activity.recreate` | done in build 109: the row `am:recreate`, a contract line, and the relaunch |
 | **Alarms are never delivered.** Chrono's timer reaches its end and counts overtime in silence | `svc:alarm` supplied | 242 schedule alarms | `svc:alarm` reads hollow from build 109's harness; deliver alarms in process while the app runs (plan gap 5) |
-| **A dialog's touch area is not where it is drawn.** Chrono's notice is centred, reports the top left as its position, and a tap on its OK misses | `wm:window-placement` passes (the probe's AlertDialog reports its place) | not counted | find which dialogs report the top left; a contract line for one like this |
+| **A dialog's touch area is not where it is drawn.** Chrono's notice is centred, reports the top left as its position, and a tap on its OK misses | `wm:window-placement` passes (the probe's dialogs had not laid themselves out) | 333 show dialogs | done in build 110: the line relays its dialog out and checks the alert is centred, and the fix (an attached frame only for child windows) |
 
 
 
