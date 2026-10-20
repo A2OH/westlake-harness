@@ -296,6 +296,28 @@ had not laid themselves out. The line now relays the dialog out with its own att
 the alert is centred: it fails on build 109 (the dialog moves to 40,0) and passes on build 110. 333
 corpus apps show dialogs.
 
+## Build 112: alarms delivered
+
+Chrono's timer rings at its end. The alarm the app sets for the expiry fires after 30 s, its
+PendingIntent reaches the app's `TimerAlertReceiver`, the receiver starts the app's timer service,
+and the board records the ring. Of the seventeen flows, fourteen are confirmed, with no false
+alarms and three misses (precision 1.0, recall 0.62; `results-build112.json`, SELinux enforcing).
+Build 103's regression set draws 22 of 24, as on build 110: Reddit stops where it does on most
+runs, and Toutiao as always.
+
+Westlake's alarm service accepted every alarm and delivered none, and a PendingIntent that was
+sent went nowhere. Westlake #41 delivers alarms in process while the app runs: each fires at its
+trigger time, a PendingIntent alarm is sent, and a listener alarm calls its listener. A sent
+PendingIntent now reaches the app's own receivers, services and activities. The receivers an app
+declares in its manifest run in process for a broadcast sent to them by name or within the app's
+package; Chrono's alarm reaches its receiver that way. An alarm still lasts only as long as the
+app's process: nothing restarts the app for one, and nothing wakes the device.
+
+The framework-contracts probe's new `svc:alarm` line sets a listener alarm and a PendingIntent
+alarm to a receiver in the probe's manifest, both 1.5 s ahead. It fails on build 110 (neither
+arrives in 8 s) and passes on build 112. `pm:call:queryBroadcastReceivers` passes as well: the
+package manager now resolves the app's own receivers. 242 corpus apps schedule alarms.
+
 ## What the calibration says about the gap map
 
 Each miss is a contract no row describes, or a row that reads supplied while the flow fails;
@@ -318,7 +340,7 @@ whose scans reference the API behind the contract.
 | **Android executables cannot run.** Termux's bootstrap fails | nothing: no row for an app's own programs | 146 start processes | a row for executables that need Android's linker |
 | **No status-bar service.** Chrono dies when its timer starts | nothing: no status-bar row | 17 use Quick Settings tiles or `StatusBarManager` | done in build 109: the service answered in process, and `svc:statusbar` from the census's static helpers (12 call `TileService.requestListeningState`) |
 | **Activities are not recreated.** AntennaPod's theme does not apply | nothing: no row for recreation | 267 call `Activity.recreate` | done in build 109: the row `am:recreate`, a contract line, and the relaunch |
-| **Alarms are never delivered.** Chrono's timer reaches its end and counts overtime in silence | `svc:alarm` supplied | 242 schedule alarms | `svc:alarm` reads hollow from build 109's harness; deliver alarms in process while the app runs (plan gap 5) |
+| **Alarms are never delivered.** Chrono's timer reaches its end and counts overtime in silence | `svc:alarm` supplied | 242 schedule alarms | done in build 112: alarms delivered in process while the app runs, PendingIntents sent to the app's own components, its manifest receivers run; a contract line (`svc:alarm`). Jobs, the rest of plan gap 5, are not run (`svc:jobscheduler` fails) |
 | **A dialog's touch area is not where it is drawn.** Chrono's notice is centred, reports the top left as its position, and a tap on its OK misses | `wm:window-placement` passes (the probe's dialogs had not laid themselves out) | 333 show dialogs | done in build 110: the line relays its dialog out and checks the alert is centred, and the fix (an attached frame only for child windows) |
 
 

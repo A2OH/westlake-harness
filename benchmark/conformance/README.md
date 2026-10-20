@@ -192,6 +192,13 @@ relaid-out dialog moved to (40,0): the window adapter gave every window an attac
 own size, and ViewRootImpl lays a dialog out inside its attached frame. On build 110 it stays at
 (280,634); every other line reads as on build 109.
 
+**Build 112** (Westlake #41) delivers alarms in process. framework-contracts gains an `svc:alarm`
+line: a listener alarm and a PendingIntent alarm to a receiver the probe's manifest declares, both
+set 1.5 s ahead, must arrive within 8 s. On build 110 neither arrived, because the alarm service
+accepted every alarm and delivered none. On build 112 both arrive, and
+`pm:call:queryBroadcastReceivers` passes too, as the package manager now resolves the app's own
+receivers. Every other line reads as on build 110.
+
 ## Running it
 
 On a new build, run the suite with that build's provider flags, merging into this file:
