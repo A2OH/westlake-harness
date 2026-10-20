@@ -1,10 +1,12 @@
 package org.westlake.probe.contracts;
 
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.KeyguardManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
 import android.content.ActivityNotFoundException;
@@ -26,6 +28,9 @@ import android.media.AudioManager;
 import android.media.metrics.MediaMetricsManager;
 import android.media.metrics.PlaybackSession;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.SystemClock;
 import android.os.Process;
 import android.os.UserHandle;
 import android.os.UserManager;
@@ -360,6 +365,25 @@ public class MainActivity extends Activity {
             if (!gone) throw fail("still active after cancel");
             return "channel kept; notifications " + (enabled ? "allowed (POST_NOTIFICATIONS granted): the post listed, then cancelled"
                     : "not allowed by the user (POST_NOTIFICATIONS denied): the post dropped, as Android drops it");
+        });
+        // An alarm set while the app runs is delivered at its time: a listener alarm to its listener,
+        // and a PendingIntent alarm to the receiver it names, one declared in this app's manifest.
+        check("svc:alarm", () -> {
+            AlarmManager am = getSystemService(AlarmManager.class);
+            CountDownLatch heard = new CountDownLatch(1);
+            long at = SystemClock.elapsedRealtime() + 1500;
+            am.setExact(AlarmManager.ELAPSED_REALTIME, at, "wl-probe", heard::countDown,
+                    new Handler(Looper.getMainLooper()));
+            Intent ring = new Intent(this, ProbeReceiver.class).setAction(ProbeReceiver.ALARM);
+            PendingIntent operation = PendingIntent.getBroadcast(this, 7, ring, PendingIntent.FLAG_IMMUTABLE);
+            am.set(AlarmManager.ELAPSED_REALTIME, at, operation);
+            boolean listened = heard.await(8, TimeUnit.SECONDS);
+            boolean received = ProbeReceiver.ALARMED.await(listened ? 2 : 8, TimeUnit.SECONDS);
+            am.cancel(operation);
+            if (!listened && !received) throw fail("neither alarm arrived in 8 s: an alarm set is accepted and never delivered");
+            if (!listened) throw fail("the listener alarm never arrived (the PendingIntent alarm did)");
+            if (!received) throw fail("the PendingIntent alarm never reached the receiver it names (the listener alarm arrived)");
+            return "a listener alarm, and a PendingIntent alarm to the app's own receiver, each delivered at its time";
         });
         // These two bring another activity up over this one, so they come last. An activity this app
         // starts is created, started and resumed, and stays resumed while it is on top: a player
