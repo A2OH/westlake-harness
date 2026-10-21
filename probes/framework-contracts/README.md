@@ -40,6 +40,7 @@ The package manager's queries are asked for the probe's own components, declared
 | `svc:alarm` | an alarm set 1.5 s ahead is delivered: a listener alarm (setExact with an OnAlarmListener) to its listener, and a PendingIntent alarm (set) to ProbeReceiver, declared in the probe's manifest, both within 8 s |
 | `svc:input_method` | the probe's own KeyboardActivity: its focused EditText asks for the soft keyboard; the manager serves it and the window's insets report the keyboard within 6 s |
 | `wm:focus-handoff` | a dialog shown over that editor takes window focus, and once closed the activity's window gets it back within 3 s |
+| `wm:toast` | a text toast is shown within 3 s (Toast.Callback.onToastShown) and hidden about 2 s later (LENGTH_SHORT: 1.5 to 6 s); the activity keeps window focus while it shows |
 | `intent:view-web`, `intent:share`, `intent:pick-document` | what handles a web link (VIEW https), a text share (SEND text/plain) and the document picker (OPEN_DOCUMENT) on the device: PASS with the first handler, ABSENT when nothing does. The manifest's `<queries>` make them visible on Android 11 and later |
 | `am:start-unresolved` | an intent nothing handles, started from the main thread and from a worker thread, by action and by name, throws ActivityNotFoundException each time; a chooser over it does not throw. Last, as Android's chooser stays up over the probe (no row of its own) |
 
