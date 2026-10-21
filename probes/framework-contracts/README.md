@@ -40,7 +40,8 @@ The package manager's queries are asked for the probe's own components, declared
 | `svc:alarm` | an alarm set 1.5 s ahead is delivered: a listener alarm (setExact with an OnAlarmListener) to its listener, and a PendingIntent alarm (set) to ProbeReceiver, declared in the probe's manifest, both within 8 s |
 | `svc:input_method` | the probe's own KeyboardActivity: its focused EditText asks for the soft keyboard; the manager serves it and the window's insets report the keyboard within 6 s |
 | `wm:focus-handoff` | a dialog shown over that editor takes window focus, and once closed the activity's window gets it back within 3 s |
-| `am:start-unresolved` | starting an activity nothing handles throws ActivityNotFoundException (no row yet) |
+| `intent:view-web`, `intent:share`, `intent:pick-document` | what handles a web link (VIEW https), a text share (SEND text/plain) and the document picker (OPEN_DOCUMENT) on the device: PASS with the first handler, ABSENT when nothing does. The manifest's `<queries>` make them visible on Android 11 and later |
+| `am:start-unresolved` | an intent nothing handles, started from the main thread and from a worker thread, by action and by name, throws ActivityNotFoundException each time; a chooser over it does not throw. Last, as Android's chooser stays up over the probe (no row of its own) |
 
 `probes/run_suite.py` records each line as a result of its own, and `gap-map --probe-results` applies
 it to the row it names. Build with `./build.sh`; the APK is pinned in the launcher's

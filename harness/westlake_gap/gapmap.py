@@ -1728,6 +1728,45 @@ def own_intent_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[st
     )]
 
 
+# The intents an app starts for another app to handle (scanner.external_intent_families), by family:
+# what the row covers, what answers it on an Android phone, and what in the app's code shows it.
+EXTERNAL_INTENT_ROWS = {
+    "view-web": ("Web links opened in another app (ACTION_VIEW with an http(s) URL)", "a browser",
+                 "names ACTION_VIEW and http(s) URLs",
+                 "fossify notes (calibration flow fnotes-link: its GitHub link opened nothing)"),
+    "share": ("Sharing with another app (ACTION_SEND, Intent.createChooser)", "a share target",
+              "names ACTION_SEND or calls Intent.createChooser",
+              "markor (calibration flow markor-share: no share sheet came up)"),
+    "pick-document": ("The system document picker (OPEN_DOCUMENT, GET_CONTENT, CREATE_DOCUMENT)",
+                      "a document picker", "names OPEN_DOCUMENT, GET_CONTENT, CREATE_DOCUMENT or OPEN_DOCUMENT_TREE",
+                      "keepassdx (calibration flow keepassdx-open: no picker came up to open a database)"),
+}
+
+
+def external_intent_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
+    """Intents the app starts for another app to handle: a web link, a share, the system document
+    picker. An Android phone always has something to answer them. Here it is whatever OH ability the
+    intent's Want resolves to on the device, and when nothing does the start throws
+    ActivityNotFoundException. The framework-contracts probe's intent:* lines measure what the device
+    has; the board has none of the three."""
+    rows = []
+    for family in scan["inventory"].get("external_intents") or []:
+        if family not in EXTERNAL_INTENT_ROWS:
+            continue
+        item, handler, evidence, seen = EXTERNAL_INTENT_ROWS[family]
+        rows.append(_row(
+            "app-framework", "intent:" + family, item,
+            oh_touchpoint="bundle manager QueryAbilityInfos for the Want the intent maps to, then StartAbility",
+            verdict="unverified", shim_class="CU", effort="verify", confidence=STATIC,
+            provider=f"whatever OH ability handles the intent's Want on the device ({handler} on Android); "
+                     "the framework-contracts probe measures it",
+            app_evidence="the app's code " + evidence,
+            seen_blocking=[seen],
+            shim=f"{handler} the app can reach: an OH one through the intent's Want, or one in process",
+        ))
+    return rows
+
+
 def post_create_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
     """The app's own activity code in onPostCreate or onRestoreInstanceState (scanner.after_start_overrides),
     which Android calls after onStart from the pending actions its launch marked. A provider that
@@ -4081,6 +4120,7 @@ def build_map(
                                    contracts.shim_versioned_definitions(westlake_root))
             + task_root_rows(scan, contracts.activity_client_model(westlake_root))
             + own_intent_rows(scan, contracts.own_intent_model(westlake_root))
+            + external_intent_rows(scan)
             + post_create_rows(scan, contracts.launch_start_model(westlake_root))
             + permission_request_rows(scan, contracts.permission_request_model(westlake_root))
             + activity_result_rows(scan, contracts.activity_result_model(westlake_root))

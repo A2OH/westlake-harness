@@ -2026,6 +2026,30 @@ class WeakApi(unittest.TestCase):
         self.assertEqual(gapmap.weak_api_rows([], set()), [])
 
 
+class ExternalIntents(unittest.TestCase):
+    def test_the_families_the_code_names(self) -> None:
+        from westlake_gap.scanner import external_intent_families
+        self.assertEqual(external_intent_families(["android.intent.action.VIEW", "https://github.com/x"]), {"view-web"})
+        self.assertEqual(external_intent_families(["android.intent.action.VIEW", "content://x"]), set(),
+                         "a view of the app's own content is no web link")
+        self.assertEqual(external_intent_families(["android.intent.action.SEND_MULTIPLE"]), {"share"})
+        self.assertEqual(external_intent_families(["android.intent.action.GET_CONTENT", "android.intent.action.SEND"]),
+                         {"pick-document", "share"})
+
+    def test_a_row_per_family_that_the_device_measurement_decides(self) -> None:
+        scan = {"inventory": {"external_intents": ["pick-document", "share", "unknown"]}}
+        rows = gapmap.external_intent_rows(scan)
+        self.assertEqual([(r["id"], r["verdict"]) for r in rows],
+                         [("intent:pick-document", "unverified"), ("intent:share", "unverified")])
+        self.assertEqual(gapmap.external_intent_rows({"inventory": {}}), [])
+        gap_map = {"provider": {"westlake": {"commit": "abc123"}}, "rows": rows}
+        gapmap.apply_probe_results(gap_map, {"results": [
+            {"probe": "framework-contracts/intent:share", "row": "intent:share", "outcome": "absent", "passed": False,
+             "verdict": "ABSENT nothing handles a text share on this device", "westlake_commit": "abc1234567"}]})
+        self.assertEqual((rows[1]["verdict"], rows[1]["measured"]), ("absent", "absent"))
+        self.assertEqual(rows[0]["verdict"], "unverified", "no measurement on this build")
+
+
 class OwnImplicitIntents(unittest.TestCase):
     def test_a_row_when_the_code_names_its_own_filters(self) -> None:
         scan = {"inventory": {"own_intent_names": ["shazam_activity", "shazam"]}}

@@ -980,6 +980,8 @@ class DexInventory:
     native_methods: list[dict[str, Any]] = field(default_factory=list)
     superclasses: dict[str, str] = field(default_factory=dict)
     own_intent_names: set[str] = field(default_factory=set)
+    # What the app's code starts for another app to handle (external_intent_families).
+    external_intents: set[str] = field(default_factory=set)
     # Android's SQLite collations the app's SQL names (COLLATE UNICODE / LOCALIZED / PHONEBOOK).
     sql_collations: set[str] = field(default_factory=set)
     # Classes defining one of AFTER_START_CALLBACKS, with which ones.
@@ -994,6 +996,27 @@ def sql_collations(strings: Iterable[str]) -> set[str]:
     Fossify Notes reads its notes "ORDER BY title COLLATE UNICODE"."""
     return {m.group(1).upper() for text in strings if "OLLATE" in text.upper()
             for m in _SQL_COLLATION.finditer(text)}
+
+
+# Intents an app starts for another app to handle, by family: the action strings the app's code names
+# (Intent.ACTION_* constants are inlined as strings). A web link is ACTION_VIEW with an http(s) URL in
+# the code; a share is ACTION_SEND or a call to Intent.createChooser (external_intent_families).
+EXTERNAL_INTENT_ACTIONS = {
+    "share": frozenset({"android.intent.action.SEND", "android.intent.action.SEND_MULTIPLE"}),
+    "pick-document": frozenset({"android.intent.action.OPEN_DOCUMENT", "android.intent.action.GET_CONTENT",
+                                "android.intent.action.CREATE_DOCUMENT",
+                                "android.intent.action.OPEN_DOCUMENT_TREE"}),
+}
+
+
+def external_intent_families(strings: Iterable[str]) -> set[str]:
+    """Which EXTERNAL_INTENT_ACTIONS families, and whether a web link ("view-web"), the app's code
+    names. What answers them is the device's: a browser, a share target, a document picker."""
+    texts = set(strings)
+    found = {family for family, actions in EXTERNAL_INTENT_ACTIONS.items() if texts & actions}
+    if "android.intent.action.VIEW" in texts and any(t.startswith(("http://", "https://")) for t in texts):
+        found.add("view-web")
+    return found
 
 
 def named_filter_targets(strings: Iterable[str], targets: dict[str, list[str]]) -> set[str]:
@@ -1071,6 +1094,7 @@ def inventory_dex(path: Path, filter_targets: dict[str, list[str]] | None = None
         if filter_targets:
             result.own_intent_names |= named_filter_targets(strings, filter_targets)
         result.sql_collations |= sql_collations(strings)
+        result.external_intents |= external_intent_families(strings)
         for c in dex.get_classes():
             result.defined_classes.add(str(c.get_name()))
             # Kept for the activity hierarchy: which engine base class a launch activity extends.
@@ -2233,6 +2257,9 @@ def scan_apk(
             "feature_queries": inventory.feature_queries,
             "nonnull_casts": inventory.nonnull_casts,
             "own_intent_names": sorted(inventory.own_intent_names),
+            "external_intents": sorted(inventory.external_intents
+                                       | ({"share"} if any(owner == "Landroid/content/Intent;" and name == "createChooser"
+                                                          for owner, name, _ in inventory.method_refs) else set())),
             "sql_collations": sorted(inventory.sql_collations),
             "after_start_overrides": after_start_overrides(identity.get("activity_names") or [],
                                                            inventory.superclasses, inventory.after_start_callbacks),
