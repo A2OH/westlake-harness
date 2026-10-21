@@ -618,6 +618,21 @@ def recreate_model(westlake_root: Path) -> dict[str, Any]:
             "source": f"{registry.relative_to(westlake_root)}:{java.count(chr(10), 0, head.start()) + 1}"}
 
 
+def toast_model(westlake_root: Path) -> dict[str, Any]:
+    """Whether the provider shows toasts. Toast.show() enqueues the toast with the notification
+    service (enqueueTextToast for a text toast, enqueueToast for one with a view of its own), which
+    has SystemUI or the toast's own TN draw it. The in-process notification service answered neither,
+    so no toast was ever shown; one that answers them shows it."""
+    service = westlake_root / "framework/core/java/LocalNotifications.java"
+    if not service.exists():
+        return {"shown": None, "source": None}
+    java = _strip_java_comments(service.read_text(errors="replace"))
+    case = re.search(r'case\s+"enqueueTextToast"\s*:', java)
+    shown = bool(case) and re.search(r'case\s+"enqueueToast"\s*:', java) is not None
+    return {"shown": shown,
+            "source": f"{service.relative_to(westlake_root)}:{java.count(chr(10), 0, case.start()) + 1 if case else 1}"}
+
+
 def host_permission_model(westlake_root: Path) -> dict[str, Any]:
     """The OH permissions the host application requests, and the OH permission each Android permission
     maps to. Android apps run in the host's process, so OH checks the host's access token: what the

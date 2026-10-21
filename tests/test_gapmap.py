@@ -2026,6 +2026,32 @@ class WeakApi(unittest.TestCase):
         self.assertEqual(gapmap.weak_api_rows([], set()), [])
 
 
+class Toasts(unittest.TestCase):
+    def test_a_row_for_apps_that_show_toasts(self) -> None:
+        scan = {"inventory": {"platform_method_names": {"Landroid/widget/Toast;": ["makeText", "show"]}}}
+        rows = gapmap.toast_rows(scan, {"shown": False, "source": "LocalNotifications.java:1"})
+        self.assertEqual((rows[0]["id"], rows[0]["verdict"]), ("wm:toast", "missing"))
+        self.assertEqual(gapmap.toast_rows(scan, {"shown": True})[0]["verdict"], "supplied")
+        self.assertEqual(gapmap.toast_rows({"inventory": {}}, {"shown": True}), [])
+        self.assertEqual(gapmap.toast_rows(scan, {"shown": None}), [], "no notification service source to read")
+
+    def test_the_model_reads_whether_the_service_answers_both_toast_calls(self) -> None:
+        import tempfile
+        from westlake_gap import contracts
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / "framework/core/java/LocalNotifications.java"
+            path.parent.mkdir(parents=True)
+            path.write_text('class L {\n  static Object answer(String m) {\n    switch (m) {\n'
+                            '      case "enqueueTextToast":\n      case "enqueueToast":\n        return toast(m);\n'
+                            '      default:\n        return null;\n    }\n  }\n}\n')
+            self.assertEqual(contracts.toast_model(root),
+                             {"shown": True, "source": "framework/core/java/LocalNotifications.java:4"})
+            path.write_text('class L {\n  // case "enqueueTextToast": not here\n  static Object answer(String m) { return null; }\n}\n')
+            self.assertEqual(contracts.toast_model(root)["shown"], False)
+            self.assertEqual(contracts.toast_model(root / "missing")["shown"], None)
+
+
 class ExternalIntents(unittest.TestCase):
     def test_the_families_the_code_names(self) -> None:
         from westlake_gap.scanner import external_intent_families

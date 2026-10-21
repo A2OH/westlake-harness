@@ -1897,6 +1897,29 @@ def recreate_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str,
     )]
 
 
+def toast_rows(scan: dict[str, Any], model: dict[str, Any]) -> list[dict[str, Any]]:
+    """Toasts: Toast.show() hands the toast to the notification service, which has SystemUI draw a
+    text toast, or the toast's own TN draw one with a view of its own. A provider that does not
+    answer those calls shows none: an app's "copied", "saved" or "no browser found" says nothing
+    (Fossify Notes' "no browser found" for its GitHub link, calibration flow fnotes-link)."""
+    called = set(scan["inventory"].get("platform_method_names", {}).get("Landroid/widget/Toast;", []))
+    if "show" not in called or model.get("shown") is None:
+        return []
+    shown = bool(model["shown"])
+    return [_row(
+        "app-framework", "wm:toast", "Toasts (Toast.makeText, Toast.show)",
+        oh_touchpoint="an application window over the activity: OH's own toast window is a system window",
+        verdict="supplied" if shown else "missing", shim_class="C0" if shown else "C9",
+        effort="verify" if shown else "S", confidence=STATIC,
+        provider=("the in-process notification service queues toasts and shows each in a window of its own"
+                  if shown else "the notification service answers no toast: none is ever shown"),
+        provider_source=model.get("source"),
+        app_evidence="the app calls Toast.show",
+        seen_blocking=["fossify notes (calibration flow fnotes-link: its \"no browser found\" toast never showed)"],
+        shim="queue toasts as NotificationManagerService does and show each as SystemUI does (ToastPresenter)",
+    )]
+
+
 # Capabilities the provider carries out in the host application's process through an OH call that
 # checks the caller's permission, by that OH permission: the provider source making the call, and what
 # an app sees when the host lacks the permission. A capability the provider does not bridge at all is
@@ -4126,6 +4149,7 @@ def build_map(
             + activity_result_rows(scan, contracts.activity_result_model(westlake_root))
             + launch_lifecycle_rows(scan, contracts.launch_lifecycle_model(westlake_root))
             + recreate_rows(scan, contracts.recreate_model(westlake_root))
+            + toast_rows(scan, contracts.toast_model(westlake_root))
             + host_permission_rows(facts, contracts.host_permission_model(westlake_root), westlake_root)
             + ce_storage_rows(scan, contracts.ce_storage_model(westlake_root))
             + feature_rows(scan, contracts.feature_claims_model(westlake_root), aosp_services, westlake_services)

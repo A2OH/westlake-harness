@@ -217,6 +217,14 @@ a text share and the document picker on the device. On the board nothing does, o
 truthful absence that rows of the same names carry into the gap map. Every other line reads as on
 build 113.
 
+**Build 119** (Westlake #44) shows toasts. framework-contracts gains a `wm:toast` line. A text toast
+must be shown within 3 s (`Toast.Callback.onToastShown`) and hidden about 2 s later, with the
+activity keeping window focus while it shows. On build 114 no toast was shown: the in-process
+notification service answered no toast call. On build 119 the toast shows 321 ms after `show()` and
+hides 2152 ms later, and the activity keeps focus. On the first cut, build 115, the activity lost
+window focus while the toast showed: OH moves its focus to every new window, the toast's included.
+Every other line reads as on build 114.
+
 ## Running it
 
 On a new build, run the suite with that build's provider flags, merging into this file:

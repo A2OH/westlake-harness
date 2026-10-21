@@ -381,6 +381,35 @@ picker. The batch-2 plan's three start flows match these rows through `intent:*`
 maps of the batch's seven apps, the plan, unchanged, predicts 8 of the 9 outcomes, in sample
 (`batch2-backtest-build114.json`). Only `fnotes-copy-paste`, a long press, has no row.
 
+## Build 119: toasts shown
+
+No toast was ever shown. `Toast.show()` hands a toast to the notification service, and Westlake's
+in-process service answered no toast call. Fossify Notes' "no browser found" after build 114 refused
+its link said nothing; so did every app's "copied" or "saved". Westlake #44 queues toasts as
+NotificationManagerService does and draws a text toast as SystemUI does, in a window over the
+activity that takes neither touches nor focus.
+
+Three things showed up on the way, each on the board:
+
+- OH moves its focus to every new window, so the activity lost window focus while a toast showed,
+  as an editor under a dropdown would lose its keyboard. Westlake's focus bridge now keeps focus
+  with the window under a window that cannot take it.
+- The toast inflated through the activity's layout inflater was restyled by the app's view factories:
+  Fossify's toast text came out nearly white on a white frame. It is now made with the
+  application's inflater in Material's theme, light or dark by the night mode.
+- Toasts show at the bottom of the screen, under the keyboard when the keyboard is up: OH's keyboard
+  is a window of OH's own, above the app's.
+
+A new flow, `fnotes-toast`, shares an empty note in Fossify Notes and checks that the app's "Cannot
+share empty text" shows at the bottom of the screen. It was added with the fix, after a run by
+hand: its prediction is not blind. The eighteen flows score fifteen confirmed, no false alarms and
+three misses (precision 1.0, recall 0.62; `results-build119.json`, SELinux enforcing). Build 103's
+regression set draws 22 of 24: Reddit stops where it does on most runs, and Toutiao as always.
+
+The framework-contracts probe's new `wm:toast` line shows a text toast and checks its callbacks, its
+duration and that the activity keeps focus. It fails on build 114 (no toast) and passes on build
+119. The gap map's new `wm:toast` row covers apps that call Toast.show: 259 of 371 corpus apps.
+
 ## What the calibration says about the gap map
 
 Each miss is a contract no row describes, or a row that reads supplied while the flow fails;
@@ -400,6 +429,7 @@ whose scans reference the API behind the contract.
 | **Enter closes the keyboard.** Fossify Notes gets no new line: the board keyboard's Enter reaches the bridge as "hide" | `jni:android.view.KeyCharacterMap` broken (another cause) | 154 handle the keyboard's action key; 306 use `EditText` | a contract line (the action key reaches the editor as a newline or an editor action) and the bridge's Enter |
 | **No long press.** Text cannot be selected, so nothing is copied | `svc:clipboard` supplied; no row for how touch reaches the app | 280 set long-press listeners | stream a held finger in tap mode (the touch forwarder); a row for the launch's touch mode |
 | **Starts go nowhere.** A web link, a share and the system picker report success and open nothing | no rows for other apps' activities (the plan's layer 1 is not built) | 300 name a web link, 264 a share, 273 the document picker | done in build 114 for gap 1: an unresolved start throws ActivityNotFoundException (`am:start-unresolved`), and the rows `intent:view-web`, `intent:share`, `intent:pick-document` read absent on the board. Still open, gap 2: OH's picker and share, which need the host application to pass the picker's result back |
+| **No toast is shown.** Fossify Notes' "no browser found" after its link is refused never shows | nothing: no row for toasts | 259 call `Toast.show` | done in build 119: toasts queued and shown in process, the row `wm:toast`, a contract line, and the flow `fnotes-toast` |
 | **Android executables cannot run.** Termux's bootstrap fails | nothing: no row for an app's own programs | 146 start processes | a row for executables that need Android's linker |
 | **No status-bar service.** Chrono dies when its timer starts | nothing: no status-bar row | 17 use Quick Settings tiles or `StatusBarManager` | done in build 109: the service answered in process, and `svc:statusbar` from the census's static helpers (12 call `TileService.requestListeningState`) |
 | **Activities are not recreated.** AntennaPod's theme does not apply | nothing: no row for recreation | 267 call `Activity.recreate` | done in build 109: the row `am:recreate`, a contract line, and the relaunch |

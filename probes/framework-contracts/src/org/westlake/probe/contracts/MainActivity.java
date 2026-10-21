@@ -48,6 +48,7 @@ import android.view.textclassifier.TextClassification;
 import android.view.textclassifier.TextClassificationManager;
 import android.view.textclassifier.TextClassifier;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -416,6 +417,33 @@ public class MainActivity extends Activity {
             if (!received) throw fail("the PendingIntent alarm never reached the receiver it names (the listener alarm arrived)");
             return "a listener alarm, and a PendingIntent alarm to the app's own receiver, each delivered at its time";
         });
+        // A text toast shows over this activity and goes after its duration: its callbacks hear it
+        // shown and then hidden about 2 s later (LENGTH_SHORT), and the activity keeps window focus,
+        // as a toast takes neither focus nor touches.
+        check("wm:toast", () -> {
+            ToastWatch watch = new ToastWatch();
+            boolean focusedBefore = hasWindowFocus();
+            long start = SystemClock.uptimeMillis();
+            runOnUiThread(() -> {
+                Toast toast = Toast.makeText(this, "Westlake probe toast", Toast.LENGTH_SHORT);
+                toast.addCallback(watch);
+                toast.show();
+            });
+            if (!watch.shown.await(3, TimeUnit.SECONDS)) throw fail("a text toast was not shown in 3 s (no onToastShown)");
+            Thread.sleep(300);
+            boolean focusedDuring = hasWindowFocus();
+            if (!watch.hidden.await(8, TimeUnit.SECONDS)) throw fail("the toast was shown and not hidden in 8 s (no onToastHidden)");
+            long[] at = {watch.shownAt, watch.hiddenAt};
+            long showedFor = at[1] - at[0];
+            if (focusedBefore && !focusedDuring) {
+                throw fail("this activity lost window focus while the toast showed; a toast takes neither focus nor touches");
+            }
+            if (showedFor < 1500 || showedFor > 6000) {
+                throw fail("the toast showed for " + showedFor + " ms; LENGTH_SHORT shows for about 2 s");
+            }
+            return "a text toast was shown " + (at[0] - start) + " ms after show() and hidden " + showedFor
+                    + " ms later" + (focusedBefore ? ", the activity keeping window focus" : "");
+        });
         // What handles a web link, a share and the system document picker here. An app that opens
         // one starts whatever does; on a device with none, its start finds nothing.
         check("intent:view-web", () -> handlers(pm,
@@ -508,6 +536,26 @@ public class MainActivity extends Activity {
                     + "a chooser over the intent does not throw";
         });
         line("done", "", "");
+    }
+
+    /** A toast's callbacks, as the toast manager reports it shown and hidden. */
+    private static final class ToastWatch extends Toast.Callback {
+        final CountDownLatch shown = new CountDownLatch(1);
+        final CountDownLatch hidden = new CountDownLatch(1);
+        volatile long shownAt;
+        volatile long hiddenAt;
+
+        @Override
+        public void onToastShown() {
+            shownAt = SystemClock.uptimeMillis();
+            shown.countDown();
+        }
+
+        @Override
+        public void onToastHidden() {
+            hiddenAt = SystemClock.uptimeMillis();
+            hidden.countDown();
+        }
     }
 
     /** What handles the intent on this device, or ABSENT when nothing does. */
