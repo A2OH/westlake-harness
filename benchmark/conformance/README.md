@@ -199,6 +199,14 @@ accepted every alarm and delivered none. On build 112 both arrive, and
 `pm:call:queryBroadcastReceivers` passes too, as the package manager now resolves the app's own
 receivers. Every other line reads as on build 110.
 
+**Build 113** (Westlake #42) runs scheduled jobs in process. framework-contracts' `svc:jobscheduler`
+line used to check only that a job due at once runs. It now also schedules a job 1.5 s ahead that
+needs a network: the job must be pending until it runs, run no sooner than 1.5 s and within 10 s
+with a network in its parameters, and no longer be pending once done. Work given through `enqueue`
+must reach its job through `dequeueWork`. On build 112 the first job never ran: the scheduler
+accepted every job and ran none. On build 113 the delayed job ran after 1517 ms. Every other line
+reads as on build 112.
+
 ## Running it
 
 On a new build, run the suite with that build's provider flags, merging into this file:

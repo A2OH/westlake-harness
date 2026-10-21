@@ -6,6 +6,8 @@
 
     <uses-sdk android:minSdkVersion="28" android:targetSdkVersion="34" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Android 14 requires it of an app whose job asks for a network (svc:jobscheduler). -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application

@@ -9,6 +9,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
+import android.app.job.JobWorkItem;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -221,13 +222,37 @@ public class MainActivity extends Activity {
         check("svc:jobscheduler", () -> {
             JobScheduler jobs = getSystemService(JobScheduler.class);
             if (jobs == null) throw fail("no JobScheduler");
-            int result = jobs.schedule(new JobInfo.Builder(4242, new ComponentName(this, ProbeJob.class))
-                    .setOverrideDeadline(0).build());
+            ComponentName service = new ComponentName(this, ProbeJob.class);
+            int result = jobs.schedule(new JobInfo.Builder(ProbeJob.NOW, service).setOverrideDeadline(0).build());
             if (result != JobScheduler.RESULT_SUCCESS) throw fail("schedule returned " + result);
             if (!ProbeJob.RAN.await(15, TimeUnit.SECONDS)) {
-                throw fail("scheduled (pending=" + (jobs.getPendingJob(4242) != null) + ") but never ran in 15 s");
+                throw fail("scheduled (pending=" + (jobs.getPendingJob(ProbeJob.NOW) != null) + ") but never ran in 15 s");
             }
-            return "scheduled and ran";
+            // A job 1.5 s ahead that needs a network: pending until it runs, not run before its time,
+            // given the network it runs on, and no longer pending once it is done.
+            long scheduledAt = SystemClock.elapsedRealtime();
+            jobs.schedule(new JobInfo.Builder(ProbeJob.LATER, service).setMinimumLatency(1500)
+                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY).build());
+            boolean pending = jobs.getPendingJob(ProbeJob.LATER) != null;
+            if (!ProbeJob.LATER_RAN.await(10, TimeUnit.SECONDS)) {
+                int reason = jobs.getPendingJobReason(ProbeJob.LATER);
+                jobs.cancel(ProbeJob.LATER);
+                throw fail("a job 1.5 s ahead that needs a network never ran in 10 s (pending reason " + reason + ")");
+            }
+            long waited = ProbeJob.laterAt - scheduledAt;
+            if (!pending) throw fail("a job scheduled 1.5 s ahead was not pending before it ran");
+            if (waited < 1500) throw fail("a job with a 1.5 s minimum latency ran after " + waited + " ms");
+            if (ProbeJob.laterNetwork == null) throw fail("a job that needs a network ran without one (getNetwork null)");
+            long until = SystemClock.elapsedRealtime() + 3000;
+            while (jobs.getPendingJob(ProbeJob.LATER) != null && SystemClock.elapsedRealtime() < until) Thread.sleep(100);
+            if (jobs.getPendingJob(ProbeJob.LATER) != null) throw fail("a job that finished is still pending");
+            // Work enqueued for a job reaches it through dequeueWork, as JobIntentService takes it.
+            jobs.enqueue(new JobInfo.Builder(ProbeJob.WORK, service).setOverrideDeadline(0).build(),
+                    new JobWorkItem(new Intent().putExtra("probe", "work-1")));
+            if (!ProbeJob.WORKED.await(10, TimeUnit.SECONDS)) throw fail("enqueued work never reached its job in 10 s");
+            if (!"work-1".equals(ProbeJob.work)) throw fail("the job dequeued " + ProbeJob.work + ", not the enqueued work");
+            return "a job ran at once; one 1.5 s ahead that needs a network ran after " + waited
+                    + " ms with its network and was then no longer pending; enqueued work reached its job";
         });
         check("svc:vibrator", () -> {
             Vibrator vibrator = getSystemService(Vibrator.class);
