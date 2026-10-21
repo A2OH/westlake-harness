@@ -318,6 +318,34 @@ alarm to a receiver in the probe's manifest, both 1.5 s ahead. It fails on build
 arrives in 8 s) and passes on build 112. `pm:call:queryBroadcastReceivers` passes as well: the
 package manager now resolves the app's own receivers. 242 corpus apps schedule alarms.
 
+## Build 113: jobs run
+
+Westlake's job scheduler accepted every job and ran none. Westlake #42 runs them in process while
+the app runs, as JobSchedulerService does. A job starts once its minimum latency has passed and
+its constraints are met, or at its deadline. It is started through its service's JobServiceEngine
+and finishes as the app says. Rescheduled jobs back off, periodic ones come back each window, and
+work given through `enqueue` reaches the job. The network constraint matches the active network.
+Jobs that wait for the device to be idle or for content changes run only at their deadline,
+because nothing sees either. Jobs last as long as the app's process.
+
+The seventeen flows score as on build 112: fourteen confirmed, no false alarms, three misses
+(precision 1.0, recall 0.62; `results-build113.json`, SELinux enforcing). No flow drives a job,
+so the regression set is where jobs show:
+
+- It draws 22 of 24, as on build 112.
+- Ten of its apps scheduled 53 jobs, 44 of them WorkManager's.
+- Jobs ran in six apps, 18 starts in all, and none failed to bind or start: WorkManager's job
+  service in AntennaPod, Nextcloud, Noice, Reddit and X, and Firebase's transport job in Reddit,
+  Telegram and X.
+- The jobs F-Droid, Tusky and Gallery scheduled wait for the device to be idle or for new photos,
+  and did not run.
+
+The framework-contracts probe's `svc:jobscheduler` line checked only that a job due at once runs.
+It now also schedules a job 1.5 s ahead that needs a network, which must be pending until it runs,
+run no sooner than 1.5 s with its network, and no longer be pending once done, and work through
+`enqueue`. It fails on build 112 (the first job never runs) and passes on build 113. 216 corpus
+apps use JobScheduler.
+
 ## What the calibration says about the gap map
 
 Each miss is a contract no row describes, or a row that reads supplied while the flow fails;
@@ -340,7 +368,7 @@ whose scans reference the API behind the contract.
 | **Android executables cannot run.** Termux's bootstrap fails | nothing: no row for an app's own programs | 146 start processes | a row for executables that need Android's linker |
 | **No status-bar service.** Chrono dies when its timer starts | nothing: no status-bar row | 17 use Quick Settings tiles or `StatusBarManager` | done in build 109: the service answered in process, and `svc:statusbar` from the census's static helpers (12 call `TileService.requestListeningState`) |
 | **Activities are not recreated.** AntennaPod's theme does not apply | nothing: no row for recreation | 267 call `Activity.recreate` | done in build 109: the row `am:recreate`, a contract line, and the relaunch |
-| **Alarms are never delivered.** Chrono's timer reaches its end and counts overtime in silence | `svc:alarm` supplied | 242 schedule alarms | done in build 112: alarms delivered in process while the app runs, PendingIntents sent to the app's own components, its manifest receivers run; a contract line (`svc:alarm`). Jobs, the rest of plan gap 5, are not run (`svc:jobscheduler` fails) |
+| **Alarms are never delivered.** Chrono's timer reaches its end and counts overtime in silence | `svc:alarm` supplied | 242 schedule alarms | done in build 112: alarms delivered in process while the app runs, PendingIntents sent to the app's own components, its manifest receivers run; a contract line (`svc:alarm`). Jobs, the rest of plan gap 5, run from build 113 |
 | **A dialog's touch area is not where it is drawn.** Chrono's notice is centred, reports the top left as its position, and a tap on its OK misses | `wm:window-placement` passes (the probe's dialogs had not laid themselves out) | 333 show dialogs | done in build 110: the line relays its dialog out and checks the alert is centred, and the fix (an attached frame only for child windows) |
 
 

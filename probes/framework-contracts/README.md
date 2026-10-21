@@ -20,7 +20,7 @@ The package manager's queries are asked for the probe's own components, declared
 | `pm:call:setComponentEnabledSetting` | the second activity disabled no longer resolves |
 | `pm:call:getComponentEnabledSetting` | the disabled state read back |
 | `jni:android.view.KeyCharacterMap` | the virtual keyboard's map: `KEYCODE_A` and the events for "ab" |
-| `svc:jobscheduler` | a job with no deadline, scheduled and run within 15 s |
+| `svc:jobscheduler` | a job due at once runs within 15 s; one 1.5 s ahead that needs a network is pending until it runs, runs no sooner than 1.5 s and within 10 s with a network in its parameters, and is no longer pending once done; work given through `enqueue` reaches its job through `dequeueWork` |
 | `svc:vibrator` | `hasVibrator`, and `vibrate` returning (ABSENT when there is none) |
 | `svc:sensor` | the sensor list, and accelerometer events within 5 s (ABSENT when none is listed) |
 | `svc:phone` | the phone type, SIM state and operator (ABSENT when the type is NONE) |
