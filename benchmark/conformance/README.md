@@ -207,6 +207,16 @@ must reach its job through `dequeueWork`. On build 112 the first job never ran: 
 accepted every job and ran none. On build 113 the delayed job ran after 1517 ms. Every other line
 reads as on build 112.
 
+**Build 114** (Westlake #43) resolves starts that leave the app before starting them.
+framework-contracts' `am:start-unresolved` line now starts an intent nothing handles from the main
+thread and from a worker thread, by action and by name, and wraps one in a chooser. On build 113 it
+failed: the main-thread start returned, because OH's refusal code is positive and Android reads it
+as success. On build 114 each start throws ActivityNotFoundException and the chooser does not. The
+new `intent:view-web`, `intent:share` and `intent:pick-document` lines say what handles a web link,
+a text share and the document picker on the device. On the board nothing does, on both builds: a
+truthful absence that rows of the same names carry into the gap map. Every other line reads as on
+build 113.
+
 ## Running it
 
 On a new build, run the suite with that build's provider flags, merging into this file:

@@ -28,6 +28,7 @@ import android.media.AudioFocusRequest;
 import android.media.AudioManager;
 import android.media.metrics.MediaMetricsManager;
 import android.media.metrics.PlaybackSession;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -64,7 +65,9 @@ import java.util.concurrent.TimeUnit;
  *
  * then "[WL-CONTRACT] done". The package manager's queries are asked for this probe's own components,
  * declared in its manifest, so each has one right answer. Starting an activity nothing handles has
- * no row yet; it is measured as am:start-unresolved, where Android throws ActivityNotFoundException.
+ * no row of its own; it is measured as am:start-unresolved, where Android throws
+ * ActivityNotFoundException. The intent:* lines say what handles a web link, a share and the
+ * document picker on the device, or that nothing does: what an app's start of one can reach.
  */
 public class MainActivity extends Activity {
     private static final String TAG = "WL-CONTRACT";
@@ -126,6 +129,8 @@ public class MainActivity extends Activity {
     private static final int RESULT_REQUEST = 4243;
     private final CountDownLatch resultArrived = new CountDownLatch(1);
     private volatile String resultSeen;
+    // The start from the main thread, made in onCreate: null once it threw ActivityNotFoundException.
+    private volatile String mainThreadStart = "not run";
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -141,15 +146,16 @@ public class MainActivity extends Activity {
         TextView view = new TextView(this);
         view.setText("Westlake framework contracts probe");
         setContentView(view);
-        // Starting an activity is checked here, on the main thread, as an app's button handler does.
-        check("am:start-unresolved", () -> {
-            try {
-                startActivity(new Intent(PREFIX + "NOTHING_HANDLES_THIS"));
-            } catch (ActivityNotFoundException e) {
-                return "ActivityNotFoundException, as on Android";
-            }
-            throw fail("startActivity returned for an intent nothing handles; Android throws ActivityNotFoundException");
-        });
+        // Starting an activity nothing handles, on the main thread as an app's button handler does.
+        // The am:start-unresolved line reports it, last, with the starts made from the worker thread.
+        try {
+            startActivity(new Intent(PREFIX + "NOTHING_HANDLES_THIS"));
+            mainThreadStart = "startActivity returned for an intent nothing handles; Android throws ActivityNotFoundException";
+        } catch (ActivityNotFoundException expected) {
+            mainThreadStart = null;
+        } catch (Throwable t) {
+            mainThreadStart = t.toString();
+        }
         new Thread(this::runAll, "framework-contracts").start();
     }
 
@@ -410,6 +416,15 @@ public class MainActivity extends Activity {
             if (!received) throw fail("the PendingIntent alarm never reached the receiver it names (the listener alarm arrived)");
             return "a listener alarm, and a PendingIntent alarm to the app's own receiver, each delivered at its time";
         });
+        // What handles a web link, a share and the system document picker here. An app that opens
+        // one starts whatever does; on a device with none, its start finds nothing.
+        check("intent:view-web", () -> handlers(pm,
+                new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.example.com/")), "a web link"));
+        check("intent:share", () -> handlers(pm,
+                new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, "probe"), "a text share"));
+        check("intent:pick-document", () -> handlers(pm,
+                new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*"),
+                "the document picker (OPEN_DOCUMENT)"));
         // These two bring another activity up over this one, so they come last. An activity this app
         // starts is created, started and resumed, and stays resumed while it is on top: a player
         // that pauses in onPause (mpv) stays paused after an extra pause and resume.
@@ -466,6 +481,39 @@ public class MainActivity extends Activity {
             if (!KeyboardActivity.handoffPassed) throw fail(KeyboardActivity.handoffDetail);
             return KeyboardActivity.handoffDetail;
         });
+        // Last, as on Android the chooser stays up over this one. Starting an activity nothing handles
+        // throws ActivityNotFoundException, by action from the main thread (onCreate) and from this
+        // one, and by name; Intent.createChooser over it opens the chooser and does not throw.
+        check("am:start-unresolved", () -> {
+            if (mainThreadStart != null) throw fail("from the main thread: " + mainThreadStart);
+            try {
+                startActivity(new Intent(PREFIX + "NOTHING_HANDLES_THIS"));
+                throw fail("startActivity from a worker thread returned for an intent nothing handles; "
+                        + "Android throws ActivityNotFoundException");
+            } catch (ActivityNotFoundException expected) {
+            }
+            try {
+                startActivity(new Intent().setClassName("org.westlake.probe.absent", "org.westlake.probe.absent.Main"));
+                throw fail("startActivity returned for an activity of a package that is not installed; "
+                        + "Android throws ActivityNotFoundException");
+            } catch (ActivityNotFoundException expected) {
+            }
+            try {
+                startActivity(Intent.createChooser(new Intent(PREFIX + "NOTHING_HANDLES_THIS"), "probe"));
+            } catch (ActivityNotFoundException e) {
+                throw fail("a chooser over an intent nothing handles threw ActivityNotFoundException; "
+                        + "Android's chooser opens and says that nothing does");
+            }
+            return "ActivityNotFoundException from the main thread and a worker thread, by action and by name; "
+                    + "a chooser over the intent does not throw";
+        });
         line("done", "", "");
+    }
+
+    /** What handles the intent on this device, or ABSENT when nothing does. */
+    private static String handlers(PackageManager pm, Intent intent, String what) throws Outcome {
+        List<ResolveInfo> found = pm.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
+        if (found == null || found.isEmpty()) throw absent("nothing handles " + what + " on this device");
+        return found.size() + " handle " + what + ", " + found.get(0).activityInfo.packageName + " first";
     }
 }

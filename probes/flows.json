@@ -1481,6 +1481,11 @@
           ],
           "min_diff": 6,
           "why": "the system file picker shows (picking the database in it is added once one shows)"
+        },
+        {
+          "log": "ActivityNotFoundException",
+          "present": false,
+          "why": "the picker was started, not refused: KeePassDX answers a refused start with a file-manager dialog of its own, which changes the screen too"
         }
       ]
     },

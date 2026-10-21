@@ -346,6 +346,41 @@ run no sooner than 1.5 s with its network, and no longer be pending once done, a
 `enqueue`. It fails on build 112 (the first job never runs) and passes on build 113. 216 corpus
 apps use JobScheduler.
 
+## Build 114: starts that leave the app
+
+A start that left the app reported success when nothing handled it. From a worker thread it was
+posted and answered success. From the main thread it returned OH's refusal code (2097205), which
+is positive, and Android reads any positive start result as success. Westlake #43 resolves such a
+start first, as ActivityStarter does. When no OH ability handles the intent, the app gets
+`ActivityNotFoundException`, and nothing is handed to OH, which answers a failed implicit start with
+a dead-end dialog. A chooser never throws, as Android's always opens: when nothing handles what it
+wraps, nothing opens. A text share that nothing handles still has its text put on the clipboard.
+
+On the board nothing handles a web link, a share or the document picker. The framework-contracts
+probe's new `intent:view-web`, `intent:share` and `intent:pick-document` lines report all three
+absent. The three start flows now answer as an app does on an Android device without the
+handler, and they still fail:
+
+- KeePassDX shows its own message that a file manager handling OPEN_DOCUMENT is needed. Before,
+  nothing happened at all. The flow's check now also requires that the start was not refused,
+  since the message changes the screen as a picker would.
+- Fossify Notes catches the exception for its GitHub link and shows a toast, which Westlake does not
+  display: no toast is shown.
+- Markor's share opens nothing.
+
+The seventeen flows score as on build 113: fourteen confirmed, no false alarms, three misses
+(precision 1.0, recall 0.62; `results-build114.json`, SELinux enforcing). Build 103's regression set
+draws 23 of 24: Reddit drew this run, as it does on some runs, and Toutiao stops as always. No app's
+launch hit an unresolved start.
+
+The gap map gains a row per intent family the app's code names: `intent:view-web` (ACTION_VIEW
+with an http(s) URL), `intent:share` (ACTION_SEND or Intent.createChooser) and
+`intent:pick-document` (OPEN_DOCUMENT, GET_CONTENT, CREATE_DOCUMENT, OPEN_DOCUMENT_TREE). The
+device measurement decides each. Of 371 corpus apps, 300 name a web link, 264 a share and 273 the
+picker. The batch-2 plan's three start flows match these rows through `intent:*`. On the build-114
+maps of the batch's seven apps, the plan, unchanged, predicts 8 of the 9 outcomes, in sample
+(`batch2-backtest-build114.json`). Only `fnotes-copy-paste`, a long press, has no row.
+
 ## What the calibration says about the gap map
 
 Each miss is a contract no row describes, or a row that reads supplied while the flow fails;
@@ -364,7 +399,7 @@ whose scans reference the API behind the contract.
 | **Ordinary dialogs are placed and dimmed.** Fossify Clock's timer dialog is centred and the screen behind it dimmed | `wm:window-placement` broken, `wm:dim-behind` missing | 318 | done in build 106: the probe's failure was where the app was told its dialog sat (the top left), not where it was drawn; each window's configuration now has the display's bounds and the line passes. The dim was drawn already: the prediction read `wm:dim-behind` from maps older than the dim layer |
 | **Enter closes the keyboard.** Fossify Notes gets no new line: the board keyboard's Enter reaches the bridge as "hide" | `jni:android.view.KeyCharacterMap` broken (another cause) | 154 handle the keyboard's action key; 306 use `EditText` | a contract line (the action key reaches the editor as a newline or an editor action) and the bridge's Enter |
 | **No long press.** Text cannot be selected, so nothing is copied | `svc:clipboard` supplied; no row for how touch reaches the app | 280 set long-press listeners | stream a held finger in tap mode (the touch forwarder); a row for the launch's touch mode |
-| **Starts go nowhere.** A web link, a share and the system picker report success and open nothing | no rows for other apps' activities (the plan's layer 1 is not built) | 274 call `Intent.createChooser`; 217 use `DocumentsContract` | answer `ActivityNotFoundException` when nothing handles a start (plan gap 1); the picker and share mapped to OH's (gap 2) |
+| **Starts go nowhere.** A web link, a share and the system picker report success and open nothing | no rows for other apps' activities (the plan's layer 1 is not built) | 300 name a web link, 264 a share, 273 the document picker | done in build 114 for gap 1: an unresolved start throws ActivityNotFoundException (`am:start-unresolved`), and the rows `intent:view-web`, `intent:share`, `intent:pick-document` read absent on the board. Still open, gap 2: OH's picker and share, which need the host application to pass the picker's result back |
 | **Android executables cannot run.** Termux's bootstrap fails | nothing: no row for an app's own programs | 146 start processes | a row for executables that need Android's linker |
 | **No status-bar service.** Chrono dies when its timer starts | nothing: no status-bar row | 17 use Quick Settings tiles or `StatusBarManager` | done in build 109: the service answered in process, and `svc:statusbar` from the census's static helpers (12 call `TileService.requestListeningState`) |
 | **Activities are not recreated.** AntennaPod's theme does not apply | nothing: no row for recreation | 267 call `Activity.recreate` | done in build 109: the row `am:recreate`, a contract line, and the relaunch |
