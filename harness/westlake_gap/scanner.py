@@ -1000,7 +1000,9 @@ def sql_collations(strings: Iterable[str]) -> set[str]:
 
 # Intents an app starts for another app to handle, by family: the action strings the app's code names
 # (Intent.ACTION_* constants are inlined as strings). A web link is ACTION_VIEW with an http(s) URL in
-# the code; a share is ACTION_SEND or a call to Intent.createChooser (external_intent_families).
+# the code; a share is ACTION_SEND or a call to Intent.createChooser; a screen of Android's own apps
+# is a Settings action (android.settings.*) or a call to VpnService.prepare, which names the VPN
+# consent (external_intent_families).
 EXTERNAL_INTENT_ACTIONS = {
     "share": frozenset({"android.intent.action.SEND", "android.intent.action.SEND_MULTIPLE"}),
     "pick-document": frozenset({"android.intent.action.OPEN_DOCUMENT", "android.intent.action.GET_CONTENT",
@@ -1010,12 +1012,15 @@ EXTERNAL_INTENT_ACTIONS = {
 
 
 def external_intent_families(strings: Iterable[str]) -> set[str]:
-    """Which EXTERNAL_INTENT_ACTIONS families, and whether a web link ("view-web"), the app's code
-    names. What answers them is the device's: a browser, a share target, a document picker."""
+    """Which EXTERNAL_INTENT_ACTIONS families, whether a web link ("view-web"), and whether a screen of
+    Android's Settings ("system-screen"), the app's code names. What answers them is the device's: a
+    browser, a share target, a document picker, Android's own apps."""
     texts = set(strings)
     found = {family for family, actions in EXTERNAL_INTENT_ACTIONS.items() if texts & actions}
     if "android.intent.action.VIEW" in texts and any(t.startswith(("http://", "https://")) for t in texts):
         found.add("view-web")
+    if any(t.startswith("android.settings.") for t in texts):
+        found.add("system-screen")
     return found
 
 
@@ -2259,7 +2264,9 @@ def scan_apk(
             "own_intent_names": sorted(inventory.own_intent_names),
             "external_intents": sorted(inventory.external_intents
                                        | ({"share"} if any(owner == "Landroid/content/Intent;" and name == "createChooser"
-                                                          for owner, name, _ in inventory.method_refs) else set())),
+                                                          for owner, name, _ in inventory.method_refs) else set())
+                                       | ({"system-screen"} if any(owner == "Landroid/net/VpnService;" and name == "prepare"
+                                                                  for owner, name, _ in inventory.method_refs) else set())),
             "sql_collations": sorted(inventory.sql_collations),
             "after_start_overrides": after_start_overrides(identity.get("activity_names") or [],
                                                            inventory.superclasses, inventory.after_start_callbacks),

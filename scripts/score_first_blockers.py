@@ -15,7 +15,11 @@ first blocker (harness.westlake_gap.lifecycle --json) is looked up in the app's 
 
 An app exception counts when its root cause (lifecycle's root_cause) names a service: a Kotlin cast
 of a null manager by the manager's class, a compiled null check by its frame among a service row's
-throwing sites.
+throwing sites. An ActivityNotFoundException counts by what the app started (started_family): the
+intent:* row for a web link, a share, the document picker, or a screen of Android's own apps (a
+Settings action, or one of their activities by name, as VpnService.prepare names VPN consent). An
+exception from a client transaction item that the provider scheduled counts by the item's contract
+(_ITEM_ROWS): an ActivityResultItem by am:activity-result.
 
 The blocker text is reduced to a key: a missing symbol needs a row mentioning it (a std::__ndk1 one:
 load:shadowed-by-board); an unbound platform native a jni:<class> row; a missing library a load:
@@ -92,6 +96,41 @@ _NONNULL_CAST = re.compile(r"null cannot be cast to non-null type (android\.[\w.
 _NULL_BINDER = re.compile(r"Attempt to invoke [^']*'[^' ]+ ((?:[a-z]\w*\.)+I[A-Z]\w*)\.\w+\([^']*\)' on a null object reference")
 
 
+_STARTED_COMPONENT = re.compile(r"explicit activity class \{([\w.]+)/")
+_STARTED_ACTION = re.compile(r"\bact=([\w.]+)")
+_PICKER_ACTIONS = {"android.intent.action.OPEN_DOCUMENT", "android.intent.action.GET_CONTENT",
+                   "android.intent.action.CREATE_DOCUMENT", "android.intent.action.OPEN_DOCUMENT_TREE"}
+_SHARE_ACTIONS = {"android.intent.action.SEND", "android.intent.action.SEND_MULTIPLE", "android.intent.action.CHOOSER"}
+
+
+# The contract of a client transaction item the provider schedules: AnkiDroid (r90, build 119) died
+# on an ActivityResultItem for a caller that had finished.
+_TRANSACTION_ITEM = re.compile(r"to execute transaction item: (\w+)\{")
+_ITEM_ROWS = {"ActivityResultItem": "am:activity-result"}
+
+
+def started_family(message):
+    """The intent:* family of what an ActivityNotFoundException says the app started, or None for an
+    intent no family covers."""
+    component = _STARTED_COMPONENT.search(message)
+    if component:
+        package = component.group(1)
+        return "system-screen" if package == "android" or package.startswith("com.android.") else None
+    action = _STARTED_ACTION.search(message)
+    if not action:
+        return None
+    action = action.group(1)
+    if action.startswith("android.settings."):
+        return "system-screen"
+    if action in _PICKER_ACTIONS:
+        return "pick-document"
+    if action in _SHARE_ACTIONS:
+        return "share"
+    if action == "android.intent.action.VIEW" and re.search(r"\bdat=https?:", message):
+        return "view-web"
+    return None
+
+
 def root_cause_rows(cause, rows):
     """Service rows that name an app exception's root cause, or None if it names none: a Kotlin cast
     of a null manager names the manager's class; a compiled null check (getClass() on null) names
@@ -99,6 +138,12 @@ def root_cause_rows(cause, rows):
     interface (socks5's IVpnManager, fetched by VpnService.prepare itself) names the row that lists
     the interface."""
     message = cause.get("message") or ""
+    if cause.get("exception") == "ActivityNotFoundException":
+        family = started_family(message)
+        return [r for r in rows if r["id"] == "intent:" + family] if family else None
+    item = _TRANSACTION_ITEM.search(message)
+    if item and item.group(1) in _ITEM_ROWS:
+        return [r for r in rows if r["id"] == _ITEM_ROWS[item.group(1)]]
     binder = _NULL_BINDER.search(message)
     if cause.get("exception") == "NullPointerException" and binder:
         named = null_service_rows([binder.group(1)], rows)

@@ -48,6 +48,45 @@ class NullBinderScoring(unittest.TestCase):
         self.assertEqual([r["id"] for r in named], ["svc:vpn_management"])
 
 
+class StartScoring(unittest.TestCase):
+    ROWS = ROWS + [{"id": "intent:system-screen", "verdict": "unverified"},
+                   {"id": "intent:pick-document", "verdict": "absent"}]
+
+    def named(self, message):
+        cause = {"exception": "ActivityNotFoundException", "message": message, "frame": "a.b.c"}
+        found = score.candidate_rows("app-framework", "start activity: ActivityNotFoundException", self.ROWS, cause)
+        return None if found is None else [r["id"] for r in found]
+
+    def test_a_start_nothing_handled_is_named_by_the_row_for_what_was_started(self) -> None:
+        """r90 on build 119: aat's Settings screen, socks5's VPN consent, viewer's document picker."""
+        self.assertEqual(self.named("No Activity found to handle Intent { act=android.settings."
+                                    "MANAGE_APP_ALL_FILES_ACCESS_PERMISSION dat=package: }"), ["intent:system-screen"])
+        self.assertEqual(self.named("Unable to find explicit activity class {com.android.vpndialogs/"
+                                    "com.android.vpndialogs.ConfirmDialog}; have you declared this activity in your "
+                                    "AndroidManifest.xml?"), ["intent:system-screen"])
+        self.assertEqual(self.named("No Activity found to handle Intent { act=android.intent.action.OPEN_DOCUMENT "
+                                    "cat=[android.intent.category.OPENABLE] typ=*/* (has extras) }"),
+                         ["intent:pick-document"])
+
+    def test_a_family_the_map_has_no_row_for_is_not_named(self) -> None:
+        self.assertEqual(self.named("No Activity found to handle Intent { act=android.intent.action.VIEW "
+                                    "dat=https://example.com/... }"), [])
+
+    def test_a_result_for_a_caller_gone_is_named_by_the_result_row(self) -> None:
+        """AnkiDroid, r90 on build 119: its launcher activity finished before its result arrived."""
+        rows = self.ROWS + [{"id": "am:activity-result", "verdict": "supplied", "measured": "conformant"}]
+        cause = {"exception": "IllegalArgumentException",
+                 "message": "Activity client record must not be null to execute transaction item: ActivityResultItem{"
+                            "mActivityToken=a.b@1,resultInfoList=[ResultInfo{who=null, request=0, result=0, data=null}]}"}
+        named = score.candidate_rows("app-framework", "process init: IllegalArgumentException", rows, cause)
+        self.assertEqual([r["id"] for r in named], ["am:activity-result"])
+        self.assertEqual(score.outcome_of(named), "supplied", "the harness had it measured conformant")
+
+    def test_an_intent_no_family_covers_stays_unscorable(self) -> None:
+        self.assertIsNone(self.named("No Activity found to handle Intent { act=com.example.OPEN }"))
+        self.assertIsNone(self.named("Unable to find explicit activity class {com.example/com.example.Main}"))
+
+
 class SymptomScoring(unittest.TestCase):
     def test_an_app_exception_a_row_lists_as_its_symptom_is_named_by_it(self) -> None:
         rows = ROWS + [{"id": "perm:host:ohos.permission.MICROPHONE", "verdict": "missing",

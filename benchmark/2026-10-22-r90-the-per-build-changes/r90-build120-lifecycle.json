@@ -1,0 +1,561 @@
+[
+ {
+  "app": "aat",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 973,
+  "fatal": 0,
+  "relayouts": 8,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 8
+  },
+  "screen": "app",
+  "main_thread": {
+   "name": "Thread-2",
+   "java_state": "ThreadState(92)",
+   "state": "S",
+   "waiting": "idle in its message loop",
+   "frames": [
+    "android.os.MessageQueue.nativePollOnce(Native method)",
+    "android.os.MessageQueue.next(unavailable:21)",
+    "android.os.Looper.loopOnce(unavailable:6)",
+    "android.os.Looper.loop(unavailable:34)",
+    "android.app.ActivityThread.main(unavailable:96)",
+    "java.lang.reflect.Method.invoke(Native method)",
+    "com.android.internal.os.AppSpawnXInit.invokeStaticMain(unavailable:296)",
+    "com.android.internal.os.AppSpawnXInit.initChild(unavailable:402)"
+   ],
+   "first_app_frame": null
+  },
+  "startup": {
+   "resumed": 0.71,
+   "first_frame": 1.22
+  }
+ },
+ {
+  "app": "anki",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1391,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app",
+  "main_thread": {
+   "name": "Thread-2",
+   "java_state": "ThreadState(92)",
+   "state": "S",
+   "waiting": "idle in its message loop",
+   "frames": [
+    "android.os.MessageQueue.nativePollOnce(Native method)",
+    "android.os.MessageQueue.next(unavailable:21)",
+    "android.os.Looper.loopOnce(unavailable:6)",
+    "android.os.Looper.loop(unavailable:34)",
+    "android.app.ActivityThread.main(unavailable:96)",
+    "java.lang.reflect.Method.invoke(Native method)",
+    "com.android.internal.os.AppSpawnXInit.invokeStaticMain(unavailable:296)",
+    "com.android.internal.os.AppSpawnXInit.initChild(unavailable:402)"
+   ],
+   "first_app_frame": null
+  },
+  "startup": {
+   "resumed": 2.2,
+   "first_frame": 2.93,
+   "first_frame_timeout": 3.35
+  }
+ },
+ {
+  "app": "clock",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1052,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app",
+  "main_thread": {
+   "name": "Thread-2",
+   "java_state": "ThreadState(92)",
+   "state": "S",
+   "waiting": "idle in its message loop",
+   "frames": [
+    "android.os.MessageQueue.nativePollOnce(Native method)",
+    "android.os.MessageQueue.next(unavailable:21)",
+    "android.os.Looper.loopOnce(unavailable:6)",
+    "android.os.Looper.loop(unavailable:34)",
+    "android.app.ActivityThread.main(unavailable:96)",
+    "java.lang.reflect.Method.invoke(Native method)",
+    "com.android.internal.os.AppSpawnXInit.invokeStaticMain(unavailable:296)",
+    "com.android.internal.os.AppSpawnXInit.initChild(unavailable:402)"
+   ],
+   "first_app_frame": null
+  },
+  "startup": {
+   "resumed": 0.63,
+   "first_frame": 1.72
+  }
+ },
+ {
+  "app": "luxalarm",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1070,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app",
+  "main_thread": {
+   "name": "Thread-2",
+   "java_state": "ThreadState(92)",
+   "state": "S",
+   "waiting": "idle in its message loop",
+   "frames": [
+    "android.os.MessageQueue.nativePollOnce(Native method)",
+    "android.os.MessageQueue.next(unavailable:21)",
+    "android.os.Looper.loopOnce(unavailable:6)",
+    "android.os.Looper.loop(unavailable:34)",
+    "android.app.ActivityThread.main(unavailable:96)",
+    "java.lang.reflect.Method.invoke(Native method)",
+    "com.android.internal.os.AppSpawnXInit.invokeStaticMain(unavailable:296)",
+    "com.android.internal.os.AppSpawnXInit.initChild(unavailable:402)"
+   ],
+   "first_app_frame": null
+  },
+  "startup": {
+   "resumed": 0.57,
+   "first_frame": 1.16
+  }
+ },
+ {
+  "app": "obtainium",
+  "rung": 4,
+  "rung_name": "view",
+  "lines": 750,
+  "fatal": 1,
+  "relayouts": 20,
+  "held_back": 0,
+  "blocker_category": "native-crash",
+  "blocker": "SIGABRT on thread mali-cmar-backe: aborted from libGLES_mali.z.so",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 20
+  },
+  "anomaly": "drew, but the screenshot shows the host screen: the app left or died",
+  "screen": "host",
+  "crash_dump": {
+   "signal": "SIGABRT",
+   "code": "SI_TKILL",
+   "address": "0x1315446000058c3",
+   "thread": "mali-cmar-backe",
+   "frames": [
+    {
+     "pc": 1119044,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1",
+     "symbol": "raise+384"
+    },
+    {
+     "pc": 775516,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1",
+     "symbol": "abort+20"
+    },
+    {
+     "pc": 3871344,
+     "path": "/vendor/lib64/chipsetsdk/libGLES_mali.z.so",
+     "library": "libGLES_mali.z.so"
+    },
+    {
+     "pc": 6350284,
+     "path": "/vendor/lib64/chipsetsdk/libGLES_mali.z.so",
+     "library": "libGLES_mali.z.so",
+     "symbol": "cdbgp_quit+8"
+    },
+    {
+     "pc": 3571396,
+     "path": "/vendor/lib64/chipsetsdk/libGLES_mali.z.so",
+     "library": "libGLES_mali.z.so",
+     "symbol": "base_jd_event_term+92"
+    },
+    {
+     "pc": 6405996,
+     "path": "/vendor/lib64/chipsetsdk/libGLES_mali.z.so",
+     "library": "libGLES_mali.z.so",
+     "symbol": "cmarp_backend_thread+284"
+    },
+    {
+     "pc": 1247720,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1",
+     "symbol": "start+236"
+    },
+    {
+     "pc": 616740,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1"
+    }
+   ],
+   "kind": "abort",
+   "summary": "aborted from libGLES_mali.z.so"
+  },
+  "startup": {
+   "resumed": 0.96,
+   "first_frame_timeout": 2.07
+  }
+ },
+ {
+  "app": "obtainx",
+  "rung": 4,
+  "rung_name": "view",
+  "lines": 695,
+  "fatal": 1,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocker_category": "native-crash",
+  "blocker": "SIGABRT on thread mali-cmar-backe: aborted from libGLES_mali.z.so",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "anomaly": "drew, but the screenshot shows the host screen: the app left or died",
+  "screen": "host",
+  "crash_dump": {
+   "signal": "SIGABRT",
+   "code": "SI_TKILL",
+   "address": "0x131544600005b47",
+   "thread": "mali-cmar-backe",
+   "frames": [
+    {
+     "pc": 1119044,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1",
+     "symbol": "raise+384"
+    },
+    {
+     "pc": 775516,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1",
+     "symbol": "abort+20"
+    },
+    {
+     "pc": 3871344,
+     "path": "/vendor/lib64/chipsetsdk/libGLES_mali.z.so",
+     "library": "libGLES_mali.z.so"
+    },
+    {
+     "pc": 6350284,
+     "path": "/vendor/lib64/chipsetsdk/libGLES_mali.z.so",
+     "library": "libGLES_mali.z.so",
+     "symbol": "cdbgp_quit+8"
+    },
+    {
+     "pc": 3571396,
+     "path": "/vendor/lib64/chipsetsdk/libGLES_mali.z.so",
+     "library": "libGLES_mali.z.so",
+     "symbol": "base_jd_event_term+92"
+    },
+    {
+     "pc": 6405996,
+     "path": "/vendor/lib64/chipsetsdk/libGLES_mali.z.so",
+     "library": "libGLES_mali.z.so",
+     "symbol": "cmarp_backend_thread+284"
+    },
+    {
+     "pc": 1247720,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1",
+     "symbol": "start+236"
+    },
+    {
+     "pc": 616740,
+     "path": "/system/lib/ld-musl-aarch64.so.1",
+     "library": "ld-musl-aarch64.so.1"
+    }
+   ],
+   "kind": "abort",
+   "summary": "aborted from libGLES_mali.z.so"
+  },
+  "startup": {
+   "resumed": 0.99,
+   "first_frame_timeout": 2.53
+  }
+ },
+ {
+  "app": "reddit",
+  "rung": 4,
+  "rung_name": "view",
+  "lines": 3901,
+  "fatal": 0,
+  "relayouts": 14,
+  "held_back": 0,
+  "blocker_category": "no-frame",
+  "blocker": "the activity resumed 4.1 s after start and drew no frame",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 14
+  },
+  "anomaly": "drew, but the screenshot shows the host screen: the app left or died",
+  "screen": "host",
+  "main_thread": {
+   "name": "Thread-2",
+   "java_state": "ThreadState(0)",
+   "state": "R",
+   "waiting": "running",
+   "frames": [
+    "android.view.DisplayEventReceiver.nativeScheduleVsync(Native method)",
+    "android.view.DisplayEventReceiver.scheduleVsync(unavailable:16)",
+    "android.view.Choreographer.scheduleVsyncLocked(unavailable:9)",
+    "android.view.Choreographer.scheduleFrameLocked(unavailable:17)",
+    "android.view.Choreographer.postCallbackDelayedInternal(unavailable:19)",
+    "android.view.Choreographer.postCallbackDelayed(unavailable:7)",
+    "android.view.Choreographer.postCallback(unavailable:6)",
+    "android.view.ViewRootImpl.scheduleTraversals(unavailable:29)"
+   ],
+   "first_app_frame": null
+  },
+  "startup": {
+   "resumed": 4.07,
+   "first_frame_timeout": 5.17
+  }
+ },
+ {
+  "app": "socks5",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1022,
+  "fatal": 0,
+  "relayouts": 11,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 11
+  },
+  "screen": "app",
+  "main_thread": {
+   "name": "Thread-2",
+   "java_state": "ThreadState(92)",
+   "state": "S",
+   "waiting": "idle in its message loop",
+   "frames": [
+    "android.os.MessageQueue.nativePollOnce(Native method)",
+    "android.os.MessageQueue.next(unavailable:21)",
+    "android.os.Looper.loopOnce(unavailable:6)",
+    "android.os.Looper.loop(unavailable:34)",
+    "android.app.ActivityThread.main(unavailable:96)",
+    "java.lang.reflect.Method.invoke(Native method)",
+    "com.android.internal.os.AppSpawnXInit.invokeStaticMain(unavailable:296)",
+    "com.android.internal.os.AppSpawnXInit.initChild(unavailable:402)"
+   ],
+   "first_app_frame": null
+  },
+  "startup": {
+   "resumed": 0.86,
+   "first_frame": 1.3
+  }
+ },
+ {
+  "app": "stims",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 1226,
+  "fatal": 0,
+  "relayouts": 18,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 2,
+   "view": 2,
+   "drawing": 18
+  },
+  "screen": "app",
+  "main_thread": {
+   "name": "Thread-2",
+   "java_state": "ThreadState(92)",
+   "state": "S",
+   "waiting": "idle in its message loop",
+   "frames": [
+    "android.os.MessageQueue.nativePollOnce(Native method)",
+    "android.os.MessageQueue.next(unavailable:21)",
+    "android.os.Looper.loopOnce(unavailable:6)",
+    "android.os.Looper.loop(unavailable:34)",
+    "android.app.ActivityThread.main(unavailable:96)",
+    "java.lang.reflect.Method.invoke(Native method)",
+    "com.android.internal.os.AppSpawnXInit.invokeStaticMain(unavailable:296)",
+    "com.android.internal.os.AppSpawnXInit.initChild(unavailable:402)"
+   ],
+   "first_app_frame": null
+  },
+  "startup": {
+   "resumed": 0.53,
+   "first_frame": 1.22
+  }
+ },
+ {
+  "app": "viewer",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 892,
+  "fatal": 0,
+  "relayouts": 8,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 8
+  },
+  "screen": "app",
+  "main_thread": {
+   "name": "Thread-2",
+   "java_state": "ThreadState(92)",
+   "state": "S",
+   "waiting": "idle in its message loop",
+   "frames": [
+    "android.os.MessageQueue.nativePollOnce(Native method)",
+    "android.os.MessageQueue.next(unavailable:21)",
+    "android.os.Looper.loopOnce(unavailable:6)",
+    "android.os.Looper.loop(unavailable:34)",
+    "android.app.ActivityThread.main(unavailable:96)",
+    "java.lang.reflect.Method.invoke(Native method)",
+    "com.android.internal.os.AppSpawnXInit.invokeStaticMain(unavailable:296)",
+    "com.android.internal.os.AppSpawnXInit.initChild(unavailable:402)"
+   ],
+   "first_app_frame": null
+  },
+  "startup": {
+   "resumed": 0.49,
+   "first_frame": 1.02
+  }
+ },
+ {
+  "app": "waze",
+  "rung": 4,
+  "rung_name": "view",
+  "lines": 3778,
+  "fatal": 0,
+  "relayouts": 52,
+  "held_back": 0,
+  "blocker_category": "no-frame",
+  "blocker": "the activity resumed 3.9 s after start and drew no frame",
+  "blocking": true,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 4,
+   "view": 4,
+   "drawing": 52
+  },
+  "anomaly": "drew, but the screenshot shows the host screen: the app left or died",
+  "screen": "host",
+  "main_thread": {
+   "name": "Thread-2",
+   "java_state": "ThreadState(92)",
+   "state": "S",
+   "waiting": "running",
+   "frames": [
+    "android.view.InputEventReceiver.nativeDispose(Native method)",
+    "android.view.InputEventReceiver.dispose(unavailable:22)",
+    "android.view.InputEventReceiver.dispose(unavailable:1)",
+    "android.view.ViewRootImpl$WindowInputEventReceiver.dispose(unavailable:5)",
+    "android.view.ViewRootImpl.dispatchDetachedFromWindow(unavailable:120)",
+    "android.view.ViewRootImpl.doDie(unavailable:25)",
+    "android.view.ViewRootImpl$ViewRootHandler.handleMessageImpl(unavailable:933)",
+    "android.view.ViewRootImpl$ViewRootHandler.handleMessage(unavailable:15)"
+   ],
+   "first_app_frame": null
+  },
+  "startup": {
+   "resumed": 3.92,
+   "first_frame_timeout": 5.2
+  }
+ },
+ {
+  "app": "wifianalyzer",
+  "rung": 5,
+  "rung_name": "drawing",
+  "lines": 4632,
+  "fatal": 0,
+  "relayouts": 14,
+  "held_back": 0,
+  "blocking": false,
+  "markers": {
+   "runtime-init": 1,
+   "bound": 1,
+   "activity": 1,
+   "view": 1,
+   "drawing": 14
+  },
+  "screen": "app",
+  "main_thread": {
+   "name": "Thread-2",
+   "java_state": "ThreadState(92)",
+   "state": "S",
+   "waiting": "idle in its message loop",
+   "frames": [
+    "android.os.MessageQueue.nativePollOnce(Native method)",
+    "android.os.MessageQueue.next(unavailable:21)",
+    "android.os.Looper.loopOnce(unavailable:6)",
+    "android.os.Looper.loop(unavailable:34)",
+    "android.app.ActivityThread.main(unavailable:96)",
+    "java.lang.reflect.Method.invoke(Native method)",
+    "com.android.internal.os.AppSpawnXInit.invokeStaticMain(unavailable:296)",
+    "com.android.internal.os.AppSpawnXInit.initChild(unavailable:402)"
+   ],
+   "first_app_frame": null
+  },
+  "startup": {
+   "resumed": 0.7,
+   "first_frame": 1.23
+  }
+ }
+]

@@ -24,6 +24,11 @@
             <action android:name="android.intent.action.OPEN_DOCUMENT" />
             <data android:mimeType="*/*" />
         </intent>
+        <intent>
+            <action android:name="android.settings.APPLICATION_DETAILS_SETTINGS" />
+            <data android:scheme="package" />
+        </intent>
+        <package android:name="com.android.vpndialogs" />
     </queries>
 
     <application
@@ -42,6 +47,7 @@
 
         <!-- The answers the package manager's queries must find: one of each kind, by its own action. -->
         <activity android:name=".ResultActivity" android:exported="false" />
+        <activity android:name=".TrampolineActivity" android:exported="false" />
         <activity android:name=".LifecycleActivity" android:exported="false" />
         <activity android:name=".RecreateActivity" android:exported="false" />
         <activity android:name=".KeyboardActivity" android:exported="false" />

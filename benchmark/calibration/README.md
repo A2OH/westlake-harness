@@ -410,6 +410,16 @@ The framework-contracts probe's new `wm:toast` line shows a text toast and check
 duration and that the activity keeps focus. It fails on build 114 (no toast) and passes on build
 119. The gap map's new `wm:toast` row covers apps that call Toast.show: 259 of 371 corpus apps.
 
+## Build 120: r90's regressions
+
+r90, the first full round after build 114, found seven apps that died on a start that threw: screens
+of Settings, VPN consent and the document picker, which every Android device has and apps start
+unguarded (the r90 record). Westlake #45 has such a start open nothing, as before build 114, and
+drops a result for a caller that has finished. The eighteen flows score as on build 119: fifteen
+confirmed, no false alarms, three misses (`results-build120.json`, SELinux enforcing).
+`keepassdx-open` fails differently: on build 119 the refused start brought up KeePassDX's own "a file
+manager is required" dialog, and on build 120 its button opens nothing.
+
 ## What the calibration says about the gap map
 
 Each miss is a contract no row describes, or a row that reads supplied while the flow fails;
@@ -428,7 +438,7 @@ whose scans reference the API behind the contract.
 | **Ordinary dialogs are placed and dimmed.** Fossify Clock's timer dialog is centred and the screen behind it dimmed | `wm:window-placement` broken, `wm:dim-behind` missing | 318 | done in build 106: the probe's failure was where the app was told its dialog sat (the top left), not where it was drawn; each window's configuration now has the display's bounds and the line passes. The dim was drawn already: the prediction read `wm:dim-behind` from maps older than the dim layer |
 | **Enter closes the keyboard.** Fossify Notes gets no new line: the board keyboard's Enter reaches the bridge as "hide" | `jni:android.view.KeyCharacterMap` broken (another cause) | 154 handle the keyboard's action key; 306 use `EditText` | a contract line (the action key reaches the editor as a newline or an editor action) and the bridge's Enter |
 | **No long press.** Text cannot be selected, so nothing is copied | `svc:clipboard` supplied; no row for how touch reaches the app | 280 set long-press listeners | stream a held finger in tap mode (the touch forwarder); a row for the launch's touch mode |
-| **Starts go nowhere.** A web link, a share and the system picker report success and open nothing | no rows for other apps' activities (the plan's layer 1 is not built) | 300 name a web link, 264 a share, 273 the document picker | done in build 114 for gap 1: an unresolved start throws ActivityNotFoundException (`am:start-unresolved`), and the rows `intent:view-web`, `intent:share`, `intent:pick-document` read absent on the board. Still open, gap 2: OH's picker and share, which need the host application to pass the picker's result back |
+| **Starts go nowhere.** A web link, a share and the system picker report success and open nothing | no rows for other apps' activities (the plan's layer 1 is not built) | 300 name a web link, 264 a share, 273 the document picker, 262 a screen of Android's own apps | done in build 114 for gap 1: an unresolved start throws ActivityNotFoundException (`am:start-unresolved`), and the rows `intent:view-web`, `intent:share`, `intent:pick-document` read absent on the board. From build 120 the screens every Android device has (Settings, VPN consent, the pickers) open nothing instead, as apps start them unguarded (r90), with the row `intent:system-screen`. Still open, gap 2: OH's picker and share, which need the host application to pass the picker's result back |
 | **No toast is shown.** Fossify Notes' "no browser found" after its link is refused never shows | nothing: no row for toasts | 259 call `Toast.show` | done in build 119: toasts queued and shown in process, the row `wm:toast`, a contract line, and the flow `fnotes-toast` |
 | **Android executables cannot run.** Termux's bootstrap fails | nothing: no row for an app's own programs | 146 start processes | a row for executables that need Android's linker |
 | **No status-bar service.** Chrono dies when its timer starts | nothing: no status-bar row | 17 use Quick Settings tiles or `StatusBarManager` | done in build 109: the service answered in process, and `svc:statusbar` from the census's static helpers (12 call `TileService.requestListeningState`) |
