@@ -1740,15 +1740,22 @@ EXTERNAL_INTENT_ROWS = {
     "pick-document": ("The system document picker (OPEN_DOCUMENT, GET_CONTENT, CREATE_DOCUMENT)",
                       "a document picker", "names OPEN_DOCUMENT, GET_CONTENT, CREATE_DOCUMENT or OPEN_DOCUMENT_TREE",
                       "keepassdx (calibration flow keepassdx-open: no picker came up to open a database)"),
+    "system-screen": ("Screens of Android's own apps: Settings (android.settings.* actions), VPN consent "
+                      "(VpnService.prepare)", "Settings and the system's own dialogs",
+                      "names android.settings.* actions or calls VpnService.prepare",
+                      "aat, Clock, LuxAlarm, stims, WiFiAnalyzer and socks5 (r90, build 119: each died when "
+                      "its start of one threw ActivityNotFoundException)"),
 }
 
 
 def external_intent_rows(scan: dict[str, Any]) -> list[dict[str, Any]]:
     """Intents the app starts for another app to handle: a web link, a share, the system document
-    picker. An Android phone always has something to answer them. Here it is whatever OH ability the
-    intent's Want resolves to on the device, and when nothing does the start throws
-    ActivityNotFoundException. The framework-contracts probe's intent:* lines measure what the device
-    has; the board has none of the three."""
+    picker, a screen of Android's own apps (Settings, VPN consent). An Android phone always has
+    something to answer them. Here it is whatever OH ability the intent's Want resolves to on the
+    device. When nothing does, a web link or a share throws ActivityNotFoundException; the document
+    picker and Android's own screens, which every Android device has and apps start unguarded, open
+    nothing (from build 120; they threw before). The framework-contracts probe's intent:* lines
+    measure what the device has; the board has none of the four."""
     rows = []
     for family in scan["inventory"].get("external_intents") or []:
         if family not in EXTERNAL_INTENT_ROWS:

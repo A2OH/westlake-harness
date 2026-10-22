@@ -1,0 +1,604 @@
+{
+ "date": "2026-10-22",
+ "westlake_commit": "e8d4b20272fff46b97c49737129f373ff43a1f34",
+ "summary": {
+  "flows": 18,
+  "ran": 18,
+  "confirmed": 15,
+  "false_alarms": 0,
+  "misses": 3,
+  "precision": 1.0,
+  "recall": 0.62
+ },
+ "flows": [
+  {
+   "id": "noice-play",
+   "app": "noice",
+   "intent": "play a sound",
+   "predicted": "works",
+   "prediction": {
+    "outcome": "works",
+    "rows": {
+     "svc:audio": "conformant since build 101 (before: focus refused)",
+     "jni:android.media.AudioTrack": "conformant"
+    }
+   },
+   "observed": "works",
+   "verdict": "confirmed",
+   "checks": [
+    {
+     "check": "the board plays the sound",
+     "passed": true,
+     "seen": "526213 non-zero samples in audio"
+    },
+    {
+     "check": "the app keeps running",
+     "passed": true,
+     "seen": "process alive"
+    }
+   ],
+   "evidence": [
+    "audio.wav",
+    "playing.jpeg"
+   ]
+  },
+  {
+   "id": "mpv-play-file",
+   "app": "mpv",
+   "intent": "play a video picked in the app's file picker",
+   "predicted": "works",
+   "prediction": {
+    "outcome": "works",
+    "rows": {
+     "am:activity-result": "conformant since build 102 (the picked file reaches the player)",
+     "am:launch-lifecycle": "conformant since build 103 (before: the player paused itself in onPause)"
+    }
+   },
+   "observed": "works",
+   "verdict": "confirmed",
+   "checks": [
+    {
+     "check": "the picture moves: the clip's clock and pattern advance",
+     "passed": true,
+     "seen": "playing -> later differ by 16.1"
+    },
+    {
+     "check": "the clip's 1 kHz tone plays",
+     "passed": true,
+     "seen": "236280 non-zero samples in audio"
+    }
+   ],
+   "evidence": [
+    "audio.wav",
+    "later.jpeg",
+    "picker.jpeg",
+    "playing.jpeg"
+   ]
+  },
+  {
+   "id": "justplayer-choose",
+   "app": "justplayer",
+   "intent": "choose a video and play it",
+   "predicted": "fails",
+   "prediction": {
+    "outcome": "fails",
+    "rows": {
+     "jni:android.media.MediaCodec": "broken",
+     "jni:android.media.MediaExtractor": "broken",
+     "java:Media store": "unmeasured"
+    }
+   },
+   "observed": "fails",
+   "verdict": "confirmed",
+   "checks": [
+    {
+     "check": "the clip plays",
+     "passed": false,
+     "seen": "0 non-zero samples in audio"
+    }
+   ],
+   "evidence": [
+    "audio.wav",
+    "chooser.jpeg"
+   ]
+  },
+  {
+   "id": "markor-type",
+   "app": "markor",
+   "intent": "type into a note",
+   "predicted": "works",
+   "prediction": {
+    "outcome": "works",
+    "rows": {
+     "svc:input_method": "conformant: a focused editor is served and the board's keyboard shown (framework-contracts)",
+     "wm:focus-handoff": "conformant since build 107 (before: the window under Markor's closed changelog never got focus back, so its editor was not served)"
+    }
+   },
+   "observed": "works",
+   "verdict": "confirmed",
+   "checks": [
+    {
+     "check": "a keyboard comes up over the lower screen",
+     "passed": true,
+     "seen": "editor -> focused differ by 17.6"
+    },
+    {
+     "check": "the typed letters show in the note",
+     "passed": true,
+     "seen": "0.022 of the region dark in typed"
+    }
+   ],
+   "evidence": [
+    "editor.jpeg",
+    "focused.jpeg",
+    "typed.jpeg"
+   ]
+  },
+  {
+   "id": "markor-preview",
+   "app": "markor",
+   "intent": "preview a note (WebView)",
+   "predicted": "works",
+   "prediction": {
+    "outcome": "works",
+    "rows": {
+     "wv:renderer-process": "conformant: WebView runs in process (webview-boundaries' multiprocess line, builds 100 on)"
+    }
+   },
+   "observed": "works",
+   "verdict": "confirmed",
+   "checks": [
+    {
+     "check": "the app survives its first WebView",
+     "passed": true,
+     "seen": "process alive"
+    },
+    {
+     "check": "the rendered heading shows",
+     "passed": true,
+     "seen": "0.008 of the region dark in preview"
+    }
+   ],
+   "evidence": [
+    "preview.jpeg"
+   ]
+  },
+  {
+   "id": "fclock-timer",
+   "app": "fclock",
+   "intent": "a 5-minute timer rings when it ends",
+   "predicted": "works",
+   "prediction": {
+    "outcome": "works",
+    "rows": {
+     "svc:notification": "conformant since build 108: channels kept, a post plays its channel's sound (the board's host app allowed notifications in OH Settings)",
+     "svc:alarm": "supplied: the timer's own countdown posts at expiry"
+    }
+   },
+   "observed": "works",
+   "verdict": "confirmed",
+   "checks": [
+    {
+     "check": "the timer rings",
+     "passed": true,
+     "seen": "372950 non-zero samples in expiry"
+    }
+   ],
+   "evidence": [
+    "expired.jpeg",
+    "expiry.wav",
+    "running.jpeg"
+   ]
+  },
+  {
+   "id": "fclock-menu",
+   "app": "fclock",
+   "intent": "open the overflow menu",
+   "predicted": "works",
+   "prediction": {
+    "outcome": "works",
+    "rows": {
+     "wm:popup-window": "supplied since build 105 (before: the popup's window got no OH session and was never shown)"
+    }
+   },
+   "observed": "works",
+   "verdict": "confirmed",
+   "checks": [
+    {
+     "check": "the menu draws under its button",
+     "passed": true,
+     "seen": "before -> menu differ by 13.1"
+    }
+   ],
+   "evidence": [
+    "before.jpeg",
+    "menu.jpeg"
+   ]
+  },
+  {
+   "id": "fclock-dialog",
+   "app": "fclock",
+   "intent": "edit a timer in its dialog",
+   "predicted": "works",
+   "prediction": {
+    "outcome": "works",
+    "rows": {
+     "wm:window-placement": "conformant since build 106 (before: drawn centred, but the app was told its dialog sat at the top left)",
+     "wm:dim-behind": "supplied: the window adapter draws a dim layer (on screen only)"
+    }
+   },
+   "observed": "works",
+   "verdict": "confirmed",
+   "checks": [
+    {
+     "check": "the dialog shows in the middle of the screen",
+     "passed": true,
+     "seen": "before -> dialog differ by 21.9"
+    },
+    {
+     "check": "what is behind it is dimmed",
+     "passed": true,
+     "seen": "before -> dialog differ by 81.0"
+    }
+   ],
+   "evidence": [
+    "before.jpeg",
+    "dialog.jpeg"
+   ]
+  },
+  {
+   "id": "fnotes-newline",
+   "app": "fnotes",
+   "intent": "type two lines in a note (Enter between them)",
+   "predicted": "fails",
+   "prediction": {
+    "outcome": "fails",
+    "rows": {
+     "svc:input_method": "supplied, measured conformant",
+     "wm:focus-handoff": "supplied, measured conformant",
+     "jni:android.view.KeyCharacterMap": "missing, measured broken"
+    },
+    "no_row": [
+     "jni:android.view.KeyEvent"
+    ],
+    "source": "batch 2, scripts/predict_flows.py on the build-108 maps, before any run"
+   },
+   "observed": "fails",
+   "verdict": "confirmed",
+   "checks": [
+    {
+     "check": "the first line's text shows",
+     "passed": true,
+     "seen": "0.018 of the region dark in typed"
+    },
+    {
+     "check": "text shows on a line below the first",
+     "passed": false,
+     "seen": "0.000 of the region dark in typed"
+    },
+    {
+     "check": "the app keeps running",
+     "passed": true,
+     "seen": "process alive"
+    }
+   ],
+   "evidence": [
+    "start.jpeg",
+    "typed.jpeg"
+   ]
+  },
+  {
+   "id": "fnotes-copy-paste",
+   "app": "fnotes",
+   "intent": "copy a word and paste it",
+   "predicted": "works",
+   "prediction": {
+    "outcome": "works",
+    "rows": {
+     "svc:clipboard": "supplied",
+     "wm:popup-window": "supplied",
+     "svc:input_method": "supplied, measured conformant"
+    },
+    "source": "batch 2, scripts/predict_flows.py on the build-108 maps, before any run"
+   },
+   "observed": "fails",
+   "verdict": "miss",
+   "checks": [
+    {
+     "check": "the pasted word shows after the text",
+     "passed": false,
+     "seen": "0.000 of the region dark in pasted"
+    },
+    {
+     "check": "the app keeps running",
+     "passed": true,
+     "seen": "process alive"
+    }
+   ],
+   "evidence": [
+    "pasted.jpeg",
+    "selected.jpeg",
+    "typed.jpeg"
+   ]
+  },
+  {
+   "id": "fnotes-link",
+   "app": "fnotes",
+   "intent": "open a web link from the About screen",
+   "predicted": "works",
+   "prediction": {
+    "outcome": "works",
+    "rows": {},
+    "no_row": [
+     "am:own-implicit-intents",
+     "svc:android.intent.action.VIEW",
+     "intent:*",
+     "am:start-*",
+     "pm:call:queryIntentActivities",
+     "pm:call:resolveActivity"
+    ],
+    "source": "batch 2, scripts/predict_flows.py on the build-108 maps, before any run"
+   },
+   "observed": "fails",
+   "verdict": "miss",
+   "checks": [
+    {
+     "check": "a web page opens over the About screen",
+     "passed": false,
+     "seen": "about -> link differ by 0.0"
+    }
+   ],
+   "evidence": [
+    "about.jpeg",
+    "link.jpeg"
+   ]
+  },
+  {
+   "id": "fnotes-toast",
+   "app": "fnotes",
+   "intent": "a toast says an empty note cannot be shared",
+   "predicted": "works",
+   "prediction": {
+    "outcome": "works",
+    "rows": {
+     "wm:toast": "supplied, measured conformant"
+    },
+    "source": "added with build 119, after its fix and a run by hand: not blind"
+   },
+   "observed": "works",
+   "verdict": "confirmed",
+   "checks": [
+    {
+     "check": "a toast shows at the bottom of the screen (its frame, centred above the navigation bar)",
+     "passed": true,
+     "seen": "note -> toast differ by 12.0"
+    }
+   ],
+   "evidence": [
+    "note.jpeg",
+    "toast.jpeg"
+   ]
+  },
+  {
+   "id": "markor-share",
+   "app": "markor",
+   "intent": "share a note",
+   "predicted": "fails",
+   "prediction": {
+    "outcome": "fails",
+    "rows": {
+     "pm:call:queryIntentActivityOptions": "stub, measured broken"
+    },
+    "no_row": [
+     "am:own-implicit-intents",
+     "svc:android.intent.action.SEND",
+     "intent:*",
+     "am:start-*",
+     "pm:call:queryIntentActivities"
+    ],
+    "source": "batch 2, scripts/predict_flows.py on the build-108 maps, before any run"
+   },
+   "observed": "fails",
+   "verdict": "confirmed",
+   "checks": [
+    {
+     "check": "a share sheet shows where to send the note",
+     "passed": false,
+     "seen": "note -> shared differ by 0.0"
+    }
+   ],
+   "evidence": [
+    "note.jpeg",
+    "shared.jpeg"
+   ]
+  },
+  {
+   "id": "termux-command",
+   "app": "termux",
+   "intent": "run a command in the terminal",
+   "predicted": "fails",
+   "prediction": {
+    "outcome": "fails",
+    "rows": {
+     "svc:input_method": "supplied, measured conformant",
+     "jni:android.view.KeyCharacterMap": "missing, measured broken"
+    },
+    "no_row": [
+     "os:*",
+     "sepolicy:*",
+     "jni:android.view.KeyEvent",
+     "exec:*"
+    ],
+    "source": "batch 2, scripts/predict_flows.py on the build-108 maps, before any run"
+   },
+   "observed": "fails",
+   "verdict": "confirmed",
+   "checks": [
+    {
+     "check": "the terminal, not the bootstrap error, is on screen",
+     "passed": false,
+     "seen": "0.047 of the region dark in terminal"
+    },
+    {
+     "check": "the shell answers the command",
+     "passed": false,
+     "seen": "terminal -> ran differ by 0.0"
+    },
+    {
+     "check": "the app keeps running",
+     "passed": true,
+     "seen": "process alive"
+    }
+   ],
+   "evidence": [
+    "ran.jpeg",
+    "terminal.jpeg"
+   ]
+  },
+  {
+   "id": "chrono-timer",
+   "app": "chrono",
+   "intent": "a 30-second timer rings when it ends",
+   "predicted": "works",
+   "prediction": {
+    "outcome": "works",
+    "rows": {
+     "svc:alarm": "supplied",
+     "svc:notification": "supplied, measured conformant",
+     "svc:audio": "supplied, measured conformant",
+     "svc:power": "supplied"
+    },
+    "source": "batch 2, scripts/predict_flows.py on the build-108 maps, before any run"
+   },
+   "observed": "works",
+   "verdict": "confirmed",
+   "checks": [
+    {
+     "check": "the timer rings",
+     "passed": true,
+     "seen": "245821 non-zero samples in expiry"
+    },
+    {
+     "check": "the app keeps running",
+     "passed": true,
+     "seen": "process alive"
+    }
+   ],
+   "evidence": [
+    "expired.jpeg",
+    "expiry.wav",
+    "running.jpeg",
+    "set.jpeg"
+   ]
+  },
+  {
+   "id": "keepassdx-open",
+   "app": "keepassdx",
+   "intent": "open a database file picked in the system file picker",
+   "predicted": "works",
+   "prediction": {
+    "outcome": "works",
+    "rows": {
+     "am:activity-result": "supplied, measured conformant",
+     "pm:providers": "supplied"
+    },
+    "no_row": [
+     "am:own-implicit-intents",
+     "intent:*",
+     "am:start-*",
+     "storage:*",
+     "svc:storage"
+    ],
+    "source": "batch 2, scripts/predict_flows.py on the build-108 maps, before any run"
+   },
+   "observed": "fails",
+   "verdict": "miss",
+   "checks": [
+    {
+     "check": "the system file picker shows (picking the database in it is added once one shows)",
+     "passed": false,
+     "seen": "home -> picker differ by 0.0"
+    },
+    {
+     "check": "the picker was started, not refused: KeePassDX answers a refused start with a file-manager dialog of its own, which changes the screen too",
+     "passed": true,
+     "seen": "'ActivityNotFoundException' not in the app's logs"
+    }
+   ],
+   "evidence": [
+    "home.jpeg",
+    "picker.jpeg"
+   ]
+  },
+  {
+   "id": "opencamera-photo",
+   "app": "opencamera",
+   "intent": "take a photo",
+   "predicted": "fails",
+   "prediction": {
+    "outcome": "fails",
+    "rows": {
+     "svc:camera": "inert",
+     "jni:android.hardware.camera2.DngCreator": "missing",
+     "jni:android.hardware.camera2.impl.CameraMetadataNative": "missing",
+     "jni:android.hardware.camera2.utils.SurfaceUtils": "missing",
+     "jni:android.hardware.Camera": "missing"
+    },
+    "no_row": [
+     "java:Camera",
+     "feature:*"
+    ],
+    "source": "batch 2, scripts/predict_flows.py on the build-108 maps, before any run"
+   },
+   "observed": "fails",
+   "verdict": "confirmed",
+   "checks": [
+    {
+     "check": "the preview shows the camera's picture",
+     "passed": false,
+     "seen": "0.989 of the region dark in camera"
+    },
+    {
+     "check": "the shutter saves a photo: its thumbnail shows",
+     "passed": false,
+     "seen": "camera -> taken differ by 0.0"
+    }
+   ],
+   "evidence": [
+    "camera.jpeg",
+    "taken.jpeg"
+   ]
+  },
+  {
+   "id": "antennapod-theme",
+   "app": "antennapod",
+   "intent": "switch the app to its dark theme",
+   "predicted": "works",
+   "prediction": {
+    "outcome": "works",
+    "rows": {
+     "svc:uimode": "supplied",
+     "am:launch-lifecycle": "supplied, measured conformant"
+    },
+    "no_row": [
+     "am:relaunch",
+     "am:recreate"
+    ],
+    "source": "batch 2, scripts/predict_flows.py on the build-108 maps, before any run"
+   },
+   "observed": "works",
+   "verdict": "confirmed",
+   "checks": [
+    {
+     "check": "the app's screens turn dark",
+     "passed": true,
+     "seen": "0.949 of the region dark in dark"
+    }
+   ],
+   "evidence": [
+    "dark.jpeg",
+    "light.jpeg"
+   ]
+  }
+ ]
+}

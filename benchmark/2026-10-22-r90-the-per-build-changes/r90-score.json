@@ -1,0 +1,222 @@
+{
+ "counts": {
+  "named": 9,
+  "supplied": 3,
+  "unscorable": 9,
+  "device": 1,
+  "not-named": 1
+ },
+ "results": [
+  {
+   "app": "aat",
+   "stage": "activity",
+   "category": "app-framework",
+   "blocker": "start activity: ActivityNotFoundException",
+   "outcome": "named",
+   "rows": [
+    "intent:system-screen=unverified"
+   ]
+  },
+  {
+   "app": "anki",
+   "stage": "view",
+   "category": "app-framework",
+   "blocker": "process init: IllegalArgumentException: Activity client record must not be null to execute transaction item: ActivityRes",
+   "outcome": "supplied",
+   "rows": [
+    "am:activity-result=supplied"
+   ]
+  },
+  {
+   "app": "cclauncher",
+   "stage": "view",
+   "category": "stall",
+   "blocker": "main thread idle in its message loop at android.os.MessageQueue.nativePollOnce(Native method)",
+   "outcome": "named",
+   "rows": [
+    "wm:show-wallpaper=missing"
+   ]
+  },
+  {
+   "app": "clock",
+   "stage": "activity",
+   "category": "app-framework",
+   "blocker": "start activity: ActivityNotFoundException",
+   "outcome": "named",
+   "rows": [
+    "intent:system-screen=unverified"
+   ]
+  },
+  {
+   "app": "facebooknotifica",
+   "stage": "activity",
+   "category": "app-framework",
+   "blocker": "start activity: InflateException",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "flipboard",
+   "stage": "runtime-init",
+   "category": "app-framework",
+   "blocker": "bind: RuntimeException: Unable to get provider androidx.startup.InitializationProvider: eqb: java.lang.U",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "fmessages",
+   "stage": "view",
+   "category": "self-finish",
+   "blocker": "its last activity finished itself 591 ms after resuming, and nothing replaced it",
+   "outcome": "device",
+   "rows": [
+    "svc:role=supplied",
+    "am:task-root=supplied"
+   ]
+  },
+  {
+   "app": "insigno",
+   "stage": "bound",
+   "category": "native-crash",
+   "blocker": "SIGABRT on thread mali-cmar-backe: aborted from libGLES_mali.z.so",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "luxalarm",
+   "stage": "activity",
+   "category": "app-framework",
+   "blocker": "start activity: ActivityNotFoundException",
+   "outcome": "named",
+   "rows": [
+    "intent:system-screen=unverified"
+   ]
+  },
+  {
+   "app": "nytimes",
+   "stage": "activity",
+   "category": "app-framework",
+   "blocker": "start activity: RuntimeException",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "obtainium",
+   "stage": "view",
+   "category": "native-crash",
+   "blocker": "SIGABRT on thread mali-cmar-backe: aborted from libGLES_mali.z.so",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "obtainx",
+   "stage": "view",
+   "category": "native-crash",
+   "blocker": "SIGABRT on thread mali-cmar-backe: aborted from libGLES_mali.z.so",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "opflashcontrol",
+   "stage": "view",
+   "category": "app-framework",
+   "blocker": "process init: IllegalStateException: Slider value(80.0) must be greater or equal to valueFrom(0.0), and lower or equa",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "osmand",
+   "stage": "view",
+   "category": "native-crash",
+   "blocker": "SIGABRT on thread Thread (pooled): aborted from libc++_shared.so",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "plusplusbattery",
+   "stage": "bound",
+   "category": "app-framework",
+   "blocker": "process init: NoShellException: Unable to create a shell!",
+   "outcome": "named",
+   "rows": [
+    "os:shell=missing"
+   ]
+  },
+  {
+   "app": "reddit",
+   "stage": "view",
+   "category": "no-frame",
+   "blocker": "the activity resumed 4.1 s after start and drew no frame",
+   "outcome": "supplied",
+   "rows": [
+    "am:post-create=supplied"
+   ]
+  },
+  {
+   "app": "shortcut",
+   "stage": "view",
+   "category": "self-finish",
+   "blocker": "its last activity finished itself 123 ms after resuming, and nothing replaced it",
+   "outcome": "not-named",
+   "rows": []
+  },
+  {
+   "app": "socks5",
+   "stage": "activity",
+   "category": "app-framework",
+   "blocker": "start activity: ActivityNotFoundException",
+   "outcome": "named",
+   "rows": [
+    "intent:system-screen=unverified"
+   ]
+  },
+  {
+   "app": "spacebeam",
+   "stage": "view",
+   "category": "stall",
+   "blocker": "main thread running at android.graphics.HardwareRenderer.nSyncAndDrawFrame(Native method)",
+   "outcome": "unscorable",
+   "rows": []
+  },
+  {
+   "app": "stims",
+   "stage": "bound",
+   "category": "app-framework",
+   "blocker": "process init: RuntimeException: Unable to resume activity {acidburn.stims/acidburn.stims.MainActivity}: android.",
+   "outcome": "named",
+   "rows": [
+    "intent:system-screen=unverified"
+   ]
+  },
+  {
+   "app": "viewer",
+   "stage": "bound",
+   "category": "app-framework",
+   "blocker": "process init: ActivityNotFoundException: No Activity found to handle Intent { act=android.intent.action.OPEN_DOCUMENT cat",
+   "outcome": "named",
+   "rows": [
+    "intent:pick-document=absent"
+   ]
+  },
+  {
+   "app": "waze",
+   "stage": "view",
+   "category": "no-frame",
+   "blocker": "the activity resumed 3.8 s after start and drew no frame",
+   "outcome": "supplied",
+   "rows": [
+    "am:post-create=supplied"
+   ]
+  },
+  {
+   "app": "wifianalyzer",
+   "stage": "bound",
+   "category": "app-framework",
+   "blocker": "process init: ActivityNotFoundException: No Activity found to handle Intent { act=android.settings.LOCATION_SOURCE_SETTIN",
+   "outcome": "named",
+   "rows": [
+    "intent:system-screen=unverified"
+   ]
+  }
+ ]
+}

@@ -225,6 +225,18 @@ hides 2152 ms later, and the activity keeps focus. On the first cut, build 115, 
 window focus while the toast showed: OH moves its focus to every new window, the toast's included.
 Every other line reads as on build 114.
 
+**Build 120** (Westlake #45) fixes the regressions r90 found. framework-contracts' `am:activity-result`
+line also starts an activity that starts one for a result and finishes at once, as a launcher
+trampoline does: it must get no result, and the app must go on. On build 119 the probe died there,
+with the exception that killed AnkiDroid in r90 ("Activity client record must not be null"): the
+result was scheduled for a caller that was then destroyed. On build 120 the line passes.
+`am:start-unresolved` also starts a screen of Settings, the VPN consent that `VpnService.prepare`
+names and the document picker, which every Android device has: none may throw. It passes on build
+120; on build 119 the probe did not reach it, and r90 had seven apps die on such starts. A new
+`intent:system-screen` line says what handles Settings' app details screen and VPN consent on the
+device: nothing on the board, a truthful absence carried by the row of the same name. Every other
+line reads as on build 119.
+
 ## Running it
 
 On a new build, run the suite with that build's provider flags, merging into this file:
@@ -242,5 +254,5 @@ Then rescan with `gap-map ... --probe-results benchmark/conformance/probe-result
 Results apply only to maps of the same Westlake commit, so a new build reads nothing until its own
 run. Follow-ups:
 - `wm:dim-behind` needs a screen oracle: the dim shows on screen only;
-- `am:start-unresolved` and `media:decode-file` have no row yet;
+- `am:start-unresolved` and `media:decode-file` have no row yet (what a start reaches is in the `intent:*` rows);
 - runtime-answers' `new MediaRecorder()` could become a line for `jni:android.media.MediaRecorder`.

@@ -67,8 +67,9 @@ import java.util.concurrent.TimeUnit;
  * then "[WL-CONTRACT] done". The package manager's queries are asked for this probe's own components,
  * declared in its manifest, so each has one right answer. Starting an activity nothing handles has
  * no row of its own; it is measured as am:start-unresolved, where Android throws
- * ActivityNotFoundException. The intent:* lines say what handles a web link, a share and the
- * document picker on the device, or that nothing does: what an app's start of one can reach.
+ * ActivityNotFoundException. The intent:* lines say what handles a web link, a share, the
+ * document picker and the screens of Android's own apps on the device, or that nothing does: what an
+ * app's start of one can reach.
  */
 public class MainActivity extends Activity {
     private static final String TAG = "WL-CONTRACT";
@@ -453,6 +454,18 @@ public class MainActivity extends Activity {
         check("intent:pick-document", () -> handlers(pm,
                 new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*"),
                 "the document picker (OPEN_DOCUMENT)"));
+        // Screens of Android's own apps, which every Android device has: Settings' (its app details
+        // screen here) and the VPN consent that VpnService.prepare names.
+        check("intent:system-screen", () -> {
+            String settings = handlers(pm, new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    Uri.parse("package:" + getPackageName())), "a screen of Settings (app details)");
+            Intent consent = android.net.VpnService.prepare(this);
+            if (consent == null) return settings + "; VPN consent already given";
+            if (pm.resolveActivity(consent, 0) == null) {
+                throw absent("nothing handles the VPN consent " + consent.getComponent() + " on this device; " + settings);
+            }
+            return settings + "; VPN consent " + consent.getComponent().flattenToShortString();
+        });
         // These two bring another activity up over this one, so they come last. An activity this app
         // starts is created, started and resumed, and stays resumed while it is on top: a player
         // that pauses in onPause (mpv) stays paused after an extra pause and resume.
@@ -479,7 +492,15 @@ public class MainActivity extends Activity {
                 throw fail("the started activity set a result and finished; onActivityResult never ran in 10 s");
             }
             if (!("resultCode=" + RESULT_OK + " answer=42").equals(resultSeen)) throw fail("wrong result: " + resultSeen);
-            return "onActivityResult got " + resultSeen;
+            // A caller that finishes as soon as it has started an activity for a result, as a launcher
+            // trampoline does, gets no result, and the app goes on.
+            runOnUiThread(() -> startActivity(new Intent(this, TrampolineActivity.class)));
+            if (!TrampolineActivity.DESTROYED.await(10, TimeUnit.SECONDS)) {
+                throw fail("an activity that started another for a result and finished was not destroyed in 10 s");
+            }
+            Thread.sleep(2000);
+            if (TrampolineActivity.resultSeen) throw fail("a result reached a caller that had already finished");
+            return "onActivityResult got " + resultSeen + "; a caller that finished first got no result, and the app went on";
         });
         // An activity that calls recreate() is destroyed and a new instance brought up with the
         // state it saved, as when an app applies a new theme or language.
@@ -532,8 +553,25 @@ public class MainActivity extends Activity {
                 throw fail("a chooser over an intent nothing handles threw ActivityNotFoundException; "
                         + "Android's chooser opens and says that nothing does");
             }
+            // Every Android device has these screens, and apps start them unguarded: one of Settings',
+            // the VPN consent that VpnService.prepare names, and the document picker.
+            Intent[] screens = {
+                    new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                            Uri.parse("package:" + getPackageName())),
+                    android.net.VpnService.prepare(this),
+                    new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*"),
+            };
+            for (Intent screen : screens) {
+                if (screen == null) continue; // VPN consent already given: prepare names no screen
+                try {
+                    startActivityForResult(screen, 11);
+                } catch (ActivityNotFoundException e) {
+                    throw fail("a screen every Android device has threw ActivityNotFoundException: " + screen);
+                }
+            }
             return "ActivityNotFoundException from the main thread and a worker thread, by action and by name; "
-                    + "a chooser over the intent does not throw";
+                    + "a chooser over the intent does not throw, nor do a screen of Settings, VPN consent "
+                    + "and the document picker";
         });
         line("done", "", "");
     }

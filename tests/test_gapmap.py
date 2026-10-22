@@ -2061,12 +2061,15 @@ class ExternalIntents(unittest.TestCase):
         self.assertEqual(external_intent_families(["android.intent.action.SEND_MULTIPLE"]), {"share"})
         self.assertEqual(external_intent_families(["android.intent.action.GET_CONTENT", "android.intent.action.SEND"]),
                          {"pick-document", "share"})
+        self.assertEqual(external_intent_families(["android.settings.MANAGE_APP_ALL_FILES_ACCESS_PERMISSION"]),
+                         {"system-screen"}, "a screen of Android's Settings")
 
     def test_a_row_per_family_that_the_device_measurement_decides(self) -> None:
-        scan = {"inventory": {"external_intents": ["pick-document", "share", "unknown"]}}
+        scan = {"inventory": {"external_intents": ["pick-document", "share", "system-screen", "unknown"]}}
         rows = gapmap.external_intent_rows(scan)
         self.assertEqual([(r["id"], r["verdict"]) for r in rows],
-                         [("intent:pick-document", "unverified"), ("intent:share", "unverified")])
+                         [("intent:pick-document", "unverified"), ("intent:share", "unverified"),
+                          ("intent:system-screen", "unverified")])
         self.assertEqual(gapmap.external_intent_rows({"inventory": {}}), [])
         gap_map = {"provider": {"westlake": {"commit": "abc123"}}, "rows": rows}
         gapmap.apply_probe_results(gap_map, {"results": [
