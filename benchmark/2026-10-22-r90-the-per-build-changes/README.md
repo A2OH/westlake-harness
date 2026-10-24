@@ -172,7 +172,7 @@ Before this round's harness changes, 6 of the 23 were scorable: the seven start 
 AnkiDroid's were unscorable, as app exceptions with no platform symbol.
 
 **What the per-build loop missed.** Build 114's change reached every app that starts another app's
-screen: 334 of the corpus's 371 APKs name one of the four families, and 262 name a screen of
+screen: 358 of the corpus's 371 APKs name one of the four families, and 285 name a screen of
 Android's own apps. Build 114 was checked with the probes, the calibration flows and build 103's
 regression set. None of those apps died on such a start, and the maps had no row for the screens of
 Android's own apps. A change to what every start does reaches every app, and ADR-0001 asks a full
