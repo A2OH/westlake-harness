@@ -1,0 +1,1001 @@
+rank,package,title,kind,genre,source,source_note,predicted,predicted_media_lazy,because
+1,com.spotify.music,Spotify: Music and Podcasts,app,,apkpure,,draws,draws,
+2,com.ss.android.ugc.aweme.mobile,抖音 Douyin,app,,apkpure,,draws,draws,
+3,ai.x.grok,Grok AI,app,,play,1.2.50-release.00,draws,draws,
+4,com.twitter.android,X,app,,apkpure,,draws,draws,
+5,com.xingin.xhs,rednote,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so native:ndk:weak-api native:ndk:weld:window
+6,com.instagram.android,Instagram,app,,apkpure,,blocked,blocked,native:ndk:weak-api
+7,com.facebook.katana,Facebook,app,,apkpure,,blocked,blocked,native:ndk:weak-api
+8,com.dramawave.app,DramaWave - Dramas & Reels,app,,play,2.0.51,draws,draws,
+9,com.whatsapp,WhatsApp Messenger,app,,apkpure,,draws,draws,
+10,com.netshort.abroad,NetShort - Popular Dramas & TV,app,,play-only,2.3.5,draws,draws,
+11,com.lemon.lvoverseas,CapCut: Photo & Video Editor,app,,apkpure,,blocked,blocked,native:ndk:weak-api
+12,com.storymatrix.drama,DramaBox - Stream Drama Shorts,app,,play,7.0.0,draws,draws,
+13,com.newleaf.app.android.victor,ReelShort - Stream Drama & TV,app,,apkpure,,draws,draws,
+14,sg.bigo.live,"Bigo Live–Live Stream, Go Live",app,,apkpure-variant,6.53.0,blocked,blocked,native:ndk:weak-api
+15,com.discord,"Discord - Talk, Play, Hang Out",app,,play,350.8 - Stable,draws,draws,
+16,com.duolingo,Duolingo: Learn Languages,app,,play,6.102.4,draws,draws,
+17,com.truecaller,Truecaller: Phone Call Blocker,app,,apkpure,,draws,draws,
+18,com.tencent.ibg.joox,JOOX Music - AI Player,app,,apkpure,,draws,draws,
+19,com.whatsapp.w4b,WhatsApp Business,app,,play,2.26.41.77,draws,draws,
+20,com.iqiyi.i18n,"iQIYI - Drama, Anime, Show",app,,apkpure,,draws,draws,
+21,open.chat.gpt.aichat.bot.free.app,Open Chat - AI bot app,app,,apkpure,,draws,draws,
+22,com.microsoft.office.outlook,Microsoft Outlook,app,,apkpure,,draws,draws,
+23,ai.x.grok.bot,Grok Bot,app,,apkpure,,draws,draws,
+24,com.linkedin.android,LinkedIn: Community & Network,app,,apkpure,,draws,draws,
+25,com.skysoft.kkbox.android,KKBOX | Music and Podcasts,app,,apkpure-variant,6.20.20,draws,draws,
+26,com.strava,"Strava: Run, Bike, Walk",app,,play,486.9,draws,draws,
+27,com.xiaomi.smarthome,Xiaomi Home,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+28,com.pikcloud.pikpak,"PikPak-Safe Cloud, Video Saver",app,,play,2.5.1,draws,draws,
+29,ch.protonvpn.android,Proton VPN: Secure & Fast VPN,app,,play-only,5.20.98.0,draws,draws,
+30,org.telegram.messenger,Telegram,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+31,com.google.android.apps.subscriptions.red,Google One,app,,play,1.331.1001988053,draws,draws,
+32,com.surfshark.vpnclient.android,Surfshark - 快速 VPN、防毒、廣告攔截,app,,play-only,3.36.0,draws,draws,
+33,com.nordvpn.android,NordVPN: private & secure VPN,app,,play-only,9.15.2,draws,draws,
+34,com.wejoy.weplay,WePlay - Party Game & Chat,app,,apkpure,,blocked,draws,native:ndk:weak-api
+35,com.apple.android.music,Apple Music,app,,play,6.5.3,draws,draws,
+36,com.google.android.gm,Gmail,app,,play,2026.10.19.1003431317.Release,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+37,com.bilibili.app.in,bilibili - Anime · Video HD,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so native:ndk:weak-api native:ndk:weld:buffers
+38,com.microsoft.office.officehubrow,Microsoft Copilot,app,,apkpure,,draws,draws,
+39,us.zoom.videomeetings,Zoom Workplace,app,,play,7.2.1.43844,draws,draws,
+40,com.tinder,Tinder Dating App: Chat & Date,app,,apkpure-variant,17.37.3,draws,draws,
+41,com.disney.disneyplus,Disney+,app,,play,26.19.0+rc3-2026.10.20,draws,draws,
+42,com.blink.drama.player,BlinkDrama: Short Dramas & TV,app,,apkpure,,draws,draws,
+43,com.pico.live,"Wefun - Chat, Party and Game",app,,apkpure,,draws,draws,
+44,com.allbrowser.searchforbrowser,All Browser,app,,apkpure,,draws,draws,
+45,com.mt.mtxx.mtxx,Meitu,app,,play,12.20.6,blocked,blocked,native:ndk:weak-api
+46,ai.perplexity.app.android,Perplexity - Ask Anything,app,,apkpure,,draws,draws,
+47,com.naver.linewebtoon,"WEBTOON: Manga, Comics, Manhwa",app,,play,26.101.0,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+48,tech.butterfly.app,Manus AI,app,,play,26.19.2,draws,draws,
+49,hk.gov.immd.contactless,Hong Kong e-Channel,app,,play,1.0.28,draws,draws,
+50,com.audible.application,Audible: Audiobooks & Podcasts,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+51,com.bumble.app,Bumble Dating App: Meet & Date,app,,apkpure-variant,5.489.0,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+52,com.phoenix.read.oversea.gp,红果短剧 - 海量热门短剧随心看,app,,apkpure,,draws,draws,
+53,com.tvb.mytvsuper,myTV SUPER - Watch TV and news,app,,apkpure,,draws,draws,
+54,com.google.android.apps.bard,Google Gemini,app,,play,1.0.995038376,draws,draws,
+55,com.microsoft.skydrive,Microsoft OneDrive,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+56,com.goline.beatitell,FuSu,app,,apkpure,,draws,draws,
+57,com.google.android.apps.maps,Google Maps,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so native:ndk:weld:buffers
+58,com.google.android.youtube,YouTube,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so native:ndk:weld:buffers native:ndk:weld:window
+59,com.baitu.qingshu,Poppo Live - Live Stream,app,,play-only,5.4.551.1015,blocked,blocked,native:ndk:weak-api
+60,com.codeway.aitutor,"Learn English, Spanish: Learna",app,,play,4.0.1,draws,draws,
+61,com.thecarousell.Carousell,Carousell: Sell and Buy,app,,apkpure,,draws,draws,
+62,com.freereels.app,FreeReels - Dramas & Reels,app,,play,2.5.01,draws,draws,
+63,com.tencent.qqlivei18n,WeTV: Asian & Local Drama,app,,play,5.40.1.18590,blocked,blocked,native:ndk:weak-api
+64,jp.pxv.android,pixiv,app,,apkpure,,draws,draws,
+65,com.fitbit.FitbitMobile,Google Health (Fitbit),app,,play-only,5.10.1.health-mobile-1104127819-998509810,draws,draws,
+66,com.jeremysteckling.facerrel,Facer Watch Faces,app,,apkpure,,draws,draws,
+67,com.canva.editor,Canva: AI Photo & Video Editor,app,,play-only,2.383.0,draws,draws,
+68,com.deep.search.browser,Aura Browser,app,,play,1.7.0,draws,draws,
+69,com.snapchat.android,Snapchat,app,,apkpure,,blocked,blocked,native:ndk:weak-api
+70,com.adobe.reader,Adobe Acrobat Reader: Edit PDF,app,,play-only,26.9.2.50367,draws,draws,
+71,com.grindrapp.android,Grindr - Gay Dating & Chat,app,,apkpure-variant,26.15.1,draws,draws,
+72,com.xinhe.tataxingqiunew,TataLand,app,,apkpure,,draws,draws,
+73,com.microsoft.office.excel,Microsoft Excel: Spreadsheets,app,,apkpure,,draws,draws,
+74,ai.onspace.app,Crushie Al: Romance AI Chat,app,,apkpure-variant,2.2.4,blocked,blocked,native:ndk:weak-api
+75,com.kakao.talk,KakaoTalk : Messenger,app,,apkpure,,draws,draws,
+76,com.android.chrome,Google Chrome,app,,play,155.0.8059.84,blocked,blocked,native:ndk:weak-api native:ndk:weld:buffers native:ndk:weld:services native:ndk:weld:window
+77,com.windyty.android,Windy.com - Weather Forecast,app,,play,51.3.2,draws,draws,
+78,com.zyhwplatform.shortplay,FlickReels - AI Story & Drama,app,,play,2.4.0.0,draws,draws,
+79,com.instagram.barcelona,Threads,app,,apkpure,,blocked,blocked,native:ndk:weak-api
+80,com.google.android.googlequicksearchbox,Google,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so native:ndk:weak-api
+81,sg.omi,Omi - Dating & Meet Friends,app,,apkpure,,draws,draws,
+82,com.larus.nova,豆包,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+83,com.google.android.apps.walletnfcrel,Google Wallet,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+84,com.loora.app,Speak English with Loora AI,app,,play,2.22.2,draws,draws,
+85,hk.alipay.wallet,AlipayHK,app,,apkpure,,blocked,draws,native:ndk:weak-api
+86,com.viu.phone,Viu : Korean & Asian content,app,,apkpure,,draws,draws,
+87,com.facebook.stella,Meta AI,app,,play-only,295.0.0.37.164,draws,draws,
+88,com.coffeemeetsbagel,Coffee Meets Bagel Dating App,app,,apkpure,,draws,draws,
+89,tv.twitch.android.app,Twitch: Live Streaming,app,,play,31.7.0,draws,draws,
+90,cn.wps.moffice_eng,"WPS Office-PDF, Word, Sheet",app,,apkpure,,draws,draws,
+91,com.taobao.taobao,淘宝,app,,play-only,10.66.22.603,draws,draws,
+92,kling.ai.video.chat,Kling AI: AI Image&Video Maker,app,,play-only,3.9.20.409,blocked,blocked,native:ndk:weak-api
+93,com.tencent.mm,WeChat,app,,apkpure,,blocked,blocked,native:ndk:weak-api
+94,com.ubercab,Uber - Request a ride,app,,apkpure,,draws,draws,
+95,com.intsig.camscanner,"CamScanner- scanner, PDF maker",app,,play,7.27.0.2609220000,draws,draws,
+96,com.autonavi.minimap,AMap Global,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+97,com.nbaimd.gametime.nba2011,NBA: Live Games & Scores,app,,play,1.1.0,draws,draws,
+98,com.metalight.transitnow,TransitNow - Live Bus Tracker,app,,play,0.1.45,draws,draws,
+99,live.shorttv.apps,ShortMax - Short Dramas & TV,app,,apkpure,,draws,draws,
+100,com.quickdoc.pdfreader,QuickDoc: PDF Reader Tools,app,,apkpure,,draws,draws,
+101,org.iggymedia.periodtracker,Flo Period & Pregnancy Tracker,app,,apkpure,,draws,draws,
+102,com.printage.floze,Floze: Romantasy AI Chat,app,,apkpure,,draws,draws,
+103,com.github.android,GitHub,app,,play,1.282.0,draws,draws,
+104,com.poe.android,Poe - Fast AI Chat,app,,play-only,a3.77.2,draws,draws,
+105,com.storyreel.tv.android,StoryReel: Drama Shorts & TV,app,,apkpure,,draws,draws,
+106,com.quickbrowser.briskswifter,Quick Browser,app,,apkpure,,draws,draws,
+107,slide.watchFrenzy,WatchMaker Watch Faces,app,,apkpure,,draws,draws,
+108,com.dropbox.android,Dropbox: Files & Cloud Storage,app,,apkpure,,blocked,blocked,native:ndk:weak-api
+109,com.biao.minemo,Minemo - Voice Chat & Friends,app,,apkpure-variant,1.0.7,draws,draws,
+110,com.kobobooks.android,Kobo | eBooks & Audiobooks,app,,play,11.1.2,draws,draws,
+111,com.read.goodnovel,"GoodNovel - Booktok, Stories",app,,apkpure,,draws,draws,
+112,com.flightradar24free,Flightradar24 Flight Tracker,app,,play,11.13.0,draws,draws,
+113,com.getpure.pure,PURE: Anonymous Dating & Chat,app,,apkpure,,draws,draws,
+114,com.vibeshort.visualnovel.android,VibeShort: AI Dramas & Reels,app,,apkpure,,draws,draws,
+115,com.octopuscards.nfc_reader,Octopus,app,,play,12.49.0,draws,draws,
+116,com.tplink.iot,TP-Link Tapo,app,,play,3.22.105,blocked,blocked,native:ndk:weak-api
+117,com.alltrails.alltrails,"AllTrails: Hike, Bike & Run",app,,play-only,26.10.30,blocked,blocked,native:ndk:weak-api
+118,all.documentreader.filereader.office.viewer,Document Reader & PDF Editor,app,,play,1.3.6.85,draws,draws,
+119,com.filemaster.cleaner.cachae,Clean Master,app,,play,1.4.2,draws,draws,
+120,com.newreading.goodreels,GoodShort - Short Dramas Hub,app,,play-only,3.2.5.2125,draws,draws,
+121,com.starmakerinteractive.starmaker,StarMaker-唱歌練歌，歡唱派對，全民K歌语音交友,app,,play,9.21.2,draws,draws,
+122,com.qianwen.tellolive,Tello,app,,apkpure-variant,1.1.4,draws,draws,
+123,jp.naver.line.android,LINE: Calls & Messages,app,,play,26.16.0,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+124,com.myfitnesspal.android,MyFitnessPal: Calorie Counter,app,,apkpure,,draws,draws,
+125,com.suno.android,Suno - AI Music & Songs Maker,app,,apkpure,,draws,draws,
+126,com.konew.fintech.corp,K Cash,app,,missing,,,,
+127,org.findmykids.app,Findmykids: Location tracker,app,,apkpure,,draws,draws,
+128,com.jobsdb,Jobsdb: Jobs & Part-time Work,app,,play,15.36.0,draws,draws,
+129,com.arashivision.insta360akiko,Insta360,app,,apkpure,,blocked,blocked,native:ndk:weak-api
+130,co.benx.weverse,Weverse: Connect with Artists,app,,play,3.18.2,blocked,blocked,native:ndk:weak-api
+131,ai.tain.reelso,LoveyDovey - Dream Chats,app,,play,1.5.58,draws,draws,
+132,com.ceccoils.online759,759 Online,app,,apkpure,,draws,draws,
+133,com.amazon.mShop.android.shopping,Amazon Shopping,app,,apkpure-variant,32.12.4.100,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so native:ndk:weak-api
+134,com.meitu.meiyancamera,BeautyCam-AI Photo Editor,app,,apkpure,,blocked,blocked,native:ndk:weak-api
+135,com.facebook.orca,Messenger,app,,apkpure,,blocked,blocked,native:ndk:weak-api
+136,com.tradingview.tradingviewapp,TradingView: Track All Markets,app,,play,1.20.85.0.1002535,draws,draws,
+137,com.adobe.lrmobile,Lightroom Photo & Video Editor,app,,play-only,11.6.11,draws,draws,
+138,com.youku.international.phone,"YOUKU-Drama, Film, Show, Anime",app,,apkpure,,draws,draws,
+139,com.immomo.miraimind,MiraiMind - Create Your Own AI,app,,apkpure-variant,1.3.1,draws,draws,
+140,ai.frontia.app,Frontia: AI Cinematic Play,app,,play,1.7.0,draws,draws,
+141,com.quvideo.xiaoying,VivaVideo - Video Editor&Maker,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+142,com.wbd.stream,HBO Max: Stream TV & Movies,app,,play,7.13.0.141,draws,draws,
+143,com.moonshot.kimichat,Kimi,app,,apkpure,,draws,draws,
+144,com.badoo.mobile,Badoo Dating App: Meet & Date,app,,apkpure-variant,5.482.0,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+145,com.tantantribe.tribe,tantan - Global Dating App,app,,apkpure-variant,7.5.3,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+146,com.sofascore.results,Sofascore: Live Sports Scores,app,,play,26.10.12,draws,draws,
+147,com.hevy,Hevy - Gym Log Workout Tracker,app,,apkpure,,draws,draws,
+148,com.apposter.watchmaker,TIMEFLIK Watch Faces,app,,apkpure,,draws,draws,
+149,com.daily.plan.list.todo,PDFReader - Master,app,,apkpure,,draws,draws,
+150,com.callapp.contacts,CallApp: Caller ID & Block,app,,play,2.290,draws,draws,
+151,com.hellotalk,HelloTalk - Learn Languages,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+152,com.koishd.pdf.viewer,"PDF Viewer Pro: Read, Edit PDF",app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+153,ctrip.english,"Trip.com: Book Flights, Hotels",app,,apkpure,,draws,draws,
+154,com.pixverseai.pixverse,PixVerse: AI Video Generator,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+155,gogolook.callgogolook2,Whoscall: Caller ID & Block,app,,play,8.42,draws,draws,
+156,com.helen.uptk,Spark Live - Live Stream,app,,apkpure,,draws,draws,
+157,org.thunderdog.challegram,Telegram X,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+158,com.microsoft.office.word,Microsoft Word: Edit Documents,app,,apkpure,,draws,draws,
+159,app.bumpy.android,Bumpy – International Dating,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+160,com.prominent.aicatch,AI Catch: AI Video Generator,app,,apkpure,,draws,draws,
+161,com.google.android.apps.translate,Google Translate,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+162,com.picsart.studio,"Picsart AI Photo Editor, Video",app,,play-only,30.9.5,draws,draws,
+163,com.storage.androidcleaner,Cleanup: Phone Storage Cleaner,app,,play-only,1.4.7,draws,draws,
+164,com.konrev.bagelchat,BagelChat: AI Character Story,app,,play-only,1.0.9,draws,draws,
+165,com.intsig.camexam,Quiz AI: AI Homework Helper,app,,apkpure,,draws,draws,
+166,com.global.foodpanda.android,foodpanda: food & groceries,app,,play,26.42.0,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+167,com.dnd.dollarfix.df51,Dollarfix+,app,,play,1.9.4,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+168,music.musicplayer.playmusic.mp3player.audioplayer,Music Player & Mp3 Player,app,,apkpure,,draws,draws,
+169,com.deepseek.chat,DeepSeek - AI Assistant,app,,play,2.7.1,draws,draws,
+170,com.alibaba.wireless,1688,app,,apkpure,,draws,draws,
+171,com.audiomack,Audiomack: Music Downloader,app,,play,8.11.1,draws,draws,
+172,com.life360.android.safetymapd,Life360: Family Safety & GPS,app,,play,26.40.0,blocked,blocked,native:ndk:weak-api
+173,com.lucky.luckyclient,瑞幸咖啡,app,,apkpure,,draws,draws,
+174,fc.com.ai.translate.live.voice.camera.pdf.doc,XTranslator Live: AI Translate,app,,play,1.0.26,draws,draws,
+175,appjp.ucvpn.com,UCVPN,app,,apkpure,,draws,draws,
+176,com.picmepicme.app,VidFox: AI Photo Video Maker,app,,apkpure-variant,3.9.8,draws,draws,
+177,com.againstvirus.flux,Antivirus Flux,app,,apkpure,,draws,draws,
+178,com.google.android.inputmethod.latin,Gboard - the Google Keyboard,app,,apkpure,,blocked,blocked,native:ndk:weak-api
+179,com.aspiro.tidal,TIDAL Music: HiFi sound,app,,apkpure,,draws,draws,
+180,com.yuurewards.app,yuu HK & Macau,app,,play-only,4.35.0,draws,draws,
+181,com.hisong.android,Pazzy,app,,apkpure-variant,9.32.0,draws,draws,
+182,ai.hailuo.video,Hailuo AI: Image&Video Maker,app,,apkpure,,draws,draws,
+183,com.pulseal.qrlarcs,QR Code Scanner,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+184,com.offerToday,OfferToday - Find Jobs,app,,play,2.160,draws,draws,
+185,com.microsoft.teams,Microsoft Teams,app,,apkpure,,draws,draws,
+186,wearos.smart.watch.bt.sync.notifier,Watch Sync App - BT Notifier,app,,play,1.3.4.P,draws,draws,
+187,com.ailanguageassistant.languagetutor.learnlanguages,Lurnia: AI Language Tutor,app,,play,1.5.2,draws,draws,
+188,com.tencent.wesing,全民K歌 (又：WeSing) - 華人聊天K歌直播遊戲,app,,apkpure,,blocked,blocked,native:ndk:weak-api
+189,com.facebook.lite,Facebook Lite,app,,apkpure,,draws,draws,
+190,com.ChinaMobile,MyLink My Zone,app,,apkpure,,draws,draws,
+191,com.photoroom.app,Photoroom: AI Photo Editor,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+192,com.sankuai.sailor.afooddelivery,Keeta - Food Delivery,app,,apkpure,,draws,draws,
+193,hk.org.ha.hago,HA Go,app,,play,2.43.0,draws,draws,
+194,com.netflix.mediaclient,Netflix,app,,apkpure,,blocked,blocked,native:ndk:weak-api
+195,com.cupidmedia.wrapper.muslima,Muslima: Muslim Dating App,app,,apkpure,,draws,draws,
+196,com.amazon.avod.thirdpartyclient,Prime Video,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+197,com.viber.voip,Rakuten Viber Messenger,app,,apkpure,,blocked,blocked,native:ndk:weak-api
+198,ai.app.ai,Chatbot App - AI Assistant,app,,apkpure,,draws,draws,
+199,com.sf.hmto,SF-EXPRESS,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+200,com.pdf.pdfviewer.reader.allfile,PDF Reader Home App,app,,apkpure,,draws,draws,
+201,com.recordpro.audiorecord,HiNoter - AI Note Taker,app,,play,5.1.0,draws,draws,
+202,com.accuweather.android,AccuWeather: Weather Radar,app,,apkpure,,draws,draws,
+203,apps.r.calculator,Calculator,app,,apkpure,,draws,draws,
+204,app.hkbus,巴士到站預報 - hkbus.app,app,,play,2.10.8,draws,draws,
+205,hk.com.hsbc.paymefromhsbc,PayMe by HSBC,app,,apkpure,,draws,draws,
+206,com.chinarailway.globalticketing,Railway 12306,app,,apkpure,,draws,draws,
+207,com.lyfta,Lyfta: Gym Log Workout Tracker,app,,play,1.602,draws,draws,
+208,com.tipsyturbo.app,Tipsy: Live Your Story,app,,apkpure,,draws,draws,
+209,com.studiokuma.callfilter,Call Defender - Caller ID,app,,apkpure,,draws,draws,
+210,com.codeway.chatapp,Chat AI: Ask Agent Anything,app,,apkpure,,draws,draws,
+211,com.mtr.mtrmobile,MTR Mobile,app,,apkpure,,draws,draws,
+212,com.haochang.party,全民party-歡歌進行時！歡歌不停歇！,app,,apkpure,,blocked,draws,native:ndk:weak-api
+213,com.office.cleaner.storage.ai,Phone Cleaner: AI Cleaner,app,,apkpure,,draws,draws,
+214,mega.privacy.android.app,MEGA,app,,play,16.14(262890140)(d38471f7bb),draws,draws,
+215,de.mobileconcepts.cyberghost,CyberGhost VPN: Secure VPN,app,,play-only,8.43.0,draws,draws,
+216,com.cafe24.ec.pluseoliveyoung,OLIVE YOUNG US,app,,apkpure,,draws,draws,
+217,com.banix.drawsound.drawmusic,Draw Music: Sketch to Sound,app,,play,2.2,draws,draws,
+218,io.faceapp,FaceApp: Perfect Face Editor,app,,play,14.0.0,draws,draws,
+219,com.shdj.test,StardustTV - Movies & Dramas,app,,missing,,,,
+220,com.google.android.apps.authenticator2,Google Authenticator,app,,apkpure,,draws,draws,
+221,com.mobilefootie.wc2010,FotMob - Soccer Live Scores,app,,play,239.17834.20261016,draws,draws,
+222,hk.com.hsbc.hsbchkmobilebanking,HSBC HK Mobile Banking,app,,apkpure,,blocked,blocked,native:ndk:weak-api
+223,com.uniqlo.hk.catalogue,UNIQLO Hong Kong & Macau,app,,apkpure,,draws,draws,
+224,com.nwfb,Citybus,app,,apkpure,,draws,draws,
+225,com.chat.moko,Moko Live: Live Stream & Chat,app,,apkpure,,draws,draws,
+226,homeworkout.fitness.app,Workout Planner Gym Log・Fit AI,app,,play,2.0.5,draws,draws,
+227,com.smule.singandroid,"Smule: Sing, Duet & Karaoke",app,,apkpure,,draws,draws,
+228,ai.photogenerator.aivideo.aivideogenerator.aiart,Nexus - AI Video Generator,app,,apkpure,,draws,draws,
+229,com.midland.mrinfo,Midland Realty 美聯筍盤,app,,apkpure,,draws,draws,
+230,com.v2cross.proxy,Shadowrocket - VPN Proxy Nodes,app,,apkpure,,draws,draws,
+231,com.iqiyi.i18n.tv,iQIYI Video – Dramas & Movies,app,,apkpure,,draws,draws,
+232,com.ai.polyverse.mirror,AI Mirror: AI Photo & Video,app,,apkpure,,draws,draws,
+233,com.flow.mobile,Emochi: Chat With Character,app,,apkpure,,draws,draws,
+234,com.nikkei.newspaper,日本経済新聞 電子版【公式】／経済ニュースアプリ,app,,play,9.3.1,draws,draws,
+235,com.actus.aoochat,TianYu,app,,apkpure,,draws,draws,
+236,com.imsgchat.banliao,BanLiao,app,,apkpure,,draws,draws,
+237,tw.com.gamer.android.animad,巴哈姆特動畫瘋,app,,play,1.19.7.1,draws,draws,
+238,com.trusted.pdfeditor.pdfreader,PDF ProX: PDF Reader & Editor,app,,play,2.0.2-Office,draws,draws,
+239,com.expressvpn.vpn,ExpressVPN: VPN Fast & Secure,app,,play-only,12.83.0,draws,draws,
+240,com.clean.mix.junk,Mix Cleaner,app,,apkpure,,draws,draws,
+241,com.tvb.mytvsuper.atv,myTV SUPER,app,,apkpure-no-arm64,,draws,draws,
+242,com.blessedmate.fabian,Fuban,app,,missing,,,,
+243,com.free.vpn.super.hotspot.open,VPN - Super Unlimited Proxy,app,,play,2.34.1,draws,draws,
+244,com.translate.ai.voice.screen.language,AI Translator: Voice & Screen,app,,apkpure,,draws,draws,
+245,com.citymapper.app.release,Citymapper,app,,play,11.60.2,draws,draws,
+246,com.unearby.sayhi,SayHi Chat Meet Dating People,app,,apkpure,,draws,draws,
+247,com.eg.android.AlipayGphone,Alipay,app,,apkpure,,blocked,blocked,native:ndk:weak-api
+248,com.crunchyroll.crunchyroid,Crunchyroll: Anime Streaming,app,,play-only,3.126.0,blocked,blocked,native:ndk:weld:buffers
+249,com.shopback.app,ShopBack: Cashback & Rewards,app,,apkpure,,draws,draws,
+250,com.dearu.bubble.jyp,bubble for JYPnation,app,,play,1.5.3,draws,draws,
+251,com.wrongchao.v2vpn,V2VPN - A Fast VPN Proxy,app,,play-only,26.10.21,draws,draws,
+252,cn.futu.trader,Futubull-Easy Investment,app,,apkpure,,draws,draws,
+253,com.klook,Klook: Travel & Activities,app,,play,7.55.0,draws,draws,
+254,com.miaozhua.read,喵爪小説 - 全球爆火小說漫劇必備神器，每日更新,app,,play,5.1.3.1,draws,draws,
+255,com.hktv.android.hktvmall,HKTVmall – online shopping,app,,apkpure,,draws,draws,
+256,com.roblox.client,Roblox,game,,play,2.744.1081,draws,draws,
+257,musicplayer.playmusic.audioplayer,Music Player & MP3 - DDMusic,app,,play,2.12.0,draws,draws,
+258,com.ai.art.magic.image.generator,AI Photo Editor: Art Studio,app,,apkpure,,draws,draws,
+259,quran.offline.alquran.holyquran.quranpak.quranmajeed.readquranoffline.holybookreading.alquranulkareem,Holy Quran Offline Reading,app,,apkpure,,draws,draws,
+260,com.sand.airdroidkidp,AirDroid Parental Control,app,,apkpure,,draws,draws,
+261,com.superplaystudios.disneysolitairedreams,Disney Solitaire,game,,play-only,1.26.3,blocked,draws,native:ndk:weak-api
+262,com.ea.gp.fifamobile,EA SPORTS FC Soccer Mobile 27,game,,apkpure,,draws,draws,
+263,jp.konami.pesam,eFootball™,game,,apkpure,,blocked,blocked,native:ndk:weld:input
+264,com.hitappsgames.wordsolitaire,Solitaire Associations Journey,game,,apkpure,,draws,draws,
+265,com.changdu.mobovideo,MoboReels: Good Reel Short TV,app,,apkpure,,draws,draws,
+266,com.browserweb.astrotravel,Astro Browser,app,,apkpure,,draws,draws,
+267,com.asw.moneyback,MoneyBack,app,,apkpure,,draws,draws,
+268,com.levelinfinite.sgameGlobal,Honor of Kings,game,,apkpure,,draws,draws,
+269,com.king.candycrushsaga,Candy Crush Saga,game,,apkpure,,draws,draws,
+270,com.mergegames.gossipharbor,Gossip Harbor®: Merge & Story,game,,play,4.10.5,blocked,draws,native:ndk:weak-api
+271,com.iyagames.flotshelter,Wild Water World,game,,apkpure,,draws,draws,
+272,com.vincentb.MobControl,Mob Control,game,,apkpure,,blocked,draws,native:ndk:weak-api
+273,com.santa.phone.tracker,Phone Tracker Pro & Locator,app,,apkpure,,draws,draws,
+274,jp.cocone.p2korea,Twin Tales,app,,apkpure,,blocked,draws,native:ndk:weak-api
+275,com.yandex.browser,Yandex Browser with Alice AI,app,,apkpure,,blocked,blocked,native:ndk:weak-api
+276,com.fineart.universal.tv.remote.control,Universal Tv Remote-Cast to TV,app,,apkpure,,draws,draws,
+277,com.nianticlabs.pokemongo,Pokémon GO,game,,apkpure,,blocked,blocked,native:ndk:weak-api native:ndk:weld:power
+278,jp.pokemon.pokemontcgp,Pokémon TCG Pocket,game,,apkpure,,draws,draws,
+279,hk.gov.epd.green,GREENS Mobile App,app,,play,1.3.21,draws,draws,
+280,com.dragon.read.oversea.gp,番茄小说 - 热门短剧全本小说电子书阅读器,app,,apkpure,,draws,draws,
+281,app.visory.security_camera,Surveillance Camera: Visory,app,,apkpure,,draws,draws,
+282,wni.WeathernewsTouch.jp,Weathernews Weather Forecast,app,,play,7.5.1,draws,draws,
+283,com.youmusic.magictiles,Magic Tiles 3™ - Piano Game,game,,apkpure,,draws,draws,
+284,pro.airemodel.android,AI Remodel - Interior Design,app,,play,1.37.0,draws,draws,
+285,com.flashget.parentalcontrol,FlashGet Kids:parental control,app,,play,1.4.3.0,draws,draws,
+286,com.machipopo.media17,17LIVE - Live Streaming Chat,app,,apkpure,,draws,draws,
+287,hk.gov.ehealth.life,e+生活 e+Life,app,,play,1.0.23,draws,draws,
+288,com.nhn.android.webtoon,네이버 웹툰 - Naver Webtoon,app,,play,2.48.2,draws,draws,
+289,com.AnatomyLearning.Anatomy3DViewer3,Anatomy Learning - 3D Anatomy,app,,play,3.2.544,draws,draws,
+290,com.farlightgames.pgame.gp,Clash of Critters,game,,apkpure,,blocked,draws,native:ndk:weak-api
+291,com.miniclip.eightballpool,8 Ball Pool,game,,play,56.32.2,draws,draws,
+292,com.microsoft.emmx,Microsoft Edge,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so native:ndk:weak-api native:ndk:weld:buffers native:ndk:weld:services native:ndk:weld:window
+293,calendar.agenda.calendarplanner.agendaplanner,Calendar Planner - Agenda App,app,,play,2.07.35.0930,draws,draws,
+294,com.mhclyxpb.gatja,Merge Teahouse,game,,apkpure,,blocked,draws,native:ndk:weak-api
+295,com.parknshop.parknshopapp,PNS eShop,app,,play,7.46.1,draws,draws,
+296,tools.pocket.pdf.editor.expert,PDFMaster - PDF Reader,app,,play-only,1.2.0,draws,draws,
+297,com.greetingsisland.sam,Invitation Maker: Cards & RSVP,app,,play,3.12.0,draws,draws,
+298,de.wetteronline.wetterapp,Weather & Radar Forecast,app,,play,2026.20,draws,draws,
+299,com.bandainamcoent.gget_WW,SD Gundam G Generation ETERNAL,game,,apkpure,,blocked,draws,native:ndk:weak-api
+300,com.pinterest,Pinterest,app,,apkpure,,draws,draws,
+301,app.igames.ps2,IGAMES PS2,app,,play,2.0.6,draws,draws,
+302,com.gamespark.topking.gp,Top Lords,game,,play,1.0.42,blocked,draws,native:ndk:weak-api
+303,com.run.tower.defense,Kingshot,game,,apkpure,,draws,draws,
+304,com.chess,Chess - Play and Learn Online,game,,apkpure,,draws,draws,
+305,apps.r.compass,Compass: Accurate Compass,app,,apkpure,,draws,draws,
+306,com.gof.global,Whiteout Survival,game,,play,1.34.16,draws,draws,
+307,com.unicostudio.braintest,Brain Test: Tricky Puzzles,game,,play,2.776.0,blocked,draws,native:ndk:weak-api
+308,com.foshine.bemi,BeMi Love: AI戀愛聊天專屬角色與沉浸劇情,app,,apkpure-variant,1.2.2,draws,draws,
+309,com.pujie.watchfaces,Pujie Watch Faces - Wear OS 6,app,,play,7.0.76f,draws,draws,
+310,com.gps.locationtracker.phonetracker.phonefinder.location,Phone Tracker - Location App,app,,apkpure,,draws,draws,
+311,com.mnogogames.triviascapes,IQ & brain test: Triviascapes,game,,apkpure,,blocked,draws,native:ndk:weak-api
+312,com.starutopia.global,Blade War:Three Kingdoms,game,,apkpure,,draws,draws,
+313,com.proxima.dfm,Delta Force: 2nd Anniversary,game,,apkpure,,draws,draws,
+314,com.scaleup.chatai,AI Chatbot - Nova,app,,apkpure,,draws,draws,
+315,chat.melting.apppp,Melting – AI Romance Chat,app,,apkpure-variant,1.0.103,draws,draws,
+316,com.everysing.lysn,Lysn,app,,play,1.7.1,draws,draws,
+317,com.mobilesecretcodes.allandroidtips.androidtricks.allsecretcodes,Secret Codes And Mobile Hacks,app,,play,2.3.0,draws,draws,
+318,com.translate.easy.languagete,AI Translate Easy,app,,apkpure-variant,1.2.1,draws,draws,
+319,com.cardmaker.invitationcardmaker.birthdayinvitation.weddinginvitation,All Invitation Card Maker App,app,,apkpure,,draws,draws,
+320,com.planner5d.planner5d,Planner 5D - AI Home Design,app,,apkpure,,blocked,blocked,native:ndk:weak-api
+321,com.lbrc.PeriodCalendar,Period Tracker and Calendar,app,,play,13.4.0,draws,draws,
+322,io.supercent.bulldozermasters,Bulldozer Master: Crush & Mine,game,,apkpure,,draws,draws,
+323,com.scopely.monopolygo,MONOPOLY GO!,game,,play,1.79.2,blocked,draws,native:ndk:weak-api
+324,com.tamjai.android,譚仔雲南米線  TamJai Yunnan Mixian,app,,apkpure,,draws,draws,
+325,com.simtaxi.driver,閃的 Sim Taxi 司機版 - 香港call的士,app,,apkpure,,draws,draws,
+326,com.ivuu,Alfred Home Security Camera,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+327,com.legendwx.gp,半夜別修仙,game,,play,1.1.9,draws,draws,
+328,games.vaveda.militaryoverturn,Tower War - Tactical Conquest,game,,play,1.29.3,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so native:ndk:weak-api
+329,com.ovz.carscanner,Car Scanner ELM OBD2,app,,apkpure,,draws,draws,
+330,com.grandegames.slots.dafu.casino,大福Online-全民休閒拉霸角子機,game,,apkpure,,draws,draws,
+331,com.tomato.and.hkssbhc,時尚百貨城,game,,apkpure,,blocked,blocked,native:ndk:weak-api
+332,io.smakapps.guessly,Charades Guess Game — Guessly,game,,play,1.9.0,draws,draws,
+333,kidultlovin.word.zen,Zen Word® - Relax Puzzle Game,game,,apkpure,,blocked,draws,native:ndk:weak-api
+334,com.azure.authenticator,Microsoft Authenticator,app,,apkpure,,draws,draws,
+335,net.zedge.android,Zedge™ Wallpapers & Ringtones,app,,apkpure,,draws,draws,
+336,com.bilibili.lumi,Lumi Master,game,,apkpure,,blocked,draws,native:ndk:weak-api
+337,com.brighteasestudio.pdfreader.pdfeditor,All PDF Reader & PDF Editor,app,,apkpure,,draws,draws,
+338,com.volumecontrol.volumebassbooster.android2023,AI Hit Music Maker,app,,play,35.0,draws,draws,
+339,com.paypal.android.p2pmobile,"PayPal - Pay, Send, Save",app,,play,10.18.0,draws,draws,
+340,com.appswize.weddingcardmaker,Wedding Invitation Card Maker,app,,apkpure,,draws,draws,
+341,com.fugo.wow,Words of Wonders: Crossword,game,,apkpure,,draws,draws,
+342,com.newai.ooc,OOC: The Playable Anime,app,,play,0.1.25,draws,draws,
+343,com.diamondlife.slots.vegas.free,Lotsa Slots - Casino Games,game,,play,4.91,draws,draws,
+344,com.kurogame.wutheringwaves.global,Wuthering Waves,game,,apkpure,,blocked,blocked,native:ndk:weld:input
+345,jp.ne.ibis.ibispaintx.app,ibis Paint X,app,,play-only,14.1.2,draws,draws,
+346,com.ftw_and_co.happn,happn: dating app,app,,apkpure-variant,2026.20.0,draws,draws,
+347,com.whfplus.location.ker,GPS Location Tracker Plus,app,,apkpure,,draws,draws,
+348,com.substack.app,Substack,app,,play,3.10.1,draws,draws,
+349,com.loco.bike,LocoBike,app,,play,3.3.89,draws,draws,
+350,app.kids360.parent,Kids360: Parental Control App,app,,play,2.87.0,draws,draws,
+351,com.miHoYo.GenshinImpact,Genshin Impact 6th Anniversary,game,,apkpure,,blocked,blocked,native:ndk:weld:power
+352,com.hutchgames.formularacing,F1® Clash - Official 2026 Game,game,,apkpure,,blocked,draws,native:ndk:weak-api
+353,com.smilegate.chaoszero.stove.google,Chaos Zero Nightmare,game,,apkpure,,draws,draws,
+354,com.project.idle.cd,Top Force,game,,play,3.5.1,draws,draws,
+355,com.truedevelopersstudio.automatictap.autoclicker,Auto Clicker - Automatic tap,app,,apkpure,,draws,draws,
+356,com.scmp.newspulse,South China Morning Post,app,,play,7.2.6,draws,draws,
+357,jp.co.shueisha.mangaplus,MANGA Plus by SHUEISHA,app,,play,2.7.0,draws,draws,
+358,com.tencent.ig,PUBG MOBILE,game,,apkpure,,blocked,blocked,native:ndk:weld:input
+359,com.kakaku.tabelog.tourists,Tabelog - Food Guide in Japan,app,,missing,,,,
+360,com.tj.dslrprofessional.hdcamera,DSLR HD Camera : 4K HD Camera,app,,apkpure,,draws,draws,
+361,com.MadOut.BIG,MadOut 2: Grand Auto Racing RP,game,,play,21.22,blocked,draws,native:ndk:weak-api
+362,com.nianticlabs.pikmin,Pikmin Bloom: Walk & Explore,game,,apkpure,,blocked,draws,native:ndk:weak-api
+363,com.webcomics.manga,WebComics - Webtoon & Manga,app,,apkpure,,draws,draws,
+364,com.amazon.kindle,Amazon Kindle: Reading App,app,,play,8.158.0.100(2.0.109808.0),blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+365,com.universal.ac.remote.control.air.conditioner,Universal AC Remote Control,app,,play,3.5,draws,draws,
+366,tiny.readpdf.com,Tiny PDF-Read PDF,app,,play,4.0.3,draws,draws,
+367,enterprises.dating.boo,Boo Dating App: Date & Friends,app,,apkpure,,draws,draws,
+368,com.mchutov.Quranify,Quranify: Quran Audio Player,app,,missing,,,,
+369,com.firsttouchgames.dls7,Dream League Soccer 2026,game,,play,13.430,draws,draws,
+370,com.fanatee.keep,Everyday Puzzles: Mini Games,game,,play,13.8.0,blocked,draws,native:ndk:weak-api
+371,com.square_enix.android_googleplay.mangaup_global,Manga UP!,app,,apkpure,,draws,draws,
+372,com.idealista.android,idealista,app,,play-only,15.8.0,draws,draws,
+373,air.com.playtika.slotomania,Slotomania™ Slots Casino Games,game,,play-only,77.169.02,draws,draws,
+374,scameter.hk.cyberdefender,Scameter+,app,,huawei,2.1.24 (2011037) = Play version,draws,draws,
+375,com.live.translator.ai,Live Translator: AI translate,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+376,com.ronasoftstudios.earmaxfxpro,Microphone Amplifier,app,,apkpure,,draws,draws,
+377,com.watchfacestudio.per023pro,PER23 Digital Watch Face,app,,missing,,,,
+378,com.camerasideas.instashot,Video Editor & Maker - InShot,app,,apkpure,,draws,draws,
+379,com.luckyshow.live,DesParty,app,,apkpure-variant,1.6.0,draws,draws,
+380,com.peoplefun.wordcross,Wordscapes,game,,play,3.14.10,draws,draws,
+381,au.com.shiftyjelly.pocketcasts,Pocket Casts - Podcast App,app,,play,8.23,draws,draws,
+382,hk.co.akindo_sushiro.sushiroapp,香港壽司郎,app,,apkpure,,draws,draws,
+383,com.spinmaster.gabbysdollhouse,Gabbys Dollhouse: Cat Games,game,,play,4.1.1,blocked,draws,native:ndk:weak-api
+384,com.gooddrama.idrama,iDrama – Short Dramas & Reels,app,,play,1.36.3,draws,draws,
+385,net.manta.comic,"Manta - Manga, Manhwa, Novels",app,,apkpure,,draws,draws,
+386,cz.ackee.ventusky,Ventusky: Weather Forecast,app,,play,57.0,draws,draws,
+387,com.photo.hd.camera.beauty.filter,HD Camera for Android,app,,apkpure,,draws,draws,
+388,com.playrix.township,Township,game,,apkpure,,draws,draws,
+389,com.boost.samsung.remote,Remote for Smart Samsung TV,app,,play,1.7.6,draws,draws,
+390,com.supercell.brawlstars,Brawl Stars,game,,apkpure,,draws,draws,
+391,com.dreamgames.royalkingdom,Royal Kingdom,game,,play-only,34392,blocked,draws,native:ndk:weak-api
+392,com.evernote,Evernote - Note Organizer,app,,play,11.38.7,draws,draws,
+393,qrcodescanner.barcodescanner.qrscanner.qrcodereader,QR 碼掃描器和條碼掃描器，掃描 QR 碼,app,,apkpure,,draws,draws,
+394,com.garena.game.kgtw,Garena 傳說對決：十週年裂隙穿梭版本,game,,apkpure,,draws,draws,
+395,com.nexon.devcat.mm.tw,瑪奇 Mobile,game,,missing,,,,
+396,com.xiaomi.wearable,Mi Fitness (Xiaomi Wear),app,,apkpure,,draws,draws,
+397,com.kkday.member,KKday - Everything travel,app,,play,2.126.2,draws,draws,
+398,com.vlbot.veluna,"FuYu-Chat Freely, Open Video",app,,apkpure-variant,1.3.4,draws,draws,
+399,com.qustodio.family.parental.control.app.screentime,Qustodio Parental Control App,app,,apkpure,,draws,draws,
+400,com.innplaylabs.animalkingdomraid,Animals & Coins: Animal Run,game,,play-only,17.4.3,draws,draws,
+401,com.carxtech.sr,CarX Street,game,,apkpure,,blocked,blocked,native:ndk:weak-api native:ndk:weld:power
+402,com.google.android.apps.youtube.music,YouTube Music,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so native:ndk:weak-api
+403,com.hollywood.merge,Hollywood Merge,game,,apkpure,,blocked,draws,native:ndk:weak-api
+404,com.fatmerge.global,Tasty Travels: Merge Game,game,,play,66.0.0,blocked,draws,native:ndk:weak-api
+405,com.userjoy.str,三國群英傳：策定九州,game,,apkpure,,blocked,draws,native:ndk:weak-api
+406,com.smakapps.imposter,Fakeit: Imposter Game,game,,apkpure,,draws,draws,
+407,org.mozilla.firefox,Firefox Fast & Private Browser,app,,play,158.0.2,draws,draws,
+408,bitpit.launcher,Niagara Launcher ‧ Home Screen,app,,apkpure,,draws,draws,
+409,com.vr.heymandi,Heymandi Make Friends by Words,app,,apkpure,,draws,draws,
+410,com.a3.topgirl.gplay,Top Girl,game,,play-only,1.0.153,blocked,draws,native:ndk:weak-api
+411,com.gameloft.android.ANMP.GloftA8HM,Asphalt 8 - Car Racing Game,game,,apkpure,,draws,draws,
+412,fc.all.text.pdf.document.voice.image.translate,"All Translate: Photo, PDF, DOC",app,,play,1.1.5,draws,draws,
+413,com.weather.Weather,The Weather Channel - Radar,app,,apkpure,,draws,draws,
+414,com.fapp.translate.language.translator.fasttranslation,"XTranslate - Photo, Voice, PDF",app,,apkpure,,draws,draws,
+415,com.vanilla.picoboom,Picoboom: Imposter game online,game,,play,1.0.57,draws,draws,
+416,com.nimispace.app,NIMI App: Chat & Party,app,,apkpure,,draws,draws,
+417,com.gu_japan.osharemaker.hk,GU Hong Kong,app,,apkpure,,draws,draws,
+418,todolist.scheduleplanner.dailyplanner.todo.reminders,To-Do List - Schedule Planner,app,,apkpure,,draws,draws,
+419,hairstyle.colorChanger.haircut_salon,Modiface Haircut：Hair Makeover,app,,apkpure,,draws,draws,
+420,com.dazn,DAZN - Watch Live Sports,app,,apkpure,,draws,draws,
+421,grit.storytel.app,Storytel - Audiobooks & Books,app,,play,26.41,draws,draws,
+422,com.kwai.video,Kwai - Video & Drama,app,,apkpure,,draws,draws,
+423,com.rovio.angrybirdsfriends,Angry Birds Friends,game,,apkpure,,blocked,draws,native:ndk:weak-api
+424,com.matteljv.uno,UNO!™,game,,play,1.18.4423,blocked,draws,native:ndk:weak-api
+425,com.contentsfirst.tappytoon,Tappytoon Manhwa & Novels,app,,play,4.21.0,draws,draws,
+426,com.lulufiretech.music.ct,粵語老歌 - 粵語經典流行歌曲,app,,apkpure-variant,1.2.5,draws,draws,
+427,com.adobe.scan.android,"Adobe Scan AI PDF Scanner, OCR",app,,play,26.10.06,draws,draws,
+428,com.miui.huanji,Mi Mover,app,,apkpure,,draws,draws,
+429,com.dreamgames.royalmatch,Royal Match,game,,play,38911,draws,draws,
+430,com.readygo.barrel.gp,Last Z: Survival Shooter,game,,apkpure,,draws,draws,
+431,com.airplay.screencasttv,AirPlay - Cast Tv,app,,play,2.6.1,draws,draws,
+432,com.bochk.app.aos,BOCHK中銀香港,app,,play,7.5.6,draws,draws,
+433,com.moniqtap.carplay.autocar.connect.android,Car Play Connect Auto Sync,app,,play,2.5,draws,draws,
+434,com.mobibrain.championforge,Champion Forge: Idle RPG,game,,apkpure,,draws,draws,
+435,ai.interior.design.home.renovation.app,AI Home Design: Interior DecAI,app,,play-only,1.6.2,draws,draws,
+436,com.bingo.cruise.free.best.top.game,Bingo Voyage - Live Bingo Game,game,,apkpure,,blocked,draws,native:ndk:weak-api
+437,com.fivexgames.shin.tc,蠟筆小新：GO！,game,,apkpure,,draws,draws,
+438,com.etermax.preguntados.lite,Trivia Crack: Brain Quiz Games,game,,apkpure,,draws,draws,
+439,de.komoot.android,"komoot - hike, bike & run",app,,apkpure,,draws,draws,
+440,com.wallacewong.kongboard,KongBoard 香港中文鍵盤,app,,apkpure,,draws,draws,
+441,com.wikiloc.wikilocandroid,Wikiloc - Trails of the World,app,,apkpure,,blocked,blocked,native:ndk:weak-api
+442,hk.gov.ehealth.ehr,醫健通eHealth,app,,play,26.09.03,draws,draws,
+443,com.hketransport,HKeMobility,app,,play-only,6.2.89,draws,draws,
+444,com.apple.atve.androidtv.appletv,"Apple TV: Shows, Movies & More",app,,apkpure,,draws,draws,
+445,jp.co.celsys.clipstudiopaint.googleplay,Clip Studio Paint,app,,apkpure,,blocked,blocked,native:ndk:weld:input
+446,com.gismart.guitar,Real Guitar - Music Band Game,game,,play,3.41,draws,draws,
+447,com.egsl.zhy.gp1,惡鬼狩獵：終夜,game,,apkpure-no-arm64,,draws,draws,
+448,com.nytimes.android,NYTimes: US and Global News,app,,play,11.98.0,draws,draws,
+449,com.gt.rivals.car.racing.game,GT Rivals: Real Racing Sim,game,,play,1.1.0,blocked,draws,native:ndk:weak-api
+450,com.netease.yyslshmt,燕雲十六聲,game,,apkpure,,draws,draws,
+451,com.dazzlefun.xnmj,少女迷境,game,,apkpure,,blocked,draws,native:ndk:weak-api
+452,com.gryphline.endfield.gp,Arknights: Endfield,game,,apkpure,,draws,draws,
+453,so.nymph.android,Nymph: Open-Minded Dating App,app,,apkpure-variant,4.2,draws,draws,
+454,com.os.airforce,1945 Air Force: Plane Shooter,game,,play,15.84,blocked,draws,native:ndk:weak-api
+455,com.espn.score_center,ESPN,app,,play,8.28.0,draws,draws,
+456,jp.cocone.sweetdays,Hello Kitty Dream Village,app,,apkpure,,draws,draws,
+457,com.evif.itrap,Waky Pro-Voice chat & Chill,app,,apkpure,,draws,draws,
+458,com.clean.easycleaner.free.apps,Easy Cleaner,app,,apkpure,,draws,draws,
+459,com.initialcoms.ridi,만화 웹툰 웹소설 도서는 리디,app,,apkpure,,draws,draws,
+460,alldocumentreader.office.viewer.filereader.pdfviewer,All Document Reader:PDF Viewer,app,,apkpure,,draws,draws,
+461,com.sticker.maker.emojifun.wastickers,Sticker Maker & Funny Emoji,app,,play,1.0.2,draws,draws,
+462,com.HoYoverse.hkrpgoversea,Honkai: Star Rail,game,,apkpure,,draws,draws,
+463,com.grabtaxi.passenger,Grab - Taxi & Food Delivery,app,,play,5.430.0,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+464,com.acmeaom.android.myradar,MyRadar Weather Radar,app,,play,8.74.0,draws,draws,
+465,com.lezhin.comics,Lezhin Comics - Daily Releases,app,,apkpure,,draws,draws,
+466,slots.pcg.casino.games.free.android,Cash Frenzy™ - Casino Slots,game,,play,4.87,draws,draws,
+467,com.madmadgroup.godtaxi,God Taxi-Get a taxi in HK,app,,apkpure,,draws,draws,
+468,com.catfishanimationstudio.MuscularSystemLite,Anatomy 3D Atlas,app,,apkpure,,blocked,draws,native:ndk:weak-api
+469,us.mitene,FamilyAlbum - Photo Sharing,app,,play,23.1.1,draws,draws,
+470,com.sled.surfers.game,Sled Surfers,game,,apkpure,,draws,draws,
+471,com.grandgames.magicsort,Magic Sort!,game,,apkpure,,draws,draws,
+472,com.calm.android,"Calm - Sleep, Meditate, Relax",app,,apkpure,,draws,draws,
+473,com.optimumbrewlab.invitationcardmaker,"Invitation Card Maker, RSVP",app,,apkpure,,draws,draws,
+474,cam.sweet.selfie.effect.camera,Beauty Camera - Sweet Camera,app,,play,3.8.1,draws,draws,
+475,com.fingersoft.hcr2,Hill Climb Racing 2,game,,play,1.75.2,draws,draws,
+476,com.adobe.spark.post,"Adobe Express: AI Photo, Video",app,,play,31.0.2,draws,draws,
+477,com.hp.pregnancy.lite,Pregnancy + | Tracker App,app,,apkpure,,draws,draws,
+478,com.playrix.gardenscapes,Gardenscapes,game,,play,10.0.0,draws,draws,
+479,com.sdu.didi.psnger,DiDi China: Ride Hailing,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+480,com.watchfacestudio.per32,PER32 Ultra Hybrid Watch Face,app,,apkpure,,draws,draws,
+481,in.playsimple.wordsearch,Word Search Explorer,game,,apkpure,,draws,draws,
+482,com.yalla.yallagames,Yalla Ludo - Ludo&Jackaroo,game,,apkpure,,draws,draws,
+483,com.mnogoteams.triviablocks,Wood Quiz Blast: Trivia Blocks,game,,apkpure,,blocked,draws,native:ndk:weak-api
+484,com.vitagreen.vita_app,維特健靈,app,,apkpure,,draws,draws,
+485,sweet.snap.art.camera.lite.snap.cat.face.camera,Sweet Editor Camera Lite,app,,apkpure,,draws,draws,
+486,com.garena.game.codm,Call of Duty®: Mobile - Garena,game,,apkpure,,draws,draws,
+487,com.fiveminlab.overgeared.hero.backpack.merge,Overgeared Hero: Merge RPG,game,,play,1.41.0,draws,draws,
+488,com.cyphergames.royalsmash,Royal Smash! - Physics Puzzle,game,,apkpure,,draws,draws,
+489,com.logicappkids,LogicLike: ABC & Math for Kids,game,,play,3.9.0,draws,draws,
+490,co.windyapp.android,Windy.app - Enhanced forecast,app,,apkpure,,draws,draws,
+491,com.williamsinteractive.jackpotparty,Jackpot Party Casino Slots,game,,play-only,5074.00,blocked,draws,native:ndk:weak-api
+492,com.loohp.hkbuseta,HK Bus ETA,app,,play,2.7.7,draws,draws,
+493,net.gameduo.dfd,E.D.E.N : The Last Line,game,,apkpure,,blocked,draws,native:ndk:weak-api
+494,com.mobvoi.mwf.magicfaces,TimeShow Watch Faces,app,,apkpure,,draws,draws,
+495,com.tfgco.games.sports.free.tennis.clash,Tennis Clash: Multiplayer Game,game,,play,6.46.0,blocked,draws,native:ndk:weak-api
+496,com.icandesignapp.all,Home Planner AI: Room Interior,app,,apkpure,,blocked,draws,native:ndk:weak-api
+497,hdmi.connector.five,USB Connector Cast Phone to TV,app,,apkpure,,draws,draws,
+498,com.dashapp.user,DASH: HK's Main Taxi App,app,,play,3.9.15,draws,draws,
+499,com.tstudio.emojibatteryicon,Emoji Battery Icon Customize,app,,apkpure,,draws,draws,
+500,com.runwayml.prod,Runway: AI Image & Video,app,,apkpure,,draws,draws,
+501,com.geoguessr.app,GeoGuessr,game,,play,12.2,blocked,blocked,native:ndk:weak-api
+502,pilatesworkout.yogaworkout.loseweight.workoutapps,Pilates Workout at Home,app,,apkpure,,draws,draws,
+503,com.kamagames.pokerist,Texas Hold'em Poker: Pokerist,game,,play,75.29.0,blocked,draws,native:ndk:weak-api
+504,com.xs2theworld.cxmobile,Cathay Pacific,app,,play-only,15.2.1,draws,draws,
+505,com.deepstash,Deepstash: Smarter Every Day!,app,,apkpure,,draws,draws,
+506,com.apps.home.design.plan.floor.planner,Floor Plan Creator Home Design,app,,apkpure,,draws,draws,
+507,com.quickshare.smartdatashare.filetransfer.datatransfer.phoneclone.easyshare,Quick Share: File Transfer App,app,,apkpure,,draws,draws,
+508,com.xmonetize.quizzland,QuizzLand. Quiz & Trivia game,game,,play,3.17.007,blocked,draws,native:ndk:weak-api
+509,com.reddit.frontpage,Reddit,app,,play,2026.42.0,draws,draws,
+510,com.lang.lang,LANG LIVE - LIVE Music Shows,app,,apkpure,,draws,draws,
+511,com.ricacorp.ricacorp,Ricacorp Real Listing,app,,apkpure,,draws,draws,
+512,com.compass.digital.direction.directionfinder,Digital Compass for Android,app,,apkpure,,draws,draws,
+513,com.blood.sugar.tracker.glucometer.Diary.test.diabetes.checker.info.glucose.convert.logger.health.fitness.monitor.history,Blood Sugar Diary for Diabetes,app,,apkpure,,draws,draws,
+514,com.digitalcarkeyllc.car.scanner.obd.elm.torque.fixd.carly,OBD2 Car Scanner - ELM Torque,app,,apkpure,,draws,draws,
+515,com.CameraEndoscope.UsbCamera,Camera endoscope,app,,play,13.0,draws,draws,
+516,com.kiloo.subwaysurf,Subway Surfers,game,,play,3.70.3,blocked,draws,native:ndk:weak-api
+517,com.flaglink.aimovie,VifunAI : AI Video Generator,app,,apkpure,,draws,draws,
+518,com.lmyx.gptw,SSS冒險家,game,,apkpure,,draws,draws,
+519,com.joytunes.simplypiano,Simply Piano: Learn Piano Fast,app,,apkpure,,draws,draws,
+520,com.dts.freefireth,Free Fire x NARUTO SHIPPUDEN,game,,play,1.132.1,blocked,draws,native:ndk:weak-api
+521,com.amanotes.beathopper,Tiles Hop Music & Ball Game,game,,apkpure,,blocked,draws,native:ndk:weak-api
+522,com.autoscout24,AutoScout24: Automobile market,app,,play,26.42.8,draws,draws,
+523,com.joystar.btthgp,鬥破蒼穹M：少年崛起--動畫正版授權,game,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so native:ndk:weak-api
+524,com.pieyel.scrabble,Scrabble® GO – Fun with Words!,game,,play,1.114.0,blocked,draws,native:ndk:weak-api
+525,jp.cocone.livly,Livly Island - Adopt Cute Pets,app,,play,2.94.1,draws,draws,
+526,com.blizzard.wtcg.hearthstone,Hearthstone,game,,apkpure,,blocked,draws,native:ndk:weak-api
+527,io.mewtant.pixaiart,PixAI: AI Anime Art Generator,app,,play,4.25.0,draws,draws,
+528,com.yahoo.mobile.client.android.mail,Yahoo Mail: Email & Planner,app,,play,26.41.1,draws,draws,
+529,uk.co.ordnancesurvey.osmaps,"OS Maps: Walk, Hike, Run, Bike",app,,play,5.6.2.1464,draws,draws,
+530,com.xiaomo.lastextract,Last Extract,game,,play,0.0.37,draws,draws,
+531,es.monkimun.lingokids,Lingokids: Games & Shows,app,,apkpure,,blocked,draws,native:ndk:weak-api
+532,com.flytaxi.hktaxi,Fly Taxi 的士 - HK book Taxi App,app,,play,191,draws,draws,
+533,com.medium.reader,Medium: Read & Write Stories,app,,play,4.5.1784910928,draws,draws,
+534,pt.cosmicode.truthordare,Truth or Dare - Dirty & Spicy,game,,play,1.4.0,draws,draws,
+535,com.global.ztmslgtw,末日喧囂,game,,apkpure,,blocked,draws,native:ndk:weak-api
+536,io.voodoo.paper2,Paper.io 2,game,,apkpure,,blocked,draws,native:ndk:weak-api
+537,com.keyconnect.android,KeyConnect Digital Car Key,app,,play,2.6.1,draws,draws,
+538,com.cvmobileapp,carVertical: Check Car History,app,,play,3.16.0,blocked,blocked,native:ndk:weld:buffers
+539,com.liveyap.timehut,TimeHut - Baby Album,app,,play,8.5.0,draws,draws,
+540,eu.nordeus.topgoal,Top Goal: Soccer Champion,game,,apkpure,,blocked,draws,native:ndk:weak-api
+541,ru.yandex.music,"Yandex Music, Books & Podcasts",app,,play,2026.09.5 #167gpr,draws,draws,
+542,com.pallo.passiontimerscoped,YPT - Yeolpumta,app,,play,810.0.95,blocked,blocked,native:ndk:weak-api
+543,com.lyrebirdstudio.beauty,Beauty Makeup Editor & Camera,app,,play,2.1.2,draws,draws,
+544,com.bytebloom.control.center.ioscontrol.bb,iOS Control Center - Panel,app,,play,1.0.12,draws,draws,
+545,eu.nordeus.topeleven.android,Top Eleven Be a Soccer Manager,game,,apkpure,,blocked,draws,native:ndk:weak-api
+546,com.matryoshka.royal.cooking.kitchen.madness,Royal Cooking,game,,apkpure,,blocked,draws,native:ndk:weak-api
+547,com.beyondtrip.hopegoo,HopeGoo-Travel to Asia,app,,play,1.52.0,draws,draws,
+548,com.modhaus.cosmo,Cosmo : the Gate,app,,apkpure,,draws,draws,
+549,com.wenext.wayak,Wyak-Voice Chat&Meet Friends,app,,apkpure,,draws,draws,
+550,com.wildcaly.b5.hmt,NBA巔峰對決,game,,apkpure,,draws,draws,
+551,com.huuuge.casino.slots,Huuuge Casino Slots Vegas 777,game,,play-only,12.10.27300,draws,draws,
+552,com.cooking.bingo.ldkwh,Bingo Frenzy™-Live Bingo Games,game,,play,3.79.0,draws,draws,
+553,com.xt.retouchoversea,Hypic - Photo Editor & AI Art,app,,apkpure,,draws,draws,
+554,com.mrtgd2.tw.and,嘎嘎特攻,game,,apkpure,,blocked,draws,native:ndk:weak-api
+555,com.WalkTalk.FlightMaster,Epic Plane Evolution,game,,play-only,1.14.1,blocked,draws,native:ndk:weak-api
+556,com.aim.racing,Extreme Car Driving Simulator,game,,apkpure,,blocked,draws,native:ndk:weak-api
+557,io.piesystems.pie,Pie VAT - Tax Free Shopping,app,,play,3.52.0,draws,draws,
+558,easy.drum.real.music.drum.set,Easy Drum - Real Music Drum,game,,play,1.19.0,draws,draws,
+559,com.shorts.wave.drama,ShortsWave: Watch Drama Series,app,,apkpure,,draws,draws,
+560,com.wxdmxtw.android,新武俠大明星-《牧神記》聯動,game,,apkpure,,blocked,draws,native:ndk:weak-api
+561,com.thetrojanapps.qrcode.reader.scanner,QR Code Reader: QR Code Maker,app,,play,6.8,draws,draws,
+562,com.moduleinfotech.birthday.greetings,Birthday Greetings & Wishes,app,,apkpure,,draws,draws,
+563,com.iloveworking.ching,Ching - Auto Expense Tracker,app,,play-only,2.0.3,draws,draws,
+564,com.alexeymorozua.prestige,Prestige: Watch Faces Wear OS,app,,missing,,,,
+565,com.unicostudio.braintestlegacy,Brain Test All-Star: IQ Boost,game,,apkpure,,blocked,draws,native:ndk:weak-api
+566,com.zynga.livepoker,Zynga Poker ™ – Texas Holdem,game,,apkpure,,draws,draws,
+567,com.devsisters.gb,CookieRun: OvenBreak,game,,play,14.302,draws,draws,
+568,video.editor.videomaker.effects.fx,AI Video Editor: ShotCut AI,app,,play-only,3.8.0,draws,draws,
+569,com.pdfflow.read,PDF Flow,app,,apkpure,,draws,draws,
+570,com.trending.movie.dramastory.shortreels,DramaReel: Short Movies,app,,play,1.0.8,draws,draws,
+571,com.live.earthmap.streetview.livecam,Live Earth Map - World Map 3D,app,,apkpure,,draws,draws,
+572,com.nordcurrent.flyingfever,Airplane Chefs - Cooking Game,game,,play,16.0.0,draws,draws,
+573,com.dlzq.rongmai,NeuralFin,app,,play-only,2.1.0,draws,draws,
+574,com.dearu.bubble.stars,bubble with STARS,app,,apkpure,,draws,draws,
+575,com.locatormidgard.findnumber,Phone Number Location Tracker,app,,apkpure,,draws,draws,
+576,com.netigen.bestmirror,Phone Mirror app - True Mirror,app,,apkpure,,draws,draws,
+577,io.whif,WHIF: Romance & BL AI Chat,app,,play,1.4.1,draws,draws,
+578,br.com.rodrigokolb.realdrum,Real Drum electronic drums set,game,,play,11.18.6,blocked,blocked,native:ndk:weld:window
+579,com.okcupid.okcupid,OkCupid Dating: Date Singles,app,,missing,,,,
+580,com.Stargazer.StellaSora,星塔旅人,game,,apkpure,,draws,draws,
+581,com.vitastudio.mahjong,Vita Mahjong,game,,play,3.43.0,blocked,draws,native:ndk:weak-api
+582,com.Chillgaming.oneState,OneState RP - Role Play Life,game,,apkpure,,blocked,draws,native:ndk:weak-api
+583,com.ea.game.nfs14_row,Need for Speed™ No Limits,game,,play,9.6.0,draws,draws,
+584,pdf.tap.scanner,PDF Scanner app - TapScanner,app,,play,3.1.23,draws,draws,
+585,com.bigbluebubble.singingmonsters.full,My Singing Monsters,game,,play,5.7.2,draws,draws,
+586,com.hangseng.rbmobile,Hang Seng Personal Banking,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so native:ndk:weak-api
+587,com.longe.racehmt,巔峰極速,game,,apkpure,,blocked,blocked,native:ndk:weld:input
+588,com.qy.vicq,VICQ: Vibe with Live Creators,app,,apkpure,,draws,draws,
+589,com.gamovation.mahjongclub,Mahjong Club - Solitaire Game,game,,play,4.6.4,draws,draws,
+590,com.vigloo,Vigloo - Premier Short Dramas,app,,play,1.7.51,draws,draws,
+591,com.brave.browser,"Brave Private Web Browser, VPN",app,,play,1.97.59,blocked,blocked,native:ndk:weak-api native:ndk:weld:buffers native:ndk:weld:services native:ndk:weld:window
+592,com.imo.android.imoim,imo-International Calls & Chat,app,,play,2026.09.1051,draws,draws,
+593,hub.browser.video.downloader.saver,Hub Video Downloader,app,,apkpure,,draws,draws,
+594,com.jmsgame.jackpotmastercasino,Jackpot Master™ Slots - Casino,game,,play-only,2.0.90,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so native:ndk:weak-api
+595,com.familygpslocator.app,Family GPS Locator・Kids Safety,app,,play,1.507,draws,draws,
+596,com.selabs.speak,Speak: Language Learning,app,,apkpure,,draws,draws,
+597,com.facer.pipboy_se,Fallout Pip-Boy SE Watch Face,app,,missing,,,,
+598,com.hunantv.imgo.activity.inter,MangoTV,app,,play,7.2.6.2,draws,draws,
+599,com.orange.kidspiano.music.songs,Piano Kids - Music & Songs,game,,play,3.79,draws,draws,
+600,com.HoYoverse.Nap,Zenless Zone Zero,game,,apkpure,,draws,draws,
+601,com.teenpatti.hd.gold,"Teen Patti GOLD, Rummy & Poker",game,,apkpure,,draws,draws,
+602,com.app.lognexa,Lognexa,app,,play,1.0.4,draws,draws,
+603,com.ticktick.task,TickTick:To Do List & Calendar,app,,play,8.2.2.0,draws,draws,
+604,com.google.android.apps.docs.editors.docs,Google Docs,app,,play,1.26.421.04.90,blocked,blocked,native:ndk:weak-api
+605,moe.shizuku.privileged.api,Shizuku,app,,apkpure,,draws,draws,
+606,com.bigwinepot.nwdn.international,Remini - AI Photo Enhancer,app,,apkpure,,draws,draws,
+607,com.sadcity.traffic.racer.russian.village,Traffic Racer Open World,game,,apkpure,,blocked,draws,native:ndk:weak-api
+608,com.yuyin0117.yogo,NiuChat voice chat room,app,,apkpure-variant,1.31.0,draws,draws,
+609,com.aidiangames.garden.gp,Dreamscape Island: Farm & Cook,game,,apkpure,,blocked,blocked,native:ndk:weak-api
+610,com.Chodun.CatGunner,Idle Cat Gunner: Shooter RPG,game,,apkpure,,blocked,blocked,native:ndk:weak-api native:ndk:weld:power
+611,com.topapp.Interlocution,問問塔羅,app,,apkpure,,draws,draws,
+612,com.kodansha.kmanga,K MANGA,app,,apkpure,,draws,draws,
+613,com.app.logsy,Logsy,app,,apkpure,,draws,draws,
+614,com.nytimes.crossword,NYT Games: Wordle & Crossword,game,,play,6.47.1,draws,draws,
+615,com.igg.android.doomsdaylastsurvivors,Doomsday: Undead Bride,game,,apkpure,,blocked,draws,native:ndk:weak-api
+616,com.hair_flutter,Hairstyle Try On - AI Haircut,app,,apkpure,,draws,draws,
+617,com.neave.zoomearth,Zoom Earth - Weather Forecast,app,,apkpure,,draws,draws,
+618,com.standysoftware.colorstyle,Color Analysis - Dressika,app,,play,2.5.2,draws,draws,
+619,com.Zeeppo.GuitarBand,Guitar Band: Rock Battle,game,,apkpure,,blocked,draws,native:ndk:weak-api
+620,com.fingersoft.hillclimb,Hill Climb Racing,game,,play,1.72.2,draws,draws,
+621,com.productmadness.cashmancasino,Cashman Casino Slots Games,game,,play,5.20.258,blocked,draws,native:ndk:weak-api
+622,com.tranzmate,Moovit: Bus & Public Transit,app,,apkpure,,draws,draws,
+623,com.fgol.HungrySharkEvolution,Hungry Shark Evolution,game,,play,14.6.0,blocked,draws,native:ndk:weak-api
+624,net.booksy.business,Booksy Biz: For Businesses,app,,play,26.10.2200,draws,draws,
+625,com.productmadness.lightninglink,Lightning Link Casino Slots,game,,play-only,10.14.0,blocked,blocked,native:ndk:weak-api native:ndk:weld:power
+626,in.playsimple.crossword.go,Crossword Go!,game,,play,1.84.0,draws,draws,
+627,com.timeleft.app,Timeleft: Make New Friends IRL,app,,apkpure,,draws,draws,
+628,com.atom.browser.surf,Atom Browser,app,,apkpure,,draws,draws,
+629,com.sprunki.mod.horror.incredibox.monster.beats.music.game,Sprunki Beat: Full Mod Music,game,,play-only,0.4.1,draws,draws,
+630,kr.co.millie.millieshelf,밀리의 서재 - 독서와 무제한 친해지리,app,,play,5.47.1.0,draws,draws,
+631,com.fdzq.app,方德智投-港美股交易 & AI智能選股,app,,play-only,7.8.3,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+632,com.lyt.addons,MochiCloner Premium & Add‑ons,app,,apkpure,,draws,draws,
+633,com.nexters.herowars,Hero Wars: Alliance RPG Legend,game,,play,1.292.300,blocked,draws,native:ndk:weak-api
+634,com.gameloft.android.ANMP.GloftA9HM,Asphalt Legends - Racing Game,game,,apkpure,,draws,draws,
+635,com.smartwidgetlabs.chatgpt,Chat Smith: AI Chatbot & Agent,app,,apkpure,,draws,draws,
+636,com.watchfacestudio.per27,PER27 Digital Watch Face,app,,apkpure,,draws,draws,
+637,com.netease.eggypartyhmt,蛋仔派對,game,,apkpure,,draws,draws,
+638,beauty.picshop.sweet.face.camera,Sweet Camera Selfie,app,,apkpure,,draws,draws,
+639,com.biglime.cookingmadness,Cooking Madness: A Chef's Game,game,,play-only,3.4.5,draws,draws,
+640,com.supercell.clashofclans,Clash of Clans,game,,apkpure,,draws,draws,
+641,com.UCMobile.intl,"UC Browser-Safe, Fast, Private",app,,apkpure,,draws,draws,
+642,in.playsimple.wordtrip.association,Word Connect Association,game,,play,1.70.0,draws,draws,
+643,com.qookkagame.sgzzlb.hkmo,三國志・戰略版（港澳版）,game,,apkpure,,draws,draws,
+644,com.taxsee.taxsee,maxim — order a taxi & food,app,,apkpure,,draws,draws,
+645,com.meitu.wink,Wink: Video Enhancer & Editor,app,,apkpure,,blocked,blocked,native:ndk:weak-api
+646,com.dxx.firenow,Survivor.io,game,,play-only,5.3.1,blocked,draws,native:ndk:weak-api
+647,com.genieeplus.carplay.sync,Car Play Sync for Android Awto,app,,play,1.1.7,draws,draws,
+648,com.nexon.bluearchive,Blue Archive,game,,apkpure,,draws,draws,
+649,com.fanatee.cody,CodyCross: Crossword Puzzles,game,,play,2.14.1,blocked,draws,native:ndk:weak-api
+650,com.funplus.ts.global,Tiles Survive!,game,,play,2.6.300,blocked,draws,native:ndk:weak-api
+651,com.toomics.global.google,Toomics - Read Premium Comics,app,,apkpure,,draws,draws,
+652,com.azmobile.broken.screen.wallpaper,Broken Screen: Magic Wallpaper,app,,apkpure,,draws,draws,
+653,com.hellosimply.simplydraw,Simply Draw: Learn to Draw,app,,play-only,1.18.0,draws,draws,
+654,dovi.darkhero.survival,Dark Hunter - Hunter Hero RPG,game,,play,2.6.15,blocked,draws,native:ndk:weak-api
+655,com.ProjectMoon.LimbusCompany,Limbus Company,game,,apkpure,,blocked,draws,native:ndk:weak-api
+656,com.widgify.worldroid,Widgify - DIY Phone Screen,app,,apkpure,,draws,draws,
+657,com.ludo.king,Ludo King®,game,,play,10.6.0.416,blocked,draws,native:ndk:weak-api
+658,jp.konami.masterduel,Yu-Gi-Oh! Master Duel,game,,play,2.8.0,blocked,draws,native:ndk:weak-api
+659,com.camerasideas.trimmer,YouCut - Video Editor & Maker,app,,apkpure,,draws,draws,
+660,com.mustname.car_connect,Car Play Sync for Android Auto,app,,play,1.85.0,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+661,com.josef.electrodrumpadnew,Real Electro Drum Pad: Hip Hop,game,,play,11.0.2,draws,draws,
+662,com.dinoapp.chat,Dino - Meet New Friends,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+663,com.bimiboo.kids.drawing,Coloring for Kids: Drawing 2-6,game,,play-only,1.58,blocked,draws,native:ndk:weak-api
+664,com.galixo.tv.remote.control.tvremote.alltvremote,TV Remote Control,app,,play,1.2.3,draws,draws,
+665,app.artworkout.learn.how.to.draw,Learn how to draw - ArtWorkout,app,,apkpure,,blocked,blocked,native:ndk:weak-api
+666,com.precious.aiphotostudio,Precious - AI Photo Studio,app,,play,1.1.8,draws,draws,
+667,com.roomperfect.global,Family Farm Merge,game,,apkpure,,blocked,draws,native:ndk:weak-api
+668,com.app.logsense,LogSense,app,,apkpure,,draws,draws,
+669,com.arcsoft.perfect365,Perfect365: Face Makeup Editor,app,,play,10.33.6,draws,draws,
+670,com.fun.lastwar.gp,Last War:Survival Game,game,,apkpure,,draws,draws,
+671,com.asianmobile.fontskeyboard,Emoji Font Keyboard & Themes,app,,apkpure,,draws,draws,
+672,com.gps.liveearthtracker.map.routefinder.navigation,GPS Navigation: Live Earth Map,app,,play,3.0.3,draws,draws,
+673,com.easygames.race,Race Master 3D: Car Racing,game,,play,3.18.7.3579,blocked,draws,native:ndk:weak-api
+674,com.litatom.app,Litmatch—Make new friends,app,,apkpure,,draws,draws,
+675,com.xman.tw.gp,超能戰爭,game,,apkpure,,blocked,draws,native:ndk:weak-api
+676,com.classdojo.android,ClassDojo,app,,play,9.4.0,draws,draws,
+677,fasttranslate.voice.photo.alllanguagestranslator.trangoai.oktranslate,All Language Translator Fast,app,,play,1.6.6,draws,draws,
+678,com.losttemplegames.duckysort,Quack Sort: Loop Puzzle,game,,apkpure,,draws,draws,
+679,com.movile.playkids.pkxd,"PK XD: Fun, friends & games",game,,play,1.93.3,blocked,draws,native:ndk:weak-api
+680,com.invinciblesstudioltd.soccermanager2025,Soccer Manager 2027 - Football,game,,apkpure,,blocked,draws,native:ndk:weak-api
+681,com.bandlab.bandlab,BandLab – Music Making Studio,app,,play,11.35.2,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+682,com.squarevalley.i8birdies,18Birdies Golf GPS Rangefinder,app,,apkpure,,blocked,blocked,native:ndk:weak-api
+683,mobi.mangatoon.comics.aphone,MangaToon: Comic & Manga,app,,play,3.38.06,draws,draws,
+684,com.iconchanger.widget.theme.shortcut,"Themepack - App Icons, Widgets",app,,apkpure,,draws,draws,
+685,com.shazam.android,Shazam: Find Music & Concerts,app,,play,16.64.0-261015,draws,draws,
+686,com.sinyee.babybus.taxi,Baby Panda's School Bus,game,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so native:ndk:weak-api
+687,com.alightcreative.motion,Alight Motion,app,,apkpure,,draws,draws,
+688,com.gotv.nflgamecenter.us.lite,NFL,app,,play,61.0.17,draws,draws,
+689,com.softwareupdate.allappsupdate,Update Software App: Updates,app,,apkpure,,draws,draws,
+690,com.aieditor.artgen,MePic－AI Photo Video Generator,app,,apkpure,,draws,draws,
+691,com.hairu.app,Hairu: Hairstyle Try On,app,,play,4.2.0,draws,draws,
+692,com.clap.tofind.phone.finder.whistle,Clap to Find My Phone: Whistle,app,,apkpure,,draws,draws,
+693,com.vectorunit.purple.googleplay,Beach Buggy Racing,game,,apkpure,,draws,draws,
+694,chat.ometv.dating,OmeTV Chat — Friends & Dating,app,,apkpure,,draws,draws,
+695,pt.cosmicode.imposter,Imposter Up - Who is the Spy?,game,,play,1.5.2,draws,draws,
+696,com.cola.game,Flambé®: Merge & Cook,game,,apkpure,,blocked,draws,native:ndk:weak-api
+697,com.fourtechnologies.mynetdiary.ad,Calorie Counter - MyNetDiary,app,,play,9.9.0,draws,draws,
+698,com.jaumo,Jaumo Dating App: Flirt & Date,app,,apkpure,,draws,draws,
+699,ginlemon.flowerfree,Smart Launcher 6 ‧ Home Screen,app,,apkpure,,draws,draws,
+700,ai.talkpal,Talkpal - AI Language Learning,app,,play,2.8.25,draws,draws,
+701,com.timesgroup.magicbricks,"Magicbricks Buy, Rent Property",app,,apkpure,,draws,draws,
+702,com.bestapp.entertainment.ringsfree,Android Ringtone Songs,app,,apkpure,,draws,draws,
+703,com.biglord.gp.tw,主公來點將,game,,apkpure,,blocked,draws,native:ndk:weak-api
+704,com.sonypicturestelevision.millionaire,Official Millionaire Game,game,,play,68.0.0,draws,draws,
+705,pdfreader.pdfviewer.free.officetool,PDF Reader - PDF Editor,app,,apkpure,,draws,draws,
+706,com.datamount.tipsme,Tipsme - Football Livescore,app,,play,4.5.33,draws,draws,
+707,com.todoist,Todoist: To Do List & Calendar,app,,apkpure,,draws,draws,
+708,com.ttech.aihairtryon,Hair Color & Hairstyle Try On,app,,play,9.8.4,draws,draws,
+709,com.xd.TLglobal,Torchlight: Infinite,game,,apkpure,,draws,draws,
+710,com.gcl.mictospeaker.bluetoothspeaker.volumebooster,Mic to Speaker Bluetooth Mic,app,,play,3.1.6,draws,draws,
+711,com.nhn.android.search,네이버 - NAVER,app,,play,12.24.5,blocked,draws,native:ndk:weak-api
+712,com.mrblue.mrblue,"미스터블루 - 웹툰, 만화, 소설앱",app,,apkpure,,draws,draws,
+713,world.letsgo.booster.android.pro,LetsVPN,app,,play-only,2.32.0,draws,draws,
+714,com.ddup.zombiewaves.zw,Zombie Waves,game,,apkpure,,draws,draws,
+715,com.olzhas.carparking.multyplayer2,Car Parking Multiplayer 2,game,,play-only,1.3.3.7,blocked,draws,native:ndk:weak-api
+716,com.justgame.jails,Lands of Jail,game,,play,1.0.75,blocked,draws,native:ndk:weak-api
+717,com.watchfacestudio.lbclassic06,TAG HEUER CARRERA 3 Watch Face,app,,missing,,,,
+718,com.drillyapps.babydaybook,Baby Daybook - Newborn Tracker,app,,play,7.3.1,draws,draws,
+719,io.supercent.linkedcubic,Snake Clash!,game,,apkpure,,blocked,draws,native:ndk:weak-api
+720,me.funkin.fnf,Friday Night Funkin',game,,play,0.8.8,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+721,hk.gov.immd.mobileapps,HK Immigration Department,app,,apkpure,,draws,draws,
+722,com.superb.rhv,Rhythm Hive,game,,apkpure,,blocked,draws,native:ndk:weak-api
+723,de.mdiener.rain.usa,Rain Alarm,app,,apkpure,,draws,draws,
+724,jp.co.drecom.wizardry.daphne,Wizardry Variants Daphne,game,,play-only,2.0.5,draws,draws,
+725,com.fitbod.fitbod,Fitbod: Workout & Gym Planner,app,,apkpure,,draws,draws,
+726,helsi.me,Helsi: Health & Doctor Search,app,,apkpure,,draws,draws,
+727,com.rush.xtreme.sports,RUSH: Xtreme,game,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so native:ndk:weak-api native:ndk:weld:power
+728,com.vblast.flipaclip,FlipaClip: Draw 2D Animation,app,,apkpure,,draws,draws,
+729,com.readygo.dark.gp,Dark War Survival,game,,apkpure,,draws,draws,
+730,cam.camy,Camy — Live Video CCTV,app,,apkpure,,draws,draws,
+731,com.soccer.football.livescores.news,Football Live Scores & News,app,,play,3.0.4,draws,draws,
+732,com.fox.jstwgp,青丘世界：緣起,game,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+733,com.google.android.calendar,Google Calendar,app,,apkpure,,draws,draws,
+734,org.blubblub.app.speechblubs,Speech Blubs: Language Therapy,app,,apkpure,,draws,draws,
+735,com.jaumo.casual,HookUp & Casual Dating App CSL,app,,apkpure-variant,202610.2.1,draws,draws,
+736,com.catdaddy.nba2km,NBA 2K Mobile Basketball Game,game,,apkpure,,draws,draws,
+737,beatmaker.edm.musicgames.PianoGames,Piano Fire: Edm Music & Piano,game,,apkpure,,draws,draws,
+738,com.m88.idleXX,杖劍傳說：坎斯汀之約,game,,apkpure,,blocked,draws,native:ndk:weak-api
+739,com.hily.app,Hily Dating app: Meet & Date,app,,apkpure-variant,5.91.1,draws,draws,
+740,com.ltgames.android.m71.tw,一念逍遙,game,,apkpure,,blocked,draws,native:ndk:weak-api
+741,com.heygen.app,HeyGen: AI Video Generator,app,,play,1.2.6,draws,draws,
+742,kz.sirius.kidssecurity,Parental Control App Blocker,app,,apkpure,,draws,draws,
+743,com.wonderpeople.megahitpoker.global,Mega Hit Poker: Texas Holdem,game,,apkpure,,draws,draws,
+744,mirrorapp.lightmirror.beautymirror.makeupmirror,Mirror App - Beauty Mirror,app,,apkpure,,draws,draws,
+745,com.gear2.growslayer,Slayer Legend : Idle RPG,game,,play,700.0.4,blocked,draws,native:ndk:weak-api
+746,com.fusionmedia.investing,Investing.com: Stock Market,app,,play,6.52,draws,draws,
+747,com.interstellarapps.hairstyleai,Hairstyle & Hair Color Changer,app,,apkpure,,draws,draws,
+748,ringtonesforandroidphonefree.ringtones.ringtonessongs.ringtonesapp,Ringtones for Android Phone,app,,play,1.5.5,draws,draws,
+749,br.tv.horizonte.android.premierefc,Premiere: Jogos ao vivo,app,,play,9.11.1,draws,draws,
+750,com.qookkagames.xczyw.gp.hk,信長之野望 真戰（港澳版）,game,,apkpure,,draws,draws,
+751,hero.claw.master,Claw Master – Roguelike Hero,game,,apkpure,,blocked,draws,native:ndk:weak-api
+752,com.touchie.ai,Touchie - AI Story & Create,app,,apkpure,,draws,draws,
+753,com.marvel.unlimited,Marvel Unlimited,app,,play,7.101.0,draws,draws,
+754,com.commsource.beautyplus,BeautyPlus-Selfie Photo Editor,app,,apkpure,,blocked,blocked,native:ndk:weak-api
+755,com.pof.android,Plenty of Fish : Dating App,app,,apkpure,,draws,draws,
+756,sg.partying.android.lite,Veeka: Find Community & Fun,app,,apkpure-variant,3.22.0,draws,draws,
+757,com.tenetapps.artielab,ARtie Lab: AR Drawing & Sketch,app,,play,1.0.4,draws,draws,
+758,com.napper,Napper: Baby Sleep & Parenting,app,,play,6.84.0,draws,draws,
+759,io.iftech.bistrobridge,Kuli Kuli: Travel Translator,app,,apkpure,,draws,draws,
+760,com.global.sgdbztw,時光大爆炸,game,,apkpure,,draws,draws,
+761,link.socialai.app,status - sims but social media,app,,play,1.9.63,draws,draws,
+762,com.isharing.isharing,iSharing: GPS Location Tracker,app,,play,13.0.2.2,draws,draws,
+763,dance.fit.zumba.weightloss.danceburn,Dancefitme - Fun Weight Loss,app,,play,4.53.0,draws,draws,
+764,tsoiyatshing.hikingtrailhk,Hiking Trail HK,app,,play,10.31,draws,draws,
+765,com.supportware.Buienradar,Buienradar - weer,app,,play,7.4.8,draws,draws,
+766,com.mnogoteams.quizblitz,Quiz Blitz: Test Brain Game,game,,play,2.14.155,blocked,draws,native:ndk:weak-api
+767,ai.zuoye.shijuanbao,試卷寶-拍照抹除筆跡，整理試卷錯題,app,,apkpure,,draws,draws,
+768,com.outdooractive.Outdooractive,Outdooractive. Hike and Ride,app,,apkpure,,draws,draws,
+769,com.todtv.tod,TOD by beIN,app,,play,26.9.0,draws,draws,
+770,com.themekit.widgets.themes,ThemeKit - Themes & Widgets,app,,apkpure,,draws,draws,
+771,com.kaboom.apps.free.invitation.maker,Invitation Maker－Card Creator,app,,apkpure,,draws,draws,
+772,com.geozilla.family,Geozilla - Family GPS Locator,app,,play,6.86.8,draws,draws,
+773,com.viralpet.app,ViralPet: AI Pet Video Maker,app,,play,1.1.3,draws,draws,
+774,com.arlosoft.macrodroid,MacroDroid - Device Automation,app,,apkpure,,draws,draws,
+775,com.google.android.contacts,Contacts,app,,apkpure,,draws,draws,
+776,lequipe.fr,"L’ÉQUIPE - actu, score, match",app,,play,10.70.0,draws,draws,
+777,tiktok.video.downloader.nowatermark.tiktokdownload.snaptik,SnapTok - TT Video Downloader,app,,play-only,3.15.1,draws,draws,
+778,com.udates,Once: Chat & Connect App,app,,apkpure,,draws,draws,
+779,com.badguytw.gp,不良人：破局,game,,apkpure,,draws,draws,
+780,com.fansipan.epic.stickman.survival.rpg.idle.game,Epic Stickman: Idle RPG War,game,,apkpure,,blocked,draws,native:ndk:weak-api
+781,com.chorefriend.chorefriend,Chorefriend: Cleaning Schedule,app,,apkpure,,draws,draws,
+782,com.eyezy.android,Findio: GPS phone tracker,app,,apkpure,,draws,draws,
+783,life.channel.accurate.local.weather.forecast,Local Weather：Weather Forecast,app,,apkpure,,draws,draws,
+784,com.popularapp.periodcalendar,Period Calendar Period Tracker,app,,play-only,1.79.368.GP,draws,draws,
+785,com.unicostudio.braintest5,Brain Test X: Hard Challenge,game,,apkpure,,blocked,draws,native:ndk:weak-api
+786,ai.leonardo.leonardo,Leonardo.Ai - Image Generator,app,,play-only,2.0.45,draws,draws,
+787,com.musicdreamtiles.pianogame,Dreameow Tiles: Rhythm Cat,game,,apkpure,,draws,draws,
+788,com.bomcomics.bomtoon.playstore,봄툰,app,,apkpure,,draws,draws,
+789,com.tfgco.apps.coloring.free.color.by.number,Color by Number：Coloring Games,game,,apkpure,,draws,draws,
+790,com.alien.shooter.galaxy.attack,Galaxy Attack: Shooting Game,game,,play,76.6,blocked,draws,native:ndk:weak-api
+791,com.untitledshows.pov,POV – Disposable Camera Events,app,,play,1.58.5,draws,draws,
+792,com.blackmagicdesign.android.blackmagiccam,Blackmagic Camera,app,,missing,,,,
+793,com.cricheroes.cricheroes.alpha,CricHeroes-Cricket Scoring App,app,,apkpure,,draws,draws,
+794,com.zing.zalo,Zalo,app,,apkpure,,draws,draws,
+795,jp.co.yamap,YAMAP -Social Trekking GPS App,app,,play,17.8.0,draws,draws,
+796,com.hybeim.architect,Architect: Land of Exiles,game,,apkpure,,blocked,blocked,native:ndk:weld:input
+797,com.unicostudio.braintest2new,Brain Test 2: Tricky Stories,game,,apkpure,,blocked,draws,native:ndk:weak-api
+798,com.musescore.playerlite,MuseScore: Music Chords & Tabs,app,,play,2.14.53,draws,draws,
+799,com.qoni.guesstheiranswer,Guess Their Answer - IQ Games,game,,play,5.2.3,blocked,draws,native:ndk:weak-api
+800,com.runbuddy.prod,Runna: Running Plans & Coach,app,,missing,,,,
+801,com.moonfrog.ludo.club,Ludo Club - Fun Dice Game,game,,apkpure,,draws,draws,
+802,com.google.android.apps.adm,Google’s Find Hub,app,,play,3.1.763-05,draws,draws,
+803,com.cedargames.mysterytown,Mystery Town: Merge Games,game,,play,1.21.5,blocked,draws,native:ndk:weak-api
+804,com.globalcomix.mobileapp,GlobalComix: Comics and Manga,app,,apkpure-variant,2.2.55,draws,draws,
+805,com.easybrain.crossword.puzzles,Crossword Master - Word Puzzle,game,,play-only,1.29.0,blocked,draws,native:ndk:weak-api
+806,com.bitmango.go.wordcookies,Word Cookies! ®,game,,play,2621.0.0,draws,draws,
+807,com.lemonde.androidapp,"Le Monde, Live News",app,,apkpure,,draws,draws,
+808,com.loadcomplete.welldiver,WellDiver,game,,apkpure,,blocked,draws,native:ndk:weak-api
+809,com.percent.aos.cooptd,Coop TD: Together,game,,apkpure,,draws,draws,
+810,se.maginteractive.quizduel2,QuizDuel! Quiz & Trivia Game,game,,play,1.71.02,blocked,draws,native:ndk:weak-api
+811,io.randomco.travel,Travel Town - Merge Adventure,game,,apkpure,,blocked,draws,native:ndk:weak-api
+812,video.ai.videogenerator,AI Video Generator: 3D FlixAI,app,,apkpure,,draws,draws,
+813,no.mobitroll.kahoot.android,Kahoot! Play & Create Quizzes,app,,play,6.7.7,draws,draws,
+814,com.quizlet.quizletandroid,Quizlet: More than Flashcards,app,,apkpure,,draws,draws,
+815,com.guardian,The Guardian - US & World News,app,,apkpure,,draws,draws,
+816,com.topwar.gp,Top War: Battle Game,game,,play,1.682.0,draws,draws,
+817,com.supercell.clashroyale,Clash Royale,game,,play,160402020,draws,draws,
+818,com.greenmushroom.boomblitz.gp,Top Heroes: Kingdom Saga,game,,apkpure,,draws,draws,
+819,com.skgames.trafficrider,Traffic Rider,game,,play,2.11,draws,draws,
+820,com.topcog.archmageidle,Archmage Idle,game,,play,2.5.4,draws,draws,
+821,com.grad.def,Yami Star - Voice Chat,app,,apkpure-variant,2.60.94,draws,draws,
+822,com.flortumapp.date,My Flirt: Meet People Nearby,app,,apkpure-variant,2026.10.07,draws,draws,
+823,com.cronometer.android.gold,Cronometer: Calorie Counter,app,,apkpure,,draws,draws,
+824,com.huckleberry_labs.app,Huckleberry: Baby Tracker,app,,play-only,0.9.314,draws,draws,
+825,com.eset.ems2.gp,ESET Mobile Security Antivirus,app,,apkpure,,draws,draws,
+826,com.coretoolslab.cleaner.storage.ai,Phone Cleanup: AI Cleaner,app,,apkpure,,draws,draws,
+827,com.mysugr.android.companion,mySugr - Diabetes Tracker Log,app,,apkpure,,draws,draws,
+828,com.netease.idv_tw.googleplay,第五人格,game,,apkpure,,draws,draws,
+829,com.phstw.global,醫起救世界：鼠裡逃生,game,,apkpure,,blocked,blocked,native:ndk:weak-api native:ndk:weld:power
+830,com.weather.nold.forecast,Live Weather: Weather Forecast,app,,play,1.1.42,draws,draws,
+831,ai.photo.generator.editor.fotos.ai.image.app.free,AI Photo Generator: Muselab AI,app,,apkpure,,draws,draws,
+832,com.google.android.apps.chromecast.app,Google Home,app,,apkpure,,draws,draws,
+833,com.sibeliusstudios.gallerie,Gallerie Wallpapers,app,,apkpure,,draws,draws,
+834,com.flags.quiz.trivia,Flags Quiz - Guess The Flag,game,,play,2.0.4,blocked,blocked,native:ndk:weak-api native:ndk:weld:power
+835,app.game.rentaapps,漫画 ”Ｒｅｎｔａ”マンガ レンタル漫画アプリ,app,,play,3.2.2,draws,draws,
+836,com.platogo.pmp,Slotpark Casino Slots Games,game,,apkpure,,draws,draws,
+837,com.playdigious.ninekings,9 Kings,game,,apkpure,,blocked,draws,native:ndk:weak-api
+838,org.thoughtcrime.securesms,Signal Private Messenger,app,,play,8.32.3,draws,draws,
+839,com.unicostudio.braintest4,Brain Test 4: Tricky Friends,game,,apkpure,,blocked,draws,native:ndk:weak-api
+840,com.maps.radar.navigation.android2023,"MapXplorer: Navigation, Radar",app,,apkpure,,draws,draws,
+841,luma.sora.pika.runway.video.ai,Drma: AI Short Drama Maker,app,,apkpure,,draws,draws,
+842,com.pixel.art.coloring.color.number,Happy Color®: Color by Number,game,,play,2.24.0,draws,draws,
+843,com.discovenger.app,LiveLocate - Family Tracker,app,,play,1.2.3,draws,draws,
+844,com.wetter.androidclient,weather24: Forecast & Radar,app,,play,2.78.1,draws,draws,
+845,com.sec.android.app.sbrowser,Samsung Browser,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so native:ndk:weak-api
+846,com.football.soccer.league,Football League 2026,game,,apkpure,,draws,draws,
+847,com.geotrackpro.gpsphonelocationtracker,Phone Tracker & GPS Location,app,,apkpure,,draws,draws,
+848,com.app.nextlog,NextLog,app,,apkpure,,draws,draws,
+849,com.miniclip.plagueinc,Plague Inc.,game,,apkpure,,draws,draws,
+850,com.a3d4medical.completeanatomy,Complete Anatomy - Learn in 3D,app,,play,12.6.1,draws,draws,
+851,com.freevoicetranslator.languagetranslate.speakandtranslate,Languages Translator App,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+852,com.sygic.familywhere.android,Find my Phone - Family Locator,app,,apkpure,,draws,draws,
+853,com.pocketchamps.game,Pocket Champs: 3D Racing Games,game,,play,7.11.5,blocked,draws,native:ndk:weak-api
+854,com.tdsking.videostatus,Mecha Core,game,,apkpure,,draws,draws,
+855,com.sinyee.babybus.world,Baby Panda World-Learning Game,game,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so native:ndk:weak-api
+856,com.master.hotelmaster,My Perfect Hotel,game,,play,1.39.0,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so native:ndk:weak-api
+857,com.miniclip.carrom,Carrom Pool: Disc Game,game,,play,19.6.0,draws,draws,
+858,com.retouchphoto.objectremover.enhanceimage.ai,AI Photo Editor: Photo Enhance,app,,apkpure,,draws,draws,
+859,com.wemadeconnect.aos.makedrama.google,MAke Drama : MAD,game,,apkpure,,blocked,draws,native:ndk:weak-api
+860,com.crypt.gram.puzz,Cryptogram: Word Logic Puzzles,game,,play,3.7.1,blocked,draws,native:ndk:weak-api
+861,com.wallapers.sillysmiles.live.wallpaper,Wallpics - Live Wallpapers 4K,app,,play,1.0.106,draws,draws,
+862,com.merge.cooking.theme.restaurant.food,Merge Cooking®,game,,apkpure,,blocked,draws,native:ndk:weak-api
+863,com.ax.car.engine.sounds,Car Engine Sounds - Gas Pedal,app,,apkpure,,draws,draws,
+864,com.devolverdigital.ballxpit,BALL x PIT,game,,play,1.301,blocked,draws,native:ndk:weak-api
+865,cool.fonts.symbol.keyboard.custom.fancy.text.editor,Fonts Art - Keyboard Fonts,app,,play,2.85.2,draws,draws,
+866,com.tvb.iNews,TVB News+ – News & Lifestyle,app,,apkpure,,draws,draws,
+867,com.askout.social,AskOut: Post & Join Plans,app,,apkpure,,draws,draws,
+868,com.bellyBloom.pregnancy.tracker,Baby & Pregnancy Tracker App,app,,apkpure,,blocked,blocked,native:ndk:weak-api
+869,com.deeporbit.regenradarlivenl,Weather & Rain Radar Forecast,app,,apkpure,,draws,draws,
+870,com.YoBroStudios.MergeSpinner,Spinner Merge Blitz: Spin Top,game,,apkpure,,draws,draws,
+871,com.ultimateguitar.tabs,Ultimate Guitar: Chords & Tabs,app,,play,7.3.35,draws,draws,
+872,com.running.ball.beat.dancing.color.music.game,Running Roadball,game,,play,0.0.28,draws,draws,
+873,de.delitoon,LEZHIN DE,app,,play,3.0.21,draws,draws,
+874,org.eobdfacile.android,OBD2 Car Scanner - EOBD Facile,app,,apkpure,,draws,draws,
+875,com.frontrow.vlog,VN: Photo & Video Editor,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+876,com.defensez.survivaltd,Defense Z: Survival TD,game,,apkpure,,blocked,draws,native:ndk:weak-api
+877,com.ballytechnologies.quickhitslots,Quick Hit Casino Slots Games,game,,play-only,3.72.00,blocked,draws,native:ndk:weak-api
+878,com.droid27.transparentclockweather,Transparent clock and weather,app,,play,9.17.0,draws,draws,
+879,com.sillens.shapeupclub,Lifesum: AI Calorie Tracker,app,,play,20.12.0,draws,draws,
+880,com.tutotoons.app.fluvsies.free,Fluvsies - Cute Virtual Pets,game,,play,24.1.5,blocked,draws,native:ndk:weak-api
+881,com.x.aniimos,Aniimo,game,,apkpure,,blocked,blocked,native:ndk:weak-api native:ndk:weld:power
+882,com.football.livescores.liveupdates,Football Live Score: Soccer,app,,apkpure,,draws,draws,
+883,com.lucky_apps.RainViewer,RainViewer: Live Weather Radar,app,,apkpure,,draws,draws,
+884,com.storytoys.lego.bluey.googleplay,LEGO® Bluey,game,,play-only,7.1.0,blocked,draws,native:ndk:weak-api
+885,wsj.reader_sp,The Wall Street Journal,app,,apkpure,,draws,draws,
+886,com.scannerradio,Scanner Radio - Police Scanner,app,,apkpure,,draws,draws,
+887,adventure.party.real.life,Sunday City: Life RolePlay,game,,apkpure,,blocked,draws,native:ndk:weak-api
+888,com.security.fileguard,File Cleaner-Storage Cleaner,app,,play,1.2.2,draws,draws,
+889,com.matryoshka.cooking.vibes,We Are Cooking: Taste of Life,game,,apkpure,,blocked,draws,native:ndk:weak-api
+890,com.ubisoft.dance.JustDance,Just Dance Now,game,,play,9.8.0,blocked,draws,native:ndk:weak-api
+891,pro.godok.gymwork,Gymwork: Workout Tracker Log,app,,apkpure,,draws,draws,
+892,com.storytoys.marvelhq.googleplay,Marvel HQ: Kids Super Hero Fun,game,,play,11.0.0,blocked,draws,native:ndk:weak-api
+893,com.merge.game.foodstars,Foodstars: Merge & Cook,game,,apkpure,,blocked,draws,native:ndk:weak-api
+894,com.draw.sketch.ardrawing.trace.anime.paint,Artrace: AR Easy Draw & Sketch,app,,apkpure,,draws,draws,
+895,com.openmygame.games.android.fillwordsoffline,Fillwords: Word Search Puzzles,game,,play-only,1.70.9,draws,draws,
+896,ai.photoeditor.retouch.enhance.photo.generator,AI Photo Studio: Editor Pro,app,,apkpure,,draws,draws,
+897,com.app.screenza,Screenza,app,,play,1.0.4,draws,draws,
+898,com.dating.chat.citas.app,Meet Singles & Date – Catchyy,app,,apkpure-variant,1.34.0,draws,draws,
+899,app.source.getcontact,Getcontact,app,,play,8.19.0,draws,draws,
+900,com.beatmaker.aimusic,Beatron - AI Music Maker,app,,apkpure,,draws,draws,
+901,com.touch2goal.soccer,Mini Soccer Star: Football Cup,game,,apkpure,,draws,draws,
+902,ai.mybuddy.talkingflashcards_new,Buddy.ai: Kids Learning Games,app,,apkpure,,blocked,draws,native:ndk:weak-api
+903,com.nianticlabs.monsterhunter,Monster Hunter Now,game,,apkpure,,blocked,blocked,native:ndk:weak-api native:ndk:weld:power
+904,com.skylum.luminar,Luminar: Photo Editor&Enhancer,app,,play-only,4.5,blocked,blocked,native:ndk:weld:buffers
+905,com.encar.encarMobileApp,Encar,app,,apkpure,,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so
+906,com.fzhbkd.bkme,精靈出發：大冒險,game,,apkpure,,blocked,draws,native:ndk:weak-api
+907,com.opera.browser,Opera browser with VPN,app,,apkpure,,draws,draws,
+908,jp.gocro.smartnews.android,SmartNews: Local Breaking News,app,,apkpure,,draws,draws,
+909,com.callpod.android_apps.keeper,Keeper Password Manager,app,,play,app 18.1.1.148001,draws,draws,
+910,com.dts.freefiremax,Free Fire MAX x NARUTO,game,,apkpure,,blocked,draws,native:ndk:weak-api
+911,com.niceteen.games.dtbam,Deal To Be A Millionaire,game,,apkpure,,blocked,draws,native:ndk:weak-api
+912,com.global.live,Hiya-Group Voice Chat,app,,apkpure,,draws,draws,
+913,com.vigafun.funfinity.foodhunt,Food Hunt: Pixel Puzzle,game,,apkpure,,blocked,draws,native:ndk:weak-api
+914,com.getepic.Epic,Epic: Kids' Books & Reading,app,,play,3.142.3,draws,draws,
+915,com.grouprx.pureanti,Antivirus Pure,app,,apkpure,,draws,draws,
+916,com.bilibili.sirius,BanG Dream! Our Notes,game,,apkpure,,blocked,blocked,native:ndk:weak-api native:ndk:weld:power
+917,solitaire.word.association.connections.puzzle,Associate Words: Solitaire,game,,play,1.330,draws,draws,
+918,com.thousandfold.reverie.gp.blansh,Thousandfold Reverie AI,app,,apkpure-variant,0.2,draws,draws,
+919,ai.praktika.android,Praktika – AI Language Tutor,app,,play,4.41.2,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so native:ndk:weak-api
+920,com.janitor.ai,Janitor: Interactive Stories,app,,apkpure,,draws,draws,
+921,com.datemyage,DateMyAge Mature Connections,app,,apkpure-variant,8.948.0,draws,draws,
+922,com.wachanga.superchat,ChatGO - AI Chat Assistant,app,,apkpure,,draws,draws,
+923,com.storytoys.lego.duplo.peppa.pig.googleplay,LEGO® DUPLO® Peppa Pig,game,,play-only,14.0.0,blocked,draws,native:ndk:weak-api
+924,tw.com.iwplay.nte,異環,game,,missing,,,,
+925,semlog.family.parent,SemLog,app,,apkpure,,draws,draws,
+926,com.gamamobi.nikke,勝利女神：妮姬,game,,missing,,,,
+927,global.gps.location.tracker.kids,GPS Location Tracker For Kids,app,,apkpure,,draws,draws,
+928,com.regasoftware.udisc,UDisc Disc Golf App,app,,play,24.3.4,draws,draws,
+929,com.delitoon,LEZHIN FR,app,,apkpure,,draws,draws,
+930,com.abi.colony.flow,Colony Flow!,game,,apkpure,,blocked,draws,native:ndk:weak-api
+931,jp.co.mixi.monsterstrikeTW,怪物彈珠 - RPG手機遊戲,game,,apkpure,,draws,draws,
+932,com.unicornstudio.cashparty.slots.casino.vegas.free,Cash Club Casino - Vegas Slots,game,,apkpure,,blocked,draws,native:ndk:weak-api
+933,com.rephoto.recover.pro,照片恢復：找回刪除的照片、影片和文檔,app,,apkpure,,draws,draws,
+934,com.liteorange.hometopia,Frost Valley™: Merge & Story,game,,apkpure,,draws,draws,
+935,jp.co.ponos.battlecatstw,貓咪大戰爭,game,,apkpure,,draws,draws,
+936,com.huuuge.casino.texas,Billionaire Casino Slots 777,game,,play-only,12.10.27300,draws,draws,
+937,com.drone.assist,Drone App: Forecast for UAV,app,,apkpure,,draws,draws,
+938,org.kustom.widget,KWGT Kustom Widget Maker,app,,play,3.82b621115,draws,draws,
+939,fr.thema.wear.watch.dmax,D-Max Watch Face,app,,play,1.26.09.0501,draws,draws,
+940,com.billiards.billiardhero.rescueshot,Billiard Hero™️,game,,apkpure,,draws,draws,
+941,com.weatherradar.liveradar.weathermap,Weather Radar & Weather Live,app,,apkpure,,draws,draws,
+942,com.comikey.banagher,Comikey - Manga & Webcomics,app,,play,26.10.01,draws,draws,
+943,com.productmadness.hovmobile,Heart of Vegas Casino Slots,game,,apkpure,,blocked,draws,native:ndk:weak-api
+944,com.pixonic.wwr,War Robots Multiplayer Battles,game,,apkpure,,blocked,draws,native:ndk:weak-api
+945,com.onetaptool.pdfeditor.pdfreader,PDF Reader & PDF Viewer,app,,play,1.1.6-OneTap,draws,draws,
+946,ch.protonmail.android,Proton Mail: Encrypted Email,app,,apkpure,,draws,draws,
+947,gen.tech.keiki.world.learning,Keiki Learning games for Kids,game,,apkpure,,blocked,draws,native:ndk:weak-api
+948,com.appediet.appediet,AI Calorie Counter - Appediet,app,,apkpure,,draws,draws,
+949,com.checkitt,Ground News,app,,apkpure,,draws,draws,
+950,com.PepiPlay.PepiHospital,Pepi City: Hospital Life,game,,apkpure,,blocked,draws,native:ndk:weak-api
+951,com.igg.android.lordsmobile,Lords Mobile: Kingdom Wars,game,,play,2.206,blocked,draws,native:ndk:weak-api
+952,com.themekit.lite.widgets.themes,ThemePro - Widget & Wallpaper,app,,apkpure,,draws,draws,
+953,vidma.video.editor.videomaker,AI Video Editor - Vidma Cut AI,app,,apkpure,,draws,draws,
+954,com.dartslive.dlapp,DARTSLIVE,app,,play,3.5.13,draws,draws,
+955,com.accurate.weather.forecast.live,"Weather Radar, Live Radar",app,,play,2.1.6,draws,draws,
+956,com.logoquiz.triviagame,Logo Quiz - World Trivia Game,game,,play,2.0.5,blocked,blocked,native:ndk:weak-api native:ndk:weld:power
+957,com.global.hiyagame,Hiya Game – Party & Voice Chat,app,,apkpure-variant,4.64.0,draws,draws,
+958,game.qualiarts.hololive.dreams.com,hololive Dreams,game,,apkpure,,draws,draws,
+959,co.astra_ai.app.twa,Astra AI: Study & Exam Prep,app,,apkpure,,draws,draws,
+960,com.zynga.words3,Words With Friends Word Game,game,,play,62.01.01,blocked,draws,native:ndk:weak-api
+961,com.bamnetworks.mobile.android.gameday.atbat,MLB,app,,play,26.18.2.2,draws,draws,
+962,com.golfbuddy.smartcaddie,Smart Caddie-Golf GPS,app,,play,5.0.22,draws,draws,
+963,com.scaleup.dancehit.ai,DanceHit: AI Dance Generator,app,,missing,,,,
+964,com.tutotoons.app.dopplesworld,Dopples World,game,,play-only,22.0.42,draws,draws,
+965,com.garena.game.fctw,Garena Speed Drifters,game,,apkpure,,blocked,blocked,native:ndk:weak-api
+966,com.rrsolutions.fevercheckup,Body Temperature・Fever Tracker,app,,apkpure,,draws,draws,
+967,scorebuzz.soccerlivescore.livesports.footballscore,SnapGoal: Football Live Scores,app,,play,1.0.75,draws,draws,
+968,wp.wattpad,Wattpad - Read & Write Stories,app,,play,11.41.1,draws,draws,
+969,jp.pokemon.pokemonchampions,Pokémon Champions,game,,missing,,,,
+970,com.azarlive.android,"Azar: Video Chat, Meet Friends",app,,apkpure-variant,7.13.0,blocked,blocked,native:ndk:weak-api
+971,com.compassfree.digitalcompass.forandroid.app,Compass app - Accurate Compass,app,,play,3.1.3,draws,draws,
+972,com.tikie.ai.android,TiKie: AI Fantasy & Roleplay,app,,apkpure,,draws,draws,
+973,com.adsk.sketchbook,Sketchbook,app,,apkpure,,draws,draws,
+974,com.more.lastshelter.gp,Last Shelter: War Z,game,,play,26.1002.001,blocked,blocked,lookup:sym:runtime-resolved:libnativehelper.so native:ndk:weak-api
+975,com.amiko.ai,Amiko: Chat to Learn Languages,app,,play,1.8.6,draws,draws,
+976,com.rummikubfree,Rummikub®,game,,play,4.13.10,draws,draws,
+977,com.wgame.codeball,屍控防線 - Zomline Survival,game,,apkpure,,blocked,draws,native:ndk:weak-api
+978,com.google.android.keep,Google Keep - Notes and lists,app,,apkpure,,blocked,blocked,native:ndk:weak-api
+979,com.murka.scatterslots,Scatter Slots - Slot Machines,game,,apkpure-variant,6.5.0,draws,draws,
+980,com.sinyee.babybus.kids,BabyBus Kids: Play & Learn,game,,play,3.2.4.1,blocked,draws,native:ndk:weak-api
+981,com.screenshake.dominodreams,Domino Dreams™,game,,play-only,1.62.1,draws,draws,
+982,com.miniclip.realsniper,Pure Sniper: Gun Shooter Games,game,,apkpure-variant,500271,draws,draws,
+983,music.beat.piano.fire.magic.tiles.challenge.free,Beat Piano - Music EDM Tiles,game,,apkpure,,draws,draws,
+984,com.s01.global,Lordrush,game,,play,1.10.8,draws,draws,
+985,com.liteup.getgains,Gravl: AI Personal Trainer,app,,play,1.53.7,blocked,blocked,native:ndk:weak-api
+986,com.bandainamcoent.dblegends_ww,DRAGON BALL LEGENDS,game,,play,6.30.0,blocked,draws,native:ndk:weak-api
+987,com.navitime.local.navitime,NAVITIME - Map & Transfer Navi,app,,play,12.35.0,draws,draws,
+988,com.dating.android,Dating.com: Global Online Chat,app,,apkpure,,draws,draws,
+989,com.cat.hole.puzzle.aos,Drop the Cat!,game,,apkpure,,draws,draws,
+990,com.aws.android,Weather Forecast by WeatherBug,app,,apkpure,,draws,draws,
+991,com.obdocker.obdocker,OBDocker - OBD2 Car Scanner,app,,apkpure,,draws,draws,
+992,com.jumappbuild.app,Pinduo Market,app,,apkpure,,draws,draws,
+993,com.playstudios.popslots,POP! Slots™,game,,apkpure,,draws,draws,
+994,com.santech.desireapp,DesireLand: Anonymous Dating,app,,apkpure-variant,1.12.4,draws,draws,
+995,com.universal.tv.remote.control.screen.mirroring,Remote Control for All TV,app,,play,5.5.4,draws,draws,
+996,com.skyhorse.dyqdj.tw.gp,道友請渡劫,game,,missing,,,,
+997,com.house.design.floorplancreate.rebuild,House Design 3D Floor Plan App,app,,apkpure,,blocked,blocked,native:ndk:weak-api
+998,com.peoplefun.wordsolitaire,Wordscapes Solitaire,game,,apkpure,,blocked,draws,native:ndk:weak-api
+999,com.remoteapps.dashcam.android,Dash Cam: Dashcam Viewer,app,,play-only,1.1.1,draws,draws,
+1000,com.mi.earphone,Xiaomi Earbuds,app,,apkpure,,draws,draws,
