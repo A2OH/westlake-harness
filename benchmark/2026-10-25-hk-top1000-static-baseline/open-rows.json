@@ -1,0 +1,2658 @@
+{
+ "apps": 982,
+ "rows": [
+  {
+   "id": "dep:google-play-services",
+   "apps": 974,
+   "item": "Google Play services",
+   "shim_class": "C5",
+   "effort": "M"
+  },
+  {
+   "id": "intent:view-web",
+   "apps": 960,
+   "item": "Web links opened in another app (ACTION_VIEW with an http(s) URL)",
+   "shim_class": "C0",
+   "effort": "none"
+  },
+  {
+   "id": "am:permission-request",
+   "apps": 959,
+   "item": "Runtime permission requests (Activity.requestPermissions)",
+   "shim_class": "C9",
+   "effort": "XS"
+  },
+  {
+   "id": "intent:system-screen",
+   "apps": 958,
+   "item": "Screens of Android's own apps: Settings (android.settings.* actions), ",
+   "shim_class": "C0",
+   "effort": "none"
+  },
+  {
+   "id": "svc:phone",
+   "apps": 955,
+   "item": "phone",
+   "shim_class": "C0",
+   "effort": "none"
+  },
+  {
+   "id": "wm:popup-window",
+   "apps": 955,
+   "item": "Popup windows (menus, dropdowns) shown over their window",
+   "shim_class": "C6",
+   "effort": "S"
+  },
+  {
+   "id": "intent:share",
+   "apps": 950,
+   "item": "Sharing with another app (ACTION_SEND, Intent.createChooser)",
+   "shim_class": "C0",
+   "effort": "none"
+  },
+  {
+   "id": "pm:call:queryIntentActivityOptions",
+   "apps": 938,
+   "item": "PackageManager.queryIntentActivityOptions",
+   "shim_class": "C9",
+   "effort": "M"
+  },
+  {
+   "id": "dep:firebase-component-discovery:ComponentDiscoveryService",
+   "apps": 937,
+   "item": "Firebase component discovery (ComponentDiscoveryService)",
+   "shim_class": "C5",
+   "effort": "verify"
+  },
+  {
+   "id": "svc:sensor",
+   "apps": 932,
+   "item": "sensor",
+   "shim_class": "C0",
+   "effort": "none"
+  },
+  {
+   "id": "jni:android.media.MediaMetadataRetriever",
+   "apps": 932,
+   "item": "android.media.MediaMetadataRetriever: 13 of 13 natives unregistered",
+   "shim_class": "C3",
+   "effort": "M"
+  },
+  {
+   "id": "pm:call:setComponentEnabledSetting",
+   "apps": 928,
+   "item": "PackageManager.setComponentEnabledSetting",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:queryIntentContentProviders",
+   "apps": 917,
+   "item": "PackageManager.queryIntentContentProviders",
+   "shim_class": "C9",
+   "effort": "M"
+  },
+  {
+   "id": "pm:call:getComponentEnabledSetting",
+   "apps": 915,
+   "item": "PackageManager.getComponentEnabledSetting",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "jni:android.view.KeyCharacterMap",
+   "apps": 912,
+   "item": "android.view.KeyCharacterMap: 2 of 14 natives unregistered",
+   "shim_class": "C3",
+   "effort": "S"
+  },
+  {
+   "id": "svc:textclassification",
+   "apps": 879,
+   "item": "textclassification",
+   "shim_class": "C0",
+   "effort": "none"
+  },
+  {
+   "id": "intent:pick-document",
+   "apps": 863,
+   "item": "The system document picker (OPEN_DOCUMENT, GET_CONTENT, CREATE_DOCUMEN",
+   "shim_class": "C0",
+   "effort": "none"
+  },
+  {
+   "id": "jni:android.media.MediaCodec",
+   "apps": 857,
+   "item": "android.media.MediaCodec: 26 of 46 natives unregistered",
+   "shim_class": "C3",
+   "effort": "M"
+  },
+  {
+   "id": "pm:uses-library:android.ext.adservices",
+   "apps": 833,
+   "item": "Shared library android.ext.adservices (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "svc:vibrator",
+   "apps": 791,
+   "item": "vibrator",
+   "shim_class": "C0",
+   "effort": "none"
+  },
+  {
+   "id": "jni:android.media.ImageReader",
+   "apps": 756,
+   "item": "android.media.ImageReader: 10 of 10 natives unregistered",
+   "shim_class": "C3",
+   "effort": "M"
+  },
+  {
+   "id": "jni:android.media.PublicFormatUtils",
+   "apps": 750,
+   "item": "android.media.PublicFormatUtils: 3 of 3 natives unregistered",
+   "shim_class": "C3",
+   "effort": "S"
+  },
+  {
+   "id": "jni:android.renderscript.RenderScript",
+   "apps": 729,
+   "item": "android.renderscript.RenderScript: 128 of 128 natives unregistered",
+   "shim_class": "C3",
+   "effort": "L"
+  },
+  {
+   "id": "svc:media_metrics",
+   "apps": 728,
+   "item": "media_metrics",
+   "shim_class": "C5",
+   "effort": "S"
+  },
+  {
+   "id": "jni:android.media.MediaExtractor",
+   "apps": 705,
+   "item": "android.media.MediaExtractor: 26 of 26 natives unregistered",
+   "shim_class": "C3",
+   "effort": "M"
+  },
+  {
+   "id": "jni:android.media.MediaDrm",
+   "apps": 662,
+   "item": "android.media.MediaDrm: 35 of 43 natives unregistered",
+   "shim_class": "C3",
+   "effort": "M"
+  },
+  {
+   "id": "pm:uses-library:androidx.window.extensions",
+   "apps": 625,
+   "item": "Shared library androidx.window.extensions (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "pm:uses-library:androidx.window.sidecar",
+   "apps": 625,
+   "item": "Shared library androidx.window.sidecar (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "jni:android.media.MediaCrypto",
+   "apps": 619,
+   "item": "android.media.MediaCrypto: 1 of 7 natives unregistered",
+   "shim_class": "C3",
+   "effort": "S"
+  },
+  {
+   "id": "java:Media store",
+   "apps": 606,
+   "item": "Media store",
+   "shim_class": "C9",
+   "effort": "verify"
+  },
+  {
+   "id": "sym:runtime-resolved:libandroid.so",
+   "apps": 561,
+   "item": "libandroid.so entry points looked up by name at runtime, not supplied ",
+   "shim_class": "C1/C2",
+   "effort": "M"
+  },
+  {
+   "id": "pm:uses-library:org.apache.http.legacy",
+   "apps": 489,
+   "item": "Shared library org.apache.http.legacy (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "svc:print",
+   "apps": 447,
+   "item": "print",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "svc:fingerprint",
+   "apps": 441,
+   "item": "fingerprint",
+   "shim_class": "C0",
+   "effort": "none"
+  },
+  {
+   "id": "jni:android.graphics.pdf.PdfDocument",
+   "apps": 423,
+   "item": "android.graphics.pdf.PdfDocument: 5 of 5 natives unregistered",
+   "shim_class": "C3",
+   "effort": "S"
+  },
+  {
+   "id": "svc:input",
+   "apps": 419,
+   "item": "input",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "pm:call:getApplicationEnabledSetting",
+   "apps": 419,
+   "item": "PackageManager.getApplicationEnabledSetting",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "svc:bluetooth",
+   "apps": 374,
+   "item": "bluetooth",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "jni:android.os.storage.StorageManager",
+   "apps": 366,
+   "item": "android.os.storage.StorageManager: 1 of 1 natives unregistered",
+   "shim_class": "C3",
+   "effort": "S"
+  },
+  {
+   "id": "jni:android.media.MediaMuxer",
+   "apps": 357,
+   "item": "android.media.MediaMuxer: 8 of 8 natives unregistered",
+   "shim_class": "C3",
+   "effort": "M"
+  },
+  {
+   "id": "pm:call:getInstalledApplications",
+   "apps": 350,
+   "item": "PackageManager.getInstalledApplications",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "sym:runtime-resolved:libnativewindow.so",
+   "apps": 342,
+   "item": "libnativewindow.so entry points looked up by name at runtime, not supp",
+   "shim_class": "C1/C2",
+   "effort": "S"
+  },
+  {
+   "id": "window:surfaceview-opacity",
+   "apps": 335,
+   "item": "An engine's SurfaceView composed over the screen below its window (Uni",
+   "shim_class": "C2",
+   "effort": "S"
+  },
+  {
+   "id": "pm:multiprocess",
+   "apps": 330,
+   "item": "Components in secondary processes: :lbcore, :lbmain, :lebian.base, :le",
+   "shim_class": "C4",
+   "effort": "L"
+  },
+  {
+   "id": "svc:grammatical_inflection",
+   "apps": 325,
+   "item": "grammatical_inflection",
+   "shim_class": "C5",
+   "effort": "S"
+  },
+  {
+   "id": "jni:android.hardware.camera2.impl.CameraMetadataNative",
+   "apps": 316,
+   "item": "android.hardware.camera2.impl.CameraMetadataNative: 20 of 20 natives u",
+   "shim_class": "C3",
+   "effort": "M"
+  },
+  {
+   "id": "jni:android.hardware.camera2.utils.SurfaceUtils",
+   "apps": 316,
+   "item": "android.hardware.camera2.utils.SurfaceUtils: 5 of 5 natives unregister",
+   "shim_class": "C3",
+   "effort": "S"
+  },
+  {
+   "id": "java:Networking",
+   "apps": 308,
+   "item": "Networking",
+   "shim_class": "C9",
+   "effort": "verify"
+  },
+  {
+   "id": "load:shadowed-by-board",
+   "apps": 306,
+   "item": "Packaged libraries a board library of the same name shadows (libc++_sh",
+   "shim_class": "C3",
+   "effort": "XS"
+  },
+  {
+   "id": "jni:android.view.MotionEvent",
+   "apps": 302,
+   "item": "android.view.MotionEvent: 1 of 52 natives unregistered",
+   "shim_class": "C3",
+   "effort": "S"
+  },
+  {
+   "id": "jni:android.media.MediaParser",
+   "apps": 300,
+   "item": "android.media.MediaParser: 1 of 1 natives unregistered",
+   "shim_class": "C3",
+   "effort": "S"
+  },
+  {
+   "id": "svc:profiling",
+   "apps": 290,
+   "item": "profiling",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "jni:android.hardware.Camera",
+   "apps": 285,
+   "item": "android.hardware.Camera: 23 of 29 natives unregistered",
+   "shim_class": "C3",
+   "effort": "M"
+  },
+  {
+   "id": "pm:call:getPackageGids",
+   "apps": 283,
+   "item": "PackageManager.getPackageGids",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "svc:vibrator_manager",
+   "apps": 247,
+   "item": "vibrator_manager",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "jni:android.media.MediaRecorder",
+   "apps": 238,
+   "item": "android.media.MediaRecorder: 18 of 36 natives unregistered",
+   "shim_class": "C3",
+   "effort": "M"
+  },
+  {
+   "id": "jni:android.media.ImageWriter",
+   "apps": 234,
+   "item": "android.media.ImageWriter: 8 of 8 natives unregistered",
+   "shim_class": "C3",
+   "effort": "M"
+  },
+  {
+   "id": "pm:uses-library:com.amazon.privacypass",
+   "apps": 220,
+   "item": "Shared library com.amazon.privacypass (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "dep:firebase-component-discovery:MlKitComponentDiscoveryService",
+   "apps": 211,
+   "item": "Firebase component discovery (MlKitComponentDiscoveryService)",
+   "shim_class": "C5",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:weak-api",
+   "apps": 206,
+   "item": "Weak NDK imports nothing on the board defines (android_get_application",
+   "shim_class": "C1",
+   "effort": "S"
+  },
+  {
+   "id": "svc:biometric",
+   "apps": 188,
+   "item": "biometric",
+   "shim_class": "C5",
+   "effort": "S"
+  },
+  {
+   "id": "sym:runtime-resolved:libneuralnetworks.so",
+   "apps": 164,
+   "item": "libneuralnetworks.so entry points looked up by name at runtime, not su",
+   "shim_class": "C1/C2",
+   "effort": "L"
+  },
+  {
+   "id": "jni:android.os.MemoryFile",
+   "apps": 154,
+   "item": "android.os.MemoryFile: 2 of 2 natives unregistered",
+   "shim_class": "C3",
+   "effort": "S"
+  },
+  {
+   "id": "jni:android.hardware.SyncFence",
+   "apps": 117,
+   "item": "android.hardware.SyncFence: 7 of 7 natives unregistered",
+   "shim_class": "C3",
+   "effort": "M"
+  },
+  {
+   "id": "java:Graphics",
+   "apps": 115,
+   "item": "Graphics",
+   "shim_class": "C4",
+   "effort": "S"
+  },
+  {
+   "id": "svc:game",
+   "apps": 107,
+   "item": "game",
+   "shim_class": "C5",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:checkSignatures",
+   "apps": 106,
+   "item": "PackageManager.checkSignatures",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "sym:runtime-resolved:libmediandk.so",
+   "apps": 106,
+   "item": "libmediandk.so entry points looked up by name at runtime, not supplied",
+   "shim_class": "C1/C2",
+   "effort": "M"
+  },
+  {
+   "id": "svc:telephony_subscription_service",
+   "apps": 104,
+   "item": "telephony_subscription_service",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "jni:android.hardware.camera2.DngCreator",
+   "apps": 100,
+   "item": "android.hardware.camera2.DngCreator: 9 of 9 natives unregistered",
+   "shim_class": "C3",
+   "effort": "M"
+  },
+  {
+   "id": "jni:android.hardware.usb.UsbDevice",
+   "apps": 93,
+   "item": "android.hardware.usb.UsbDevice: 2 of 2 natives unregistered",
+   "shim_class": "C3",
+   "effort": "S"
+  },
+  {
+   "id": "svc:textservices",
+   "apps": 93,
+   "item": "textservices",
+   "shim_class": "C5",
+   "effort": "S"
+  },
+  {
+   "id": "jni:android.app.backup.FileBackupHelperBase",
+   "apps": 89,
+   "item": "android.app.backup.FileBackupHelperBase: 5 of 5 natives unregistered",
+   "shim_class": "C3",
+   "effort": "S"
+  },
+  {
+   "id": "ndk:libc-abi",
+   "apps": 88,
+   "item": "bionic libc ABI: 8 symbols to translate onto musl",
+   "shim_class": "C1/C2",
+   "effort": "S"
+  },
+  {
+   "id": "load:needed-missing",
+   "apps": 85,
+   "item": "Libraries named in DT_NEEDED that nothing provides (libjsc.so, libnati",
+   "shim_class": "C1",
+   "effort": "M"
+  },
+  {
+   "id": "svc:wifip2p",
+   "apps": 85,
+   "item": "wifip2p",
+   "shim_class": "C4",
+   "effort": "S"
+  },
+  {
+   "id": "jni:android.app.backup.BackupDataInput",
+   "apps": 83,
+   "item": "android.app.backup.BackupDataInput: 5 of 5 natives unregistered",
+   "shim_class": "C3",
+   "effort": "S"
+  },
+  {
+   "id": "jni:android.drm.DrmManagerClient",
+   "apps": 81,
+   "item": "android.drm.DrmManagerClient: 19 of 19 natives unregistered",
+   "shim_class": "C3",
+   "effort": "M"
+  },
+  {
+   "id": "jni:android.app.backup.BackupHelperDispatcher",
+   "apps": 73,
+   "item": "android.app.backup.BackupHelperDispatcher: 4 of 4 natives unregistered",
+   "shim_class": "C3",
+   "effort": "S"
+  },
+  {
+   "id": "abi:bionic-tls-slots",
+   "apps": 66,
+   "item": "Bionic TLS slots read directly (thread id: liba3e5.so, libeef0.so)",
+   "shim_class": "C6",
+   "effort": "L"
+  },
+  {
+   "id": "jni:android.os.Debug",
+   "apps": 66,
+   "item": "android.os.Debug: 26 of 31 natives unregistered",
+   "shim_class": "C3",
+   "effort": "M"
+  },
+  {
+   "id": "sym:runtime-resolved:libjnigraphics.so",
+   "apps": 66,
+   "item": "libjnigraphics.so entry points looked up by name at runtime, not suppl",
+   "shim_class": "C1/C2",
+   "effort": "S"
+  },
+  {
+   "id": "sym:runtime-resolved:libnativehelper.so",
+   "apps": 59,
+   "item": "libnativehelper.so entry points looked up by name at runtime, not supp",
+   "shim_class": "C1/C2",
+   "effort": "S"
+  },
+  {
+   "id": "pm:uses-library:androidx.camera.extensions.impl",
+   "apps": 54,
+   "item": "Shared library androidx.camera.extensions.impl (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "upcall:libpag.so",
+   "apps": 49,
+   "item": "libpag.so \u2192 17 classes, 70 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "svc:nfc",
+   "apps": 46,
+   "item": "nfc",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "load:packed-init-array",
+   "apps": 44,
+   "item": "Java-loaded libraries whose constructors packed relocations fill (libr",
+   "shim_class": "C3",
+   "effort": "XS"
+  },
+  {
+   "id": "java:App framework",
+   "apps": 39,
+   "item": "App framework",
+   "shim_class": "C9",
+   "effort": "verify"
+  },
+  {
+   "id": "jni:android.hardware.usb.UsbDeviceConnection",
+   "apps": 39,
+   "item": "android.hardware.usb.UsbDeviceConnection: 13 of 13 natives unregistere",
+   "shim_class": "C3",
+   "effort": "M"
+  },
+  {
+   "id": "svc:dropbox",
+   "apps": 38,
+   "item": "dropbox",
+   "shim_class": "C5",
+   "effort": "S"
+  },
+  {
+   "id": "svc:restrictions",
+   "apps": 36,
+   "item": "restrictions",
+   "shim_class": "C5",
+   "effort": "S"
+  },
+  {
+   "id": "jni:android.os.ServiceManager",
+   "apps": 35,
+   "item": "android.os.ServiceManager: 1 of 1 natives unregistered",
+   "shim_class": "C3",
+   "effort": "S"
+  },
+  {
+   "id": "upcall:libsqlcipher.so",
+   "apps": 34,
+   "item": "libsqlcipher.so \u2192 74 classes, 210 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "jni:android.media.ToneGenerator",
+   "apps": 33,
+   "item": "android.media.ToneGenerator: 6 of 6 natives unregistered",
+   "shim_class": "C3",
+   "effort": "M"
+  },
+  {
+   "id": "jni:android.media.AudioSystem",
+   "apps": 31,
+   "item": "android.media.AudioSystem: 83 of 103 natives unregistered",
+   "shim_class": "C3",
+   "effort": "L"
+  },
+  {
+   "id": "ndk:weld:media",
+   "apps": 29,
+   "item": "NDK weld \u00b7 media: 2 symbols",
+   "shim_class": "C4",
+   "effort": "L"
+  },
+  {
+   "id": "pm:call:setComponentEnabledSettings",
+   "apps": 27,
+   "item": "PackageManager.setComponentEnabledSettings",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "jni:android.media.FaceDetector",
+   "apps": 26,
+   "item": "android.media.FaceDetector: 5 of 5 natives unregistered",
+   "shim_class": "C3",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:getSystemSharedLibraryNames",
+   "apps": 25,
+   "item": "PackageManager.getSystemSharedLibraryNames",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:isSafeMode",
+   "apps": 24,
+   "item": "PackageManager.isSafeMode",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "java:WiFi",
+   "apps": 23,
+   "item": "WiFi",
+   "shim_class": "C9",
+   "effort": "verify"
+  },
+  {
+   "id": "pm:uses-library:android.test.runner",
+   "apps": 22,
+   "item": "Shared library android.test.runner (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "jni:android.app.NativeActivity",
+   "apps": 22,
+   "item": "android.app.NativeActivity: 18 of 18 natives unregistered",
+   "shim_class": "C3",
+   "effort": "M"
+  },
+  {
+   "id": "pm:uses-library:android.test.base",
+   "apps": 21,
+   "item": "Shared library android.test.base (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "upcall:libBugly_Native.so",
+   "apps": 21,
+   "item": "libBugly_Native.so \u2192 10 classes, 27 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "java:Legacy HTTP",
+   "apps": 20,
+   "item": "Legacy HTTP",
+   "shim_class": "C1/C5",
+   "effort": "S"
+  },
+  {
+   "id": "upcall:libunity.so",
+   "apps": 20,
+   "item": "libunity.so \u2192 156 classes, 12023 members",
+   "shim_class": "C9",
+   "effort": "verify"
+  },
+  {
+   "id": "pm:call:getPackagesHoldingPermissions",
+   "apps": 20,
+   "item": "PackageManager.getPackagesHoldingPermissions",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "jni:android.app.backup.FullBackup",
+   "apps": 20,
+   "item": "android.app.backup.FullBackup: 1 of 1 natives unregistered",
+   "shim_class": "C3",
+   "effort": "S"
+  },
+  {
+   "id": "svc:user-unanswered",
+   "apps": 19,
+   "item": "UserManager calls the in-process user service does not answer (1)",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:getPreferredActivities",
+   "apps": 19,
+   "item": "PackageManager.getPreferredActivities",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:setApplicationEnabledSetting",
+   "apps": 19,
+   "item": "PackageManager.setApplicationEnabledSetting",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "jni:android.window.InputTransferToken",
+   "apps": 17,
+   "item": "android.window.InputTransferToken: 8 of 8 natives unregistered",
+   "shim_class": "C3",
+   "effort": "M"
+  },
+  {
+   "id": "svc:euicc",
+   "apps": 17,
+   "item": "euicc",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "jni:android.app.backup.BackupDataOutput",
+   "apps": 17,
+   "item": "android.app.backup.BackupDataOutput: 5 of 5 natives unregistered",
+   "shim_class": "C3",
+   "effort": "S"
+  },
+  {
+   "id": "ndk:weld:audio",
+   "apps": 17,
+   "item": "NDK weld \u00b7 audio: 3 symbols",
+   "shim_class": "C4",
+   "effort": "M"
+  },
+  {
+   "id": "pm:uses-library:wear-sdk",
+   "apps": 17,
+   "item": "Shared library wear-sdk (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "jni:android.media.MediaCodec$LinearBlock",
+   "apps": 17,
+   "item": "android.media.MediaCodec$LinearBlock: 4 of 4 natives unregistered",
+   "shim_class": "C3",
+   "effort": "S"
+  },
+  {
+   "id": "pm:uses-library:android.test.mock",
+   "apps": 16,
+   "item": "Shared library android.test.mock (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "svc:midi",
+   "apps": 16,
+   "item": "midi",
+   "shim_class": "C5",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:clearPackagePreferredActivities",
+   "apps": 15,
+   "item": "PackageManager.clearPackagePreferredActivities",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "jni:com.android.internal.net.NetworkUtilsInternal",
+   "apps": 15,
+   "item": "com.android.internal.net.NetworkUtilsInternal: 3 of 3 natives unregist",
+   "shim_class": "C3",
+   "effort": "S"
+  },
+  {
+   "id": "svc:wifirtt",
+   "apps": 14,
+   "item": "wifirtt",
+   "shim_class": "C5",
+   "effort": "S"
+  },
+  {
+   "id": "wm:show-wallpaper",
+   "apps": 14,
+   "item": "Activities that show the wallpaper behind their window (NotifyActivity",
+   "shim_class": "C4",
+   "effort": "S"
+  },
+  {
+   "id": "pm:uses-library:app-inputmapping",
+   "apps": 14,
+   "item": "Shared library app-inputmapping (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "pm:uses-library:com.google.android.wearable",
+   "apps": 13,
+   "item": "Shared library com.google.android.wearable (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "load:android-namespace-ndk:libandroid.so",
+   "apps": 13,
+   "item": "9 libandroid.so symbols the runtime defines but the Android namespace'",
+   "shim_class": "C1",
+   "effort": "XS"
+  },
+  {
+   "id": "ndk:weld:power",
+   "apps": 12,
+   "item": "NDK weld \u00b7 power: 5 symbols",
+   "shim_class": "C4",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:currentToCanonicalPackageNames",
+   "apps": 12,
+   "item": "PackageManager.currentToCanonicalPackageNames",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:setInstallerPackageName",
+   "apps": 12,
+   "item": "PackageManager.setInstallerPackageName",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "pm:uses-library:com.sec.android.app.multiwindow",
+   "apps": 12,
+   "item": "Shared library com.sec.android.app.multiwindow (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "pm:uses-library:androidx.security",
+   "apps": 11,
+   "item": "Shared library androidx.security (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "upcall:libCrashSight.so",
+   "apps": 11,
+   "item": "libCrashSight.so \u2192 12 classes, 42 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "jni:android.os.PerformanceHintManager",
+   "apps": 11,
+   "item": "android.os.PerformanceHintManager: 9 of 11 natives unregistered",
+   "shim_class": "C3",
+   "effort": "M"
+  },
+  {
+   "id": "pm:call:addPreferredActivity",
+   "apps": 11,
+   "item": "PackageManager.addPreferredActivity",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:canonicalToCurrentPackageNames",
+   "apps": 11,
+   "item": "PackageManager.canonicalToCurrentPackageNames",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:extendVerificationTimeout",
+   "apps": 11,
+   "item": "PackageManager.extendVerificationTimeout",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:verifyPendingInstall",
+   "apps": 11,
+   "item": "PackageManager.verifyPendingInstall",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "jni:android.view.MotionPredictor",
+   "apps": 11,
+   "item": "android.view.MotionPredictor: 5 of 5 natives unregistered",
+   "shim_class": "C3",
+   "effort": "S"
+  },
+  {
+   "id": "svc:blob_store",
+   "apps": 11,
+   "item": "blob_store",
+   "shim_class": "C5",
+   "effort": "S"
+  },
+  {
+   "id": "jni:java.lang.Package",
+   "apps": 10,
+   "item": "java.lang.Package: 2 of 2 natives unregistered",
+   "shim_class": "C3",
+   "effort": "S"
+  },
+  {
+   "id": "pm:uses-library:com.huawei.camerakit.impl",
+   "apps": 10,
+   "item": "Shared library com.huawei.camerakit.impl (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "svc:permission_controller",
+   "apps": 10,
+   "item": "permission_controller",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "pm:uses-library:org.simalliance.openmobileapi",
+   "apps": 9,
+   "item": "Shared library org.simalliance.openmobileapi (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "pm:uses-library:com.oppo.hyberboost.unit.sdk",
+   "apps": 9,
+   "item": "Shared library com.oppo.hyberboost.unit.sdk (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "ndk:weld:buffers",
+   "apps": 9,
+   "item": "NDK weld \u00b7 buffers: 6 symbols",
+   "shim_class": "C4",
+   "effort": "M"
+  },
+  {
+   "id": "pm:uses-library:libOpenCL.so",
+   "apps": 9,
+   "item": "Shared library libOpenCL.so (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "svc:performance_hint",
+   "apps": 9,
+   "item": "performance_hint",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "svc:virtualdevice",
+   "apps": 8,
+   "item": "virtualdevice",
+   "shim_class": "C5",
+   "effort": "S"
+  },
+  {
+   "id": "pm:uses-library:org.ifaa.android.manager.permissions",
+   "apps": 7,
+   "item": "Shared library org.ifaa.android.manager.permissions (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "svc:sms",
+   "apps": 7,
+   "item": "sms",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "svc:companiondevice",
+   "apps": 7,
+   "item": "companiondevice",
+   "shim_class": "C5",
+   "effort": "S"
+  },
+  {
+   "id": "sym:runtime-resolved:libbinder_ndk.so",
+   "apps": 7,
+   "item": "libbinder_ndk.so entry points looked up by name at runtime, not suppli",
+   "shim_class": "C1/C2",
+   "effort": "L"
+  },
+  {
+   "id": "svc:app_search",
+   "apps": 7,
+   "item": "app_search",
+   "shim_class": "C5",
+   "effort": "S"
+  },
+  {
+   "id": "svc:crossprofileapps",
+   "apps": 7,
+   "item": "crossprofileapps",
+   "shim_class": "C5",
+   "effort": "S"
+  },
+  {
+   "id": "ndk:unshipped-library:libsscronet.so",
+   "apps": 7,
+   "item": "Library the APK needs but does not ship (libsscronet.so): 56 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libBugly.so",
+   "apps": 7,
+   "item": "libBugly.so \u2192 10 classes, 24 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "svc:consumer_ir",
+   "apps": 7,
+   "item": "consumer_ir",
+   "shim_class": "C5",
+   "effort": "S"
+  },
+  {
+   "id": "ndk:weld:window",
+   "apps": 6,
+   "item": "NDK weld \u00b7 window: 5 symbols",
+   "shim_class": "C4",
+   "effort": "M"
+  },
+  {
+   "id": "upcall:libframesequence.so",
+   "apps": 6,
+   "item": "libframesequence.so \u2192 3 classes, 4 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "load:android-namespace-ndk:libjnigraphics.so",
+   "apps": 6,
+   "item": "9 libjnigraphics.so symbols the runtime defines but the Android namesp",
+   "shim_class": "C1",
+   "effort": "XS"
+  },
+  {
+   "id": "pm:call:setApplicationCategoryHint",
+   "apps": 6,
+   "item": "PackageManager.setApplicationCategoryHint",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "sym:runtime-resolved:libcamera2ndk.so",
+   "apps": 6,
+   "item": "libcamera2ndk.so entry points looked up by name at runtime, not suppli",
+   "shim_class": "C1/C2",
+   "effort": "L"
+  },
+  {
+   "id": "upcall:libart_sym.so",
+   "apps": 6,
+   "item": "libart_sym.so \u2192 7 classes, 18 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libjato.so",
+   "apps": 6,
+   "item": "libjato.so \u2192 23 classes, 115 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libsysoptimizer.so",
+   "apps": 6,
+   "item": "libsysoptimizer.so \u2192 20 classes, 47 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:weld:input",
+   "apps": 6,
+   "item": "NDK weld \u00b7 input: 1 symbols",
+   "shim_class": "C4",
+   "effort": "M"
+  },
+  {
+   "id": "ndk:truthful-absence",
+   "apps": 6,
+   "item": "NDK truthful-absence: 12 symbols",
+   "shim_class": "C5",
+   "effort": "XS"
+  },
+  {
+   "id": "pm:uses-library:com.amazon.device.messaging",
+   "apps": 6,
+   "item": "Shared library com.amazon.device.messaging (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "pm:uses-library:com.google.android.maps",
+   "apps": 6,
+   "item": "Shared library com.google.android.maps (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "ndk:unshipped-library:libjsc.so",
+   "apps": 5,
+   "item": "Library the APK needs but does not ship (libjsc.so): 51 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "jni:android.os.Process",
+   "apps": 5,
+   "item": "android.os.Process: 29 of 38 natives unregistered",
+   "shim_class": "C3",
+   "effort": "M"
+  },
+  {
+   "id": "java:Java library",
+   "apps": 5,
+   "item": "Java library",
+   "shim_class": "C1/C5",
+   "effort": "S"
+  },
+  {
+   "id": "svc:carrier_config",
+   "apps": 5,
+   "item": "carrier_config",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "jni:android.filterfw.core.GLEnvironment",
+   "apps": 5,
+   "item": "android.filterfw.core.GLEnvironment: 17 of 17 natives unregistered",
+   "shim_class": "C3",
+   "effort": "M"
+  },
+  {
+   "id": "svc:hardware_properties",
+   "apps": 5,
+   "item": "hardware_properties",
+   "shim_class": "C5",
+   "effort": "S"
+  },
+  {
+   "id": "ndk:unshipped-library:libhermes.so",
+   "apps": 4,
+   "item": "Library the APK needs but does not ship (libhermes.so): 7 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libgstreamer_android.so",
+   "apps": 4,
+   "item": "Library the APK needs but does not ship (libgstreamer_android.so): 138",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "jni:com.android.internal.os.FuseAppLoop",
+   "apps": 4,
+   "item": "com.android.internal.os.FuseAppLoop: 9 of 9 natives unregistered",
+   "shim_class": "C3",
+   "effort": "M"
+  },
+  {
+   "id": "jni:android.hardware.usb.UsbRequest",
+   "apps": 4,
+   "item": "android.hardware.usb.UsbRequest: 8 of 8 natives unregistered",
+   "shim_class": "C3",
+   "effort": "M"
+  },
+  {
+   "id": "pm:uses-library:com.android.extensions.appfunctions",
+   "apps": 4,
+   "item": "Shared library com.android.extensions.appfunctions (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "jni:java.io.Console",
+   "apps": 4,
+   "item": "java.io.Console: 3 of 3 natives unregistered",
+   "shim_class": "C3",
+   "effort": "S"
+  },
+  {
+   "id": "ndk:unshipped-library:libjsi.so",
+   "apps": 4,
+   "item": "Library the APK needs but does not ship (libjsi.so): 67 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libc++_shared.so",
+   "apps": 4,
+   "item": "Library the APK needs but does not ship (libc++_shared.so): 27 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "pm:uses-library:richtap-api",
+   "apps": 4,
+   "item": "Shared library richtap-api (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "ndk:unshipped-library:libnapi_v8.so, libv8_libfull.cr.so",
+   "apps": 4,
+   "item": "Library the APK needs but does not ship (libnapi_v8.so, libv8_libfull.",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libmtplayer.so",
+   "apps": 4,
+   "item": "libmtplayer.so \u2192 16 classes, 83 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libmttypes.so",
+   "apps": 4,
+   "item": "libmttypes.so \u2192 11 classes, 30 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "pm:uses-library:soterkeystore",
+   "apps": 3,
+   "item": "Shared library soterkeystore (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "pm:uses-library:com.android.extensions.xr",
+   "apps": 3,
+   "item": "Shared library com.android.extensions.xr (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "pm:uses-library:hwkeystore",
+   "apps": 3,
+   "item": "Shared library hwkeystore (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "ndk:weld:services",
+   "apps": 3,
+   "item": "NDK weld \u00b7 services: 1 symbols",
+   "shim_class": "C4",
+   "effort": "M"
+  },
+  {
+   "id": "upcall:librelax.so",
+   "apps": 3,
+   "item": "librelax.so \u2192 25 classes, 137 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "svc:country_detector",
+   "apps": 3,
+   "item": "country_detector",
+   "shim_class": "C5",
+   "effort": "S"
+  },
+  {
+   "id": "upcall:libsmses.so",
+   "apps": 3,
+   "item": "libsmses.so \u2192 1 classes, 0 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "pm:uses-library:com.miui.easygo",
+   "apps": 3,
+   "item": "Shared library com.miui.easygo (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "pm:uses-library:libOpenCL-pixel.so",
+   "apps": 3,
+   "item": "Shared library libOpenCL-pixel.so (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "svc:slice",
+   "apps": 2,
+   "item": "slice",
+   "shim_class": "C5",
+   "effort": "S"
+  },
+  {
+   "id": "upcall:libalive_detected.so",
+   "apps": 2,
+   "item": "libalive_detected.so \u2192 8 classes, 4 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libturingmfa.so",
+   "apps": 2,
+   "item": "libturingmfa.so \u2192 22 classes, 20 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libgoogle3.so",
+   "apps": 2,
+   "item": "libgoogle3.so \u2192 46 classes, 351 members",
+   "shim_class": "C9",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libturingpri_mini.so",
+   "apps": 2,
+   "item": "libturingpri_mini.so \u2192 22 classes, 20 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libv8uc.so",
+   "apps": 2,
+   "item": "Library the APK needs but does not ship (libv8uc.so): 138 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "env:forter-fraud-sdk",
+   "apps": 2,
+   "item": "Forter fraud SDK",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libvlc.so",
+   "apps": 2,
+   "item": "libvlc.so \u2192 28 classes, 204 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libc++_shared.so, libfbunwindstack.so",
+   "apps": 2,
+   "item": "Library the APK needs but does not ship (libc++_shared.so, libfbunwind",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libPixFFmpeg.so",
+   "apps": 2,
+   "item": "Library the APK needs but does not ship (libPixFFmpeg.so): 142 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libnuwa.so",
+   "apps": 2,
+   "item": "libnuwa.so \u2192 3 classes, 1 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:librvm.so",
+   "apps": 2,
+   "item": "Library the APK needs but does not ship (librvm.so): 1 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "pm:uses-library:com.symbol.emdk",
+   "apps": 2,
+   "item": "Shared library com.symbol.emdk (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "ndk:unshipped-library:libAliNNPython.so",
+   "apps": 2,
+   "item": "Library the APK needs but does not ship (libAliNNPython.so): 8 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "jni:android.content.res.ObbScanner",
+   "apps": 2,
+   "item": "android.content.res.ObbScanner: 1 of 1 natives unregistered",
+   "shim_class": "C3",
+   "effort": "S"
+  },
+  {
+   "id": "upcall:libmcto_media_player.so",
+   "apps": 2,
+   "item": "libmcto_media_player.so \u2192 66 classes, 861 members",
+   "shim_class": "C9",
+   "effort": "verify"
+  },
+  {
+   "id": "svc:tv_input",
+   "apps": 2,
+   "item": "tv_input",
+   "shim_class": "C5",
+   "effort": "S"
+  },
+  {
+   "id": "env:akamai-bot-manager",
+   "apps": 2,
+   "item": "Akamai Bot Manager",
+   "shim_class": "C5",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libFireEye-rqd.so",
+   "apps": 2,
+   "item": "libFireEye-rqd.so \u2192 10 classes, 25 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libcdsprpc.so",
+   "apps": 2,
+   "item": "Library the APK needs but does not ship (libcdsprpc.so): 5 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libc++_shared.so, libplt-unwind.so",
+   "apps": 2,
+   "item": "Library the APK needs but does not ship (libc++_shared.so, libplt-unwi",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libsqlite3x.so",
+   "apps": 2,
+   "item": "libsqlite3x.so \u2192 24 classes, 110 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libsqliteX.so",
+   "apps": 2,
+   "item": "libsqliteX.so \u2192 57 classes, 122 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "pm:uses-library:com.hihonor.easygo",
+   "apps": 2,
+   "item": "Shared library com.hihonor.easygo (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "pm:uses-library:com.huawei.easygo",
+   "apps": 2,
+   "item": "Shared library com.huawei.easygo (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "upcall:libreparo.so",
+   "apps": 2,
+   "item": "libreparo.so \u2192 14 classes, 61 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libMSDKPIXCore.so",
+   "apps": 2,
+   "item": "libMSDKPIXCore.so \u2192 118 classes, 540 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libmsaoaidsec.so",
+   "apps": 2,
+   "item": "libmsaoaidsec.so \u2192 141 classes, 940 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "pm:uses-library:camerax-vendor-extensions.jar",
+   "apps": 2,
+   "item": "Shared library camerax-vendor-extensions.jar (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "pm:uses-library:libteec.honor.so",
+   "apps": 2,
+   "item": "Shared library libteec.honor.so (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "pm:uses-library:libteec.huawei.so",
+   "apps": 2,
+   "item": "Shared library libteec.huawei.so (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "ndk:unshipped-library:librtm.so",
+   "apps": 2,
+   "item": "Library the APK needs but does not ship (librtm.so): 6 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libfutux-shr.so",
+   "apps": 1,
+   "item": "libfutux-shr.so \u2192 1 classes, 0 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "java:Telephony",
+   "apps": 1,
+   "item": "Telephony",
+   "shim_class": "C4",
+   "effort": "S"
+  },
+  {
+   "id": "upcall:libnative.so",
+   "apps": 1,
+   "item": "libnative.so \u2192 40 classes, 353 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libandroid-support.so, libpython3.12.so.1.0",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libandroid-support.so, libpyt",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libavcodec.so.61, libavdevice.so.61, libavfilter.so.10, libavformat.so.61, libavutil.so.59, libpostproc.so.58, libswresample.so.5, libswscale.so.8",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libavcodec.so.61, libavdevice",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libc++_shared.so, libcares.so, libgmp.so, libgnutls.so, libnettle.so.8, libxml2.so.16, libz.so.1",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libc++_shared.so, libcares.so",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:librdefense.so",
+   "apps": 1,
+   "item": "librdefense.so \u2192 32 classes, 202 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "pm:uses-library:libcdsprpc.so",
+   "apps": 1,
+   "item": "Shared library libcdsprpc.so (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "upcall:libtaopai_data_core.so",
+   "apps": 1,
+   "item": "libtaopai_data_core.so \u2192 2 classes, 1 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "pm:call:addCrossProfileIntentFilter",
+   "apps": 1,
+   "item": "PackageManager.addCrossProfileIntentFilter",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:clearApplicationUserData",
+   "apps": 1,
+   "item": "PackageManager.clearApplicationUserData",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:clearCrossProfileIntentFilters",
+   "apps": 1,
+   "item": "PackageManager.clearCrossProfileIntentFilters",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:deleteApplicationCacheFiles",
+   "apps": 1,
+   "item": "PackageManager.deleteApplicationCacheFiles",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:deleteApplicationCacheFilesAsUser",
+   "apps": 1,
+   "item": "PackageManager.deleteApplicationCacheFilesAsUser",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:deletePackageAsUser",
+   "apps": 1,
+   "item": "PackageManager.deletePackageAsUser",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:flushPackageRestrictionsAsUser",
+   "apps": 1,
+   "item": "PackageManager.flushPackageRestrictionsAsUser",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:freeStorage",
+   "apps": 1,
+   "item": "PackageManager.freeStorage",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:freeStorageAndNotify",
+   "apps": 1,
+   "item": "PackageManager.freeStorageAndNotify",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:getHomeActivities",
+   "apps": 1,
+   "item": "PackageManager.getHomeActivities",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:getMoveStatus",
+   "apps": 1,
+   "item": "PackageManager.getMoveStatus",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:getPackageSizeInfo",
+   "apps": 1,
+   "item": "PackageManager.getPackageSizeInfo",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:getUidForSharedUser",
+   "apps": 1,
+   "item": "PackageManager.getUidForSharedUser",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:installExistingPackageAsUser",
+   "apps": 1,
+   "item": "PackageManager.installExistingPackageAsUser",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:isPackageAvailable",
+   "apps": 1,
+   "item": "PackageManager.isPackageAvailable",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:isPackageSuspendedForUser",
+   "apps": 1,
+   "item": "PackageManager.isPackageSuspendedForUser",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:registerMoveCallback",
+   "apps": 1,
+   "item": "PackageManager.registerMoveCallback",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:replacePreferredActivity",
+   "apps": 1,
+   "item": "PackageManager.replacePreferredActivity",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "pm:call:unregisterMoveCallback",
+   "apps": 1,
+   "item": "PackageManager.unregisterMoveCallback",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "ndk:unshipped-library:libRtcMediaTransport.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libRtcMediaTransport.so): 16 ",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libandroid_runtime.so, libskia.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libandroid_runtime.so, libski",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libdaenerys.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libdaenerys.so): 51 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libdaenerys.so, libwesteros.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libdaenerys.so, libwesteros.s",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libkwai-v8-11.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libkwai-v8-11.so): 10 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libtensorflow-lite.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libtensorflow-lite.so): 14 sy",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libmega.so",
+   "apps": 1,
+   "item": "libmega.so \u2192 29 classes, 126 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libcutils.so, libmedia.so, libui.so, libutils.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libcutils.so, libmedia.so, li",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libdpsdk.so",
+   "apps": 1,
+   "item": "libdpsdk.so \u2192 8 classes, 17 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libvideokit.so",
+   "apps": 1,
+   "item": "libvideokit.so \u2192 6 classes, 1 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "pm:uses-library:AtcClient2Sdk",
+   "apps": 1,
+   "item": "Shared library AtcClient2Sdk (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "pm:uses-library:samsungkeystoreutils",
+   "apps": 1,
+   "item": "Shared library samsungkeystoreutils (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "upcall:libzeus_direct_dex.so",
+   "apps": 1,
+   "item": "libzeus_direct_dex.so \u2192 3 classes, 2 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libeglglext-jni.so",
+   "apps": 1,
+   "item": "libeglglext-jni.so \u2192 11 classes, 15 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libUE4.so",
+   "apps": 1,
+   "item": "libUE4.so \u2192 36 classes, 252 members",
+   "shim_class": "C9",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libllvmliveness.so",
+   "apps": 1,
+   "item": "libllvmliveness.so \u2192 42 classes, 188 members",
+   "shim_class": "C9",
+   "effort": "verify"
+  },
+  {
+   "id": "pm:uses-library:scamera_sep",
+   "apps": 1,
+   "item": "Shared library scamera_sep (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "svc:soundtrigger",
+   "apps": 1,
+   "item": "soundtrigger",
+   "shim_class": "C5",
+   "effort": "S"
+  },
+  {
+   "id": "upcall:libnga_jni.so",
+   "apps": 1,
+   "item": "libnga_jni.so \u2192 25 classes, 207 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "pm:uses-library:android.car",
+   "apps": 1,
+   "item": "Shared library android.car (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "abi:versioned-import-clash",
+   "apps": 1,
+   "item": "Imports versioned against the app's own libraries, also defined unvers",
+   "shim_class": "C1",
+   "effort": "S"
+  },
+  {
+   "id": "upcall:libMMASignature.so",
+   "apps": 1,
+   "item": "libMMASignature.so \u2192 7 classes, 9 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libAliNNPython.so, libMNN.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libAliNNPython.so, libMNN.so)",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libMNN.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libMNN.so): 80 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libapp.so",
+   "apps": 1,
+   "item": "libapp.so \u2192 33 classes, 281 members",
+   "shim_class": "C9",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libcandycrushsaga",
+   "apps": 1,
+   "item": "libcandycrushsaga \u2192 36 classes, 365 members",
+   "shim_class": "C9",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libcipherdb.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libcipherdb.so): 1 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libSystem.Security.Cryptography.Native.Android.so",
+   "apps": 1,
+   "item": "libSystem.Security.Cryptography.Native.Android.so \u2192 84 classes, 384 me",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libxamarin-app.so",
+   "apps": 1,
+   "item": "libxamarin-app.so \u2192 663 classes, 0 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libtcf868.so",
+   "apps": 1,
+   "item": "libtcf868.so \u2192 77 classes, 208 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libhiai.so, libhiai_enhance.so, libhiai_ir.so, libzoom_image_engine.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libhiai.so, libhiai_enhance.s",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libopencv_java3.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libopencv_java3.so): 22 symbo",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "svc:wifiaware",
+   "apps": 1,
+   "item": "wifiaware",
+   "shim_class": "C5",
+   "effort": "S"
+  },
+  {
+   "id": "upcall:libtcpag.so",
+   "apps": 1,
+   "item": "libtcpag.so \u2192 17 classes, 70 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libINTLCore.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libINTLCore.so): 4 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libINTLCore.so, libINTLFoundation.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libINTLCore.so, libINTLFounda",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libunity.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libunity.so): 13 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libstability_guard.so",
+   "apps": 1,
+   "item": "libstability_guard.so \u2192 18 classes, 61 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:config.arm64_v8a.apk!lib/arm64-v8a/libjp_tokenizer.so",
+   "apps": 1,
+   "item": "config.arm64_v8a.apk!lib/arm64-v8a/libjp_tokenizer.so \u2192 1 classes, 0 m",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libturingad.so",
+   "apps": 1,
+   "item": "libturingad.so \u2192 22 classes, 20 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libturingantibot_oversea.so",
+   "apps": 1,
+   "item": "libturingantibot_oversea.so \u2192 22 classes, 20 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "pm:uses-library:com.amazon.dcp.contracts",
+   "apps": 1,
+   "item": "Shared library com.amazon.dcp.contracts (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "pm:uses-library:com.amazon.dcp.contracts.framework",
+   "apps": 1,
+   "item": "Shared library com.amazon.dcp.contracts.framework (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "pm:uses-library:com.amazon.client.metrics.api",
+   "apps": 1,
+   "item": "Shared library com.amazon.client.metrics.api (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "upcall:libMyGame.so",
+   "apps": 1,
+   "item": "libMyGame.so \u2192 14 classes, 92 members",
+   "shim_class": "C9",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libAsphalt9.so",
+   "apps": 1,
+   "item": "libAsphalt9.so \u2192 48 classes, 486 members",
+   "shim_class": "C9",
+   "effort": "verify"
+  },
+  {
+   "id": "svc:face",
+   "apps": 1,
+   "item": "face",
+   "shim_class": "C5",
+   "effort": "S"
+  },
+  {
+   "id": "svc:iris",
+   "apps": 1,
+   "item": "iris",
+   "shim_class": "C5",
+   "effort": "S"
+  },
+  {
+   "id": "svc:sensor_privacy",
+   "apps": 1,
+   "item": "sensor_privacy",
+   "shim_class": "C5",
+   "effort": "S"
+  },
+  {
+   "id": "pm:uses-library:com.cnlaunch.second.wifi.service",
+   "apps": 1,
+   "item": "Shared library com.cnlaunch.second.wifi.service (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "upcall:libyuanshen.so",
+   "apps": 1,
+   "item": "libyuanshen.so \u2192 138 classes, 1358 members",
+   "shim_class": "C9",
+   "effort": "verify"
+  },
+  {
+   "id": "jni:android.media.CameraProfile",
+   "apps": 1,
+   "item": "android.media.CameraProfile: 3 of 3 natives unregistered",
+   "shim_class": "C3",
+   "effort": "S"
+  },
+  {
+   "id": "ndk:unshipped-library:libccdn.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libccdn.so): 15 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libtb_crypto.so, libtb_ssl.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libtb_crypto.so, libtb_ssl.so",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libcosmosffmpeg.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libcosmosffmpeg.so): 10 symbo",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libmmcv_api_base.so, libmmcv_api_facerecognition.so, libmmcv_base.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libmmcv_api_base.so, libmmcv_",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libxeengine.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libxeengine.so): 59 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libxeengine.so, libxmedia.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libxeengine.so, libxmedia.so)",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libart_method_ext.so",
+   "apps": 1,
+   "item": "libart_method_ext.so \u2192 2 classes, 2 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libmetasec_ml.so",
+   "apps": 1,
+   "item": "libmetasec_ml.so \u2192 4 classes, 6 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libRealX.so, libRealXAudio.so, libRealXBase.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libRealX.so, libRealXAudio.so",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libart.so, libbase.so, libc++.so, libcutils.so, libdexfile.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libart.so, libbase.so, libc++",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libbyteaudio.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libbyteaudio.so): 20 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libAkSoundEngine.so",
+   "apps": 1,
+   "item": "libAkSoundEngine.so \u2192 11 classes, 47 members",
+   "shim_class": "C9",
+   "effort": "verify"
+  },
+  {
+   "id": "java:OS services",
+   "apps": 1,
+   "item": "OS services",
+   "shim_class": "C4",
+   "effort": "S"
+  },
+  {
+   "id": "java:Bluetooth",
+   "apps": 1,
+   "item": "Bluetooth",
+   "shim_class": "C4",
+   "effort": "S"
+  },
+  {
+   "id": "jni:android.mtp.MtpDevice",
+   "apps": 1,
+   "item": "android.mtp.MtpDevice: 23 of 23 natives unregistered",
+   "shim_class": "C3",
+   "effort": "M"
+  },
+  {
+   "id": "ndk:unshipped-library:libTTMStrategyCenter.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libTTMStrategyCenter.so): 9 s",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libttkmedianet.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libttkmedianet.so): 2 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libwhisper.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libwhisper.so): 3 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libfabricjni.so, libfolly_runtime.so, libjsi.so, liblogger.so, libmapbufferjni.so, librrc_image.so, librrc_root.so, librrc_scrollview.so, librrc_text.so, librrc_textinput.so, librrc_unimplementedview.so, librrc_view.so, libruntimeexecutor.so, libturbomodulejsijni.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libfabricjni.so, libfolly_run",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libfolly_runtime.so, libjsc.so, libjsi.so, liblogger.so, libruntimeexecutor.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libfolly_runtime.so, libjsc.s",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libfolly_runtime.so, libjsi.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libfolly_runtime.so, libjsi.s",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libfolly_runtime.so, libjsi.so, liblogger.so, libmapbufferjni.so, librrc_root.so, librrc_view.so, libruntimeexecutor.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libfolly_runtime.so, libjsi.s",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libfolly_runtime.so, libjsi.so, liblogger.so, librrc_root.so, librrc_view.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libfolly_runtime.so, libjsi.s",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libfolly_runtime.so, libjsi.so, liblogger.so, librrc_root.so, librrc_view.so, libruntimeexecutor.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libfolly_runtime.so, libjsi.s",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libfolly_runtime.so, libjsi.so, liblogger.so, libruntimeexecutor.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libfolly_runtime.so, libjsi.s",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libfolly_runtime.so, libjsi.so, librrc_image.so, librrc_view.so, libturbomodulejsijni.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libfolly_runtime.so, libjsi.s",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libfolly_runtime.so, libjsi.so, librrc_view.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libfolly_runtime.so, libjsi.s",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libfolly_runtime.so, libjsi.so, librrc_view.so, libturbomodulejsijni.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libfolly_runtime.so, libjsi.s",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libfolly_runtime.so, libjsi.so, libruntimeexecutor.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libfolly_runtime.so, libjsi.s",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libnba2km.so",
+   "apps": 1,
+   "item": "libnba2km.so \u2192 13 classes, 157 members",
+   "shim_class": "C9",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libquarkenstein_daemons.so",
+   "apps": 1,
+   "item": "libquarkenstein_daemons.so \u2192 17 classes, 98 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "java:Other",
+   "apps": 1,
+   "item": "Other",
+   "shim_class": "C1/C5",
+   "effort": "S"
+  },
+  {
+   "id": "jni:android.view.InputEventReceiver",
+   "apps": 1,
+   "item": "android.view.InputEventReceiver: 1 of 7 natives unregistered",
+   "shim_class": "C3",
+   "effort": "S"
+  },
+  {
+   "id": "jni:android.view.InputEventSender",
+   "apps": 1,
+   "item": "android.view.InputEventSender: 4 of 4 natives unregistered",
+   "shim_class": "C3",
+   "effort": "S"
+  },
+  {
+   "id": "upcall:libperf_optimizer.so",
+   "apps": 1,
+   "item": "libperf_optimizer.so \u2192 9 classes, 11 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libautotoucher.so, libyycommonlib.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libautotoucher.so, libyycommo",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libfbjni.so, libjsi.so, libreactnative.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libfbjni.so, libjsi.so, libre",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libsentry.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libsentry.so): 48 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "pm:uses-library:com.here.android",
+   "apps": 1,
+   "item": "Shared library com.here.android (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "pm:uses-library:com.android.future.usb.accessory",
+   "apps": 1,
+   "item": "Shared library com.android.future.usb.accessory",
+   "shim_class": "C1",
+   "effort": "S"
+  },
+  {
+   "id": "pm:uses-library:com.huawei.nb.searchmanager",
+   "apps": 1,
+   "item": "Shared library com.huawei.nb.searchmanager (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "pm:uses-library:com.huawei.searchservice",
+   "apps": 1,
+   "item": "Shared library com.huawei.searchservice (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "ndk:unshipped-library:libaudioeffect.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libaudioeffect.so): 40 symbol",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libbytenn.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libbytenn.so): 3 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libbytennllm.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libbytennllm.so): 4 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "pm:uses-library:com.hihonor.penkit.impl",
+   "apps": 1,
+   "item": "Shared library com.hihonor.penkit.impl (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "pm:call:getSuspendedPackageAppExtras",
+   "apps": 1,
+   "item": "PackageManager.getSuspendedPackageAppExtras",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "ndk:unshipped-library:libquickjs.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libquickjs.so): 1 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libarvbmg.so",
+   "apps": 1,
+   "item": "libarvbmg.so \u2192 41 classes, 322 members",
+   "shim_class": "C9",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libhiai.so, libhiai_ir.so, libhiai_ir_build.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libhiai.so, libhiai_ir.so, li",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libap.so",
+   "apps": 1,
+   "item": "libap.so \u2192 3 classes, 0 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "pm:uses-library:org.com.ifaa.kmfp.android.manager.permissions",
+   "apps": 1,
+   "item": "Shared library org.com.ifaa.kmfp.android.manager.permissions (optional",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "upcall:libMobileAspectNative.so",
+   "apps": 1,
+   "item": "libMobileAspectNative.so \u2192 8 classes, 14 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libalipaywebview.so",
+   "apps": 1,
+   "item": "libalipaywebview.so \u2192 23 classes, 201 members",
+   "shim_class": "C9",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libantuser.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libantuser.so): 59 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libantuser_api.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libantuser_api.so): 1 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libblox.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libblox.so): 9 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libcrosser.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libcrosser.so): 32 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libxnn_llm_api.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libxnn_llm_api.so): 17 symbol",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "pm:uses-library:com.oplus.camera.unit.sdk",
+   "apps": 1,
+   "item": "Shared library com.oplus.camera.unit.sdk (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "pm:uses-library:com.oppo.camera.unit.sdk",
+   "apps": 1,
+   "item": "Shared library com.oppo.camera.unit.sdk (optional)",
+   "shim_class": "C1",
+   "effort": "none"
+  },
+  {
+   "id": "ndk:unshipped-library:libc++_shared.so, libcurl.so, libmdlog.so, libmmcrypto.so, libmmssl.so, libmotracing.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libc++_shared.so, libcurl.so,",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libse_loader.so",
+   "apps": 1,
+   "item": "libse_loader.so \u2192 1 classes, 0 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libtwl-net-utils.so",
+   "apps": 1,
+   "item": "libtwl-net-utils.so \u2192 2 classes, 1 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "pm:call:getTargetSdkVersion",
+   "apps": 1,
+   "item": "PackageManager.getTargetSdkVersion",
+   "shim_class": "C9",
+   "effort": "S"
+  },
+  {
+   "id": "ndk:unshipped-library:libEOSSDK.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libEOSSDK.so): 37 symbols",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libaescn.so",
+   "apps": 1,
+   "item": "libaescn.so \u2192 4 classes, 0 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libDexHelper.so",
+   "apps": 1,
+   "item": "libDexHelper.so \u2192 51 classes, 186 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "upcall:libturingmfa_cc.so",
+   "apps": 1,
+   "item": "libturingmfa_cc.so \u2192 22 classes, 20 members",
+   "shim_class": "CU",
+   "effort": "verify"
+  },
+  {
+   "id": "ndk:unshipped-library:libc++_shared.so, libxnn.so",
+   "apps": 1,
+   "item": "Library the APK needs but does not ship (libc++_shared.so, libxnn.so):",
+   "shim_class": "CU",
+   "effort": "verify"
+  }
+ ]
+}
