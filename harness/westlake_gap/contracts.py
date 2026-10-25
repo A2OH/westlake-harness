@@ -71,7 +71,8 @@ def manifest_facts(path: Path) -> dict[str, Any]:
                 processes.add(process)
             components.append({
                 "kind": kind,
-                "name": _attr(element, "name"),
+                # PayPal declares a provider whose android:name androguard cannot read.
+                "name": _attr(element, "name") or "(unnamed)",
                 "exported": _attr(element, "exported"),
                 "enabled": _attr(element, "enabled"),
                 "process": process,

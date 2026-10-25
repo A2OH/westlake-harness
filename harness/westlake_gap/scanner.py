@@ -175,10 +175,7 @@ def dex_blobs(path: Path) -> Iterator[tuple[str, bytes]]:
         with zipfile.ZipFile(path) as archive:
             if path.suffix.lower() in {".xapk", ".apkm"}:
                 for apk_name in _ordered_inner_apks(archive):
-                    info = archive.getinfo(apk_name)
-                    if info.file_size > 1024 * 1024 * 1024:
-                        raise ValueError(f"refusing oversized inner APK {apk_name}: {info.file_size} bytes")
-                    with zipfile.ZipFile(io.BytesIO(archive.read(apk_name))) as inner:
+                    with _inner_zip(archive, apk_name) as inner:
                         for name in sorted(
                             (name for name in inner.namelist() if DEX_NAME_RE.search(name)),
                             key=lambda name: (len(name), name),
@@ -199,6 +196,15 @@ def dex_blobs(path: Path) -> Iterator[tuple[str, bytes]]:
                 yield name, archive.read(name)
     except zipfile.BadZipFile as exc:
         raise ValueError(f"{path} is neither a DEX nor a valid APK/JAR/ZIP") from exc
+
+
+def _inner_zip(archive: zipfile.ZipFile, name: str) -> zipfile.ZipFile:
+    """An APK nested in an .xapk/.apkm. Small ones are read into memory; a large one (a game's 1-3 GB
+    Unity or install-time asset pack) is read in place through the seekable entry stream, which costs
+    nothing extra when the entry is stored, as bundles store their APKs."""
+    if archive.getinfo(name).file_size <= 256 * 1024 * 1024:
+        return zipfile.ZipFile(io.BytesIO(archive.read(name)))
+    return zipfile.ZipFile(archive.open(name))
 
 
 def _ordered_inner_apks(archive: zipfile.ZipFile) -> list[str]:
@@ -1743,7 +1749,7 @@ def apk_elf_inventory(path: Path) -> list[dict[str, Any]]:
     else:
         with zipfile.ZipFile(path) as outer:
             for apk_name in _ordered_inner_apks(outer):
-                with zipfile.ZipFile(io.BytesIO(outer.read(apk_name))) as inner:
+                with _inner_zip(outer, apk_name) as inner:
                     _append_elf_records(inner, f"{apk_name}!", records)
     return records
 
@@ -1836,9 +1842,8 @@ def _read_archive_member(path: Path, record: dict[str, Any]) -> bytes | None:
             inner = record.get("split_apk")
             if not inner:
                 return archive.read(entry)
-            with archive.open(inner) as stream:
-                with zipfile.ZipFile(io.BytesIO(stream.read())) as nested:
-                    return nested.read(entry)
+            with _inner_zip(archive, inner) as nested:
+                return nested.read(entry)
     except (KeyError, OSError, zipfile.BadZipFile):
         return None
 
