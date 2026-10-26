@@ -47,6 +47,32 @@ reach of 750 and no direct callers, because the framework reaches it on the app'
 `AudioTrack`'s 17 open natives are the ones the native bridge's own registration leaves out, not a
 missing port.
 
+## MediaCodec is not missing natives; it has no video
+
+The row reads "26 of 46 natives unregistered", which suggests a partial port. Reading the provider
+says something else. The 20 natives the runtime does register come from the bridge's
+`framework/core/jni/oh_mediacodec_shim.cpp`, written for one app's MP3 stream:
+
+- `native_setup` creates an **audio** codec (`OH_AudioCodec_CreateByMime`) whatever the type. For
+  `video/avc` that call fails, the failure is only logged, and the codec stays null, so
+  `dequeueInputBuffer` never returns a buffer. That is exactly the probe's failure: "video/avc gave
+  no input buffer in 1 s".
+- `MediaCodecList` reports **one** codec, `OH.audio.mp3.decoder`, supporting only `audio/mpeg`. An
+  app that asks the list for an H.264 or HEVC decoder — ExoPlayer, every short-video and
+  short-drama player — is told there is none. Even AAC is absent from the list, though
+  `createDecoderByType("audio/mp4a-latm")` would reach OH's AAC decoder.
+
+So no app can decode video here, and the gap map cannot see it: by its per-native count the class
+is mostly there. That is a harness blind spot (the provider's `MediaCodecList` answer should be a
+row of its own), and it moves MediaCodec's work from "register the rest" to "a video codec path":
+`OH_VideoDecoder` with ByteBuffer and Surface output, `OH_AVCapability` behind `MediaCodecList`, and
+the audio path kept. The bridge that holds today's code cannot be rebuilt, so the new path belongs
+in `libwl_missing_natives`, whose registrations come after the bridge's and replace them.
+
+It matters out of proportion to its row: of the HK top 100, the short-drama apps alone (DramaBox,
+ReelShort, NetShort, FlickReels, DramaWave, BlinkDrama, 红果短剧) exist to play video, and they
+are counted as working at the first screen while being unable to play anything.
+
 ## How a port is accepted
 
 `probes/media-contracts` exercises one row per line on the board
