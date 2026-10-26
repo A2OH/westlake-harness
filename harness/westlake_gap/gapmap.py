@@ -3377,6 +3377,7 @@ def external_rows(facts: dict[str, Any], scan: dict[str, Any], refused: dict[str
     rows = []
     for dep in contracts.external_dependencies(facts, set(scan["inventory"].get("platform_method_names", {}))):
         firebase = dep["dependency"].startswith("Firebase")
+        licensing = dep["dependency"] == "Store license check"
         suffix = dep["evidence"].split()[0].rsplit(".", 1)[-1] if firebase else ""
         rows.append(_row(
             "external-deps", "dep:" + dep["dependency"].lower().replace(" ", "-") + (f":{suffix}" if suffix else ""),
@@ -3384,7 +3385,12 @@ def external_rows(facts: dict[str, Any], scan: dict[str, Any], refused: dict[str
             oh_touchpoint="none: no Google services on OH", verdict="absent" if not firebase else "partial",
             shim_class="C5", effort="M" if not firebase else "verify", confidence=STATIC,
             app_evidence=dep["evidence"], provider=dep["oh_status"],
-            shim=("decide per feature: truthful 'unavailable' result, or an OH-backed replacement (push, maps, auth)"
+            seen_blocking=(["grok, allbrowser, crushie, transitnow, quickdoc (hk top 100 on build 120: nothing answered "
+                            "the bind, the check retried and the app never drew; all five drew on build 123, which "
+                            "hosts microG's Companion in the app's process)"] if licensing else None),
+            shim=("a licensing service of its own must answer the bind, or the check retries and then shows its own "
+                  "error screen instead of the app (microG's Companion answers it; see the device round)" if licensing else
+                  "decide per feature: truthful 'unavailable' result, or an OH-backed replacement (push, maps, auth)"
                   if not firebase else "component discovery is local (see pm:component-metadata); GMS-backed components degrade"),
         ))
     names = {c["name"] for c in facts["components"]} | {e.get("soname", "") for e in ohresolve.target_elfs(scan)}

@@ -103,6 +103,13 @@ design):
 Media is the largest native family: MediaMetadataRetriever, MediaCodec, MediaExtractor,
 ImageReader and MediaDrm each reach 660-930 apps. On the F-Droid corpus they reached 25-75%.
 
+Added after this baseline was published, so it is not yet in `open-rows.json`:
+`dep:store-license-check`, the license check the store app answers (C5 / M). **224 of the 982**
+carry it, counted from these scans: each declares a `com.pairip.licensecheck` component, which
+Play adds to an app it protects. Unlike the other `dep:` rows it stops the launch rather than
+degrading a feature, and the device round on the top 100 shows it stopping five apps that the
+round had recorded as silent stops. The next regeneration of the 982 maps will carry the row.
+
 ## Google services
 
 `gms-reach.json` (`gms_reach.py`): per app, the Google client families its dex references. The

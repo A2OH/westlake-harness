@@ -1017,6 +1017,13 @@ GMS_MARKERS = {
     "com.google.android.gms.version": "Google Play services client (meta-data)",
 }
 
+# Components of the store's license check: the one Play adds to an app it protects
+# (com.pairip.licensecheck, two generations), and the library a developer adds themselves (LVL).
+# Both ask the store app whether this install is licensed, so both block a launch where no store
+# answers -- unlike the GMS client rows above, where the app's own code decides what to do without
+# Play services.
+LICENSE_CHECK_COMPONENTS = ("com.pairip.licensecheck", "com.google.android.vending.licensing")
+
 
 def external_dependencies(facts: dict[str, Any], method_owners: set[str]) -> list[dict[str, Any]]:
     rows = []
@@ -1034,4 +1041,12 @@ def external_dependencies(facts: dict[str, Any], method_owners: set[str]) -> lis
     if gms_owners:
         rows.append({"dependency": "GMS client API calls", "evidence": f"{len(gms_owners)} com.google.android.gms classes called",
                      "sample": gms_owners[:10], "oh_status": "calls reach a missing Play services APK"})
+    checkers = sorted({c["name"] for c in facts.get("components", [])
+                       if c["name"] and c["name"].startswith(LICENSE_CHECK_COMPONENTS)}
+                      | {o[1:-1].replace("/", ".") for o in method_owners
+                         if o.startswith("Lcom/google/android/vending/licensing/")})
+    if checkers:
+        rows.append({"dependency": "Store license check", "evidence": ", ".join(checkers[:4]),
+                     "components": checkers,
+                     "oh_status": "binds com.android.vending's ILicensingService, which no OH package provides"})
     return rows
