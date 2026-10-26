@@ -2990,6 +2990,12 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
     resolvers = sorted({elf.get("soname") or Path(elf["name"]).name for elf in packaged
                         if NETWORK_ABI_IMPORTS & {name.split("@")[0] for name in
                                                   elf.get("undefined_symbols", []) + elf.get("undefined_weak_symbols", [])}})
+    # The launcher routes by file name, and a SONAME can differ from it (libw.so in Kling's
+    # libw543.so, libcrypto.so.1.1 in Amap's libcrypto.so): naming the SONAME made the launcher
+    # refuse the whole launch (4 of the HK top 100).
+    resolver_files = sorted({Path(elf["name"]).name for elf in packaged
+                             if NETWORK_ABI_IMPORTS & {name.split("@")[0] for name in
+                                                       elf.get("undefined_symbols", []) + elf.get("undefined_weak_symbols", [])}})
     if resolvers:
         option = (namespace_option or {}).get("net") or {"present": False, "source": None}
         rows.append(_row(
@@ -3005,7 +3011,7 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
             app_evidence=f"{len(resolvers)} APK libraries import getaddrinfo",
             seen_blocking=["hacki (batch-12), fixed by the launch args", "fdroid2 (batch-14), fixed by the launch args"],
             shim="route these libraries through the network ABI translation: " + " ".join(resolvers),
-            launch_args=[arg for name in resolvers for arg in ("--android-native-net-target", name)],
+            launch_args=[arg for name in resolver_files for arg in ("--android-native-net-target", name)],
         ))
     # funopen: the bionic shim supplies it over OH's fopencookie. A buffered cookie FILE on OH is
     # refilled by calling the reader with the FILE's own buffer, which cookieread also uses for its

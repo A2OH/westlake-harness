@@ -843,6 +843,17 @@ class LaunchRemedies(unittest.TestCase):
         self.assertEqual(gapmap.launch_args(both), ["--android-native-net-target", "libflutter.so",
                                                     "--android-native-target", "libc++_shared.so"])
 
+    def test_network_abi_targets_are_file_names(self) -> None:
+        # Kling's libw543.so has the SONAME libw.so; the launcher refuses a target no file has.
+        scan = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {"elfs": [
+            {"soname": "libw.so", "name": "lib/arm64-v8a/libw543.so", "abi": "arm64-v8a",
+             "undefined_symbols": ["getaddrinfo"]}]}}
+        option = {"present": True, "source": "x:1", "net": {"present": True, "source": "x:2"}}
+        rows = gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True}, [], option)
+        row = next(r for r in rows if r["id"] == "abi:addrinfo")
+        self.assertEqual(row["launch_args"], ["--android-native-net-target", "libw543.so"])
+        self.assertEqual(gapmap.unpackaged_launch_targets(row["launch_args"], scan), [])
+
     def test_engine_surface_follows_the_provider(self) -> None:
         scan = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {"elfs": [{"soname": "libflutter.so", "abi": "arm64-v8a"}]}}
         self.assertEqual(gapmap.engine_surface_rows(scan)[0]["verdict"], "missing")
