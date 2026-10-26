@@ -3156,3 +3156,30 @@ class RecreateRows(unittest.TestCase):
         self.assertEqual(gapmap.recreate_rows(scan, {"relaunched": True, "source": "x:1"})[0]["verdict"], "supplied")
         self.assertEqual(gapmap.recreate_rows({"inventory": {}}, {"relaunched": False}), [], "an app that never recreates")
         self.assertEqual(gapmap.recreate_rows(scan, {"relaunched": None}), [])
+
+
+class StoreLicenseCheck(unittest.TestCase):
+    """The license check the store answers: a component Play adds to a protected app
+    (com.pairip.licensecheck), or the licensing library a developer adds themselves. It is its own
+    row because it stops the launch, where the GMS client rows only degrade a feature."""
+
+    @staticmethod
+    def facts(*names: str) -> dict:
+        return {"application_meta_data": {}, "components": [
+            {"name": name, "kind": "activity", "meta_data": {}, "direct_boot_aware": False} for name in names]}
+
+    def test_the_checker_is_found_in_the_manifest_or_the_called_classes(self) -> None:
+        found = contracts.external_dependencies(self.facts("com.pairip.licensecheck.LicenseActivity"), set())
+        self.assertEqual([d["dependency"] for d in found], ["Store license check"])
+        self.assertEqual(found[0]["components"], ["com.pairip.licensecheck.LicenseActivity"])
+        library = contracts.external_dependencies(self.facts(), {"Lcom/google/android/vending/licensing/LicenseChecker;"})
+        self.assertEqual(library[0]["components"], ["com.google.android.vending.licensing.LicenseChecker"])
+        self.assertEqual(contracts.external_dependencies(self.facts("com.example.MainActivity"), set()), [])
+
+    def test_the_row_names_the_service_and_the_apps_it_stopped(self) -> None:
+        scan = {"inventory": {"platform_method_names": {}}, "elfs": []}
+        rows = gapmap.external_rows(self.facts("com.pairip.licensecheck3.LicenseActivity"), scan)
+        row = next(r for r in rows if r["id"] == "dep:store-license-check")
+        self.assertEqual((row["verdict"], row["shim_class"]), ("absent", "C5"))
+        self.assertIn("ILicensingService", row["provider"])
+        self.assertTrue(row["seen_blocking"], "the device round's evidence belongs on the row")
