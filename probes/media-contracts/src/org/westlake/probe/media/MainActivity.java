@@ -3,6 +3,7 @@ package org.westlake.probe.media;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.ImageFormat;
+import android.graphics.SurfaceTexture;
 import android.media.AudioAttributes;
 import android.media.AudioFormat;
 import android.media.AudioTrack;
@@ -12,6 +13,8 @@ import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.util.Log;
 import android.view.Surface;
 import android.widget.TextView;
@@ -21,6 +24,8 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Media contracts, measured on the provider.
@@ -34,7 +39,8 @@ import java.nio.ByteBuffer;
  *
  * then "[WL-CONTRACT] done". The checks run off the main thread, as apps decode, and each is
  * independent: one failing does not stop the next. media:decode-file, a whole decode through
- * MediaExtractor and MediaCodec, has no row of its own.
+ * MediaExtractor and MediaCodec, and media:decode-surface, the same decode rendered into a Surface
+ * (as every video player does), have no row of their own.
  */
 public class MainActivity extends Activity {
     private static final String TAG = "WL-CONTRACT";
@@ -69,15 +75,19 @@ public class MainActivity extends Activity {
     }
 
     private void runAll() {
-        File clip;
+        File clip, large;
         try {
             clip = copyAsset("clip.mp4");
+            large = copyAsset("clip-320.mp4");
         } catch (Throwable t) {
-            line("probe:media-contracts", "FAIL", "could not stage clip.mp4: " + t);
+            line("probe:media-contracts", "FAIL", "could not stage the clips: " + t);
             line("done", "", "");
             return;
         }
         final String path = clip.getPath();
+        // 160x120 is below the smallest size some hardware decoders take, so the larger clip is the
+        // one that reaches a hardware decoder where the device has one.
+        final String largePath = large.getPath();
         check("jni:android.media.MediaMetadataRetriever", () -> {
             MediaMetadataRetriever retriever = new MediaMetadataRetriever();
             try {
@@ -126,7 +136,9 @@ public class MainActivity extends Activity {
                 codec.release();
             }
         });
-        check("media:decode-file", () -> decodeVideo(path));
+        check("media:decode-file", () -> decodeVideo(path, null));
+        check("media:decode-hw", () -> decodeVideo(largePath, null));
+        check("media:decode-surface", () -> decodeToSurface(largePath));
         check("jni:android.media.ImageReader", () -> {
             ImageReader reader = ImageReader.newInstance(160, 120, ImageFormat.YUV_420_888, 2);
             try {
@@ -161,8 +173,35 @@ public class MainActivity extends Activity {
         line("done", "", "");
     }
 
-    /** Decodes the clip's video track with MediaCodec into ByteBuffers, as players without a surface do. */
-    private static String decodeVideo(String path) throws Throwable {
+    /**
+     * Decodes the clip's video track into a Surface over a SurfaceTexture, rendering each frame, and
+     * waits for the SurfaceTexture to report one: the path a player's SurfaceView or TextureView takes.
+     */
+    private static String decodeToSurface(String path) throws Throwable {
+        HandlerThread thread = new HandlerThread("decode-surface");
+        thread.start();
+        SurfaceTexture texture = new SurfaceTexture(false);
+        Surface surface = new Surface(texture);
+        CountDownLatch frame = new CountDownLatch(1);
+        try {
+            texture.setOnFrameAvailableListener(t -> frame.countDown(), new Handler(thread.getLooper()));
+            String decoded = decodeVideo(path, surface);
+            if (!frame.await(3, TimeUnit.SECONDS)) {
+                throw new IllegalStateException(decoded + " but the SurfaceTexture saw no frame in 3 s");
+            }
+            return decoded + " frameAvailable";
+        } finally {
+            surface.release();
+            texture.release();
+            thread.quitSafely();
+        }
+    }
+
+    /**
+     * Decodes the clip's video track with MediaCodec, into ByteBuffers as players without a surface do,
+     * or rendered into surface when one is given.
+     */
+    private static String decodeVideo(String path, Surface surface) throws Throwable {
         MediaExtractor extractor = new MediaExtractor();
         MediaCodec codec = null;
         try {
@@ -179,7 +218,7 @@ public class MainActivity extends Activity {
             if (format == null) throw new IllegalStateException("no video track");
             codec = MediaCodec.createDecoderByType(format.getString(MediaFormat.KEY_MIME));
             String name = codec.getName();
-            codec.configure(format, null, null, 0);
+            codec.configure(format, surface, null, 0);
             codec.start();
             MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
             int frames = 0;
@@ -202,7 +241,7 @@ public class MainActivity extends Activity {
                 int out = codec.dequeueOutputBuffer(info, 10000);
                 if (out >= 0) {
                     if (info.size > 0) frames++;
-                    codec.releaseOutputBuffer(out, false);
+                    codec.releaseOutputBuffer(out, surface != null);
                     if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) break;
                 }
             }
