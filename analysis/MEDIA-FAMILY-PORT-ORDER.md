@@ -73,6 +73,26 @@ It matters out of proportion to its row: of the HK top 100, the short-drama apps
 ReelShort, NetShort, FlickReels, DramaWave, BlinkDrama, 红果短剧) exist to play video, and they
 are counted as working at the first screen while being unable to play anything.
 
+## What the board's decoders take
+
+Measured with `probes/media-contracts` once the video path existed:
+
+- **The hardware AVC decoder lists Baseline, Main and High, and decodes only Baseline.** On the
+  first frame of any Main-profile stream it reports OH error 6 ("unknown error"), whatever the
+  level, B-frames, CABAC, or whether the parameter sets arrive in band or in the format. Nearly
+  every real stream is Main or High, so an app on the hardware decoder plays nothing (TataLand's
+  intro video never decoded). The port answers it by measurement, not by board name: the
+  first stream of each AVC profile in a process is preceded by one 176x144 frame of that profile
+  through a hardware decoder of its own, and a profile that fails goes to OH's software decoder.
+- **The hardware decoders' smallest size is 176x144**, so small clips and thumbnails also go to the
+  software decoder, which takes 2x2 up to 4096x4096.
+- **There is no software HEVC decoder**, so an HEVC stream the hardware fails has no fallback.
+- **In Surface mode OH reports each frame with size 0.** Android reports the frame's size, and
+  players drop a size-0 output as empty, so the port reports the frame's YUV size.
+
+That is why the probe's `media:decode-hw` clip is Main profile: a Baseline clip passes on a decoder
+that cannot play real video.
+
 ## How a port is accepted
 
 `probes/media-contracts` exercises one row per line on the board
