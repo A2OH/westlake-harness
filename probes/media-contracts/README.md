@@ -15,7 +15,7 @@ gap-map row it measures:
 | `jni:android.media.MediaMetadataRetriever` | `setDataSource`, the duration, and a frame at 0 |
 | `jni:android.media.MediaExtractor` | `setDataSource`, the tracks, and a first sample |
 | `jni:android.media.MediaCodec` | an AVC decoder created, configured and started, and an input buffer within 1 s |
-| `jni:android.media.ImageReader` | a YUV_420_888 reader with a valid surface |
+| `jni:android.media.ImageReader` | the 320x240 clip decoded into a YUV_420_888 reader's Surface, one image acquired, three planes and a non-zero luma plane |
 | `jni:android.media.AudioTrack` | a 48 kHz stereo 16-bit track that plays 100 ms |
 | `media:decode-file` | the clip's video decoded through MediaExtractor and MediaCodec (no row of its own) |
 | `media:decode-hw` | the 320x240 clip decoded the same way, which reaches a hardware decoder where the device has one (no row of its own) |
