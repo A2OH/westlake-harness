@@ -7,6 +7,7 @@ import android.graphics.SurfaceTexture;
 import android.media.AudioAttributes;
 import android.media.AudioFormat;
 import android.media.AudioTrack;
+import android.media.Image;
 import android.media.ImageReader;
 import android.media.MediaCodec;
 import android.media.MediaExtractor;
@@ -139,16 +140,7 @@ public class MainActivity extends Activity {
         check("media:decode-file", () -> decodeVideo(path, null));
         check("media:decode-hw", () -> decodeVideo(largePath, null));
         check("media:decode-surface", () -> decodeToSurface(largePath));
-        check("jni:android.media.ImageReader", () -> {
-            ImageReader reader = ImageReader.newInstance(160, 120, ImageFormat.YUV_420_888, 2);
-            try {
-                Surface surface = reader.getSurface();
-                if (surface == null || !surface.isValid()) throw new IllegalStateException("no valid surface");
-                return "YUV_420_888 reader, valid surface, maxImages=" + reader.getMaxImages();
-            } finally {
-                reader.close();
-            }
-        });
+        check("jni:android.media.ImageReader", () -> decodeToImageReader(largePath));
         check("jni:android.media.AudioTrack", () -> {
             int rate = 48000;
             int min = AudioTrack.getMinBufferSize(rate, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT);
@@ -193,6 +185,46 @@ public class MainActivity extends Activity {
         } finally {
             surface.release();
             texture.release();
+            thread.quitSafely();
+        }
+    }
+
+    /**
+     * Decodes the clip's video track into an ImageReader's Surface and reads one image back as
+     * YUV_420_888: the path thumbnailers, scanners and frame-processing apps take.
+     */
+    private static String decodeToImageReader(String path) throws Throwable {
+        HandlerThread thread = new HandlerThread("decode-imagereader");
+        thread.start();
+        ImageReader reader = ImageReader.newInstance(320, 240, ImageFormat.YUV_420_888, 4);
+        CountDownLatch available = new CountDownLatch(1);
+        try {
+            Surface surface = reader.getSurface();
+            if (surface == null || !surface.isValid()) throw new IllegalStateException("no valid surface");
+            reader.setOnImageAvailableListener(r -> available.countDown(), new Handler(thread.getLooper()));
+            String decoded = decodeVideo(path, surface);
+            if (!available.await(3, TimeUnit.SECONDS)) {
+                throw new IllegalStateException(decoded + " but the reader reported no image in 3 s");
+            }
+            Image image = reader.acquireLatestImage();
+            if (image == null) throw new IllegalStateException(decoded + " but acquireLatestImage gave null");
+            try {
+                Image.Plane[] planes = image.getPlanes();
+                if (planes.length != 3) throw new IllegalStateException(planes.length + " planes");
+                ByteBuffer luma = planes[0].getBuffer();
+                long sum = 0;
+                int count = 0;
+                for (int i = 0; i < luma.remaining(); i += 97, count++) sum += luma.get(i) & 0xff;
+                long mean = count > 0 ? sum / count : 0;
+                if (mean == 0) throw new IllegalStateException("the luma plane is all zero");
+                return decoded + " image " + image.getWidth() + "x" + image.getHeight() + " planes=3 yStride="
+                        + planes[0].getRowStride() + " uvPixelStride=" + planes[1].getPixelStride()
+                        + " meanY=" + mean;
+            } finally {
+                image.close();
+            }
+        } finally {
+            reader.close();
             thread.quitSafely();
         }
     }
