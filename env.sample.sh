@@ -17,3 +17,12 @@ export DEXLIB_CP="/path/to/smali-dexlib2.jar:/path/to/smali-util.jar:/path/to/gu
 export ANDROID_SDK_ROOT="$HOME/android-sdk"           # Android SDK: platforms/, build-tools/, ndk/
 export WESTLAKE_DEBUG_KEYSTORE="$HOME/.android/debug.keystore"  # signs the probe APKs
 export WESTLAKE_ANDROID11_SYSLIBS="/path/to/android11-syslibs"  # arm64 system libs pulled from a stock Android 11 device
+# device/ (launch and score apps on the board; see device/README.md)
+export WL_SC="$WESTLAKE_ROOT/source-closure"           # source-closure root: verify/, workspace/, inputs/
+export HDC_TARGET="<board ip:port or serial>"
+export WL_FW="<framework deploy under verify/out>"
+export WL_SHIM="<Bionic shim build under verify/out>"
+export WL_OVERRIDE="<runtime-library override under verify/out>"
+export WL_GUESTS="<microG guest build under verify/out>"
+export WL_PLAY_GUESTS="<Play services guest build under verify/out>"
+# export WL_CORPUS="$WL_SC/inputs/corpus-hk"  MAP=map  LOCAL_DISKS=/mnt/c  (WSL: the drive holding the virtual disk)
