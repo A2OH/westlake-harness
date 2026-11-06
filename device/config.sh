@@ -31,8 +31,8 @@ hdc_heal() { timeout 20 $WHDC -t $T shell echo ok 2>/dev/null | grep -q ok && re
   timeout 20 $WHDC kill -r >/dev/null 2>&1; sleep 3; hdc_reconnect; return 1; }
 # The host app's uid on the board: every Westlake process runs under it.
 host_uid() { timeout 20 $WHDC -t $T shell "ps -ef" 2>/dev/null | tr -d '\r' | awk '$8=="org.westlake.imehost" {print $1; exit}'; }
-# Stop every Westlake process but the host app.
+# Stop every Westlake process but the host app. The board has no awk: grep, sed and cut only.
 kill_children() { local u=${1:-$(host_uid)}; [ -n "$u" ] || return 0
-  timeout 30 $WHDC -t $T shell "for p in \$(ps -ef | awk '\$1==\"$u\" && \$8!=\"org.westlake.imehost\" {print \$2}'); do kill -9 \$p; done" >/dev/null 2>&1; }
+  timeout 30 $WHDC -t $T shell "for p in \$(ps -ef | grep '^$u ' | grep -v org.westlake.imehost | grep -v grep | sed 's/  */ /g' | cut -d' ' -f2); do kill -9 \$p; done" >/dev/null 2>&1; }
 # launcher arguments for the runtime-library override every launch uses
 override_args() { echo "--runtime-library-build $V/out/$WL_OVERRIDE --runtime-library libandroid_native_network_compat.so --runtime-library libwl_missing_natives.so --runtime-library libart.so"; }
