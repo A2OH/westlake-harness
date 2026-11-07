@@ -1,6 +1,6 @@
 # Westlake APK Gap Probe Process
 
-Status: proposed process, version 0.3  
+Status: proposed process, version 0.4  
 Scope: unchanged stock Android APK compatibility on OpenHarmony  
 Primary objective: scan and probe hundreds, eventually thousands, of APKs to identify the compatibility gaps with the highest platform-wide return on investment
 
@@ -18,6 +18,12 @@ Version 0.3 incorporates the review's second pass (consistency and implementabil
 - **§4.2 — `C1` versus `C4` is now decidable.** The two classes overlapped on the corpus's most common finding, and §4.4 previously conceded the ambiguity ("`J-C1` or `J-C4`"). Inconsistent classification splits one defect across two registry keys and corrupts prevalence counts. One question now decides it: *does an Android-side implementation already exist?*
 - **§12 — classification removed from gap identity.** `mismatch_class` and `fault_origin` were part of the canonical key while §11 permits reclassification and §20 mandates classifier re-runs. Both operations therefore minted new gaps and orphaned their history. They are now versioned attributes; identity is stable under reclassification.
 - **§3 / §15.1 — control purity.** Hard Rule 3 forbids app patches as solutions, but Noice — a named control — currently depends on two. A control only measures unchanged-APK compatibility if the control is unchanged. Patched APKs are now marked `control-impure`, every promoted platform fix must trigger a re-test of the patches that worked around it, and an unretired app patch is treated as an open platform gap wearing a disguise.
+
+Version 0.4 (2026-11-07) corrects two places where the process said one thing and the tools did another, both found when a Level 2 run (three minutes of automatic use per app) ended apps that the map had passed:
+
+- **§8 — a native import is satisfied only in scope.** The resolver counted an import as provided if any runtime library defined it. `__system_property_set` was "provided" by the runtime's own `libbase.so` in all 9 apps that import it; the loader never looks there, and the libraries did not load. Resolution is to follow the namespace the importing library is loaded into, its own dependency closure and symbol versions; a definition elsewhere is `out-of-scope`, an `N-C1` candidate, never `C0` (decided; the resolver change is milestone S1) ([ADR-0002](../analysis/adr/0002-native-imports-in-scope.md)).
+- **Hard Rule 2 — enforced, not assumed.** The 982 maps of the Hong Kong corpus were resolved against an index of build 120 while the board ran build 178. A map already records the lock it was resolved against; the round scorer is to say so whenever a round uses a map from another lock.
+- **§10.2 — the runtime tells.** Most remaining blockers are answers, not names: services answered by hand, refused calls, silent ends. The runtime is to write one light line where it answers an app differently from Android, or where the process ends, and the harness is to turn those lines into measured rows; the first tells (exits, self-signals, loader failures) exist ([RUNTIME-TELLS.md](../analysis/RUNTIME-TELLS.md)).
 
 ## 1. Purpose
 
@@ -55,7 +61,7 @@ A gap report is not permission to add a stub. It is evidence used to locate the 
 ## 3. Hard Rules
 
 1. **Scan the artifact that will run.** Identify the APK by cryptographic hash, not only package/version name.
-2. **Resolve against the runtime that is deployed.** Framework jars, ART, bridge libraries, provider APKs, loader paths, and configuration must be captured in a runtime lock file.
+2. **Resolve against the runtime that is deployed.** Framework jars, ART, bridge libraries, provider APKs, loader paths, and configuration must be captured in a runtime lock file. A gap map records the lock it was resolved against, and a round scored on a map from another lock says so ([ADR-0002](../analysis/adr/0002-native-imports-in-scope.md)).
 3. **Do not patch the APK, and know which APKs are already patched.** App bytecode changes can be used only as explicitly labelled diagnostic experiments, never as the compatibility solution. Any APK currently carrying a patch is marked `control-impure` in the runtime lock and is excluded from unchanged-APK metrics until the patch is retired. Every promoted platform fix must trigger a re-test of the app patches that worked around it (see §15.1).
 4. **Do not stub callable contracts by name alone.** A symbol name does not establish ABI, lifecycle, state, timing, security, or failure semantics. A presence-only class is permitted only under the strict `C8` proof rule: all known uses test existence, no known code invokes the type, runtime-loaded code has been scanned, and the proving call sites are recorded.
 5. **Preserve the first causal failure.** Downstream nulls and crashes must be grouped beneath the earliest broken contract when evidence supports that relationship.
@@ -65,7 +71,7 @@ A gap report is not permission to add a stub. It is evidence used to locate the 
 9. **Know how every marker is emitted.** A count or absence is not evidence until the emitting condition is recorded: sampling, gating, thread identity, and whether the marker occurs before or after fallback.
 10. **Prefer the narrowest control.** Use within-process differentials first when available, then focused contract tests and cross-app controls such as Noice and Material Catalog.
 11. **Stop scanning at the boundary.** If the APK contract resolves cleanly but behavior still fails, investigate Westlake platform skew, runtime integrity, or the observation system rather than inventing more APK gaps.
-12. **Remove diagnostics before promotion.** High-volume tracing, provenance repairs, and app-targeted probes are not production features.
+12. **Remove diagnostics before promotion.** High-volume tracing, provenance repairs, and app-targeted probes are not production features. Tells are not diagnostics: one light line, once per contract and caller, where the runtime answers differently from Android or a process ends, stays in production builds ([RUNTIME-TELLS.md](../analysis/RUNTIME-TELLS.md)).
 
 ## 4. Gap Taxonomy
 
@@ -268,6 +274,7 @@ Build a versioned platform index from the exact runtime lock:
 - Boot/framework class, method, and field signatures.
 - Framework native declarations and registered/exported implementations.
 - System and bridge ELF exports, versions, and SONAME ownership.
+- The namespace each packaged library is loaded into: its search path, what it inherits, and what is loaded globally, written out by the launcher for each build.
 - Known Bionic-to-musl ABI measurements.
 - Binder/service names and supported interfaces/transactions where available.
 - WebView/provider contracts.
@@ -282,6 +289,8 @@ Resolution produces three sets:
 Resolution is member-level. Class presence cannot satisfy a referenced method or field, and a declared member with a generated placeholder body is a `C9` candidate rather than `C0`.
 
 Presence is not proof of compatibility. A found method or symbol can still be `C2`, `C6`, `C7`, `C9`, or `C10`.
+
+**Presence must also be in scope.** A native import is satisfied only by a library the importing library can reach: the global libraries of the namespace it is loaded into, and its own dependency closure looked up in that namespace's order, under the same symbol version when the import names one. A definition anywhere else in the runtime is `out-of-scope`, an `N-C1` candidate, and the repair is to supply the name in scope with Android's answer, not to widen the scope to whatever library happens to define it ([ADR-0002](../analysis/adr/0002-native-imports-in-scope.md)).
 
 ## 9. Phase D: Reachability and Risk Estimation
 
@@ -355,6 +364,8 @@ Every normalized marker additionally records its emission rule:
 - known false-positive and false-negative modes.
 
 Before counting or trusting a marker, read the code that emits it. A derived count without its emission rule is not admissible evidence.
+
+**Tells.** The preferred source for the service, loader, policy and termination events above is the runtime's own tell: one structured line written at the place the runtime gives an app an answer Android would not give, or where the process ends, once per contract and caller, with the answer and whether it is Android's (`fidelity`). A tell is emitted at the answer site, so it does not have to be reconstructed from symptoms; an end with no tell is itself counted, as a tell still missing ([RUNTIME-TELLS.md](../analysis/RUNTIME-TELLS.md)).
 
 The existing `Tolerating clinit failure` runtime marker is a launch-path worklist, not ordinary noise. Preserve the first exception for each affected class and connect later null/partial-state failures only when the causal chain is demonstrated.
 

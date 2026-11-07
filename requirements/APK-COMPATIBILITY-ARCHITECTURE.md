@@ -1,6 +1,6 @@
 # Westlake APK Compatibility Architecture Direction
 
-Last updated: 2026-04-24
+Last updated: 2026-04-24; measured status added 2026-11-07
 
 This note captures the current first-principles architecture conclusion for
 Westlake.
@@ -282,6 +282,54 @@ The strategy only remains justified if it produces evidence on these questions:
 
 If the answer to these stays unknown while more app-level seams are patched,
 that is a sign of architectural drift rather than progress.
+
+## Where the cut stands, measured (2026-11-07)
+
+The rules above ask for evidence. This is what the Hong Kong top-1000 runs on build 177, and the
+first Level 2 run (the top 100 drawing apps, each used for three minutes by an automatic explorer),
+show.
+
+**What holds: the app side.**
+- Real ART and the AOSP framework run the app's unchanged code: 755 of 960 scored apps draw their
+  first screen.
+- 81 of the top 100 drawing apps keep running through three minutes of use. Running is not
+  working, though: 27 of those 81 reached two screens or fewer.
+- Only 20 of the 205 apps that do not draw are first stopped by a Java framework error.
+- Name-based prediction no longer finds the blockers (recall between 0 and 0.22; harness
+  ADR-0001). The missing-name gap is mostly closed.
+
+**What does not: three seams, none of them names.**
+
+| seam | what is there | evidence |
+|---|---|---|
+| system services and lifecycle | Android's system server does not run. Westlake's in-process adapters answer its calls: activity and task manager, package manager, broadcasts, jobs, settings, and a table of fixed answers | 28 of the 55 Westlake commits since Oct 23 change these adapters. Level 2 ends here: an activity destroyed twice, a pending start lost when the app restarts its own process, no calendar provider, no app store |
+| native ABI and process image | app libraries built for bionic run on musl through the shim, in Westlake's process layout | 19 of the 55 commits change the native shims, which were rebuilt about thirty times since Oct 27; one build broke 43 drawing apps. 14 of the 59 native crashes with a dump stop inside musl (10 of them aborts, so the cause may be above it). PairIP's library accounts for about 56 of the 122 native-crash stops. The same apps get past it on an Android phone without Google; ptrace and SELinux are ruled out, and the first measured difference is how it reads its own `/proc/self/maps` |
+| OS policy | OH's rules for app domains differ from Android's | pipes and symlinks in app data are refused (symlinks by a neverallow), and app domains cannot register services. No shim reaches these |
+
+**The test this note asks for has not been run.** The controlled backend swap (the same Westlake
+guest runtime over an Android backend and over the OH backend) has never been built. The
+Android-phone comparison of the end-to-end plan is a different test, Android's own runtime against
+Westlake on OH, and it has not run either.
+
+**So the cut is unproven, not disproven.**
+- The app side holds.
+- The services seam is where this note's primary rule is not being followed. Hand answers are
+  custom guest-visible behaviour, the thing "What We Got Wrong" warns against, and their number
+  keeps rising.
+- The guard added this week for TP-Link drops a destroy for an activity already gone. It is that
+  kind of tolerance. The duplicate comes from two Westlake destroy paths, one of them in a native
+  bridge that cannot be rebuilt today, and removing one of the two paths is the real fix.
+
+Two harness changes are decided (not built yet), so that this section can be re-measured every
+round instead of re-argued:
+- native rows resolve in the importing library's scope, against the deployed runtime (harness
+  `analysis/adr/0002-native-imports-in-scope.md`);
+- the runtime tells where it answers an app differently from Android, or where a process ends
+  (harness `analysis/RUNTIME-TELLS.md`). Each round then reports which seam its fatal answers fall
+  in.
+
+If the services seam dominates, the next step is AOSP's own services in place of the hand answers,
+not more answers.
 
 ## Non-Goals
 
