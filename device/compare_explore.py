@@ -5,6 +5,9 @@ Reads $WL_SC/inputs/logs/<westlake-tag>/hk-<package>.explore/explore.json (run_a
 <android-tag>/<package>.explore/explore.json (android_round.sh). For each package explored on both:
 
   died      Westlake's process ended during exploration and Android's did not
+  closed    it ended right after Back on the app's last screen: Westlake ends the process, Android
+            keeps it cached; the app closed on both. A crash while handling Back looks the same,
+            so read the end of the app's log before calling it clean
   blank     Westlake's view dumps came back empty for most steps (nothing to use)
   shallow   Westlake reached under half of the screens Android reached
   close     half or more of Android's screens (more is possible: different content or layouts)
@@ -31,7 +34,7 @@ def verdict(w: dict, a: dict) -> str:
     if a.get("died_at") is not None and w.get("died_at") is not None:
         return "both-died"
     if w.get("died_at") is not None:
-        return "died"
+        return "closed" if w.get("died_after") == "back" else "died"
     if w["steps"] and w["empty_dumps"] > 0.6 * w["steps"]:
         return "blank"
     if w["screens"] * 2 < a["screens"]:
