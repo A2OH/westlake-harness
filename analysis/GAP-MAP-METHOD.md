@@ -162,6 +162,32 @@ This is the third way a resolved name has been wrong. `mkfifo` resolved and the 
 (B7); 288 of 289 names resolved and fourteen runtime lookups returned null; now a name resolved in a
 library the loader does not search. Each time the name was there and the answer was not.
 
+## A weak import is not optional when an API check guards it
+
+**2026-11-07.** The resolver files a weak import that nothing defines as `N-C5`, a candidate for
+truthful absence: a weak symbol stays null instead of failing the load. NDK code built for a newer
+API than its minimum does not test that null. It checks the device's API level and then calls:
+
+```text
+mov  w0, #31          ; Unity Adaptive Performance, libAdaptivePerformanceThermalHeadroom.so
+bl   <api level at least 31?>
+cbz  w0, skip
+bl   AThermal_getThermalHeadroom@plt     ; weak: null if nothing defines it
+```
+
+While the library's strong `AThermal_*` imports were missing it never loaded, and Unity ran without
+it. The shim then supplied the API 30 calls; the library loaded, the check passed on a runtime that
+reports API 34, and four games that had drawn ended at startup with a jump to address 0. Supplying
+the rest of the family fixed them.
+
+Two rules follow:
+- **A weak NDK import introduced at or below the API level the runtime reports is reachable** as
+  soon as its library loads, so it is classified like a strong one (`N-C1` candidate), not `N-C5`.
+  The level each NDK name was introduced at is in the NDK's own symbol maps (`# introduced=`).
+- **A family is supplied whole or not at all.** Once a shim defines one member of an NDK family,
+  every member up to the reported API level must exist. A partial family turns a library that
+  failed to load, and was skipped, into one that loads and calls null.
+
 ## Which gaps are on the path
 
 The map alone left one unknown: after the blockers already fixed, what comes next? The answer is
