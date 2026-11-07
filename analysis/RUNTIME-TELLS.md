@@ -28,26 +28,36 @@ run carries at no extra cost.
 ## What a few tells did this week
 
 The first Level 2 run (Nov 7: the top 100 drawing apps, each used for three minutes by the
-explorer) ended 19 apps. **10 of them left no recorded cause**: no Java error, no dump, nothing.
-Three tells, each a few lines at the place the answer is given, and two reruns named most of them:
+explorer) ended 19 apps. Measured with `device/tells.py`, which reads the markers that exist as
+tells (step T0 below):
+
+| how the 19 ended | apps |
+|---|---|
+| uncaught Java exception | 4 |
+| Back on the app's last screen, Westlake ending the process; both with the GPU driver's thread aborting during the exit | 2 |
+| fatal signal | 3 |
+| fatal signal whose dump timed out | 1 |
+| **silent**: no tell, no Java exception, no fatal signal in the system log | **9** |
+
+Three tells were added the same day, each a few lines at the place the answer is given. Reruns of
+the silent apps named most of them:
 
 | app | what named it | reading |
 |---|---|---|
 | Outlook | `System.exit` with its stack, from a shutdown hook installed before the app binds | the China edition shows a disclaimer, then exits. Android restarts the process for the pending start; Westlake does not. **A lifecycle gap** |
-| Excel, Doubao | a process signalling itself, with the stack, at `Process.sendSignal` | each quit after the explorer refused consent. **An explorer fix**, not a platform gap |
-| OnSpace | the loader's own reason for a failed open | `__system_property_set` missing, while the static map said it was provided. **A shim fix and a scanner fix** ([ADR-0002](adr/0002-native-imports-in-scope.md)) |
-| Microsoft 365 | a crash dump on the rerun | a heap fault inside musl's `malloc` |
-| CamScanner | the system log | SIGILL in its own risk-detection library, with no dump |
-| WeChat | still nothing | a native crash on a startup thread; the system's dumper timed out, twice |
-| Octopus | still nothing | ends during bind with C++ destructors running and no Java exit line, which points at a native `exit()` |
-| Douyin | a dump without a usable stack | a jump to address `0x4000` |
-| Zoom | — | did not end on the rerun |
+| Excel, Doubao, Xiaomi Home | a process signalling itself, with the stack, at `Process.sendSignal` | each quit after the explorer refused or cancelled a consent dialog. **An explorer fix**, not a platform gap |
+| Pico Live | — | kept running on the rerun, once the explorer stopped refusing consent |
+| OnSpace | the loader's own reason for a failed open | `__system_property_set` missing, while the static map said it was provided. **A shim fix and a scanner fix** ([ADR-0002](adr/0002-native-imports-in-scope.md)). With the name supplied it gets past the load and still ends silently |
+| WeChat | the system log, on the rerun | a fatal signal on a startup thread; the system's dumper timed out twice, so there is no crash site |
+| CamScanner | the system log | its own signal handler took SIGILL (a risk-detection library's trap), then the process ended. Still silent |
+| Octopus | — | ends during bind with C++ destructors running and no Java exit line, which points at a native `exit()`. Still silent |
 
-The same tells named the ends that the explorer caused: Xiaomi Home quit after a refusal too. A
-fourth marker, written where a stale destroy is dropped, showed that TP-Link's Back crash came from
+**Nine silent ends became three.** The same reading corrected one of ours: the two Back ends had
+been read as a clean close. They are Westlake ending the process on the last activity, where Android
+keeps it cached, and in both the GPU driver's thread aborted while the process was going away.
+
+A fourth marker, written where a stale destroy is dropped, showed that TP-Link's Back crash came from
 Westlake destroying one activity twice, which is Westlake's own defect.
-
-Ten unexplained ends became four.
 
 On the next run the loader tell named two more: Bilibili's `libijkffext.so` needs bionic's
 `__fe_dfl_env`, which the static map did list as missing, and Insta360's `libmarsxlogg.so` cannot
@@ -192,8 +202,8 @@ measured instead of inferred.
 ## How we will know the tells work
 
 - **Backtest.** Each of the 19 Level 2 ends of Nov 7 has to be named by a tell or by a recorded
-  explorer reason. Today 15 are named. Not yet: WeChat, Octopus, Douyin's crash, and Zoom, which did
-  not reproduce.
+  explorer reason. After the first tells and reruns, 16 have an end kind; OnSpace, CamScanner and
+  Octopus are still silent, and WeChat's fatal signal has no crash site.
 - **Fixtures.** A probe app triggers each tell once:
   - a service with no adapter;
   - an unlisted binder method;
@@ -209,7 +219,8 @@ measured instead of inferred.
 ## Order of work
 
 1. **T0, harness only.** Parse the markers that exist as tells, and publish the silent count for
-   the Nov 7 runs.
+   the Nov 7 runs. *Done:* `device/tells.py <tag>...` writes `<tag>-tells.json` and prints how each
+   app ended, the candidate causes, and the contracts told by the most apps.
 2. **T1, services.** One helper in the framework, called at:
    - the service lookup;
    - the proxies' default answers and the fixed-answer table;
