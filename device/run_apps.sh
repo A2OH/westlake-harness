@@ -6,6 +6,7 @@
 # An app key hk-<package> takes its launch remedies (launch_args) from
 # $WL_CORPUS/${MAP:-map}/<package>/gap-map.json. RUN_EXTRA: launcher arguments for every app.
 # WAIT (30): the most seconds to wait; EARLY=1 (default) moves on sooner, see below.
+# EXPLORE=<seconds>: then explore the app that long (Level 2, explore.py).
 . "$(dirname "$0")/config.sh"; cd $IN
 tag=$1; shift; mkdir -p logs/$tag
 for app in "$@"; do
@@ -44,6 +45,11 @@ except Exception: pass" "$WL_CORPUS/${MAP:-map}/${app#hk-}/gap-map.json" 2>/dev/
     done
   else
     sleep ${WAIT:-30}
+  fi
+  # Level 2 (EXPLORE=<seconds>): use the app like a curious user before the evidence is taken
+  # (explore.py: taps unvisited views, scrolls, goes back); its steps land in <tag>/<app>.explore/.
+  if [ "${EXPLORE:-0}" -gt 0 ] && [ -n "$C" ]; then
+    python3 $DEVICE/explore.py oh --hdc $WHDC --serial $T --child $C --seconds $EXPLORE --out logs/$tag/$app.explore 2>&1 | tail -1 >&2
   fi
   timeout 30 $WHDC -t $T shell "power-shell wakeup >/dev/null; power-shell setmode 602 >/dev/null; snapshot_display -f /data/local/tmp/rg.jpeg >/dev/null" >/dev/null 2>&1
   rm -f $RECV/rg.jpeg; recv_to /data/local/tmp/rg.jpeg rg.jpeg

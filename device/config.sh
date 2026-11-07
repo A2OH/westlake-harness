@@ -23,7 +23,8 @@ need WL_SC HDC HDC_TARGET
 IN=$WL_SC/inputs; V=$WL_SC/verify; T=$HDC_TARGET; WHDC=$HDC
 export WL_SC HDC HDC_TARGET; export WL_CORPUS=${WL_CORPUS:-$IN/corpus-hk}; M=${WL_MANIFEST_TOOLS:-$WL_SC/workspace/manifest/tools}
 RECV=$IN/.recv; mkdir -p "$RECV" "$IN/logs" "$WL_SC/logs"
-recv_to() { timeout "${3:-60}" $WHDC -t $T file recv "$1" "$RECV/$2" >/dev/null 2>&1; }
+# From inside $RECV with a relative name, so a Windows hdc (the board on USB under WSL) works too.
+recv_to() { (cd "$RECV" && timeout "${3:-60}" $WHDC -t $T file recv "$1" "$2" >/dev/null 2>&1); }
 hdc_reconnect() { timeout 60 $WHDC tconn $T >/dev/null 2>&1; }
 # A hung local hdc server still lists the board but times out every shell call (a big file send
 # beside other transfers left it at 100% CPU). Restart it when the board does not answer.

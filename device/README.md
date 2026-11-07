@@ -22,11 +22,22 @@ apps, and Google's Play services for `play/`, come from your own corpus director
 | `round.sh <tag> <first> <last>` | the round over `apps.csv`, five apps at a time, next batch staged ahead; resumable |
 | `prefetch_board.py <pkg...>` | send staged files into the board's input cache ahead (`PUSH_AHEAD=1`) |
 | `harvest_manifest.py` | describe the run-time libraries harvest for `scan --unpacked-libs` |
+| `explore.py oh\|android` | Level 2: use a running app like a curious user (unvisited views, scrolls, a tap grid for WebView/Compose/game surfaces, Back), same loop on the board and on a phone |
+| `android_round.sh <tag> <pkg...>` | Level 2 on the Android reference phone: install the same download, explore, keep the crash log, uninstall |
+| `compare_explore.py <W tag> <A tag>` | per app: died / blank / shallow / close / both-died |
 | `play/start_play.sh` | start the shared Play services process (no activity) and watch it up to 24 h |
 | `play/client.sh <tag> <pkg>` | one app beside it |
 | `play/shared_round.sh <tag>` | a round with every app connected to it; stops at once if it dies |
 | `play/run_all.sh <tag>` | `shared_round.sh` with resume, for day-long runs |
 | `play/score_play.py <tag> [<microG tag>]` | rungs, connection status, error replies, missing services, token counts |
+
+## Level 2
+
+`EXPLORE=180 round.sh <tag> ...` explores each app on the board for 3 minutes after it is on screen,
+before the usual evidence is taken; `android_round.sh` does the same on a phone, and `compare_explore.py`
+sets the two side by side. Screens are told apart by the views on them, so the comparison is a lead to
+look at with the step screenshots, not a verdict on its own. The explorer never taps views whose text
+looks like paying, deleting, signing out or reporting, and never types.
 
 ## Timing
 
