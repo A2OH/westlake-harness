@@ -35,8 +35,11 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 DENY = re.compile(r"\b(buy|pay|purchase|subscribe|subscription|checkout|order now|place order|delete|remove account|"
-                  r"sign ?out|log ?out|uninstall|unsubscribe|report|block)\b|購買|购买|付款|支付|訂閱|订阅|刪除|删除|登出|退出登录",
-                  re.I)
+                  r"sign ?out|log ?out|uninstall|unsubscribe|report|block|disagree|do not agree|don't agree|decline|exit|quit)\b|"
+                  r"購買|购买|付款|支付|訂閱|订阅|刪除|删除|登出|退出登录|不同意|拒絕|拒绝|退出", re.I)
+# Refusing a consent notice or pressing an app's own exit closes it on purpose, as on a phone: matched by
+# view id too, since such buttons are often icons or text the dump leaves out.
+DENY_ID = re.compile(r"not_?agree|disagree|decline|reject|exit|quit", re.I)
 TEXT_INPUT = re.compile(r"EditText|TextInput|SearchView|AutoComplete", re.I)
 
 
@@ -184,7 +187,7 @@ def screen_of(views: list[View]) -> str:
 
 def choose(views: list[View], tried: set[str]) -> View | None:
     candidates = [v for v in views if v.clickable and v.key() not in tried
-                  and not TEXT_INPUT.search(v.cls) and not DENY.search(v.text)]
+                  and not TEXT_INPUT.search(v.cls) and not DENY.search(v.text) and not DENY_ID.search(v.vid)]
     # Labelled views first (a user reads before tapping), then top to bottom, left to right.
     candidates.sort(key=lambda v: (not (v.text or v.vid != "-"), v.y, v.x))
     return candidates[0] if candidates else None
@@ -251,7 +254,11 @@ def explore(device, seconds: int, out: Path, shot_every: int, settle: float) -> 
     result = {"seconds": round(time.monotonic() - t0, 1), "steps": len(steps), "screens": len(screens),
               "taps": sum("tap" in s for s in steps), "scrolls": sum("scroll" in s for s in steps),
               "backs": sum("back" in s for s in steps), "empty_dumps": sum(s["views"] == 0 for s in steps),
-              "died_at": died_at, "steps_detail": steps}
+              "died_at": died_at, "steps_detail": steps,
+              # What the process ended after: "back" (Back closed the app's last screen, which on
+              # Westlake ends the process and on Android leaves it cached) or the last tap's view.
+              "died_after": None if died_at is None or not steps else
+                            "back" if "back" in steps[-1] else f"{steps[-1].get('view')}:{steps[-1].get('id')}"}
     (out / "explore.json").write_text(json.dumps(result, indent=1) + "\n")
     return result
 
