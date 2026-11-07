@@ -146,6 +146,8 @@ A suite of probe APKs, run like the existing white-box probes (`icu-data`, `runt
 - **Evidence:** extend the startup evidence extractors to flows: crashes and ANRs; exceptions and
   null services; refused calls and `dlsym` failures; `ActivityNotFoundException`; intents that went
   nowhere (adapter logs); blank or unchanged screens (screenshot diffs).
+- *2026-11-07:* most of this evidence now comes from the runtime itself, as tells written where it
+  answers an app differently from Android or where a process ends ([RUNTIME-TELLS.md](RUNTIME-TELLS.md)).
 
 ### Layer 6: scoring and ledger
 

@@ -51,7 +51,8 @@ Every row carries: **verdict** · **shim class** (`C0`–`C10`, `CU`) · **effor
 nothing (bare binder, default-returning proxy, a scheduler that never runs jobs) · `null` the
 manager itself is null · `inert` the manager exists but its binder is null · `unresolved` the
 binder is reached through a helper the static read cannot follow · `missing` / `stub` / `denied` /
-`refused` / `absent` · `hollow-candidate`, `probe-only`, `environment-sensitive`: evidence to
+`refused` / `absent` · `out-of-scope` a native name the runtime defines, but in no library the importing
+library can reach: the library does not load (strong import) or gets null (weak) · `hollow-candidate`, `probe-only`, `environment-sensitive`: evidence to
 check, not a verdict.
 
 `unresolved` exists because the first version called any manager with no visible binder
@@ -81,7 +82,10 @@ A row's `confidence` says how far its provider verdict has been established:
 2. **probe**: a white-box conformance probe (`probes/`) exercised the contract on the board, in
    isolation, with a pass marker. `probes/service-metadata` is the Firebase contract behind B8;
    it existed since August but nothing connected it to an app that needed it. The map now does.
-3. **observed**: the full app hit it on the device.
+3. **observed**: the full app hit it on the device. From 2026-11-07 the runtime is to report these
+   itself: a tell names the contract, the answer and whether it is Android's, so an observation no
+   longer waits for a crash to be read ([RUNTIME-TELLS.md](RUNTIME-TELLS.md); the first tells,
+   for exits, self-signals and loader failures, exist).
 
 The intended loop is: map → run the probes named by `verify` rows → launch the app as acceptance.
 The launch stops being how gaps are discovered.
@@ -136,6 +140,27 @@ would, inside the app's mount namespace and uid, and reports resolved or null **
 answered**. For the WebView engine, none of the fifteen that resolve comes from `libandroid.so`
 itself; they arrive through its dependency tree, and two files of that name ship with only one
 carrying the SurfaceControl surface.
+
+## Provided means provided to the importer
+
+**2026-11-07.** A Level 2 run (three minutes of automatic use per app) ended OnSpace and Amap on
+the same missing symbol, `__system_property_set`. Every map whose libraries import it, all 9 of
+982, had called it supplied: `C0`, provider `libbase.so`. That library is internal to the runtime.
+It is not in the namespace that loads the app's libraries, not loaded globally, and no app library
+depends on it, so the loader never looks there. The resolver had counted a name as provided
+wherever the runtime defined it.
+
+Native rows are to resolve in the importing library's scope
+([ADR-0002](adr/0002-native-imports-in-scope.md), not built yet): the global libraries of its namespace and its
+own dependency closure, in the namespace's order, under the import's version. A name defined only
+elsewhere is `out-of-scope`. The same correction re-reads the 3,482 imports, in 674 apps, whose
+only provider was a library internal to the runtime. Most are `ANativeWindow_*` credited to
+`libhwui.so`; those probably reach the app through Westlake's own `libandroid.so` instead, and the
+probe decides.
+
+This is the third way a resolved name has been wrong. `mkfifo` resolved and the policy refused it
+(B7); 288 of 289 names resolved and fourteen runtime lookups returned null; now a name resolved in a
+library the loader does not search. Each time the name was there and the answer was not.
 
 ## Which gaps are on the path
 
@@ -193,6 +218,8 @@ Rows are read from the provider's source, so they assume the board runs that sou
 `deploy-check` tests the assumption: libraries the runtime asks for that are neither staged nor on
 the board, and staged binaries built from an older version of their source files. It would have
 caught three McDonald's launch failures before the launch (B14, B16 and the WebView never staged).
+The export index the maps resolve against rests on the same assumption, so it is built from the
+deployed build's staged files, and a map from another lock is reported as stale (ADR-0002).
 `probes/run_suite.py` then runs the probes on the build itself, one command per build.
 
 ## Running it
@@ -243,7 +270,8 @@ alone stays empty. That is the third row, and it is not a row a shim can close.
   neither loads before sign-in on the Android baseline. Joining those layers in would make each
   native row name the JNI methods and Java features it breaks, and whether startup reaches it.
 - **The NDK weld model is curated** per library and API family (`data/ndk-weld-model.json`), and
-  "provided" means the name is exported, not that it behaves.
+  "provided" means the name is exported, not that it behaves. Until ADR-0002 is implemented it also
+  means exported anywhere in the runtime, not necessarily by a library the importer can reach.
 - **Native calls back into Java are matched from strings**, which misses names that are built at
   runtime, encrypted or tail-merged, and matches a primitive-typed field by name alone. Classes
   that neither the SDK nor the runtime knows are `CU`: on Toutiao they are ART and old-Android

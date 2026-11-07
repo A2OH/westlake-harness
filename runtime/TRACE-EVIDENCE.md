@@ -59,6 +59,17 @@ Class-load events must include `requested_class`, `caller_class`, `caller_method
 `caller_signature`. Target-only class-load logging is ambiguous when several call sites probe the
 same name.
 
+## Tells
+
+A tell is an event of the same family, written where the runtime gives an app an answer Android
+would not give, or where the process ends ([RUNTIME-TELLS.md](../analysis/RUNTIME-TELLS.md)):
+`[WESTLAKE-TELL]` followed by one JSON object with `contract`, `answer`, `fidelity`, `caller`,
+`t_ms` and `detail`, once per contract and caller in a process. It carries no run envelope,
+because the runtime cannot know the run. The harness supplies identity from the per-app stderr
+file it collected, so tells are ingested one app at a time, like legacy lines. The hook rules
+below apply to tells as they do to traces: bounded writes, no `dladdr` or allocation in signal and
+loader paths, return addresses resolved offline.
+
 ## Runtime hook points
 
 Keep the hooks at the Android runtime boundary:
@@ -88,3 +99,6 @@ measured.
 - `not-observed` means coverage is absent. It is never evidence that the contract is optional.
 - Reflection failure supports a missing-contract priority only at the exact caller site and after
   the presence/absence branch is understood.
+- A `stand-in` or `failed` tell before a process end is a cause candidate, not a cause. It is
+  promoted when the same tell precedes the end on a repeat run, or when a probe that exercises the
+  contract alone reproduces the failure.

@@ -86,6 +86,20 @@ framework surface, resources, and one NDK library absent from the board altogeth
 kind of work from where the corpus started
 ([benchmark](benchmark/2026-09-23-five-app-validation/README.md)).
 
+### Declared, and still out of reach
+
+A fourth case was measured on 2026-11-07, and it was the scanner's own. An import counted as
+provided if any runtime library defined it. `__system_property_set` was provided, by the runtime's
+`libbase.so`, in all 9 apps that import it; the loader never looks in that library, the libraries
+importing it failed to load in the two apps that reached them, and only a launch showed it. Native
+imports are to resolve in the importing library's scope, against the runtime that is deployed
+([ADR-0002](analysis/adr/0002-native-imports-in-scope.md); decided, not built yet).
+
+What stops apps now is mostly answers, not names: services Westlake answers by hand, refused calls,
+silent ends. The runtime half of the method is the **tell**: one light line where the runtime
+answers an app differently from Android, or where a process ends, collected from every app in every
+round and ranked by what followed it ([method](analysis/RUNTIME-TELLS.md)).
+
 ---
 
 ## Layout
@@ -103,6 +117,8 @@ kind of work from where the corpus started
 | `analysis/GAP-MAP-METHOD.md` | **The gap map**: one table per APK of every surface where it touches OpenHarmony (Java API, system services, package manager, native symbols and loading, sandbox policy, external SDKs), with verdict, shim class, effort and conformance probe per row, and a backtest against failures already hit on the board. |
 | `analysis/NATIVE-PROVENANCE-AND-SURFACE.md` | **Native side of the same subtraction**: which upstream component a stripped `.so` contains, and which Android surfaces each registered JNI method reaches. |
 | `analysis/E2E-FUNCTIONAL-HARNESS-PLAN.md` | **Proposal: functional testing beyond startup.** Predict which user-facing functions fail from contracts (static scan, feature attribution, conformance probes on the board), and measure the predictions with a sampled set of real flows against the Android baseline. |
+| `analysis/RUNTIME-TELLS.md` | **The runtime half of the gap analysis.** One light line where the runtime answers an app differently from Android, or where a process ends; the harness turns tells into measured rows, ranks them by what followed, reports which seam the fatal ones fall in, and counts the ends nobody told. |
+| `analysis/adr/` | Decisions. ADR-0001: measure provider conformance on every build. ADR-0002: resolve native imports in the importing library's scope, against the deployed runtime. |
 | `evidence/TOUTIAO-BRINGUP-HANDOFF.md` | The empirical base: a full app bring-up with fixes, **nine refuted hypotheses**, build hazards, and harness notes. |
 | `harness/westlake_gap/` | Production static scanner: ordered runtime index, multidex/split APK inventory, member resolution, `C8`/`C9` detection, ELF/JNI evidence, gap registry, and report. `nativeprov.py` adds component provenance and per-method platform-surface reach (`native-surface`). |
 | `runtime/TRACE-EVIDENCE.md` | Native/reflection watchlists, structured event envelope, ART hook points, and evidence-promotion rules. |
