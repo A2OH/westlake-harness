@@ -88,15 +88,29 @@ class Board:
         self.send("v")
         time.sleep(1.5)
         text = self.shell(f"tail -c +{start} {self.log} | grep 'VT '", timeout=60)
-        # One block per window (root), bottom first: only the top one takes taps.
-        blocks = text.split("VT ==== root[")
-        text = blocks[-1] if len(blocks) > 1 else text
-        out = []
-        for line in text.splitlines():
+        # One block per window (root). They come in creation order, not stacking order: Excel's
+        # privacy dialog was root[0] under an empty full-screen overlay view, and taking the last
+        # root left the explorer blind, tapping a grid onto "Disagree and Exit". The top window is
+        # taken as the last one with something to tap.
+        blocks = [b for b in text.split("VT ==== root[")[1:]] or [text]
+        roots = [self.parse(b) for b in blocks]
+        tappable = [r for r in roots if any(v.clickable for v in r)]
+        return tappable[-1] if tappable else (roots[-1] if roots else [])
+
+    def parse(self, block: str) -> list[View]:
+        """One window's views on screen. Rects are the window's own: a window smaller than the screen
+        (a dialog) is placed centred, as Android places dialogs, which matched the board's screenshots."""
+        out, dx, dy = [], 0, 0
+        for line in block.splitlines():
             m = self.VT.search(line)
-            if not m or m[8] != "1":
+            if not m:
                 continue
             x, y, w, h = (int(m[i]) for i in (3, 4, 5, 6))
+            if not out and not (dx or dy) and x == 0 and y == 0 and w < self.width and h < self.height:
+                dx, dy = (self.width - w) // 2, (self.height - h) // 2
+            if m[8] != "1":
+                continue
+            x, y = x + dx, y + dy
             if w <= 4 or h <= 4 or x >= self.width or y >= self.height or x + w <= 0 or y + h <= 0:
                 continue
             out.append(View(m[1], m[2], x, y, w, h, m[7] == "1", m[9] or ""))
