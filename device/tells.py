@@ -56,6 +56,9 @@ LEGACY = [
 ]
 HILOG_TELLS = [
     (re.compile(r"OH_PMAdapter: \[STUB\] (\w+)"), lambda m: ("binder:IPackageManager." + m[1], "stub", "unknown", "")),
+    (re.compile(r"OH_WSAdapter: \[STUB\] (\w+)"), lambda m: ("binder:IWindowSession." + m[1], "stub", "unknown", "")),
+    (re.compile(r"OH_WSAdapter: \[STAND-IN\] (\w+) - (.*)"),
+     lambda m: ("binder:IWindowSession." + m[1], "fixed", "stand-in", m[2].strip())),
 ]
 TELL = re.compile(r"\[WESTLAKE-TELL\] (\{.*\})")
 CHILD = re.compile(r"adapter_child_(\d+)\.stderr")
