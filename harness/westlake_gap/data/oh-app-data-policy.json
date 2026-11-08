@@ -1,5 +1,5 @@
 {
-  "description": "What an app process may create in its own data directory, OpenHarmony vs Android. Queried from the loaded kernel policy, not inferred from source.",
+  "description": "What an app process may do under each platform's kernel policy: create objects in its own data directory, and act on its own processes. Queried from the loaded kernel policy, not inferred from source.",
   "method": "write '<scon> <tcon> <class_index>' to /sys/fs/selinux/access and decode the allowed/auditdeny vectors (tool: probes/avq.c)",
   "oh": {
     "board": "OpenHarmony 6.1.0.31, arm64, SELinux enforcing policy as loaded",
@@ -30,5 +30,15 @@
     "source_rule": "system/sepolicy/private/untrusted_app_all.te:37 allow untrusted_app_all app_data_file:{ lnk_file sock_file fifo_file } create_file_perms;",
     "classes": {"dir": {"allowed": true}, "file": {"allowed": true}, "sock_file": {"allowed": true},
                 "fifo_file": {"allowed": true}, "lnk_file": {"allowed": true}}
+  },
+  "process": {
+    "queried": "2026-11-08",
+    "ptrace_self": {
+      "oh": {"allowed": false, "audited": true,
+             "query": "u:r:normal_hap:s0 u:r:normal_hap:s0 process: allowed vector 0x2217f7d, without ptrace (permission 8, bit 0x80)"},
+      "android": {"allowed": true,
+                  "source_rule": "system/sepolicy/private/untrusted_app_all.te:103 allow untrusted_app_all self:process ptrace; (gdbserver for ndk-gdb)"},
+      "fix": "allow normal_hap self:process ptrace; for the domain apps run in, as Android's untrusted_app_all"
+    }
   }
 }

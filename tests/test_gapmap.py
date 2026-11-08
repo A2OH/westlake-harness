@@ -2899,6 +2899,22 @@ class DeviceIdentifiers(unittest.TestCase):
 
 
 class SandboxAndBacktest(unittest.TestCase):
+    def test_ptrace_on_the_apps_own_processes_is_a_policy_row(self) -> None:
+        """FIFA Mobile's watchdog and the crash dumpers attach to the app; OH's normal_hap may not."""
+        import json
+        policy = json.loads((Path(gapmap.__file__).parent / "data" / "oh-app-data-policy.json").read_text())
+        scan = {"inventory": {"elfs": [{"soname": "libFIFAMobileNeon.so", "name": "x", "undefined_symbols": ["ptrace", "fork"]},
+                                       {"soname": "libcrashlytics-common.so", "name": "y", "undefined_symbols": ["ptrace"]},
+                                       {"soname": "libplain.so", "name": "z", "undefined_symbols": ["open"]}],
+                              "platform_method_names": {}}}
+        rows = gapmap.process_policy_rows(scan, policy)
+        self.assertEqual([(r["id"], r["verdict"], r["effort"]) for r in rows], [("policy:ptrace-self", "denied", "OH")])
+        self.assertEqual(rows[0]["item"], "ptrace on the app's own processes (libFIFAMobileNeon.so, libcrashlytics-common.so)")
+        self.assertIn("untrusted_app_all self:process ptrace", rows[0]["provider"])
+        self.assertEqual(gapmap.process_policy_rows({"inventory": {"elfs": [scan["inventory"]["elfs"][2]]}}, policy), [])
+        allowed = {**policy, "process": {"ptrace_self": {**policy["process"]["ptrace_self"], "oh": {"allowed": True}}}}
+        self.assertEqual(gapmap.process_policy_rows(scan, allowed), [], "a board whose policy allows it has no row")
+
     def test_realm_fifo_is_predicted(self) -> None:
         policy = {"oh": {"domain": "u:r:normal_hap:s0", "app_data_type": "u:object_r:appdat:s0",
                          "workaround_without_policy_change": "relabel",
