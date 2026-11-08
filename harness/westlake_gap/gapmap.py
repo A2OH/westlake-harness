@@ -1568,20 +1568,34 @@ def apply_probe_results(gap_map: dict[str, Any], results: dict[str, Any]) -> Non
                 row["provider"] = result["finding"]
 
 
+def packaged_graph(scan: dict[str, Any]) -> tuple[dict[str, str], dict[str, set[str]]]:
+    """The packaged libraries by file name: each file's SONAME (its own name when it has none), and
+    the packaged files its DT_NEEDED names load. The launcher routes files by name, and a name it
+    cannot find stops the launch: TikTok's libeffect_plugin.so has the SONAME libeffect.so, and r77
+    and r82 never launched it ("Android namespace target is not a pinned APK DSO"). A needed name is
+    the file of that name first, else a file with that SONAME: Duolingo packages libmain.so and
+    libduolingounity.so, both with the SONAME libmain.so, and its libunity.so needs the file libmain.so."""
+    packaged = ohresolve.packaged_elfs(scan)
+    sonames: dict[str, str] = {}
+    files: dict[str, str] = {}
+    for elf in packaged:
+        base = elf["name"].rsplit("/", 1)[-1]
+        sonames.setdefault(base, elf.get("soname") or base)
+        files[base] = base
+    for base, soname in sonames.items():
+        files.setdefault(soname, base)
+    needed: dict[str, set[str]] = {}
+    for elf in packaged:
+        needed.setdefault(elf["name"].rsplit("/", 1)[-1], set()).update(
+            files.get(name, name) for name in elf.get("needed", []))
+    return sonames, needed
+
+
 def packaged_dependents(scan: dict[str, Any], names: list[str]) -> list[str]:
     """The packaged libraries among names, and every packaged library whose DT_NEEDED graph reaches
     one, as file names: what a launcher routing names to the Android namespace must route together,
     or a dependent left in the default namespace loads a second copy of the routed library there."""
-    packaged = ohresolve.packaged_elfs(scan)
-    files: dict[str, str] = {}
-    for elf in packaged:
-        base = elf["name"].rsplit("/", 1)[-1]
-        files[base] = base
-    for elf in packaged:
-        base = elf["name"].rsplit("/", 1)[-1]
-        files.setdefault(elf.get("soname") or base, base)
-    needed = {elf["name"].rsplit("/", 1)[-1]: {files.get(name, name) for name in elf.get("needed", [])}
-              for elf in packaged}
+    _, needed = packaged_graph(scan)
     reach = {name for name in names if name in needed}
     grew = True
     while grew:
@@ -2853,19 +2867,20 @@ _SEARCHED_BEFORE_APP = ("/system/lib64/", "/vendor/lib64/")
 
 
 def shadowed_libraries(scan: dict[str, Any], board_paths: list[str]) -> tuple[dict[str, str], list[str]]:
-    """Packaged libraries a board library of the same name wins over, and the APK libraries whose
-    DT_NEEDED graph reaches one: those must load in an isolated namespace to get the APK's copy."""
+    """Packaged libraries a board library of the same name wins over (by SONAME), and the APK
+    libraries whose DT_NEEDED graph reaches one, as file names: those must load in an isolated
+    namespace to get the APK's copy. Each file is its own node: Insta360 packages libmarsxlog.so and
+    libmarsxlogg.so, both with the SONAME libmarsxlog.so, and a graph by SONAME routed the first file
+    only. libmarsxlogg.so, left in the default namespace, bound OH's libc++_shared.so (std::__n1, not
+    the NDK's std::__ndk1) and failed to relocate std::runtime_error's constructor."""
     board: dict[str, str] = {}
     for path in board_paths:
         if path.startswith(_SEARCHED_BEFORE_APP):
             board.setdefault(path.rsplit("/", 1)[-1], path)
-    needed: dict[str, set[str]] = {}
     # Packaged only: a library the app writes at run time loads in the Android namespace already.
-    for elf in ohresolve.packaged_elfs(scan):
-        name = elf.get("soname") or elf["name"].rsplit("/", 1)[-1]
-        needed.setdefault(name, set()).update(elf.get("needed", []))
-    shadowed = {name: board[name] for name in needed if name in board}
-    reach = set(shadowed)
+    sonames, needed = packaged_graph(scan)
+    shadowed = {soname: board[soname] for soname in sonames.values() if soname in board}
+    reach = {base for base, soname in sonames.items() if soname in board}
     grew = True
     while grew:
         grew = False
@@ -2936,19 +2951,7 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
     elfs = ohresolve.target_elfs(scan)
     packaged = ohresolve.packaged_elfs(scan)
     unpacked = [elf for elf in elfs if elf.get("origin") == "unpacked"]
-    shadowed, targets = shadowed_libraries(scan, board_paths or [])
-    # The graph is by DT_NEEDED name (the SONAME), but the launcher routes files by name, and a name it
-    # cannot find stops the launch: TikTok's libeffect_plugin.so is libeffect.so, and r77 and r82
-    # never launched it ("Android namespace target is not a pinned APK DSO").
-    # A file's own name first: Duolingo packages libmain.so and libduolingounity.so, both with the
-    # SONAME libmain.so, and its libunity.so needs the file libmain.so.
-    files: dict[str, str] = {}
-    for elf in packaged:
-        base = elf["name"].rsplit("/", 1)[-1]
-        files[base] = base
-    for elf in packaged:
-        base = elf["name"].rsplit("/", 1)[-1]
-        files.setdefault(elf.get("soname") or base, base)
+    shadowed, targets = shadowed_libraries(scan, board_paths or [])   # file names, as the launcher routes
     if shadowed:
         option = namespace_option or {"present": False, "source": None}
         rows.append(_row(
@@ -2962,7 +2965,7 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
             app_evidence=f"{len(targets)} APK libraries reach them through DT_NEEDED",
             shim=f"load these {len(targets)} libraries in the isolated Android namespace so DT_NEEDED picks the APK's copy "
                  "(e.g. NDK libc++_shared is std::__ndk1; OH's is not): " + " ".join(targets),
-            launch_args=[arg for name in targets for arg in ("--android-native-target", files.get(name, name))],
+            launch_args=[arg for name in targets for arg in ("--android-native-target", name)],
         ))
         # In that namespace libandroid.so is the WebView shim's, whose AAsset* go through a companion
         # (libwestlake_asset_bridge.so) to the framework's asset manager. React Native loads its
