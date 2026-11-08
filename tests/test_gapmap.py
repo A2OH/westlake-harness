@@ -3195,3 +3195,16 @@ class StoreLicenseCheck(unittest.TestCase):
         self.assertEqual((row["verdict"], row["shim_class"]), ("absent", "C5"))
         self.assertIn("ILicensingService", row["provider"])
         self.assertTrue(row["seen_blocking"], "the device round's evidence belongs on the row")
+
+    def test_pairip_code_protection_is_its_own_row_and_out_of_scope(self) -> None:
+        # Apps Play protects also carry the native VM, which ended most of them at start on the board.
+        scan = {"inventory": {"platform_method_names": {}, "elfs": [
+            {"name": "split_config.arm64_v8a.apk!lib/arm64-v8a/libpairipcore.so", "soname": "libpairipcore.so"}]}}
+        rows = gapmap.external_rows(self.facts("com.pairip.licensecheck.LicenseActivity"), scan)
+        row = next(r for r in rows if r["id"] == "protect:pairip")
+        self.assertEqual((row["verdict"], row["effort"], row["confidence"]), ("blocked", "policy", gapmap.OBSERVED))
+        self.assertEqual(row["app_evidence"], "libpairipcore.so")
+        self.assertTrue(row["seen_blocking"])
+        unprotected = gapmap.external_rows(self.facts("com.pairip.licensecheck.LicenseActivity"),
+                                           {"inventory": {"platform_method_names": {}, "elfs": []}})
+        self.assertNotIn("protect:pairip", [r["id"] for r in unprotected], "the license check alone is not the VM")
