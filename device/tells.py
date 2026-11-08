@@ -70,7 +70,8 @@ HILOG_TELLS = [
 PROTECTORS = [(re.compile(r"libpairipcore\.so"), "PairIP"), (re.compile(r"libbaiduprotect"), "Baidu app hardening"),
               (re.compile(r"libmetasec_(?:ml|ov)"), "ByteDance MetaSec"),
               (re.compile(r"libsg(?:main|securitybody)"), "Alibaba SecurityGuard"),
-              (re.compile(r"libdexprotector"), "DexProtector"), (re.compile(r"libijm"), "ijiami")]
+              (re.compile(r"libdexprotector"), "DexProtector"), (re.compile(r"libijm"), "ijiami"),
+              (re.compile(r"libDexHelper|libsecexe|libSecShell"), "Bangcle"), (re.compile(r"libFairGuard"), "FairGuard")]
 NATIVE_LOAD = re.compile(r"\[SOURCE-NATIVE-LOAD\] path=(\S+)")
 DUMP_FRAME = re.compile(r"^#\d\d pc ")
 FATAL = re.compile(r"^Fatal signal |^\*\*\* \*\*\* \*\*\*|abort message: |^terminating with uncaught exception")
