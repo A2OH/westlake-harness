@@ -220,15 +220,23 @@ def choose(views: list[View], tried: set[str]) -> View | None:
     return candidates[0] if candidates else None
 
 
+def grid_points(w: int, h: int) -> list[tuple[str, int, int]]:
+    """Where to tap blind: the bottom action band first, at 91% of the height (centre, left, right),
+    then five rows from 15% to 85%, top to bottom. Welcome and sign-in screens drawn with Compose
+    show no clickable view, and keep their buttons at 88-96%: LINE's "Log in", SofaScore's "Get
+    started", HelloTalk's "Join", Dropbox's "Sign up". The rows alone stopped at 85%, and a
+    60-second run spent its 14 taps above them."""
+    cols = [w * (2 * col + 1) // 6 for col in range(3)]
+    points = [(f"b,{col}", cols[col], h * 91 // 100) for col in (1, 0, 2)]
+    points += [(f"{row},{col}", cols[col], h * (15 + 70 * row // 4) // 100) for row in range(5) for col in range(3)]
+    return points
+
+
 def grid(device, screen: str, tried: set[str]) -> View | None:
-    w, h = device.width, device.height
-    for row in range(5):
-        for col in range(3):
-            x = w * (2 * col + 1) // 6
-            y = h * (15 + 70 * row // 4) // 100
-            v = View("grid", f"{row},{col}", x - 1, y - 1, 2, 2, True, screen)   # one grid per screen
-            if v.key() not in tried:
-                return v
+    for vid, x, y in grid_points(device.width, device.height):
+        v = View("grid", vid, x - 1, y - 1, 2, 2, True, screen)   # one grid per screen
+        if v.key() not in tried:
+            return v
     return None
 
 
@@ -251,7 +259,7 @@ def explore(device, seconds: int, out: Path, shot_every: int, settle: float) -> 
         target = choose(views, tried)
         if target is None and scrolled.get(screen, 0) >= 2 and backs_here < 2:
             # Nothing labelled left (or a WebView, Compose, Flutter or game surface the view list
-            # can't see into): tap a grid of points over the content area, top to bottom.
+            # can't see into): tap a grid of points, the bottom action band first (grid_points).
             target = grid(device, screen, tried)
         if target is not None:
             tried.add(target.key())
