@@ -22,6 +22,11 @@ For each app that ended, it names how it ended. In order of precedence:
   silent           none of the above: each one is a tell still missing. When the app's own signal
                    handler took a signal first (a protector's deliberate trap), the detail says so
 
+A crash, dump timeout or silent end inside the app's own protection (anti-tamper, code virtualization,
+app hardening) also names the protector: a frame of the fault thread is in its library, or, for an app
+that never showed a screen, its library was the last one loaded before the fatal signal. Such ends are
+observed, not worked around, and are counted apart from the ends Westlake can fix.
+
 It also gathers each app's tells: the contract, the answer, whether the answer is Android's, the
 detail, and the stderr line where it was first seen. For an app that ended, the last tell in its
 stderr before the end that is a failure or a stand-in, and that not nearly every app reports, is
@@ -60,6 +65,15 @@ HILOG_TELLS = [
     (re.compile(r"OH_WSAdapter: \[STAND-IN\] (\w+) - (.*)"),
      lambda m: ("binder:IWindowSession." + m[1], "fixed", "stand-in", m[2].strip())),
 ]
+# Libraries of an app's own protection. PairIP's crashes mostly have no backtrace (28 of 58 in the
+# 1000-app round), so for an app that never drew, the last library loaded before the fault counts.
+PROTECTORS = [(re.compile(r"libpairipcore\.so"), "PairIP"), (re.compile(r"libbaiduprotect"), "Baidu app hardening"),
+              (re.compile(r"libmetasec_(?:ml|ov)"), "ByteDance MetaSec"),
+              (re.compile(r"libsg(?:main|securitybody)"), "Alibaba SecurityGuard"),
+              (re.compile(r"libdexprotector"), "DexProtector"), (re.compile(r"libijm"), "ijiami")]
+NATIVE_LOAD = re.compile(r"\[SOURCE-NATIVE-LOAD\] path=(\S+)")
+DUMP_FRAME = re.compile(r"^#\d\d pc ")
+FATAL = re.compile(r"^Fatal signal |^\*\*\* \*\*\* \*\*\*|abort message: |^terminating with uncaught exception")
 TELL = re.compile(r"\[WESTLAKE-TELL\] (\{.*\})")
 CHILD = re.compile(r"adapter_child_(\d+)\.stderr")
 FRAME = re.compile(r"^\s*at ([\w$.<>]+)\(")
@@ -144,6 +158,29 @@ def end_of(stderr: list[str], hilog: list[str], crash: list[str], explore: dict,
     return "silent", "", -1
 
 
+def protector_of(stderr: list[str], crash: list[str], explore: dict) -> str:
+    """The app's own protection an end happened in, or "": a fault-thread frame in its library, or, for
+    an app that never showed a screen, its library the last one loaded before the fatal signal."""
+    at = next((i for i, line in enumerate(crash) if line.startswith("Fault thread info")), None)
+    if at is not None:
+        for line in crash[at + 2:]:
+            if not DUMP_FRAME.match(line):
+                break
+            for pattern, name in PROTECTORS:
+                if pattern.search(line):
+                    return name
+    if (explore or {}).get("screens"):
+        return ""
+    # Other threads load libraries while the dump is taken (Youku loaded SecurityGuard 190 lines after its
+    # APM library's abort), so only loads before the fatal point count, and without one there is no rule.
+    fatal = next((i for i, line in enumerate(stderr) if FATAL.search(line)), None)
+    if fatal is None:
+        return ""
+    loads = [m[1] for m in (NATIVE_LOAD.search(line) for line in stderr[:fatal]) if m]
+    last = loads[-1].rsplit("/", 1)[-1] if loads else ""
+    return next((name for pattern, name in PROTECTORS if last and pattern.search(last)), "")
+
+
 def tells_of(stderr: list[str], hilog: list[str]) -> list[dict]:
     found: dict[tuple, dict] = {}
 
@@ -193,6 +230,9 @@ def one_app(logs: Path, app: str) -> dict:
     if ended:
         kind, detail, at = end_of(stderr, hilog, crash, explore, pid)
         record["end"] = {"kind": kind, "detail": detail, "line": at}
+        protector = protector_of(stderr, crash, explore) if kind in ("crash", "dump-timeout", "silent") else ""
+        if protector:
+            record["end"]["protector"] = protector
     return record
 
 
@@ -239,10 +279,15 @@ def main() -> int:
         for kind in ENDS:
             if kinds.get(kind):
                 print(f"  {kinds[kind]:4d}  {kind}")
+        protected = Counter(result[a]["end"]["protector"] for a in ended if result[a]["end"].get("protector"))
+        if protected:
+            print(f"  {sum(protected.values()):4d}  of them inside the app's own protection (observed, not worked around): "
+                  + ", ".join(f"{name} {n}" for name, n in protected.most_common()))
         for a in ended:
             r = result[a]
             cause = f"  <- {r['cause_candidate']}" if "cause_candidate" in r else ""
-            print(f"    {a[3:]:44s} {r['end']['kind']:13s} {r['end']['detail'][:70]}{cause[:110]}")
+            shield = f" [{r['end']['protector']}]" if r["end"].get("protector") else ""
+            print(f"    {a[3:]:44s} {r['end']['kind']:13s} {r['end']['detail'][:70]}{shield}{cause[:110]}")
 
         top = sorted(((len(v), k) for k, v in reach.items() if k not in wide), reverse=True)[:15]
         if top:

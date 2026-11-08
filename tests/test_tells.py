@@ -26,14 +26,60 @@ class HowAppsEnded(unittest.TestCase):
     def tearDown(self) -> None:
         self.tmp.cleanup()
 
-    def app(self, name: str, stderr: list[str], hilog_lines: list[str] = (), died_at=1.0, died_after=None) -> dict:
+    def app(self, name: str, stderr: list[str], hilog_lines: list[str] = (), died_at=1.0, died_after=None,
+            screens: int = 1, crash: list[str] = ()) -> dict:
         (self.logs / f"{name}.stderr").write_text("\n".join(stderr) + "\n")
         (self.logs / f"{name}.hilog").write_text("\n".join(hilog_lines) + "\n")
+        if crash:
+            (self.logs / f"{name}.cppcrash").write_text("\n".join(crash) + "\n")
         explore = self.logs / f"{name}.explore"
         explore.mkdir()
         (explore / "explore.json").write_text(json.dumps(
-            {"seconds": 5, "screens": 1, "died_at": died_at, "died_after": died_after}))
+            {"seconds": 5, "screens": screens, "died_at": died_at, "died_after": died_after}))
         return tells.one_app(self.logs, name)
+
+    PAIRIP_START = [CHILD.format(pid="110"),
+                    "[SOURCE-NATIVE-LOAD] path=/data/local/tmp/asx/lib/arm64-v8a/libpairipcore.so search=/x",
+                    "[WESTLAKE-REAP] child 111 exited(0)",
+                    "Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR) fault addr 0x7ef5fa2000",
+                    "Backtrace:", ""]
+
+    def test_a_crash_right_after_the_protector_loaded_names_it(self) -> None:
+        # Floze, 2026-11-08: PairIP's VM crashed before the first screen, with no backtrace.
+        r = self.app("hk-floze", self.PAIRIP_START, [hilog("110", "DFX_SignalHandler :: signo(11), pid(110), "
+                                                                  "processName(x), threadName(<pre-initialize).")],
+                     died_at=0.1, screens=0)
+        self.assertEqual((r["end"]["kind"], r["end"]["protector"]), ("crash", "PairIP"))
+
+    def test_a_later_crash_in_an_app_that_drew_is_not_the_protectors(self) -> None:
+        r = self.app("hk-drew", self.PAIRIP_START, [hilog("110", "DFX_SignalHandler :: signo(11), pid(110), "
+                                                                 "processName(x), threadName(RenderThread).")],
+                     died_at=40.0, screens=3)
+        self.assertEqual(r["end"]["kind"], "crash")
+        self.assertNotIn("protector", r["end"])
+
+    def test_a_protector_loaded_after_the_abort_is_not_named(self) -> None:
+        # Youku, 2026-11-08: its APM library aborted; SecurityGuard loaded on another thread during the dump.
+        r = self.app("hk-youku", [CHILD.format(pid="113"),
+                                  "[SOURCE-NATIVE-LOAD] path=/data/local/tmp/asx/lib/arm64-v8a/libfulltrace.so search=/x",
+                                  "terminating with uncaught exception of type std::bad_alloc: std::bad_alloc",
+                                  "[WESTLAKE-WEBVIEW-BIONIC] abort message: terminating with uncaught exception",
+                                  "[SOURCE-NATIVE-LOAD] path=/data/local/tmp/asx/lib/arm64-v8a/libsgmainso-6.7.so search=/x"],
+                     [hilog("113", "DFX_SignalHandler :: signo(6), pid(113), processName(x), threadName(APM-FulltraceDu).")],
+                     died_at=0.1, screens=0)
+        self.assertEqual(r["end"]["kind"], "crash")
+        self.assertNotIn("protector", r["end"])
+
+    def test_a_fault_thread_frame_in_the_protector_names_it(self) -> None:
+        # VivaVideo, 2026-11-08: a thread Baidu's hardening started faulted inside musl.
+        crash = ["Reason:Signal:SIGSEGV(SEGV_MAPERR)@000000000000000000 ", "Fault thread info:",
+                 "Tid:26815, Name:com.quvideo.xia",
+                 "#00 pc 0000000000131388 /system/lib/ld-musl-aarch64.so.1(pthread_join+84)(a9d0)",
+                 "#01 pc 0000000000130d08 /system/lib/ld-musl-aarch64.so.1(thrd_detach+48)(a9d0)",
+                 "#02 pc 000000000004bda4 /data/local/tmp/asx/lib/arm64-v8a/libbaiduprotect.so",
+                 "Registers:", "Other thread info:", "#00 pc 0000000000001000 /data/local/tmp/asx/lib/arm64-v8a/libpairipcore.so"]
+        r = self.app("hk-viva", [CHILD.format(pid="112")], died_at=0.1, screens=3, crash=crash)
+        self.assertEqual((r["end"]["kind"], r["end"]["protector"]), ("crash", "Baidu app hardening"))
 
     def test_a_system_exit_names_the_app_frame_that_called_it(self) -> None:
         r = self.app("hk-outlook", [CHILD.format(pid="100"),
