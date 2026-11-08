@@ -3,7 +3,7 @@
 #
 #   WL_SC        source-closure root: verify/ (builds, launcher outputs), workspace/ (manifest,
 #                westlake), inputs/ (prep-<app> stages, logs/<tag>/ per-app evidence), logs/
-#   HDC          the OpenHarmony device client (Linux build)
+#   HDC          the OpenHarmony device client (Linux build, or Windows hdc.exe under WSL)
 #   HDC_TARGET   the board: ip:port for a TCP link, or a USB serial
 #   WL_FW        framework deploy under $WL_SC/verify/out (holds device-report.json)
 #   WL_SHIM      Bionic shim build under $WL_SC/verify/out
@@ -21,6 +21,8 @@ DEVICE=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd); HARNESS=$(dirname "$
 need() { for v in "$@"; do [ -n "${!v:-}" ] || { echo "$(basename "$0"): set $v (see device/config.sh)" >&2; exit 64; }; done; }
 need WL_SC HDC HDC_TARGET
 IN=$WL_SC/inputs; V=$WL_SC/verify; T=$HDC_TARGET; WHDC=$HDC
+# A Windows hdc (the board on USB under WSL) goes through hdc_wsl.sh, which finds an interop socket that works.
+case $HDC in *.exe) export HDC_EXE=$HDC; WHDC=$DEVICE/hdc_wsl.sh ;; esac
 export WL_SC HDC HDC_TARGET; export WL_CORPUS=${WL_CORPUS:-$IN/corpus-hk}; M=${WL_MANIFEST_TOOLS:-$WL_SC/workspace/manifest/tools}
 RECV=$IN/.recv; mkdir -p "$RECV" "$IN/logs" "$WL_SC/logs"
 # From inside $RECV with a relative name, so a Windows hdc (the board on USB under WSL) works too.
