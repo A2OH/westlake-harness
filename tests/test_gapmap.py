@@ -1821,6 +1821,16 @@ static jstring Runtime_nativeLoad(JNIEnv* env, jclass clazz, jstring filename,
         unknown = gapmap.runtime_resolved_rows(scan({"name": "lib/arm64-v8a/libunity.so", "soname": "libunity.so"}),
                                                coverage)
         self.assertEqual(len(unknown), 2, "without the runtime's libraries nothing is taken as found")
+        # The shim's libandroid by-handle answer reaches only a lookup through the runtime's copy.
+        by_handle = {"libandroid.so": "webview_bionic_shim.c:1"}
+        shim = {"AHardwareBuffer_getNativeHandle"}
+        default = gapmap.runtime_resolved_rows(scan({"name": "lib/arm64-v8a/libunity.so", "soname": "libunity.so"}),
+                                               coverage, shim, by_handle, runtime, namespace, set())
+        self.assertEqual([r["id"] for r in default], [], "the default namespace's lookup is answered")
+        routed = gapmap.runtime_resolved_rows(scan({"name": "lib/arm64-v8a/librouted.so", "soname": "librouted.so"}),
+                                              coverage, shim, by_handle, runtime, namespace, {"librouted.so"})
+        self.assertEqual(routed[0]["symbols"], ["AChoreographer_getInstance", "AHardwareBuffer_getNativeHandle"],
+                         "the Android namespace's own libandroid.so handle is not answered by the shim")
 
     def test_shadowed_libraries_and_their_importers(self) -> None:
         scan = {"inventory": {"elfs": [

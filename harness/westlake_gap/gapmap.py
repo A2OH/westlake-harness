@@ -1509,9 +1509,14 @@ def runtime_resolved_rows(scan: dict[str, Any], ndk_cov: dict[str, Any] | None,
             entry = surface.get(candidate)
             if entry is None or entry.get("status") == "oh":
                 continue
-            if entry.get("library") in (answered or {}) and candidate in (shim_exports or set()):
+            library = entry.get("library", "unknown")
+            # A by-handle answer needs the runtime's copy's handle: a library in the Android
+            # namespace opens that namespace's own copy, which the shim does not answer.
+            namespace_copy = in_namespace and library in namespace_copies
+            if (library in (answered or {}) and candidate in (shim_exports or set())
+                    and not (namespace_copy and library in RUNTIME_HANDLE_ANSWERED)):
                 continue
-            if found_by_handle(entry.get("library", "unknown"), in_namespace, candidate):
+            if found_by_handle(library, in_namespace, candidate):
                 continue
             by_library[entry.get("library", "unknown")].add(candidate)
             importers[entry.get("library", "unknown")].add(name)
@@ -3580,6 +3585,12 @@ def bionic_shim_staged_libraries(westlake_root: Path) -> list[str]:
         return []
     names = set(re.findall(r"-soname,(lib[\w.+-]+\.so)", build.read_text(errors="replace")))
     return sorted(names - {"libwebview_bionic_shim.so"})
+
+
+# Libraries whose shim answer comes through the handle of the runtime's copy, not the dlopen:
+# westlake_libandroid_by_handle answers only a handle whose search reaches the runtime's
+# libandroid.so, so the Android namespace's own copy (the WebView's) is not answered.
+RUNTIME_HANDLE_ANSWERED = frozenset({"libandroid.so"})
 
 
 def shim_answered_libraries(westlake_root: Path) -> dict[str, str]:
