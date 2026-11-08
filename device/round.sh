@@ -4,13 +4,16 @@
 # APKs (keeping app-input.json) so the disk holds only a few apps. Apps marked missing in sources.csv,
 # or already captured under <tag>, are skipped, so running it again resumes. LIST=<file>: only these
 # packages. Each app gets the microG guests ($WL_GUESTS); PLAY=<socket> instead connects it to the
-# running shared Play services process (play/). Log: $WL_CORPUS/round-<tag>.log.
+# running shared Play services process (play/). ROUND_EXTRA: more launcher arguments for every app.
+# Log: $WL_CORPUS/round-<tag>.log.
 . "$(dirname "$0")/config.sh"; need WL_GUESTS; cd $WL_CORPUS
 tag=$1; first=$2; last=$3
 OV="$(override_args) --guest-build $V/out/$WL_GUESTS"
 if [ -n "${PLAY:-}" ]; then
   OV="$OV --runtime-env WESTLAKE_PLAY_SERVICES_CONNECT=$PLAY --runtime-env WESTLAKE_PLAY_TRACE=1"; export KEEP_RUNNING=1
 fi
+# ROUND_EXTRA: more launcher arguments for every app of the round (a --runtime-env, say), after these.
+OV="$OV ${ROUND_EXTRA:-}"
 todo=()
 while read -r rank pkg; do
   [ "$rank" -lt "$first" ] || [ "$rank" -gt "$last" ] && continue
