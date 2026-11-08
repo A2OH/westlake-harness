@@ -28,7 +28,12 @@ def sha(path):
 
 
 def cert(apk):
-    out = subprocess.run([str(TOOLS / 'apksigner'), 'verify', '--print-certs', str(apk)], capture_output=True, text=True)
+    # Verified as the platform Westlake reports (API 34) verifies an install: APK Signature Scheme v2/v3 is
+    # enough there. Left to its default, apksigner verifies down to the APK's own minSdk, and a split that
+    # declares none (Play's config.arm64_v8a.apk for Outlook) is then asked for a v1 JAR signature that
+    # Play's splits do not carry.
+    out = subprocess.run([str(TOOLS / 'apksigner'), 'verify', '--min-sdk-version', '34', '--print-certs', str(apk)],
+                         capture_output=True, text=True)
     if out.returncode != 0:
         raise ValueError(f'{apk.name}: signature does not verify: {out.stderr.strip()[:200]}')
     return re.search(r'certificate SHA-256 digest: ([0-9a-f]+)', out.stdout).group(1)
@@ -68,7 +73,10 @@ def main():
             print(key, 'NO LAUNCH ACTIVITY'); continue
         with tempfile.TemporaryDirectory(dir=HERE) as tmp:
             base, splits = unpack(download, package, Path(tmp))
-            certs = {p.name: cert(p) for p in [base, *splits]}
+            try:
+                certs = {p.name: cert(p) for p in [base, *splits]}
+            except ValueError as e:   # one app's refusal must not stop the batch's other apps
+                print(key, 'SIGNATURE', str(e)[:200], flush=True); continue
             if len(set(certs.values())) != 1:
                 print(key, 'CERT MISMATCH', certs); continue
             d = {'package': package, 'version_name': scan.get('version_name'), 'version_code': int(scan.get('version_code') or 0),
