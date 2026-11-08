@@ -14,8 +14,8 @@ Android: uiautomator), then:
   2. else scrolls this screen (twice at most),
   3. else presses Back.
 
-Views whose text looks like paying, deleting, signing out or uninstalling are never tapped, and
-text fields are not typed into. A screen is the set of (class, id) of its visible views, so a list
+Views whose text looks like paying, deleting, signing out or uninstalling are never tapped, nor
+controls that refuse a consent notice or exit the app, and text fields are not typed into. A screen is the set of (class, id) of its visible views, so a list
 that scrolls stays one screen. The run stops at --seconds or when the process is gone.
 
 Writes <out>/explore.json: each step (action, screen, views seen), screens reached, taps, whether
@@ -40,6 +40,13 @@ DENY = re.compile(r"\b(buy|pay|purchase|subscribe|subscription|checkout|order no
 # Refusing a consent notice or pressing an app's own exit closes it on purpose, as on a phone: matched by
 # view id too, since such buttons are often icons or text the dump leaves out.
 DENY_ID = re.compile(r"not_?agree|disagree|decline|reject|exit|quit", re.I)
+# On a consent notice (licence, privacy, terms) its cancel or close control refuses it too: Xiaomi Home's
+# refuse button is an icon with the id appwidget_cancel and no text, and the app ended itself when it was
+# tapped. Elsewhere cancel stays tappable: on an "Update / Cancel" prompt it is the way past.
+CONSENT = re.compile(r"\b(agree|agreed|agreement|consent|privacy|licen[cs]e|terms)\b|协议|協議|隐私|隱私|条款|條款|同意",
+                     re.I)
+CONSENT_DENY = re.compile(r"\b(cancel|close)\b|取消|關閉|关闭", re.I)
+CONSENT_DENY_ID = re.compile(r"cancel|close|negative", re.I)
 TEXT_INPUT = re.compile(r"EditText|TextInput|SearchView|AutoComplete", re.I)
 
 
@@ -199,9 +206,15 @@ def screen_of(views: list[View]) -> str:
     return hashlib.sha1("\n".join(keys).encode()).hexdigest()[:12]
 
 
+def refuses_consent(view: View, consent: bool) -> bool:
+    return consent and bool(CONSENT_DENY.search(view.text) or CONSENT_DENY_ID.search(view.vid))
+
+
 def choose(views: list[View], tried: set[str]) -> View | None:
+    consent = any(CONSENT.search(v.text) for v in views)
     candidates = [v for v in views if v.clickable and v.key() not in tried
-                  and not TEXT_INPUT.search(v.cls) and not DENY.search(v.text) and not DENY_ID.search(v.vid)]
+                  and not TEXT_INPUT.search(v.cls) and not DENY.search(v.text) and not DENY_ID.search(v.vid)
+                  and not refuses_consent(v, consent)]
     # Labelled views first (a user reads before tapping), then top to bottom, left to right.
     candidates.sort(key=lambda v: (not (v.text or v.vid != "-"), v.y, v.x))
     return candidates[0] if candidates else None
