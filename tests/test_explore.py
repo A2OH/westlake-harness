@@ -36,5 +36,26 @@ class WhatTheExplorerTaps(unittest.TestCase):
         self.assertIsNone(explore.choose(views, set()))
 
 
+class WhereTheExplorerTapsBlind(unittest.TestCase):
+    class Board:
+        width, height = 1200, 1920
+
+    def test_the_bottom_action_band_comes_first(self) -> None:
+        # Dropbox's welcome screen (Compose: no clickable view): Sign up and Log in sit at y 1745-1855.
+        points = explore.grid_points(1200, 1920)
+        self.assertEqual([(x, y) for _, x, y in points[:3]], [(600, 1747), (200, 1747), (1000, 1747)])
+        self.assertEqual(explore.grid(self.Board, "s", set()).centre(), (600, 1747))
+
+    def test_every_point_is_tapped_once_per_screen(self) -> None:
+        tried: set[str] = set()
+        taps = []
+        while (v := explore.grid(self.Board, "s", tried)) is not None:
+            tried.add(v.key())
+            taps.append(v.centre())
+        self.assertEqual(len(taps), 18)
+        self.assertEqual(len(set(taps)), 18)
+        self.assertEqual(taps[3], (200, 288), "then the rows, top to bottom")
+
+
 if __name__ == "__main__":
     unittest.main()
