@@ -27,11 +27,13 @@ class HowAppsEnded(unittest.TestCase):
         self.tmp.cleanup()
 
     def app(self, name: str, stderr: list[str], hilog_lines: list[str] = (), died_at=1.0, died_after=None,
-            screens: int = 1, crash: list[str] = ()) -> dict:
+            screens: int = 1, crash: list[str] = (), maps: list[str] = ()) -> dict:
         (self.logs / f"{name}.stderr").write_text("\n".join(stderr) + "\n")
         (self.logs / f"{name}.hilog").write_text("\n".join(hilog_lines) + "\n")
         if crash:
             (self.logs / f"{name}.cppcrash").write_text("\n".join(crash) + "\n")
+        if maps:
+            (self.logs / f"{name}.maps").write_text("\n".join(maps) + "\n")
         explore = self.logs / f"{name}.explore"
         explore.mkdir()
         (explore / "explore.json").write_text(json.dumps(
@@ -136,6 +138,30 @@ class HowAppsEnded(unittest.TestCase):
                       "for signal: 4 sig_action.sa_sigaction=7dd7999190"])
         self.assertEqual(r["end"]["kind"], "silent")
         self.assertIn("own handler took signal 4", r["end"]["detail"])
+
+    LIB = "/data/local/tmp/asx/lib/arm64-v8a/"
+    HANDLED = ("11-08 23:19:03.207 31065 31353 W C03f07/MUSL-SIGCHAIN: signal_chain_handler call usr sigaction "
+               "for signal: 4 sig_action.sa_sigaction={}")
+
+    def test_the_handler_that_took_the_signal_is_named_from_the_memory_map(self) -> None:
+        r = self.app("hk-game", [CHILD.format(pid="31065")], [self.HANDLED.format("7eba092d38")],
+                     maps=[f"7eba080000-7eba0a0000 r-xp 00000000 103:3e 1234 {self.LIB}libCrashSight.so",
+                           f"7eba0a0000-7eba0b0000 r--p 00020000 103:3e 1234 {self.LIB}libCrashSight.so"])
+        self.assertEqual(r["end"]["kind"], "silent")
+        self.assertEqual(r["end"]["detail"], "after the app's own handler took signal 4 (in libCrashSight.so)")
+
+    def test_the_shims_forwarder_names_the_handler_installed_through_it(self) -> None:
+        stderr = [CHILD.format(pid="31065"),
+                  "[WESTLAKE-SIGNAL-INSTALL] android signal=4 flags=0x8000004 handler=0x7eb451545c caller=0x7eb4513750",
+                  "[WESTLAKE-SIGNAL-INSTALL] android signal=11 flags=0x8000004 handler=0x7eba092d38 caller=0x7eb4513750"]
+        maps = [f"7eb4500000-7eb4520000 r-xp 00000000 103:3e 77 {self.LIB}libBugly_Native.so",
+                "7f03880000-7f038a0000 r-xp 00000000 103:3e 88 /data/local/tmp/asx/webview-t-lib/libwebview_bionic_shim.so"]
+        r = self.app("hk-reader", stderr, [self.HANDLED.format("7f0388a4dc")], maps=maps)
+        self.assertEqual(r["end"]["detail"], "after the app's own handler took signal 4 (in libBugly_Native.so)")
+
+    def test_without_a_memory_map_the_handler_is_not_named(self) -> None:
+        r = self.app("hk-gone", [CHILD.format(pid="31065")], [self.HANDLED.format("7eba092d38")])
+        self.assertEqual(r["end"]["detail"], "after the app's own handler took signal 4")
 
     def test_the_loader_reason_is_a_failed_tell_and_a_cause_candidate(self) -> None:
         r = self.app("hk-amap", [CHILD.format(pid="106"),

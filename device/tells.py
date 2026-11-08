@@ -8,6 +8,7 @@ $WL_SC/inputs/logs/<tag>/:
   hk-<package>.hilog           the system log (fatal signals, the crash dumper timing out, PM stubs)
   hk-<package>.cppcrash        a crash dump taken after the launch, when there is one
   hk-<package>.explore/        the Level 2 explorer's explore.json (whether and when the app ended)
+  hk-<package>.maps            the app's memory map, when the round took one (whose a signal handler is)
 
 For each app that ended, it names how it ended. In order of precedence:
   java-exit        System.exit, with the stack that called it ([WESTLAKE-EXIT] ... called on thread)
@@ -20,7 +21,9 @@ For each app that ended, it names how it ended. In order of precedence:
   dump-timeout     a fatal signal whose dump timed out: no crash site anywhere (a sub-kind of crash)
   exit-no-stack    the shutdown hook ran, with no System.exit on any thread
   silent           none of the above: each one is a tell still missing. When the app's own signal
-                   handler took a signal first (a protector's deliberate trap), the detail says so
+                   handler took a signal first, the detail says so, and names the library the handler is
+                   in when the memory map shows it: a protector's deliberate trap, or, as for Honor of
+                   Kings on 2026-11-08, a crash reporter (CrashSight) that took the signal and left no dump
 
 A crash, dump timeout or silent end inside the app's own protection (anti-tamper, code virtualization,
 app hardening) also names the protector: a frame of the fault thread is in its library, or, for an app
@@ -77,6 +80,10 @@ DUMP_FRAME = re.compile(r"^#\d\d pc ")
 FATAL = re.compile(r"^Fatal signal |^\*\*\* \*\*\* \*\*\*|abort message: |^terminating with uncaught exception")
 TELL = re.compile(r"\[WESTLAKE-TELL\] (\{.*\})")
 CHILD = re.compile(r"adapter_child_(\d+)\.stderr")
+MAPPING = re.compile(r"^([0-9a-f]+)-([0-9a-f]+)\s+\S+\s+[0-9a-f]+\s+\S+\s+\S+\s+(\S.*)$")
+HANDLER_INSTALL = re.compile(r"\[WESTLAKE-SIGNAL-INSTALL\] android signal=(\d+) .*handler=0x([0-9a-f]+)")
+# Westlake's Bionic shim installs its own forwarder for a handler an Android library installs through it.
+SHIM = "libwebview_bionic_shim.so"
 FRAME = re.compile(r"^\s*at ([\w$.<>]+)\(")
 PLATFORM = ("java.", "javax.", "android.", "androidx.", "com.android.", "dalvik.", "libcore.", "sun.", "kotlin.",
             "kotlinx.", "adapter.")
@@ -109,7 +116,27 @@ def load_json(path: Path):
         return None
 
 
-def end_of(stderr: list[str], hilog: list[str], crash: list[str], explore: dict, pid: str) -> tuple[str, str, int]:
+def library_at(maps: list[str], address: int) -> str:
+    """The base name of the file mapped at `address` in a memory map, or ""."""
+    for line in maps:
+        m = MAPPING.match(line)
+        if m and int(m[1], 16) <= address < int(m[2], 16):
+            return m[3].rsplit("/", 1)[-1]
+    return ""
+
+
+def handler_library(maps: list[str], stderr: list[str], signo: str, address: int) -> str:
+    """The library of the handler that took signal `signo`: the one at `address`, or, when that is the
+    shim's forwarder, the handler the app last installed for the signal through the shim."""
+    library = library_at(maps, address)
+    if library == SHIM:
+        installs = [m[2] for m in (HANDLER_INSTALL.search(line) for line in stderr) if m and m[1] == signo]
+        library = library_at(maps, int(installs[-1], 16)) if installs else ""
+    return library
+
+
+def end_of(stderr: list[str], hilog: list[str], crash: list[str], explore: dict, pid: str,
+           maps: list[str] = ()) -> tuple[str, str, int]:
     """How an app that ended did so: (kind, detail, stderr line or -1)."""
     for i, line in enumerate(stderr):
         if "[WESTLAKE-EXIT]" in line and "called on thread" in line:
@@ -153,9 +180,12 @@ def end_of(stderr: list[str], hilog: list[str], crash: list[str], explore: dict,
     for line in hilog:
         cols = line.split()
         if len(cols) >= 4 and cols[2] == pid and "call usr sigaction for signal:" in line:
-            handled = line.rsplit("signal:", 1)[1].split()[0]
+            handled = line
     if handled is not None:
-        return "silent", f"after the app's own handler took signal {handled}", -1
+        signo = handled.rsplit("signal:", 1)[1].split()[0]
+        address = re.search(r"sa_sigaction=([0-9a-f]+)", handled)
+        owner = handler_library(maps, stderr, signo, int(address[1], 16)) if address else ""
+        return "silent", f"after the app's own handler took signal {signo}" + (f" (in {owner})" if owner else ""), -1
     return "silent", "", -1
 
 
@@ -220,6 +250,7 @@ def one_app(logs: Path, app: str) -> dict:
     stderr = read(logs / f"{app}.stderr")
     hilog = read(logs / f"{app}.hilog")
     crash = read(logs / f"{app}.cppcrash")
+    maps = read(logs / f"{app}.maps")
     explore = load_json(logs / f"{app}.explore" / "explore.json")
     pid = next((m[1] for m in (CHILD.search(l) for l in stderr[:5]) if m), "")
     tells = tells_of(stderr, hilog)
@@ -229,7 +260,7 @@ def one_app(logs: Path, app: str) -> dict:
     ended = explore is not None and explore.get("died_at") is not None
     record["ended"] = ended
     if ended:
-        kind, detail, at = end_of(stderr, hilog, crash, explore, pid)
+        kind, detail, at = end_of(stderr, hilog, crash, explore, pid, maps)
         record["end"] = {"kind": kind, "detail": detail, "line": at}
         protector = protector_of(stderr, crash, explore) if kind in ("crash", "dump-timeout", "silent") else ""
         if protector:
