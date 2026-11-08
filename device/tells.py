@@ -74,7 +74,11 @@ PROTECTORS = [(re.compile(r"libpairipcore\.so"), "PairIP"), (re.compile(r"libbai
               (re.compile(r"libmetasec_(?:ml|ov)"), "ByteDance MetaSec"),
               (re.compile(r"libsg(?:main|securitybody)"), "Alibaba SecurityGuard"),
               (re.compile(r"libdexprotector"), "DexProtector"), (re.compile(r"libijm"), "ijiami"),
-              (re.compile(r"libDexHelper|libsecexe|libSecShell"), "Bangcle"), (re.compile(r"libFairGuard"), "FairGuard")]
+              (re.compile(r"libDexHelper|libsecexe|libSecShell"), "Bangcle"), (re.compile(r"libFairGuard"), "FairGuard"),
+              (re.compile(r"libakamaibap"), "Akamai Bot Manager")]
+# The shim's signal witness (WESTLAKE_SEGV_WITNESS for SIGSEGV; SIGILL, SIGTRAP and SIGBUS always): the
+# library the faulting pc is in, which a silent end has no crash dump to name.
+WITNESS = re.compile(r"\[WESTLAKE-SIGNAL-WITNESS\] .* at (\S+)\+0x[0-9a-f]+ ")
 NATIVE_LOAD = re.compile(r"\[SOURCE-NATIVE-LOAD\] path=(\S+)")
 DUMP_FRAME = re.compile(r"^#\d\d pc ")
 FATAL = re.compile(r"^Fatal signal |^\*\*\* \*\*\* \*\*\*|abort message: |^terminating with uncaught exception")
@@ -190,8 +194,9 @@ def end_of(stderr: list[str], hilog: list[str], crash: list[str], explore: dict,
 
 
 def protector_of(stderr: list[str], crash: list[str], explore: dict) -> str:
-    """The app's own protection an end happened in, or "": a fault-thread frame in its library, or, for
-    an app that never showed a screen, its library the last one loaded before the fatal signal."""
+    """The app's own protection an end happened in, or "": a fault-thread frame in its library, the
+    library the signal witness saw the fault in, or, for an app that never showed a screen, its library
+    the last one loaded before the fatal signal."""
     at = next((i for i, line in enumerate(crash) if line.startswith("Fault thread info")), None)
     if at is not None:
         for line in crash[at + 2:]:
@@ -200,6 +205,12 @@ def protector_of(stderr: list[str], crash: list[str], explore: dict) -> str:
             for pattern, name in PROTECTORS:
                 if pattern.search(line):
                     return name
+    # Moneyback and ParknShop: SIGILL in the constructor musl's do_init_fini called in libakamaibap.so.
+    for m in (WITNESS.search(line) for line in stderr):
+        if m:
+            found = next((name for pattern, name in PROTECTORS if pattern.search(m[1].rsplit("/", 1)[-1])), "")
+            if found:
+                return found
     if (explore or {}).get("screens"):
         return ""
     # Other threads load libraries while the dump is taken (Youku loaded SecurityGuard 190 lines after its

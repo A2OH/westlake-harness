@@ -163,6 +163,23 @@ class HowAppsEnded(unittest.TestCase):
         r = self.app("hk-gone", [CHILD.format(pid="31065")], [self.HANDLED.format("7eba092d38")])
         self.assertEqual(r["end"]["detail"], "after the app's own handler took signal 4")
 
+    def test_the_witness_names_a_protector_a_silent_end_faulted_in(self) -> None:
+        stderr = [CHILD.format(pid="20616"),
+                  "[WESTLAKE-SIGNAL-WITNESS] signal=0x4 code=0x1 tid=0x5088 thread=com.asw.moneyba pc=0x7ef9f202e8 "
+                  "x30=0x7f9d0a52ec at /data/local/tmp/asx/lib/arm64-v8a/libakamaibap.so+0x2202e8 insn=0xa5aada00 "
+                  "next=0x44c66935 from /system/lib/ld-musl-aarch64.so.1+0x7f2ec x0=0xfffffffffffff216"]
+        r = self.app("hk-loyalty", stderr, screens=0)
+        self.assertEqual(r["end"]["kind"], "silent")
+        self.assertEqual(r["end"]["protector"], "Akamai Bot Manager")
+
+    def test_a_witness_in_an_ordinary_library_names_no_protector(self) -> None:
+        stderr = [CHILD.format(pid="20616"),
+                  "[WESTLAKE-SIGNAL-WITNESS] signal=0xb code=0x1 tid=0x6006 thread=main pc=0x7f943b6f14 x30=0x7f943b6ea4 "
+                  "at /system/lib/ld-musl-aarch64.so.1+0x84f14 insn=0xf86d79cf next=0xeb0b01ff from "
+                  "/system/lib/ld-musl-aarch64.so.1+0x84ea4 x0=0x0"]
+        r = self.app("hk-meetings", stderr, screens=0)
+        self.assertNotIn("protector", r["end"])
+
     def test_the_loader_reason_is_a_failed_tell_and_a_cause_candidate(self) -> None:
         r = self.app("hk-amap", [CHILD.format(pid="106"),
                                  "[WESTLAKE-LOADER] libamaptbt.so by name failed (Error relocating x: "
