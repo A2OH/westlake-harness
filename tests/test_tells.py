@@ -180,6 +180,15 @@ class HowAppsEnded(unittest.TestCase):
         r = self.app("hk-meetings", stderr, screens=0)
         self.assertNotIn("protector", r["end"])
 
+    def test_netease_yidun_is_named_from_the_fault_thread(self) -> None:
+        """Farlight's game: its first frame is a call through an unrelocated pointer, from libnesec.so."""
+        crash = ["Reason:Signal:SIGSEGV(SEGV_ACCERR)@0x00000000000d3eb0 ", "Fault thread info:",
+                 "Tid:2514, Name:com.farlightgam", "#00 pc 00000000000c3eb0 [Unknown]",
+                 "#01 pc 00000000000a5720 /data/local/tmp/asx/lib/arm64-v8a/libnesec.so",
+                 "#02 pc 0000000000212154 /data/local/tmp/asx/boot/boot.oat", "Registers:"]
+        r = self.app("hk-shooter", [CHILD.format(pid="2495")], screens=0, crash=crash)
+        self.assertEqual((r["end"]["kind"], r["end"]["protector"]), ("crash", "NetEase Yidun"))
+
     def test_the_loader_reason_is_a_failed_tell_and_a_cause_candidate(self) -> None:
         r = self.app("hk-amap", [CHILD.format(pid="106"),
                                  "[WESTLAKE-LOADER] libamaptbt.so by name failed (Error relocating x: "
