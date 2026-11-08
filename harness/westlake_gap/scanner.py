@@ -1745,6 +1745,20 @@ def _feature_splits(archive: zipfile.ZipFile, names: list[str]) -> dict[str, Any
     return found
 
 
+def _split_components(feature_splits: dict[str, Any]) -> dict[str, dict[str, int]]:
+    """What each feature split's own manifest declares, by split, for the splits that declare any.
+    The package manager merges these with the split's name, and a registry that parses the base APK
+    alone does not know them."""
+    found: dict[str, dict[str, int]] = {}
+    for split_name, part in sorted(feature_splits.items()):
+        counts = {kind: len(getter() or []) for kind, getter in (
+            ("activities", part.get_activities), ("services", part.get_services),
+            ("receivers", part.get_receivers), ("providers", part.get_providers))}
+        if any(counts.values()):
+            found[split_name] = counts
+    return found
+
+
 def apk_metadata(path: Path) -> dict[str, Any]:
     quiet_androguard()
     base = {
@@ -1793,7 +1807,7 @@ def apk_metadata(path: Path) -> dict[str, Any]:
         native_entries = [name for name in files if name.startswith("lib/") and name.endswith(".so")]
         abis = sorted({name.split("/", 2)[1] for name in native_entries if name.count("/") >= 2})
         # Components a feature split declares are the app's, as the package manager merges them:
-        # Chrome's and Brave's launcher and 54 more activities are in their "chrome" split.
+        # Chrome's launcher and 48 more activities are in its "chrome" split (Brave's, 71 more).
         parts = [apk, *feature_splits.values()]
         activity_names = sorted({name for part in parts for name in (part.get_activities() or [])})
         return {
@@ -1818,6 +1832,7 @@ def apk_metadata(path: Path) -> dict[str, Any]:
             "services": sum(len(part.get_services() or []) for part in parts),
             "receivers": sum(len(part.get_receivers() or []) for part in parts),
             "providers": sum(len(part.get_providers() or []) for part in parts),
+            "feature_split_components": _split_components(feature_splits),
             "permissions": sorted(apk.get_permissions() or []),
             "features": sorted(apk.get_features() or []),
             "signing_certificate_sha256": sorted(certificates),

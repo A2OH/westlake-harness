@@ -380,6 +380,27 @@ def package_manager_rows(scan: dict[str, Any], facts: dict[str, Any], pm: dict[s
             provider_source=check["source"], app_evidence=", ".join(facts["splits"]),
             shim="populate splitNames/splitSourceDirs from the installed split set",
         ))
+    split_components = (scan.get("apk") or {}).get("feature_split_components") or {}
+    if split_components:
+        # Chrome declares its launcher and 48 more activities in its "chrome" split. Parsed from the
+        # base APK alone, ChromeTabbedActivity started with no theme and no split, and
+        # SemanticColorUtils found its theme attribute unset.
+        check = semantics.get("split_manifests_parsed", {"present": False, "source": None})
+        total = sum(sum(counts.values()) for counts in split_components.values())
+        rows.append(_row(
+            "package-manager", "pm:split-components", f"Components declared in feature split manifests ({total})",
+            oh_touchpoint="none (Westlake's package registry)",
+            verdict="supplied" if check["present"] else "missing", shim_class="C0" if check["present"] else "C6",
+            effort="verify" if check["present"] else "S", confidence=STATIC,
+            provider=("each split's manifest is parsed into the package, its components taking the split's name"
+                      if check["present"] else
+                      "the base APK's manifest alone: a split's components are unknown, and an activity "
+                      "declared there starts with no theme and no split"),
+            provider_source=check["source"],
+            app_evidence="; ".join(f"{name}: " + ", ".join(f"{n} {kind}" for kind, n in counts.items() if n)
+                                   for name, counts in sorted(split_components.items())),
+            shim="parse each split's manifest into the package as the cluster parse does",
+        ))
     providers = [c for c in facts["components"] if c["kind"] == "provider" and not c["process"]]
     if providers:
         rows.append(_row(
