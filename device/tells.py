@@ -53,6 +53,11 @@ LEGACY = [
      lambda m: ("load:" + m[1], "failed", "stand-in", m[2])),
     (re.compile(r"\[WESTLAKE-LOADER\] (\S+) by name gave another library"),
      lambda m: ("load:" + m[1], "another", "unknown", "older message: the open may have failed")),
+    # dlsym by a handle to the runtime's libandroid.so, answered with the bionic shim's definition. The
+    # surface-control calls create no surface (stand-in); the rest are judged by what the shim does.
+    (re.compile(r"\[WESTLAKE-LOADER\] libandroid\.so by handle: (\w+) from the bionic shim"),
+     lambda m: ("dlsym:libandroid.so#" + m[1], "shim", "stand-in" if m[1].startswith("ASurface") else "unknown",
+                "looked up by handle; the runtime's libandroid.so lacks it")),
     (re.compile(r'\[OHServiceManager\] getService\("([^"]+)"\) → null'),
      lambda m: ("svc:" + m[1], "null", "unknown", "")),
     (re.compile(r"^\[(Adapter\w+?)(?:-stub)?\] (\w+) \(no-op\)$"),

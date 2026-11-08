@@ -199,6 +199,16 @@ class HowAppsEnded(unittest.TestCase):
         self.assertEqual(load[0]["answer"], "failed")
         self.assertIn("__system_property_set", tells.cause_candidate(r, set()))
 
+    def test_libandroid_lookups_by_handle_are_tells(self) -> None:
+        r = self.app("hk-browser", [CHILD.format(pid="109"),
+                                    "[WESTLAKE-LOADER] libandroid.so by handle: ASharedMemory_create from the bionic shim",
+                                    "[WESTLAKE-LOADER] libandroid.so by handle: ASurfaceControl_createFromWindow from "
+                                    "the bionic shim"],
+                     died_at=None)
+        answers = {(t["contract"], t["answer"], t["fidelity"]) for t in r["tells"]}
+        self.assertIn(("dlsym:libandroid.so#ASharedMemory_create", "shim", "unknown"), answers)
+        self.assertIn(("dlsym:libandroid.so#ASurfaceControl_createFromWindow", "shim", "stand-in"), answers)
+
     def test_window_session_stubs_and_stand_ins_are_tells(self) -> None:
         r = self.app("hk-video", [CHILD.format(pid="108")],
                      ["11-08 08:39:21.753 108 120 I C00f00/OH_WSAdapter: [STUB] getWindowId - OH accessibility "
