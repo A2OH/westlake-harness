@@ -180,6 +180,18 @@ class HowAppsEnded(unittest.TestCase):
         r = self.app("hk-meetings", stderr, screens=0)
         self.assertNotIn("protector", r["end"])
 
+    def test_a_silent_end_right_after_a_protector_loads_names_it(self) -> None:
+        """Limbus Company: AppSealing's library loads, installs two handlers, and the log stops."""
+        stderr = [CHILD.format(pid="2601"),
+                  "[SOURCE-NATIVE-LOAD] path=/data/local/tmp/asx/lib/arm64-v8a/libcovault-appsec.so search=/x",
+                  "[SOURCE-NATIVE-LOADER] path=/data/local/tmp/asx/lib/arm64-v8a/libcovault-appsec.so class_paths=/x",
+                  "[WESTLAKE-SIGNAL-INSTALL] oh signal=4 flags=0x18000004 handler=0x7f7fbc7f98 caller=0x7f810e1310",
+                  "[WESTLAKE-SIGNAL-INSTALL] oh signal=31 flags=0x1c000004 handler=0x7f7fbc7f98 caller=0x7f810e1334"]
+        r = self.app("hk-limbus", stderr, screens=0)
+        self.assertEqual(r["end"]["protector"], "AppSealing")
+        later = self.app("hk-later", stderr + ["[OHServiceManager] getService(\"isub\") → null (stub)"] * 10, screens=0)
+        self.assertNotIn("protector", later["end"], "a load long before the log stops is not the end's cause")
+
     def test_netease_yidun_is_named_from_the_fault_thread(self) -> None:
         """Farlight's game: its first frame is a call through an unrelocated pointer, from libnesec.so."""
         crash = ["Reason:Signal:SIGSEGV(SEGV_ACCERR)@0x00000000000d3eb0 ", "Fault thread info:",

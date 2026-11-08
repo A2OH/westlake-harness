@@ -1424,9 +1424,43 @@ def silent_load_rows(scan: dict[str, Any], model: dict[str, Any],
     return rows
 
 
+def runtime_handle_scope(runtime: dict[str, Any] | None, library: str) -> set[str]:
+    """The names a lookup by the handle of the runtime's copy of library finds. musl's dlsym with a
+    library handle searches the library and then its dependencies, breadth first, so a name that any
+    library in that closure exports is found: the runtime's libandroid.so defines 48 entry points and
+    reaches AChoreographer_* through libhwui.so's dependency liboh_hwui_shim.so. Only the runtime's
+    own libraries are walked, so a name only an OH system library exports is not counted."""
+    if not runtime:
+        return set()
+    bridge = {lib.get("soname") or lib["name"]: lib for lib in runtime.get("bridge_libraries", [])}
+    seen, queue, symbols = {library}, [library], set()
+    while queue:
+        lib = bridge.get(queue.pop(0))
+        if lib is None:
+            continue
+        symbols |= set(lib.get("exported_symbols", []))
+        for dep in lib.get("needed", []):
+            if dep in bridge and dep not in seen:
+                seen.add(dep)
+                queue.append(dep)
+    return symbols
+
+
+def android_namespace_targets(rows: list[dict[str, Any]]) -> set[str]:
+    """Libraries the launch args route to the Android namespace (--android-native-target)."""
+    targets: set[str] = set()
+    for row in rows:
+        args = row.get("launch_args") or []
+        targets |= {value for flag, value in zip(args[0::2], args[1::2]) if flag == "--android-native-target"}
+    return targets
+
+
 def runtime_resolved_rows(scan: dict[str, Any], ndk_cov: dict[str, Any] | None,
                           shim_exports: set[str] | None = None,
-                          answered: dict[str, str] | None = None) -> list[dict[str, Any]]:
+                          answered: dict[str, str] | None = None,
+                          runtime: dict[str, Any] | None = None,
+                          namespace_libs: list[dict[str, Any]] | None = None,
+                          routed: set[str] | None = None) -> list[dict[str, Any]]:
     """Platform entry points an app reaches by name at runtime, which the provider does not supply.
 
     A dlopen/dlsym pair declares nothing: the name is a string, so the library never records that
@@ -1443,21 +1477,41 @@ def runtime_resolved_rows(scan: dict[str, Any], ndk_cov: dict[str, Any] | None,
 
     answered: libraries whose dlopen from app code the bionic shim answers with its own handle
     (libOpenSLES.so, libaaudio.so), so a lookup by that handle finds what the shim exports.
+
+    runtime, namespace_libs, routed: a name the handle's own search finds is not a gap. A library in
+    the default namespace opens the runtime's copy, whose dependencies are searched too (see
+    runtime_handle_scope), which is how AChoreographer_* is found. A library routed to the Android
+    namespace (routed: launch targets, and libraries the app writes at run time) opens that
+    namespace's copy where it has one, and that copy is all the lookup searches.
     """
     if not ndk_cov:
         return []
     surface = {entry["symbol"]: entry for entry in ndk_cov.get("symbols", [])}
     if not surface:
         return []
+    namespace_copies = {lib.get("soname") or lib["name"]: set(lib.get("exported_symbols", []))
+                        for lib in namespace_libs or []}
+    scopes: dict[tuple[str, bool], set[str]] = {}
+
+    def found_by_handle(library: str, in_namespace: bool, candidate: str) -> bool:
+        key = (library, in_namespace and library in namespace_copies)
+        if key not in scopes:
+            scopes[key] = namespace_copies[library] if key[1] else runtime_handle_scope(runtime, library)
+        return candidate in scopes[key]
+
     by_library: dict[str, set[str]] = defaultdict(set)
     importers: dict[str, set[str]] = defaultdict(set)
     for elf in ohresolve.target_elfs(scan):
         name = elf.get("soname") or Path(elf["name"]).name
+        in_namespace = (name in (routed or set()) or Path(elf["name"]).name in (routed or set())
+                        or elf.get("origin") == "unpacked")
         for candidate in elf.get("runtime_symbol_candidates", []):
             entry = surface.get(candidate)
             if entry is None or entry.get("status") == "oh":
                 continue
             if entry.get("library") in (answered or {}) and candidate in (shim_exports or set()):
+                continue
+            if found_by_handle(entry.get("library", "unknown"), in_namespace, candidate):
                 continue
             by_library[entry.get("library", "unknown")].add(candidate)
             importers[entry.get("library", "unknown")].add(name)
@@ -4110,28 +4164,12 @@ def android_namespace_rows(scan: dict[str, Any], rows: list[dict[str, Any]],
     declared: dict[str, set[str]] = defaultdict(set)
     for item in ndk_cov["symbols"]:
         declared[item["library"]].add(item["symbol"])
-    targets = set()
-    for row in rows:
-        args = row.get("launch_args") or []
-        targets |= {value for flag, value in zip(args[0::2], args[1::2]) if flag == "--android-native-target"}
+    targets = android_namespace_targets(rows)
     app_written = any(row["id"] == "load:app-storage-exec" for row in rows)
     written = {elf["name"] for elf in ohresolve.target_elfs(scan) if elf.get("origin") == "unpacked"}
     if not targets and not app_written:
         return []
     bridge = {lib.get("soname") or lib["name"]: lib for lib in runtime.get("bridge_libraries", [])}
-
-    def runtime_closure(name: str) -> set[str]:
-        seen, queue, symbols = {name}, [name], set()
-        while queue:
-            lib = bridge.get(queue.pop())
-            if lib is None:
-                continue
-            symbols |= set(lib.get("exported_symbols", []))
-            for dep in lib.get("needed", []):
-                if dep in bridge and dep not in seen:
-                    seen.add(dep)
-                    queue.append(dep)
-        return symbols
 
     elfs = ohresolve.target_elfs(scan)
     packaged = set()
@@ -4142,7 +4180,7 @@ def android_namespace_rows(scan: dict[str, Any], rows: list[dict[str, Any]],
         name = lib.get("soname") or lib["name"]
         if name not in bridge:
             continue
-        unreachable = (runtime_closure(name) & declared.get(name, set())) - set(lib.get("exported_symbols", [])) - packaged
+        unreachable = (runtime_handle_scope(runtime, name) & declared.get(name, set())) - set(lib.get("exported_symbols", [])) - packaged
         importers: dict[str, set[str]] = defaultdict(set)
         routed = harvested = False
         for elf in elfs:
@@ -4302,14 +4340,16 @@ def build_map(
             + silent_load_rows(scan, native_load_short_circuit(westlake_root.parent / "art-build"),
                                runtime_libraries)
             + stub_native_rows(scan, stub_native_model(westlake_root.parent / "art-build", westlake_root))
-            + runtime_resolved_rows(scan, ndk_cov, bionic_shim_exports(westlake_root),
-                                    shim_answered_libraries(westlake_root))
             + sandbox_rows(scan, policy) + process_policy_rows(scan, policy) + external_rows(facts, scan, refused_libraries(westlake_root)))
     # The interposition row's routing first: the libraries it routes meet the Android namespace's
     # libandroid.so too, which android_namespace_rows checks.
     rows += interposition_rows(scan, runtime_index, rows, launcher_namespace_option(manifest_root))
     rows += android_namespace_rows(scan, rows, android_namespace_libs, runtime_index,
                                    bionic_shim_exports(westlake_root), ndk_cov)
+    # Lookups by name, resolved in the namespace each library loads in, which the routing decides.
+    rows += runtime_resolved_rows(scan, ndk_cov, bionic_shim_exports(westlake_root),
+                                  shim_answered_libraries(westlake_root), runtime_index,
+                                  android_namespace_libs, android_namespace_targets(rows))
     if ledger:
         apply_ledger(rows, ledger)
     # Rows that describe the provider rather than the app (scope "provider": the same for every

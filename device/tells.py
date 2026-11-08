@@ -80,7 +80,8 @@ PROTECTORS = [(re.compile(r"libpairipcore\.so"), "PairIP"), (re.compile(r"libbai
               (re.compile(r"libsg(?:main|securitybody)"), "Alibaba SecurityGuard"),
               (re.compile(r"libdexprotector"), "DexProtector"), (re.compile(r"libijm"), "ijiami"),
               (re.compile(r"libDexHelper|libsecexe|libSecShell"), "Bangcle"), (re.compile(r"libFairGuard"), "FairGuard"),
-              (re.compile(r"libakamaibap"), "Akamai Bot Manager"), (re.compile(r"libnesec"), "NetEase Yidun")]
+              (re.compile(r"libakamaibap"), "Akamai Bot Manager"), (re.compile(r"libnesec"), "NetEase Yidun"),
+              (re.compile(r"libcovault"), "AppSealing")]
 # The shim's signal witness (WESTLAKE_SEGV_WITNESS for SIGSEGV; SIGILL, SIGTRAP and SIGBUS always): the
 # library the faulting pc is in, which a silent end has no crash dump to name.
 WITNESS = re.compile(r"\[WESTLAKE-SIGNAL-WITNESS\] .* at (\S+)\+0x[0-9a-f]+ ")
@@ -222,7 +223,11 @@ def protector_of(stderr: list[str], crash: list[str], explore: dict) -> str:
     # APM library's abort), so only loads before the fatal point count, and without one there is no rule.
     fatal = next((i for i, line in enumerate(stderr) if FATAL.search(line)), None)
     if fatal is None:
-        return ""
+        # A silent end: the log stops a few lines after the protector's library loaded (AppSealing's
+        # libcovault-appsec.so installs a SIGILL and a SIGSYS handler, and nothing follows).
+        tail = [m[1] for m in (NATIVE_LOAD.search(line) for line in stderr[-8:]) if m]
+        last = tail[-1].rsplit("/", 1)[-1] if tail else ""
+        return next((name for pattern, name in PROTECTORS if last and pattern.search(last)), "")
     loads = [m[1] for m in (NATIVE_LOAD.search(line) for line in stderr[:fatal]) if m]
     last = loads[-1].rsplit("/", 1)[-1] if loads else ""
     return next((name for pattern, name in PROTECTORS if last and pattern.search(last)), "")

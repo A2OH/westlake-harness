@@ -1777,6 +1777,51 @@ static jstring Runtime_nativeLoad(JNIEnv* env, jclass clazz, jstring filename,
                                                           {"libmediandk.so": "webview_bionic_shim.c:1"})
         self.assertEqual(len(exported_elsewhere), 2, "a shim export helps only a library the shim answers for")
 
+    def test_lookups_the_handle_search_finds_are_not_gaps(self) -> None:
+        # dlsym by a library handle searches the library's dependencies too, breadth first: the
+        # runtime's libandroid.so reaches AChoreographer_* through libhwui.so's liboh_hwui_shim.so.
+        # A library routed to the Android namespace opens that namespace's own copy instead, where
+        # it has one.
+        coverage = {"symbols": [
+            {"symbol": "AChoreographer_getInstance", "library": "libandroid.so", "status": "westlake"},
+            {"symbol": "AHardwareBuffer_getNativeHandle", "library": "libandroid.so", "status": "missing"},
+            {"symbol": "AMediaCodec_createDecoderByType", "library": "libmediandk.so", "status": "westlake"},
+        ]}
+        runtime = {"bridge_libraries": [
+            {"name": "libandroid.so", "needed": ["libhwui.so", "libc.so"], "exported_symbols": ["ALooper_forThread"]},
+            {"name": "libhwui.so", "needed": ["liboh_hwui_shim.so"], "exported_symbols": ["SkCanvas_draw"]},
+            {"name": "liboh_hwui_shim.so", "needed": ["libhwui.so"], "exported_symbols": ["AChoreographer_getInstance"]},
+            {"name": "libmediandk.so", "needed": [], "exported_symbols": ["AMediaCodec_createDecoderByType"]},
+        ]}
+        self.assertEqual(gapmap.runtime_handle_scope(runtime, "libandroid.so"),
+                         {"ALooper_forThread", "SkCanvas_draw", "AChoreographer_getInstance"})
+        self.assertEqual(gapmap.runtime_handle_scope(None, "libandroid.so"), set())
+        namespace = [{"name": "libandroid.so", "exported_symbols": ["ALooper_forThread"]}]
+        candidates = ["AChoreographer_getInstance", "AHardwareBuffer_getNativeHandle", "AMediaCodec_createDecoderByType"]
+
+        def scan(*elfs: dict) -> dict:
+            return {"inventory": {"elfs": [dict(elf, runtime_symbol_candidates=candidates) for elf in elfs]}}
+
+        default = gapmap.runtime_resolved_rows(scan({"name": "lib/arm64-v8a/libunity.so", "soname": "libunity.so"}),
+                                               coverage, set(), {}, runtime, namespace, set())
+        self.assertEqual([(r["id"], r["symbols"]) for r in default],
+                         [("sym:runtime-resolved:libandroid.so", ["AHardwareBuffer_getNativeHandle"])],
+                         "the default namespace's copy finds the rest through its dependencies")
+        routed = gapmap.runtime_resolved_rows(scan({"name": "lib/arm64-v8a/librouted.so", "soname": "librouted.so"}),
+                                              coverage, set(), {}, runtime, namespace, {"librouted.so"})
+        self.assertEqual([(r["id"], r["symbols"]) for r in routed],
+                         [("sym:runtime-resolved:libandroid.so",
+                           ["AChoreographer_getInstance", "AHardwareBuffer_getNativeHandle"])],
+                         "the Android namespace's libandroid.so is the whole search; libmediandk.so has no "
+                         "copy there, so the runtime's answers")
+        written = gapmap.runtime_resolved_rows(scan({"name": "files/libwritten.so", "origin": "unpacked"}),
+                                               coverage, set(), {}, runtime, namespace, set())
+        self.assertEqual(written[0]["symbols"], ["AChoreographer_getInstance", "AHardwareBuffer_getNativeHandle"],
+                         "a library the app writes and loads lands in the Android namespace")
+        unknown = gapmap.runtime_resolved_rows(scan({"name": "lib/arm64-v8a/libunity.so", "soname": "libunity.so"}),
+                                               coverage)
+        self.assertEqual(len(unknown), 2, "without the runtime's libraries nothing is taken as found")
+
     def test_shadowed_libraries_and_their_importers(self) -> None:
         scan = {"inventory": {"elfs": [
             {"name": "config.arm64_v8a.apk!lib/arm64-v8a/libc++_shared.so", "soname": "libc++_shared.so", "needed": ["libc.so"]},
