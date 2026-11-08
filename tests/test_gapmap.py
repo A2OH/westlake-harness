@@ -1033,6 +1033,38 @@ class NeededLibraries(unittest.TestCase):
             self.assertEqual(list(gapmap.shim_answered_libraries(root)), ["libaaudio.so"],
                              "a redirect to another library is not the shim answering")
 
+    def test_libandroid_lookups_the_shim_completes(self) -> None:
+        # The shim's dlsym answers a name the runtime's libandroid.so lacks with its own definition.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shim = root / "framework/webview-shim"
+            shim.mkdir(parents=True)
+            source = shim / "webview_bionic_shim.c"
+            source.write_text(
+                "int ASharedMemory_create(const char *name, size_t size)\n{\n    return -1;\n}\n\n"
+                "static void *westlake_libandroid_by_handle(WestlakeDlsymFn real, void *handle, const char *name)\n"
+                "{\n    return NULL;\n}\n\n"
+                "void *dlsym(void *handle, const char *name)\n{\n"
+                "    void *found = real(handle, name);\n"
+                "    if (found == NULL) found = westlake_libandroid_by_handle(real, handle, name);\n"
+                "    return found;\n}\n")
+            self.assertEqual(gapmap.shim_answered_libraries(root),
+                             {"libandroid.so": "framework/webview-shim/webview_bionic_shim.c:6"})
+            coverage = {"symbols": [
+                {"symbol": "ASharedMemory_create", "library": "libandroid.so", "status": "missing"},
+                {"symbol": "AChoreographer_getInstance", "library": "libandroid.so", "status": "missing"},
+            ]}
+            scan = {"inventory": {"elfs": [{
+                "name": "lib/arm64-v8a/libbrowser.so", "soname": "libbrowser.so",
+                "runtime_symbol_candidates": ["ASharedMemory_create", "AChoreographer_getInstance"]}]}}
+            rows = gapmap.runtime_resolved_rows(scan, coverage, gapmap.bionic_shim_exports(root),
+                                                gapmap.shim_answered_libraries(root))
+            self.assertEqual([r["symbols"] for r in rows], [["AChoreographer_getInstance"]],
+                             "a name the shim defines is found by handle; one it does not stays open")
+            source.write_text(source.read_text().replace("westlake_libandroid_by_handle(real, handle, name);",
+                                                         "NULL;"))
+            self.assertEqual(gapmap.shim_answered_libraries(root), {}, "a defined but uncalled fallback answers nothing")
+
 
 class OhEvents(unittest.TestCase):
     LOG = """[OHServiceManager] getService("deviceidle") \u2192 null (stub)
@@ -1789,6 +1821,16 @@ static jstring Runtime_nativeLoad(JNIEnv* env, jclass clazz, jstring filename,
         unknown = gapmap.runtime_resolved_rows(scan({"name": "lib/arm64-v8a/libunity.so", "soname": "libunity.so"}),
                                                coverage)
         self.assertEqual(len(unknown), 2, "without the runtime's libraries nothing is taken as found")
+        # The shim's libandroid by-handle answer reaches only a lookup through the runtime's copy.
+        by_handle = {"libandroid.so": "webview_bionic_shim.c:1"}
+        shim = {"AHardwareBuffer_getNativeHandle"}
+        default = gapmap.runtime_resolved_rows(scan({"name": "lib/arm64-v8a/libunity.so", "soname": "libunity.so"}),
+                                               coverage, shim, by_handle, runtime, namespace, set())
+        self.assertEqual([r["id"] for r in default], [], "the default namespace's lookup is answered")
+        routed = gapmap.runtime_resolved_rows(scan({"name": "lib/arm64-v8a/librouted.so", "soname": "librouted.so"}),
+                                              coverage, shim, by_handle, runtime, namespace, {"librouted.so"})
+        self.assertEqual(routed[0]["symbols"], ["AChoreographer_getInstance", "AHardwareBuffer_getNativeHandle"],
+                         "the Android namespace's own libandroid.so handle is not answered by the shim")
 
     def test_shadowed_libraries_and_their_importers(self) -> None:
         scan = {"inventory": {"elfs": [

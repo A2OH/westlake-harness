@@ -1509,9 +1509,14 @@ def runtime_resolved_rows(scan: dict[str, Any], ndk_cov: dict[str, Any] | None,
             entry = surface.get(candidate)
             if entry is None or entry.get("status") == "oh":
                 continue
-            if entry.get("library") in (answered or {}) and candidate in (shim_exports or set()):
+            library = entry.get("library", "unknown")
+            # A by-handle answer needs the runtime's copy's handle: a library in the Android
+            # namespace opens that namespace's own copy, which the shim does not answer.
+            namespace_copy = in_namespace and library in namespace_copies
+            if (library in (answered or {}) and candidate in (shim_exports or set())
+                    and not (namespace_copy and library in RUNTIME_HANDLE_ANSWERED)):
                 continue
-            if found_by_handle(entry.get("library", "unknown"), in_namespace, candidate):
+            if found_by_handle(library, in_namespace, candidate):
                 continue
             by_library[entry.get("library", "unknown")].add(candidate)
             importers[entry.get("library", "unknown")].add(name)
@@ -3582,10 +3587,22 @@ def bionic_shim_staged_libraries(westlake_root: Path) -> list[str]:
     return sorted(names - {"libwebview_bionic_shim.so"})
 
 
+# Libraries whose shim answer comes through the handle of the runtime's copy, not the dlopen:
+# westlake_libandroid_by_handle answers only a handle whose search reaches the runtime's
+# libandroid.so, so the Android namespace's own copy (the WebView's) is not answered.
+RUNTIME_HANDLE_ANSWERED = frozenset({"libandroid.so"})
+
+
 def shim_answered_libraries(westlake_root: Path) -> dict[str, str]:
-    """Libraries whose dlopen from app code the shim answers with its own handle, and where: a lookup
-    by that handle finds the shim's exports first (libOpenSLES.so's adapter, libaaudio.so's AAudio).
-    Other basename checks in the shim's dlopen redirect elsewhere and are not counted."""
+    """Libraries whose lookups by handle from app code find the shim's exports, and where.
+
+    - The shim answers the dlopen with its own handle, so a lookup by that handle finds the shim's
+      exports first (libOpenSLES.so's adapter, libaaudio.so's AAudio). Other basename checks in the
+      shim's dlopen redirect elsewhere and are not counted.
+    - libandroid.so: the handle is the runtime's copy, which holds part of the NDK library, and the
+      shim's dlsym answers a name that copy lacks with the shim's own definition
+      (westlake_libandroid_by_handle). Yandex Browser's ASharedMemory_create and Naver Whale's
+      ASurfaceControl entry points were looked up that way."""
     shim = westlake_root / "framework/webview-shim/webview_bionic_shim.c"
     if not shim.exists():
         return {}
@@ -3597,6 +3614,10 @@ def shim_answered_libraries(westlake_root: Path) -> dict[str, str]:
         if "real_dlopen(self.dli_fname" in text[check.end():end]:
             line = text.count("\n", 0, check.start()) + 1
             answered[check.group(1)] = f"framework/webview-shim/webview_bionic_shim.c:{line}"
+    fallback = re.search(r"^static void \*westlake_libandroid_by_handle\(", text, re.M)
+    if fallback and "westlake_libandroid_by_handle(real, handle, name)" in text:
+        line = text.count("\n", 0, fallback.start()) + 1
+        answered["libandroid.so"] = f"framework/webview-shim/webview_bionic_shim.c:{line}"
     return answered
 
 
