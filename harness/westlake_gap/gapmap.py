@@ -3249,6 +3249,27 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
             shim="renumber DT_ANDROID_RELR/RELRSZ/RELRENT to DT_RELR/RELRSZ/RELRENT (same encoding); "
                  "OH's musl applies DT_RELR and DT_ANDROID_RELA itself",
         ))
+    # R_AARCH64_IRELATIVE (scanner.irelative_relocations): OH's musl does not apply IFUNC relocations
+    # and fails the load, where bionic calls each resolver and writes its answer.
+    ifunc = {}
+    for elf in elfs:
+        if elf.get("irelative_relocations"):
+            name = elf.get("soname") or Path(elf["name"]).name
+            ifunc[name] = max(ifunc.get(name, 0), elf["irelative_relocations"])
+    if ifunc:
+        names = sorted(ifunc)
+        rows.append(_row(
+            "native-loading", "load:irelative",
+            f"Libraries with IFUNC relocations ({', '.join(names[:4])}" + (" ..." if len(names) > 4 else "") + ")",
+            oh_touchpoint="OH musl dynamic linker: rejects R_AARCH64_IRELATIVE (\"unsupported relocation type "
+                          "1032\"), so the library does not load",
+            verdict="missing", shim_class="C3", effort="M", confidence=STATIC,
+            provider="none: the library does not load",
+            app_evidence=f"{len(names)} APK libraries carry {sum(ifunc.values())} R_AARCH64_IRELATIVE relocations",
+            seen_blocking=["edge (libtelclient.so: UnsatisfiedLinkError binding the application)"],
+            shim="apply them as bionic does before the library's constructors run: call each resolver with the "
+                 "device's hwcaps and write its answer where the relocation points",
+        ))
     return rows
 
 
