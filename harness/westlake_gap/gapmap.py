@@ -59,8 +59,9 @@ EFFORT = {
     "L": "weeks: port or build a subsystem or bridge",
     "OH": "needs an OpenHarmony platform change (policy, kernel, system ability): outside Westlake",
     "verify": "implemented according to source; run the conformance probe before trusting it",
+    "policy": "out of scope by project policy: the app's own protection is observed, never worked around",
 }
-_EFFORT_ORDER = ["none", "verify", "XS", "S", "M", "L", "OH"]
+_EFFORT_ORDER = ["none", "verify", "XS", "S", "M", "L", "OH", "policy"]
 
 # Confidence ladder for a row's provider verdict.
 STATIC = "static"                  # read from APK + provider source only
@@ -3362,6 +3363,18 @@ _ENV_SDKS = [
     ("com.forter", "Forter fraud SDK", "device fingerprinting via WiFi/telephony/build properties"),
 ]
 
+# Code protection the project observes but does not work around: what it does on Westlake is read
+# from the outside (the board's crash reports and stalls), never by taking it apart.
+_PROTECTED_SDKS = [
+    ("libpairipcore.so", "PairIP",
+     "Play's automatic integrity protection: its native VM (com.pairip.VMRunner) runs before the app's "
+     "own code. On the board it ends the app at start (SIGSEGV, SIGBUS or SIGABRT in libpairipcore.so on "
+     "the <pre-initialize> thread) or holds the main thread in VMRunner.executeVM",
+     ["of the 69 HK corpus apps packaging it that ran in the 1000-app round (build 179), 58 crashed "
+      "at start right after loading it (the last library loaded each time; the fault frame names it "
+      "in 30, the others have no backtrace), 5 hung in VMRunner.executeVM, 6 drew"]),
+]
+
 
 def refused_libraries(westlake_root: Path) -> dict[str, str]:
     """Libraries the Westlake loader deliberately refuses to load, with where that is decided."""
@@ -3410,6 +3423,17 @@ def external_rows(facts: dict[str, Any], scan: dict[str, Any], refused: dict[str
                 provider_source=refusal[1] if refusal else None,
                 shim=("confirm the app degrades cleanly without it, and whether its backend then rejects the session" if refusal else
                       "capture its inputs on the Android baseline; decide load/refuse and what identity to present"),
+            ))
+    files = {e["name"].rsplit("/", 1)[-1] for e in ohresolve.target_elfs(scan)}
+    for marker, sdk, observed, seen in _PROTECTED_SDKS:
+        found = sorted(n for n in names | files if n and marker in n)
+        if found:
+            rows.append(_row(
+                "external-deps", f"protect:{sdk.lower()}", f"{sdk} code protection",
+                oh_touchpoint="none: the app's own protection layer, which judges the environment it runs in",
+                verdict="blocked", shim_class="CU", effort="policy", confidence=OBSERVED,
+                app_evidence=", ".join(found[:4]), provider=observed, seen_blocking=seen,
+                shim="none: anti-tamper and code protection are observed from outside, not taken apart or bypassed",
             ))
     return rows
 
