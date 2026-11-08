@@ -1749,6 +1749,18 @@ static jstring Runtime_nativeLoad(JNIEnv* env, jclass clazz, jstring filename,
             rows = gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True}, board,
                                               gapmap.launcher_namespace_option(launcher))
         self.assertEqual(rows[0]["launch_args"][1::2], ["libc++_shared.so", "libmain.so", "libunity.so"])
+        # Insta360: libmarsxlog.so and libmarsxlogg.so both carry the SONAME libmarsxlog.so and both
+        # need libc++_shared.so. Each file is routed on its own DT_NEEDED.
+        scan = {"inventory": {"elfs": [
+            {"name": "lib/arm64-v8a/libc++_shared.so", "soname": "libc++_shared.so", "needed": ["libc.so"]},
+            {"name": "lib/arm64-v8a/libmarsxlog.so", "soname": "libmarsxlog.so", "needed": ["libc++_shared.so"]},
+            {"name": "lib/arm64-v8a/libmarsxlogg.so", "soname": "libmarsxlog.so", "needed": ["libc++_shared.so"]}]}}
+        with tempfile.TemporaryDirectory(prefix="westlake-ns-") as temp:
+            launcher = Path(temp)
+            _write(launcher / "tools/probe_source_app.py", "parser.add_argument('--android-native-target', action='append')")
+            rows = gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True}, board,
+                                              gapmap.launcher_namespace_option(launcher))
+        self.assertEqual(rows[0]["launch_args"][1::2], ["libc++_shared.so", "libmarsxlog.so", "libmarsxlogg.so"])
 
 
 class LaunchArgsCheck(unittest.TestCase):
