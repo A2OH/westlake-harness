@@ -723,6 +723,48 @@ class AppStorageExec(unittest.TestCase):
         self.assertNotIn("load:needed-sibling", {r["id"] for r in gapmap.native_loading_rows(
             {"extract_native_libs": True}, scan, {"present": True}, [])})
 
+    def test_ifunc_relocations_are_a_load_failure(self) -> None:
+        """Edge: libtelclient.so carries R_AARCH64_IRELATIVE, which OH's musl rejects ("unsupported
+        relocation type 1032"), so binding the application failed with an UnsatisfiedLinkError."""
+        import struct
+        from westlake_gap import scanner
+
+        def elf(kinds: list[int], plt: list[int] = (), machine: int = 183) -> bytes:
+            rela = b"".join(struct.pack("<QQq", 0x4000 + 8 * i, kind, 0x100) for i, kind in enumerate(kinds))
+            jmprel = b"".join(struct.pack("<QQq", 0x5000 + 8 * i, kind, 0x200) for i, kind in enumerate(plt))
+            tags = {7: 0x1000, 8: len(rela), 9: 24, 23: 0x1000 + len(rela), 2: len(jmprel), 20: 7}
+            dynamic = b"".join(struct.pack("<QQ", t, v) for t, v in tags.items()) + struct.pack("<QQ", 0, 0)
+            header = bytearray(64)
+            header[:6] = b"\x7fELF\x02\x01"
+            struct.pack_into("<H", header, 0x12, machine)  # e_machine
+            struct.pack_into("<Q", header, 0x20, 64)       # e_phoff
+            struct.pack_into("<H", header, 0x38, 2)        # e_phnum
+            tables = rela + jmprel
+            body_at = 64 + 2 * 56
+            dynamic_at = body_at + len(tables)
+            load = struct.pack("<IIQQQQQQ", 1, 5, body_at, 0x1000, 0x1000, len(tables), len(tables), 0x1000)
+            phdr = struct.pack("<IIQQQQQQ", 2, 6, dynamic_at, 0, 0, len(dynamic), len(dynamic), 8)
+            return bytes(header) + load + phdr + tables + dynamic
+
+        self.assertEqual(scanner.irelative_relocations(elf([1027, 1032, 1027], plt=[1026, 1032])),
+                         {"irelative_relocations": 2}, "one in the RELA table, one in the PLT's")
+        self.assertEqual(scanner.irelative_relocations(elf([1027, 1026])), {})
+        self.assertEqual(scanner.irelative_relocations(elf([1032], machine=62)), {}, "not an arm64 library")
+        base = {"abi": "arm64-v8a", "abi_matches_machine": True}
+        scan = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {
+            "elfs": [{**base, "name": "lib/arm64-v8a/libtelclient.so", "soname": "libtelclient.so",
+                      "irelative_relocations": 4},
+                     {**base, "name": "lib/arm64-v8a/libother.so", "soname": "libother.so"}],
+            "load_library_calls": []}}
+        rows = {r["id"]: r for r in gapmap.native_loading_rows({"extract_native_libs": True}, scan, {"present": True}, [])}
+        row = rows["load:irelative"]
+        self.assertEqual((row["verdict"], row["item"], row["app_evidence"]),
+                         ("missing", "Libraries with IFUNC relocations (libtelclient.so)",
+                          "1 APK libraries carry 4 R_AARCH64_IRELATIVE relocations"))
+        scan["inventory"]["elfs"][0].pop("irelative_relocations")
+        self.assertNotIn("load:irelative", {r["id"] for r in gapmap.native_loading_rows(
+            {"extract_native_libs": True}, scan, {"present": True}, [])})
+
     def test_packed_relocation_constructors_need_a_sanitizer_that_knows_the_format(self) -> None:
         """Waze: libwaze.so's packed relocations fill its 2189 init array slots; the runtime's sanitizer
         did not recognize DT_ANDROID_RELA and dropped them all."""

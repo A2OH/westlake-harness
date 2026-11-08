@@ -425,6 +425,50 @@ def art_internal_names(raw: bytes) -> dict[str, Any]:
 _PACKED_RELOCATION_TAGS = {0x6000000F, 0x60000010, 0x60000011, 0x60000012}  # DT_ANDROID_REL{,SZ}, RELA{,SZ}
 
 
+R_AARCH64_IRELATIVE = 1032
+
+
+def irelative_relocations(raw: bytes) -> dict[str, int]:
+    """R_AARCH64_IRELATIVE relocations in a library's RELA and PLT tables: an IFUNC, whose resolver the
+    loader calls to pick the implementation. Bionic applies them; OH's musl rejects the library with
+    "unsupported relocation type 1032", so it does not load (Edge's libtelclient.so). Relocations in
+    Android's packed format are not decoded here. Empty for any other library."""
+    if raw[:4] != b"\x7fELF" or raw[4] != 2 or raw[5] != 1 or int.from_bytes(raw[0x12:0x14], "little") != 183:
+        return {}
+    u64 = lambda at: int.from_bytes(raw[at:at + 8], "little")
+    phoff, count = u64(0x20), int.from_bytes(raw[0x38:0x3A], "little")
+    loads, dynamic = [], None
+    for index in range(count):
+        header = phoff + index * 56
+        kind = int.from_bytes(raw[header:header + 4], "little")
+        if kind == 1:
+            loads.append((u64(header + 16), u64(header + 8), u64(header + 32)))
+        elif kind == 2:
+            dynamic = (u64(header + 8), u64(header + 32))
+    if dynamic is None:
+        return {}
+    tags: dict[int, int] = {}
+    for position in range(dynamic[0], min(dynamic[0] + dynamic[1], len(raw) - 15), 16):
+        tag = u64(position)
+        if tag == 0:
+            break
+        tags.setdefault(tag, u64(position + 8))
+    tables = [(tags[7], tags[8])] if 7 in tags and 8 in tags else []
+    if 23 in tags and 2 in tags and tags.get(20, 7) == 7:      # DT_JMPREL of DT_RELA entries
+        tables.append((tags[23], tags[2]))
+    found = 0
+    view = memoryview(raw)
+    for vaddr, size in tables:
+        start = next((offset + vaddr - base for base, offset, length in loads if base <= vaddr < base + length), None)
+        if start is None:
+            continue
+        end = min(start + size, len(raw))
+        end -= (end - start) % 24
+        found += sum(1 for _, info, _ in struct.iter_unpack("<QQq", view[start:end])
+                     if info & 0xFFFFFFFF == R_AARCH64_IRELATIVE)
+    return {"irelative_relocations": found} if found else {}
+
+
 def null_array_entries(raw: bytes) -> dict[str, int] | None:
     """Null or -1 entries in the init and fini arrays that no relocation fills: bionic skips them
     (soinfo::call_array), OH's musl calls them and jumps to address 0 (TikTok's libttffmpeg.so).
@@ -778,6 +822,7 @@ def read_elf(
             "needed": needed,
             "android_relocation_tags": _android_relocation_tags(text),
             "null_array_entries": null_array_entries(raw),
+            **irelative_relocations(raw),
             **packed_init_entries(raw),
             **art_internal_names(raw),
             **signal_lookups(raw, set(undefined) | set(undefined_weak)),
