@@ -370,7 +370,8 @@ def main(argv: list[str] | None = None) -> int:
         from . import ohresolve
 
         provided, libraries = ohresolve.index_exports(args.lib_dir)
-        app = ohresolve.resolve(read_json(args.scan), provided, ohresolve.ndk_declarations(args.ndk_api_dir),
+        app = ohresolve.resolve(ohresolve.drop_unreadable_symbols(read_json(args.scan)), provided,
+                                ohresolve.ndk_declarations(args.ndk_api_dir),
                                 ohresolve.index_export_versions(args.lib_dir))
         write_json(args.out, {"board": {"description": args.board, "libraries_indexed": libraries},
                               "apps": {args.app_key: app}})
@@ -424,9 +425,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "gap-map":
         from .contracts import manifest_facts
         from .gapmap import backtest, build_map, markdown, runtime_class_strings
+        from .ohresolve import drop_unreadable_symbols
         from .services import aosp_service_table
 
-        scan = read_json(args.scan)
+        scan = drop_unreadable_symbols(read_json(args.scan))
         levels = {}
         if args.api_levels:
             for finding in read_json(args.api_levels).get("findings", []):

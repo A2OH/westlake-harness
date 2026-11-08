@@ -3196,6 +3196,20 @@ class StoreLicenseCheck(unittest.TestCase):
         self.assertIn("ILicensingService", row["provider"])
         self.assertTrue(row["seen_blocking"], "the device round's evidence belongs on the row")
 
+    def test_libraries_with_unreadable_symbol_tables_get_one_row(self) -> None:
+        # An encrypted dynamic table: what the library imports is unknown until its protector restores it.
+        scan = {"inventory": {"platform_method_names": {}, "elfs": [
+            {"name": "lib/arm64-v8a/libil2cpp.so", "soname": "libil2cpp.so", "unreadable_symbols": 12},
+            {"name": "lib/arm64-v8a/libsecexe.so", "unreadable_symbols": 40},
+            {"name": "assets/libsecexe.so", "unreadable_symbols": 3},   # a second copy: one entry, the larger count
+            {"name": "lib/arm64-v8a/libmain.so", "soname": "libmain.so", "unreadable_symbols": 0}]}}
+        row = next(r for r in gapmap.external_rows(self.facts(), scan) if r["id"] == "protect:unreadable-symbols")
+        self.assertEqual(row["item"], "2 libraries with unreadable symbol tables")
+        self.assertEqual(row["app_evidence"], "libsecexe.so (40 names), libil2cpp.so (12 names)")
+        self.assertEqual((row["verdict"], row["effort"]), ("unverified", "verify"))
+        readable = {"inventory": {"platform_method_names": {}, "elfs": [{"name": "libmain.so"}]}}
+        self.assertNotIn("protect:unreadable-symbols", [r["id"] for r in gapmap.external_rows(self.facts(), readable)])
+
     def test_pairip_code_protection_is_its_own_row_and_out_of_scope(self) -> None:
         # Apps Play protects also carry the native VM, which ended most of them at start on the board.
         scan = {"inventory": {"platform_method_names": {}, "elfs": [

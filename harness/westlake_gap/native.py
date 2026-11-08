@@ -24,6 +24,17 @@ METHOD_NAME_RE = re.compile(r"^[^\s/;().\[\]]{1,512}$")
 METHOD_DESCRIPTOR_RE = re.compile(
     r"^\((?:\[*(?:[ZBCSIJFD]|L[^;]{1,1024};))*\)\[*(?:[VZBCSIJFD]|L[^;]{1,1024};)$"
 )
+# A symbol name is printable ASCII. Spaces occur in real ones (Unity Burst exports C# signatures such
+# as "System.Byte[] Unity.Burst.BurstString::..."); control characters and non-ASCII bytes do not. A
+# library whose dynamic table its protector has encrypted or packed (Bangcle's libsecexe.so; the game
+# shields over libil2cpp.so, libunity.so and libcocos.so) yields binary junk where the names belong,
+# and those are imports of nothing.
+UNREADABLE_SYMBOL_RE = re.compile(r"[^\x20-\x7e]")
+
+
+def readable_symbol(name: str) -> bool:
+    """Whether a dynamic symbol's name reads as a name: printable ASCII, spaces allowed."""
+    return bool(name) and UNREADABLE_SYMBOL_RE.search(name) is None
 
 
 def abi_from_machine(machine: str | None) -> str | None:

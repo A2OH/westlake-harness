@@ -12,6 +12,35 @@ from westlake_gap import ohresolve
 
 
 class Resolve(unittest.TestCase):
+    def test_junk_names_from_a_protected_table_are_counted_not_resolved(self) -> None:
+        """libsecexe.so (Bangcle) and shielded libil2cpp.so read as binary junk where names belong; older
+        scans listed that junk as libc symbols missing on OH."""
+        junk = "B|ksn\t![I7 JGgpn%-|ufU1VB#1VLIBC"
+        scan = {"inventory": {"elfs": [{"name": "libsecexe.so", "undefined_symbols": [junk, "malloc", "\x01\x02"],
+                                        "exported_symbols": ["JNI_OnLoad", "\xe9t\xe9"]}]}}
+        ohresolve.drop_unreadable_symbols(scan)
+        elf = scan["inventory"]["elfs"][0]
+        self.assertEqual((elf["undefined_symbols"], elf["exported_symbols"]), (["malloc"], ["JNI_OnLoad"]))
+        self.assertEqual(elf["unreadable_symbols"], 3)
+        ohresolve.drop_unreadable_symbols(scan)
+        self.assertEqual(elf["unreadable_symbols"], 3, "cleaning twice counts once")
+        result = ohresolve.resolve(scan, {"malloc"}, {})
+        self.assertEqual(result["missing"], [])
+        clean = {"inventory": {"elfs": [{"name": "libapp.so", "undefined_symbols": ["fegetexcept"]}]}}
+        ohresolve.drop_unreadable_symbols(clean)
+        self.assertNotIn("unreadable_symbols", clean["inventory"]["elfs"][0])
+
+    def test_a_symbol_name_is_printable_ascii(self) -> None:
+        from westlake_gap.native import readable_symbol
+
+        # Unity Burst exports C# signatures, spaces and all.
+        for name in ("fegetexcept", "_ZNSt6__ndk112basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEEaSERKS5_",
+                     "__cxa_atexit", "Java_com_example_Main_run", "$s4main",
+                     "System.Byte[] Unity.Burst.BurstString::Int32ToString"):
+            self.assertTrue(readable_symbol(name), name)
+        for name in ("", "x\ty", "\x7f", "caf\xe9", "�", "B|k\x18s\x13n"):
+            self.assertFalse(readable_symbol(name), repr(name))
+
     def test_a_versioned_import_needs_the_same_version_or_an_unversioned_definition(self) -> None:
         """Messenger: libcore.so asks for __system_property_read_callback@LIBC_O; the shim had it under LIBC."""
         scan = {"inventory": {"elfs": [{"name": "libcore.so", "undefined_symbols": [
