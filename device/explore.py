@@ -7,8 +7,9 @@ runs can be compared app by app.
     explore.py android --adb <adb> --serial <phone> --package <pkg> --out <dir> [--seconds 180]
 
 The app must already be running (on Westlake: launched by launch.sh; on Android: this starts it).
-Each step reads the screen's views (Westlake: the tap channel's view dump in the app's own log;
-Android: uiautomator), then:
+Each step reads the screen's views (Westlake: the tap channel's view dump in the app's own log, and
+when that shows nothing to tap, the framework's accessibility node dump, which sees Compose; Android:
+uiautomator), then:
 
   1. taps a clickable view on this screen it has not tapped yet (text and ids first, top to bottom),
   2. else scrolls this screen (twice at most),
@@ -70,11 +71,18 @@ class Board:
     # The view's text, when it has one, comes right after itm=; extras (WEB url="..." and so on) follow it.
     VT = re.compile(r'VT\s+(\S+) id=(\S+) rect=\[(-?\d+),(-?\d+) (\d+)x(\d+)\] c=(\d) en=(\d) .*?itm=\d+ (?:"(.*?)"(?= |$))?')
 
+    # A tap this far out on both axes asks the framework for its accessibility node dump
+    # (adapter.window.AccessibilityTreeDump): the nodes a screen drawn with Compose shows uiautomator on
+    # Android, which the view dump does not show. Dropbox's welcome screen was 9 views, none clickable.
+    A11Y_REQUEST = "1000000 1000000"
+    A11Y_END = "VT ==== a11y end ===="
+
     def __init__(self, hdc: str, serial: str, child: int):
         self.cmd = [hdc, "-t", serial]
         self.child = child
         self.log = f"/data/service/el1/public/appspawnx/adapter_child_{child}.stderr"
         self.width, self.height = 1200, 1920
+        self.a11y = True   # until a request goes unanswered: a framework without the node dump
 
     def shell(self, command: str, timeout: int = 30) -> str:
         try:
@@ -102,7 +110,28 @@ class Board:
         blocks = [b for b in text.split("VT ==== root[")[1:]] or [text]
         roots = [self.parse(b) for b in blocks]
         tappable = [r for r in roots if any(v.clickable for v in r)]
+        if not tappable and self.a11y:
+            # The node dump's windows come after the views', so a window with nodes to tap is taken.
+            roots += self.node_roots()
+            tappable = [r for r in roots if any(v.clickable for v in r)]
         return tappable[-1] if tappable else (roots[-1] if roots else [])
+
+    def node_roots(self) -> list[list[View]]:
+        """The accessibility node dump's windows; none, and no more requests, when it goes unanswered."""
+        size = self.shell(f"wc -c < {self.log}").strip()
+        start = int(size) + 1 if size.isdigit() else 1
+        self.send(self.A11Y_REQUEST)
+        text = ""
+        for _ in range(6):
+            time.sleep(0.5)
+            text = self.shell(f"tail -c +{start} {self.log} | grep 'VT '", timeout=60)
+            if self.A11Y_END in text:
+                break
+        else:
+            self.a11y = False
+            return []
+        text = text[:text.index(self.A11Y_END)]
+        return [self.parse(b) for b in text.split("VT ==== root[")[1:]]
 
     def parse(self, block: str) -> list[View]:
         """One window's views on screen. Rects are the window's own: a window smaller than the screen

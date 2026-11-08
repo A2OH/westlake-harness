@@ -36,6 +36,68 @@ class WhatTheExplorerTaps(unittest.TestCase):
         self.assertIsNone(explore.choose(views, set()))
 
 
+class FakeBoard(explore.Board):
+    """The board's app log, which grows by what each tap-channel command makes the app write."""
+
+    def __init__(self, answers: dict[str, str]) -> None:
+        super().__init__("hdc", "serial", 7)
+        self.answers, self.logtext, self.sent = answers, "", []
+
+    def shell(self, command: str, timeout: int = 30) -> str:
+        if command.startswith("wc -c"):
+            return str(len(self.logtext.encode()))
+        if command.startswith("tail -c +"):
+            start = int(command.split("+", 1)[1].split()[0]) - 1
+            return "".join(l + "\n" for l in self.logtext.encode()[start:].decode().splitlines() if "VT " in l)
+        return ""
+
+    def send(self, command: str) -> None:
+        self.sent.append(command)
+        self.logtext += self.answers.get(command, "")
+
+
+COMPOSE_VIEWS = ("VT ==== root[0] ====\n"
+                 "VT DecorView id=- rect=[0,0 1200x1920] c=0 en=1 f=0 ftm=0 itm=1 \n"
+                 "VT  AndroidComposeView id=- rect=[0,0 1200x1920] c=0 en=1 f=0 ftm=1 itm=1 \n"
+                 "VT ==== end ====\n")
+COMPOSE_NODES = ("VT ==== root[a0] ====\n"
+                 "VT DecorView id=- rect=[0,0 1200x1920] c=0 en=1 f=0 ftm=0 itm=1 \n"
+                 "VT  View id=- rect=[0,0 1200x1920] c=0 en=1 f=0 ftm=0 itm=1 \n"
+                 'VT   Button id=- rect=[152,1745 432x110] c=1 en=1 f=0 ftm=0 itm=1 "Sign up"\n'
+                 'VT   Button id=- rect=[616,1745 432x110] c=1 en=1 f=0 ftm=0 itm=1 "Log in"\n'
+                 "VT ==== a11y end ====\n")
+
+
+class WhatTheExplorerSeesOfCompose(unittest.TestCase):
+    def setUp(self) -> None:
+        self.sleep, explore.time.sleep = explore.time.sleep, lambda s: None
+
+    def tearDown(self) -> None:
+        explore.time.sleep = self.sleep
+
+    def test_a_screen_with_nothing_to_tap_asks_for_the_node_dump(self) -> None:
+        board = FakeBoard({"v": COMPOSE_VIEWS, board_request(): COMPOSE_NODES})
+        views = board.views()
+        self.assertEqual(board.sent, ["v", board_request()])
+        self.assertEqual(explore.choose(views, set()).text, "Sign up")
+
+    def test_an_unanswered_request_is_not_repeated(self) -> None:
+        board = FakeBoard({"v": COMPOSE_VIEWS})   # a framework without the node dump
+        self.assertFalse(any(v.clickable for v in board.views()))
+        board.views()
+        self.assertEqual(board.sent, ["v", board_request(), "v"])
+
+    def test_a_screen_with_views_to_tap_does_not_ask(self) -> None:
+        board = FakeBoard({"v": "VT ==== root[0] ====\n"
+                                'VT Button id=ok rect=[0,0 100x60] c=1 en=1 f=0 ftm=0 itm=1 "OK"\nVT ==== end ====\n'})
+        board.views()
+        self.assertEqual(board.sent, ["v"])
+
+
+def board_request() -> str:
+    return explore.Board.A11Y_REQUEST
+
+
 class WhereTheExplorerTapsBlind(unittest.TestCase):
     class Board:
         width, height = 1200, 1920
