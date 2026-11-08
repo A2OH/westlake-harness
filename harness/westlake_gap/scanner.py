@@ -209,10 +209,15 @@ def _inner_zip(archive: zipfile.ZipFile, name: str) -> zipfile.ZipFile:
 
 
 def _ordered_inner_apks(archive: zipfile.ZipFile) -> list[str]:
+    """The bundle's APKs, base first. The bundle's manifest names the base with id "base" and may
+    list it anywhere: a dating app's put three config splits before it, and the scan read the first
+    split's manifest as the app's (no activities, so no launch)."""
     names = [name for name in archive.namelist() if name.lower().endswith(".apk")]
     try:
         manifest = json.loads(archive.read("manifest.json"))
-        ordered = [item["file"] for item in manifest.get("split_apks", []) if item.get("file") in names]
+        entries = [item for item in manifest.get("split_apks", []) if item.get("file") in names]
+        ordered = ([item["file"] for item in entries if item.get("id") == "base"]
+                   + [item["file"] for item in entries if item.get("id") != "base"])
         return ordered + sorted(set(names) - set(ordered))
     except (KeyError, ValueError, TypeError, json.JSONDecodeError):
         return sorted(names, key=lambda name: ("config." in name or "split" in name, name))
@@ -1718,6 +1723,28 @@ def wallpaper_activities(apk: Any) -> list[str]:
         return []
 
 
+def _app_label(apk: Any) -> str | None:
+    try:
+        return apk.get_app_name()
+    except Exception:
+        return None
+
+
+def _feature_splits(archive: zipfile.ZipFile, names: list[str]) -> dict[str, Any]:
+    """The bundle's feature splits (manifest attribute isFeatureSplit), parsed, by split name."""
+    ns = "{http://schemas.android.com/apk/res/android}"
+    found: dict[str, Any] = {}
+    for name in names:
+        try:
+            split = APK(archive.read(name), raw=True, skip_analysis=False)   # True leaves the manifest unread
+            manifest = split.get_android_manifest_xml()
+            if str(manifest.get(ns + "isFeatureSplit")).lower() == "true":
+                found[manifest.get("split") or name] = split
+        except Exception:
+            continue
+    return found
+
+
 def apk_metadata(path: Path) -> dict[str, Any]:
     quiet_androguard()
     base = {
@@ -1730,6 +1757,7 @@ def apk_metadata(path: Path) -> dict[str, Any]:
         return {**base, "package": path.stem, "manifest_available": False}
     try:
         container: dict[str, Any] = {}
+        feature_splits: dict[str, Any] = {}
         if path.suffix.lower() == ".apk":
             apk = APK(str(path), skip_analysis=False)
         else:
@@ -1742,10 +1770,12 @@ def apk_metadata(path: Path) -> dict[str, Any]:
                 if not inner_names:
                     raise ValueError("bundle contains no APK files")
                 apk = APK(archive.read(inner_names[0]), raw=True, skip_analysis=False)
+                feature_splits = _feature_splits(archive, inner_names[1:])
                 container = {
                     "container_format": path.suffix.lower().lstrip("."),
                     "split_apks": inner_names,
                     "split_count": len(inner_names),
+                    "feature_splits": sorted(feature_splits),
                     "container_manifest": {
                         key: xmanifest.get(key)
                         for key in ("xapk_version", "package_name", "version_code", "version_name", "split_configs")
@@ -1762,26 +1792,32 @@ def apk_metadata(path: Path) -> dict[str, Any]:
         files = apk.get_files() or []
         native_entries = [name for name in files if name.startswith("lib/") and name.endswith(".so")]
         abis = sorted({name.split("/", 2)[1] for name in native_entries if name.count("/") >= 2})
+        # Components a feature split declares are the app's, as the package manager merges them:
+        # Chrome's and Brave's launcher and 54 more activities are in their "chrome" split.
+        parts = [apk, *feature_splits.values()]
+        activity_names = sorted({name for part in parts for name in (part.get_activities() or [])})
         return {
             **base,
             **container,
             "manifest_available": True,
             "package": apk.get_package(),
-            "app_name": apk.get_app_name(),
+            # The label alone, when androguard cannot read the resource table (newer encodings): five
+            # apps lost their whole manifest record, launcher included, to that one failure.
+            "app_name": _app_label(apk),
             "version_code": apk.get_androidversion_code(),
             "version_name": apk.get_androidversion_name(),
             "min_sdk": apk.get_min_sdk_version(),
             "target_sdk": apk.get_target_sdk_version(),
             # A launcher entry may be an <activity-alias>: no class has its name, and what
             # starts is its targetActivity (Organic Maps, Element, Gallery, Fennec).
-            "main_activities": _launch_targets(apk),
+            "main_activities": sorted({target for part in parts for target in _launch_targets(part)}),
             "activity_filter_targets": activity_filter_targets(apk),
             "wallpaper_activities": wallpaper_activities(apk),
-            "activities": len(apk.get_activities() or []),
-            "activity_names": sorted(apk.get_activities() or []),
-            "services": len(apk.get_services() or []),
-            "receivers": len(apk.get_receivers() or []),
-            "providers": len(apk.get_providers() or []),
+            "activities": len(activity_names),
+            "activity_names": activity_names,
+            "services": sum(len(part.get_services() or []) for part in parts),
+            "receivers": sum(len(part.get_receivers() or []) for part in parts),
+            "providers": sum(len(part.get_providers() or []) for part in parts),
             "permissions": sorted(apk.get_permissions() or []),
             "features": sorted(apk.get_features() or []),
             "signing_certificate_sha256": sorted(certificates),
