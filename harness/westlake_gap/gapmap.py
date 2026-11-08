@@ -3378,6 +3378,31 @@ def sandbox_rows(scan: dict[str, Any], policy: dict[str, Any]) -> list[dict[str,
     return rows
 
 
+def process_policy_rows(scan: dict[str, Any], policy: dict[str, Any]) -> list[dict[str, Any]]:
+    """ptrace within the app's own domain. Crash reporters (Crashlytics NDK, APMInsight, Unity, Sentry,
+    xCrash) fork a dumper that attaches to the app when it crashes, and some protections attach at start:
+    FIFA Mobile's watchdog child attaches to the game and, refused, makes the game end itself. Android
+    allows untrusted_app_all self:process ptrace; OH's normal_hap does not (the policy as loaded)."""
+    rule = (policy.get("process") or {}).get("ptrace_self")
+    if not rule or rule["oh"].get("allowed", True):
+        return []
+    users = sorted({elf.get("soname") or Path(elf["name"]).name for elf in ohresolve.target_elfs(scan)
+                    if "ptrace" in set(elf.get("undefined_symbols", []))})
+    if not users:
+        return []
+    return [_row(
+        "sandbox-policy", "policy:ptrace-self",
+        f"ptrace on the app's own processes ({', '.join(users[:4])}" + (" ..." if len(users) > 4 else "") + ")",
+        oh_touchpoint=f"SELinux {policy['oh']['domain']} → itself: process ptrace",
+        verdict="denied", shim_class="C4", effort="OH", confidence=STATIC,
+        provider=f"OH kernel policy denies it; Android allows it ({rule['android']['source_rule']})",
+        provider_source=rule["oh"].get("query"),
+        app_evidence=f"{len(users)} libraries import ptrace",
+        seen_blocking=["fifa mobile (its watchdog child attaches to the game; refused, the game crashes itself)"],
+        shim=rule["fix"],
+    )]
+
+
 # Known SDKs whose behaviour depends on the device rather than on API presence.
 _ENV_SDKS = [
     ("libakamaibmp.so", "Akamai Bot Manager", "device fingerprinting; self-traps (SIGILL) on unexpected environments"),
@@ -4269,7 +4294,7 @@ def build_map(
             + stub_native_rows(scan, stub_native_model(westlake_root.parent / "art-build", westlake_root))
             + runtime_resolved_rows(scan, ndk_cov, bionic_shim_exports(westlake_root),
                                     shim_answered_libraries(westlake_root))
-            + sandbox_rows(scan, policy) + external_rows(facts, scan, refused_libraries(westlake_root)))
+            + sandbox_rows(scan, policy) + process_policy_rows(scan, policy) + external_rows(facts, scan, refused_libraries(westlake_root)))
     # The interposition row's routing first: the libraries it routes meet the Android namespace's
     # libandroid.so too, which android_namespace_rows checks.
     rows += interposition_rows(scan, runtime_index, rows, launcher_namespace_option(manifest_root))
