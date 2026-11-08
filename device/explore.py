@@ -76,6 +76,7 @@ class Board:
     # Android, which the view dump does not show. Dropbox's welcome screen was 9 views, none clickable.
     A11Y_REQUEST = "1000000 1000000"
     A11Y_END = "VT ==== a11y end ===="
+    DUMP_END = "VT ==== end ===="
 
     def __init__(self, hdc: str, serial: str, child: int):
         self.cmd = [hdc, "-t", serial]
@@ -103,6 +104,13 @@ class Board:
         self.send("v")
         time.sleep(1.5)
         text = self.shell(f"tail -c +{start} {self.log} | grep 'VT '", timeout=60)
+        # A dump still being written is waited for, up to 3 s more: Bumble's (a Compose screen over a
+        # playing video) came after the read in every step, and every step saw no view.
+        for _ in range(6):
+            if self.DUMP_END in text:
+                break
+            time.sleep(0.5)
+            text = self.shell(f"tail -c +{start} {self.log} | grep 'VT '", timeout=60)
         # One block per window (root). They come in creation order, not stacking order: Excel's
         # privacy dialog was root[0] under an empty full-screen overlay view, and taking the last
         # root left the explorer blind, tapping a grid onto "Disagree and Exit". The top window is
