@@ -3435,6 +3435,26 @@ def external_rows(facts: dict[str, Any], scan: dict[str, Any], refused: dict[str
                 app_evidence=", ".join(found[:4]), provider=observed, seen_blocking=seen,
                 shim="none: anti-tamper and code protection are observed from outside, not taken apart or bypassed",
             ))
+    counts: dict[str, int] = {}
+    for elf in ohresolve.target_elfs(scan):
+        if elf.get("unreadable_symbols"):
+            name = elf.get("soname") or elf["name"].rsplit("/", 1)[-1]
+            counts[name] = max(counts.get(name, 0), elf["unreadable_symbols"])   # an APK can carry two copies
+    unreadable = sorted(((count, name) for name, count in counts.items()), key=lambda item: (-item[0], item[1]))
+    if unreadable:
+        rows.append(_row(
+            "external-deps", "protect:unreadable-symbols",
+            f"{len(unreadable)} {'library' if len(unreadable) == 1 else 'libraries'} with unreadable symbol tables",
+            oh_touchpoint="none: the library's own packing or encryption, undone by its protector at run time",
+            verdict="unverified", shim_class="CU", effort="verify", confidence=STATIC,
+            app_evidence=", ".join(f"{name} ({count} names)" for count, name in unreadable[:6]),
+            provider="binary junk where the dynamic symbol names belong: an encrypted or packed table, as Bangcle's "
+                     "libsecexe.so and the game shields over libil2cpp.so, libunity.so and libcocos.so ship. What these "
+                     "libraries import can't be read before their protector restores the table, so they are left out "
+                     "of the native-symbol rows",
+            shim="judge them on the board: the loader's and the crash reports' first run show what they need once "
+                 "unpacked; their protection itself is observed, not taken apart",
+        ))
     return rows
 
 

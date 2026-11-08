@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from . import ndk
+from .native import readable_symbol
 
 
 def index_exports(directories: list[Path]) -> tuple[set[str], list[str]]:
@@ -60,6 +61,23 @@ def target_elfs(scan: dict[str, Any]) -> list[dict[str, Any]]:
     elfs = scan["inventory"].get("elfs", [])
     target = scan.get("apk", {}).get("target_abi") or scan["inventory"].get("native_resolution", {}).get("target_abi")
     return [elf for elf in elfs if elf.get("abi", target) == target] if target else list(elfs)
+
+
+def drop_unreadable_symbols(scan: dict[str, Any]) -> dict[str, Any]:
+    """The scan with junk symbol names left out, as the scanner now leaves them out (native.readable_symbol)
+    and counts them per library in unreadable_symbols. Older scans carry them: a protector's encrypted
+    dynamic table (Bangcle's libsecexe.so, a game shield's libil2cpp.so) showed up as libc symbols missing on OH."""
+    for elf in scan.get("inventory", {}).get("elfs", []):
+        dropped = 0
+        for key in ("exported_symbols", "undefined_symbols", "undefined_weak_symbols"):
+            names = elf.get(key) or []
+            kept = [name for name in names if readable_symbol(name)]
+            if len(kept) != len(names):
+                dropped += len(names) - len(kept)
+                elf[key] = kept
+        if dropped:
+            elf["unreadable_symbols"] = (elf.get("unreadable_symbols") or 0) + dropped
+    return scan
 
 
 def packaged_elfs(scan: dict[str, Any]) -> list[dict[str, Any]]:

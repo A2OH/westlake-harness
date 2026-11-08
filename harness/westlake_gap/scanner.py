@@ -32,6 +32,7 @@ from .native import (
     abi_from_archive_name,
     abi_from_machine,
     library_filename,
+    readable_symbol,
     recover_jni_registration_entries,
 )
 from .nativeprov import attribute_unresolved_imports, resolve_native_imports
@@ -755,6 +756,12 @@ def read_elf(
         exports, undefined, undefined_weak = _dynamic_symbols(raw)
         if exports is None:
             exports, undefined, undefined_weak = _dynamic_symbols_from_text(text)
+        # Junk names from an encrypted or packed dynamic table are counted, not kept as symbols.
+        unreadable = sum(1 for name in (*exports, *undefined, *undefined_weak) if not readable_symbol(name))
+        if unreadable:
+            exports = {name for name in exports if readable_symbol(name)}
+            undefined = {name for name in undefined if readable_symbol(name)}
+            undefined_weak = {name for name in undefined_weak if readable_symbol(name)}
         registration_entries, registration_error = recover_jni_registration_entries(raw)
         machine_abi = abi_from_machine(machine)
         record = {
@@ -784,6 +791,7 @@ def read_elf(
             "exported_symbols": sorted(exports),
             "undefined_symbols": sorted(undefined),
             "undefined_weak_symbols": sorted(undefined_weak),
+            "unreadable_symbols": unreadable,
             "runtime_symbol_candidates": runtime_symbol_candidates(
                 raw, set(exports or ()) | set(undefined) | set(undefined_weak)),
             "jni_exports": sorted(name for name in exports if name.startswith("Java_")),
