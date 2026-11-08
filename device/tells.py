@@ -58,6 +58,11 @@ LEGACY = [
     (re.compile(r"\[WESTLAKE-LOADER\] libandroid\.so by handle: (\w+) from the bionic shim"),
      lambda m: ("dlsym:libandroid.so#" + m[1], "shim", "stand-in" if m[1].startswith("ASurface") else "unknown",
                 "looked up by handle; the runtime's libandroid.so lacks it")),
+    # The Mali kernel driver ended the process's GPU context (kbase's job-dispatch termination), and the
+    # driver's own thread aborts next. Every Flutter 3.27/3.29 app drawing with Impeller's Vulkan backend
+    # ended this way in the 1000-app round, before it created a window surface (Sushiro, EPD Green).
+    (re.compile(r"\((mali-[\w-]+)\) BASE: .*\b(base_jd_event_\w+)"),
+     lambda m: ("gpu:mali-context", "failed", "unknown", f"the GPU driver ended the context ({m[2]}, thread {m[1]})")),
     (re.compile(r'\[OHServiceManager\] getService\("([^"]+)"\) → null'),
      lambda m: ("svc:" + m[1], "null", "unknown", "")),
     (re.compile(r"^\[(Adapter\w+?)(?:-stub)?\] (\w+) \(no-op\)$"),

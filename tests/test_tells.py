@@ -211,6 +211,23 @@ class HowAppsEnded(unittest.TestCase):
         self.assertEqual(load[0]["answer"], "failed")
         self.assertIn("__system_property_set", tells.cause_candidate(r, set()))
 
+    def test_the_gpu_driver_ending_the_context_is_the_cause_candidate(self) -> None:
+        r = self.app("hk-flutter", [CHILD.format(pid="16923"),
+                                    "[SOURCE-NATIVE-LOAD] path=/data/local/tmp/asx/lib/arm64-v8a/libflutter.so search=/x",
+                                    "==>[ERROR] (mali-cmar-backe) BASE: In file: ../../vendor/gpu/usr/base/src/"
+                                    "mali_base_kbase.c  line: 361 base_jd_event_term",
+                                    "Could not notify message handler of driver termination.",
+                                    "[WESTLAKE-REAP] child 17024 exited(0)",
+                                    "Fatal signal 6 (SIGABRT), code -6 (SI_TKILL)", "Backtrace:", ""],
+                     [hilog("16923", "DFX_SignalHandler :: signo(6), pid(16923), processName(x), "
+                                     "threadName(mali-cmar-backe).", tid="17016")],
+                     died_at=0.1, screens=0)
+        self.assertEqual(r["end"]["kind"], "crash")
+        gpu = [t for t in r["tells"] if t["contract"] == "gpu:mali-context"]
+        self.assertEqual((gpu[0]["answer"], gpu[0]["detail"]),
+                         ("failed", "the GPU driver ended the context (base_jd_event_term, thread mali-cmar-backe)"))
+        self.assertIn("base_jd_event_term", tells.cause_candidate(r, set()))
+
     def test_libandroid_lookups_by_handle_are_tells(self) -> None:
         r = self.app("hk-browser", [CHILD.format(pid="109"),
                                     "[WESTLAKE-LOADER] libandroid.so by handle: ASharedMemory_create from the bionic shim",
