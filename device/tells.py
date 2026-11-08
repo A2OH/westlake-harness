@@ -75,7 +75,7 @@ PROTECTORS = [(re.compile(r"libpairipcore\.so"), "PairIP"), (re.compile(r"libbai
               (re.compile(r"libsg(?:main|securitybody)"), "Alibaba SecurityGuard"),
               (re.compile(r"libdexprotector"), "DexProtector"), (re.compile(r"libijm"), "ijiami"),
               (re.compile(r"libDexHelper|libsecexe|libSecShell"), "Bangcle"), (re.compile(r"libFairGuard"), "FairGuard"),
-              (re.compile(r"libakamaibap"), "Akamai Bot Manager")]
+              (re.compile(r"libakamaibap"), "Akamai Bot Manager"), (re.compile(r"libnesec"), "NetEase Yidun")]
 # The shim's signal witness (WESTLAKE_SEGV_WITNESS for SIGSEGV; SIGILL, SIGTRAP and SIGBUS always): the
 # library the faulting pc is in, which a silent end has no crash dump to name.
 WITNESS = re.compile(r"\[WESTLAKE-SIGNAL-WITNESS\] .* at (\S+)\+0x[0-9a-f]+ ")
