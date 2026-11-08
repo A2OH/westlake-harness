@@ -87,6 +87,24 @@ class WhatTheExplorerSeesOfCompose(unittest.TestCase):
         board.views()
         self.assertEqual(board.sent, ["v", board_request(), "v"])
 
+    def test_a_dump_written_late_is_waited_for(self) -> None:
+        # Bumble's dumps came after the first read: the explorer saw no view in any step.
+        board = FakeBoard({"v": "VT ==== root[0] ====\n"
+                                'VT Button id=ok rect=[0,0 100x60] c=1 en=1 f=0 ftm=0 itm=1 "OK"\nVT ==== end ====\n'})
+        reads = []
+        shell = board.shell
+
+        def slow(command: str, timeout: int = 30) -> str:
+            if command.startswith("tail -c +"):
+                reads.append(command)
+                if len(reads) < 3:
+                    return ""
+            return shell(command, timeout)
+
+        board.shell = slow
+        self.assertEqual([v.text for v in board.views()], ["OK"])
+        self.assertEqual(len(reads), 3)
+
     def test_a_screen_with_views_to_tap_does_not_ask(self) -> None:
         board = FakeBoard({"v": "VT ==== root[0] ====\n"
                                 'VT Button id=ok rect=[0,0 100x60] c=1 en=1 f=0 ftm=0 itm=1 "OK"\nVT ==== end ====\n'})
