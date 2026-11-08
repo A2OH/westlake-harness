@@ -81,6 +81,18 @@ class HowAppsEnded(unittest.TestCase):
         r = self.app("hk-viva", [CHILD.format(pid="112")], died_at=0.1, screens=3, crash=crash)
         self.assertEqual((r["end"]["kind"], r["end"]["protector"]), ("crash", "Baidu app hardening"))
 
+    def test_bangcle_and_fairguard_are_named(self) -> None:
+        # China Railway, 2026-11-08: Bangcle's libDexHelper.so aborted at start.
+        crash = ["Reason:Signal:SIGABRT(SI_TKILL)@0x0131544600000fdc ", "Fault thread info:", "Tid:4060, Name:main",
+                 "#00 pc 0000000000111344 /system/lib/ld-musl-aarch64.so.1(raise+384)(a9d0)",
+                 "#01 pc 00000000000bd55c /system/lib/ld-musl-aarch64.so.1(abort+20)(a9d0)",
+                 "#02 pc 0000000000070318 /data/local/tmp/asx/lib/arm64-v8a/libDexHelper.so", "Registers:"]
+        r = self.app("hk-rail", [CHILD.format(pid="113")], died_at=0.1, crash=crash)
+        self.assertEqual(r["end"]["protector"], "Bangcle")
+        crash[-2] = "#02 pc 000000000001e1d0 /data/local/tmp/asx/lib/arm64-v8a/libFairGuard.so"
+        r = self.app("hk-game", [CHILD.format(pid="114")], died_at=0.1, crash=crash)
+        self.assertEqual(r["end"]["protector"], "FairGuard")
+
     def test_a_system_exit_names_the_app_frame_that_called_it(self) -> None:
         r = self.app("hk-outlook", [CHILD.format(pid="100"),
                                     '[WESTLAKE-EXIT] the process is exiting (System.exit or the last thread); '
