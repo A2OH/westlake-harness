@@ -155,6 +155,9 @@ def pm_adapter_model(westlake_root: Path) -> dict[str, Any]:
         "semantics": {
             "direct_boot_match_defaults": _evidence(reg, r"MATCH_DIRECT_BOOT_AWARE\s*\|\s*PackageManager\.MATCH_DIRECT_BOOT_UNAWARE|MATCH_DIRECT_BOOT_UNAWARE", registry, westlake_root),
             "split_paths_populated": _evidence(splits.read_text(errors="replace") if splits.exists() else "", r"splitSourceDirs\s*=", splits, westlake_root),
+            # Android's cluster parse reads each split's own manifest after the base, and every component
+            # a split declares takes the split's name (PackageParser.parseSplitApk).
+            "split_manifests_parsed": _evidence(reg, r'getDeclaredMethod\("parseSplitApk"', registry, westlake_root),
             # PackageManager hands providers to ActivityThread sorted by descending initOrder
             # (ComputerEngine.sProviderInitOrderSorter); the bind path must sort them the same way.
             "providers_sorted_by_init_order": _evidence(

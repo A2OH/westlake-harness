@@ -1111,6 +1111,12 @@ class PackageManagerSemantics(unittest.TestCase):
                              "logStub on a guard is not a stub when the method answers otherwise")
             self.assertFalse(model["semantics"]["direct_boot_match_defaults"]["present"],
                              "raw caller flags reach PackageParser.isMatch and filter every component")
+            self.assertFalse(model["semantics"]["split_manifests_parsed"]["present"],
+                             "a registry that parses the base APK alone")
+            _write(pm / "SourcePackageRegistry.java", "class SourcePackageRegistry {\n  void splits() {\n"
+                   "    m = PackageParser.class.getDeclaredMethod(\"parseSplitApk\", Package.class);\n  }\n}")
+            self.assertTrue(pm_adapter_model(root)["semantics"]["split_manifests_parsed"]["present"])
+            _write(pm / "SourcePackageRegistry.java", "class SourcePackageRegistry { /* raw flags */ }")
 
             facts = {"components": [{"kind": "service", "name": "x.ComponentDiscoveryService", "process": None,
                                      "direct_boot_aware": True, "meta_data": {"com.google.firebase.components:x.R": "v"},
@@ -1148,6 +1154,37 @@ class ProviderInitOrder(unittest.TestCase):
         facts = dict(self.FACTS, components=self.FACTS["components"][:1])
         rows = {r["id"] for r in gapmap.package_manager_rows(self.SCAN, facts, self.model(False))}
         self.assertNotIn("pm:provider-init-order", rows)
+
+
+class SplitComponents(unittest.TestCase):
+    """Chrome declares its launcher and 48 more activities in its "chrome" split's manifest."""
+    FACTS = {"components": [], "splits": ["chrome", "config.en", "on_demand"], "processes": []}
+    SCAN = {"inventory": {"platform_method_names": {}},
+            "apk": {"feature_split_components": {
+                "chrome": {"activities": 49, "services": 30, "receivers": 27, "providers": 0},
+                "on_demand": {"activities": 3, "services": 5, "receivers": 0, "providers": 0}}}}
+
+    def model(self, parsed: bool) -> dict:
+        return {"methods": {}, "semantics": {
+            "direct_boot_match_defaults": {"present": True, "source": "s"},
+            "split_paths_populated": {"present": True, "source": "s"},
+            "split_manifests_parsed": {"present": parsed, "source": "r:1" if parsed else None}}}
+
+    def test_split_components_need_the_split_manifests_parsed(self) -> None:
+        rows = {r["id"]: r for r in gapmap.package_manager_rows(self.SCAN, self.FACTS, self.model(False))}
+        row = rows["pm:split-components"]
+        self.assertEqual((row["verdict"], row["effort"]), ("missing", "S"))
+        self.assertEqual(row["item"], "Components declared in feature split manifests (114)")
+        self.assertEqual(row["app_evidence"],
+                         "chrome: 49 activities, 30 services, 27 receivers; on_demand: 3 activities, 5 services")
+        rows = {r["id"]: r for r in gapmap.package_manager_rows(self.SCAN, self.FACTS, self.model(True))}
+        self.assertEqual((rows["pm:split-components"]["verdict"], rows["pm:split-components"]["provider_source"]),
+                         ("supplied", "r:1"))
+
+    def test_no_row_without_split_components(self) -> None:
+        for scan in (dict(self.SCAN, apk={"feature_split_components": {}}), {"inventory": {"platform_method_names": {}}}):
+            rows = {r["id"] for r in gapmap.package_manager_rows(scan, self.FACTS, self.model(False))}
+            self.assertNotIn("pm:split-components", rows)
 
 
 class ProviderAuthority(unittest.TestCase):

@@ -222,6 +222,23 @@ class BundleManifests(unittest.TestCase):
             self.assertEqual(_ordered_inner_apks(archive),
                              ["com.example.app.apk", "config.arm64_v8a.apk", "config.xxhdpi.apk"])
 
+    def test_components_each_feature_split_declares(self) -> None:
+        from westlake_gap.scanner import _split_components
+
+        class Split:
+            def __init__(self, activities=(), services=(), receivers=(), providers=()):
+                self.get_activities = lambda: list(activities)
+                self.get_services = lambda: list(services)
+                self.get_receivers = lambda: list(receivers)
+                self.get_providers = lambda: None   # androguard answers None for none
+
+        found = _split_components({"chrome": Split(["a.Tabbed", "a.Settings"], ["a.Sync"], ["a.Boot"]),
+                                   "on_demand": Split(services=["a.Download"]),
+                                   "assets_only": Split()})
+        self.assertEqual(found, {"chrome": {"activities": 2, "services": 1, "receivers": 1, "providers": 0},
+                                 "on_demand": {"activities": 0, "services": 1, "receivers": 0, "providers": 0}},
+                         "a split that declares nothing is left out")
+
     def test_an_unreadable_label_costs_only_the_label(self) -> None:
         from westlake_gap.scanner import _app_label
 
