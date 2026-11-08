@@ -199,3 +199,39 @@ def _find_android_d8() -> str | None:
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class BundleManifests(unittest.TestCase):
+    """How a bundle's APKs are read: the base first, whatever order the bundle lists them in."""
+
+    def test_the_base_is_read_first_wherever_the_bundle_lists_it(self) -> None:
+        import io
+        import json
+        from westlake_gap.scanner import _ordered_inner_apks
+
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w") as archive:
+            for name in ("config.arm64_v8a.apk", "config.xxhdpi.apk", "com.example.app.apk"):
+                archive.writestr(name, b"")
+            archive.writestr("manifest.json", json.dumps({"split_apks": [
+                {"file": "config.arm64_v8a.apk", "id": "config.arm64_v8a"},
+                {"file": "config.xxhdpi.apk", "id": "config.xxhdpi"},
+                {"file": "com.example.app.apk", "id": "base"},
+            ]}))
+        with zipfile.ZipFile(buffer) as archive:
+            self.assertEqual(_ordered_inner_apks(archive),
+                             ["com.example.app.apk", "config.arm64_v8a.apk", "config.xxhdpi.apk"])
+
+    def test_an_unreadable_label_costs_only_the_label(self) -> None:
+        from westlake_gap.scanner import _app_label
+
+        class Unreadable:
+            def get_app_name(self):
+                raise ValueError("unpack requires a buffer of 2 bytes")
+
+        class Readable:
+            def get_app_name(self):
+                return "Example"
+
+        self.assertIsNone(_app_label(Unreadable()))
+        self.assertEqual(_app_label(Readable()), "Example")
