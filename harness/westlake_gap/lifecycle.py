@@ -92,9 +92,11 @@ _BLOCKERS = (
      "system-services", "{0}"),
     (_HELD_BACK_BLOCKER, "app-framework", "{0}"),
     # r77: 29 of 48 stopped apps matched none of the above although their logs say why.
-    (re.compile(r"ABORT: \S*/hwui/\S*?(\w+)\.cpp ([^\n]{0,70})"),
+    # ABORT as a word: a name that ends in it (Boehm GC's GC_LOOP_ON_ABORT, in a log of the environment
+    # variables an app asked for) is not an abort.
+    (re.compile(r"(?<!\w)ABORT: \S*/hwui/\S*?(\w+)\.cpp ([^\n]{0,70})"),
      "graphics", "hwui {0}: {1}"),
-    (re.compile(r"ABORT: ([^\n/][^\n]{0,79})"),
+    (re.compile(r"(?<!\w)ABORT: ([^\n/][^\n]{0,79})"),
      "native-crash", "abort: {0}"),
     (re.compile(r"java\.lang\.UnsatisfiedLinkError: ([^\n]{0,100})"),
      "native-loading", "{0}"),
