@@ -3015,6 +3015,7 @@ def bionic_loader_model(westlake_root: Path | None, manifest_root: Path | None =
             "android_relr_shim": find("framework/webview-shim/android_relocs.c", "wl_write_loadable_copy("),
             "null_entries_launcher": find("tools/probe_source_app.py", "def init_array_sanitized(", manifest_root),
             "funopen_unbuffered": find("framework/webview-shim/webview_bionic_shim.c", "setvbuf(file, NULL, _IONBF, 0)"),
+            "libgen_bionic": find("framework/webview-shim/webview_bionic_shim.c", "static int westlake_dirname_r("),
             "dt_init_shim": find("framework/webview-shim/webview_bionic_shim.c", "static void westlake_run_dt_inits("),
             "apk_member_redirect": find("framework/webview-shim/webview_bionic_shim.c", 'strstr(filename, ".apk!/lib/")'),
             "open_by_name": find("framework/webview-shim/webview_bionic_shim.c", "westlake_open_lib_by_name("),
@@ -3120,6 +3121,35 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
             app_evidence=f"{len(funopen_users)} APK libraries import funopen",
             seen_blocking=["facebook, instagram, messenger (superpack: could not extract file from archive)"],
             shim="keep funopen FILEs unbuffered on OH, buffering inside the cookie",
+        ))
+    # dirname and basename: Bionic's never write to their argument (an answer in a buffer of the
+    # thread's own); musl's write a NUL into it, so a caller that passes a literal faults and one that
+    # reuses its path finds it cut short. musl has no __gnu_basename, Bionic's name for a GNU basename.
+    def imports(elf: dict[str, Any]) -> set[str]:
+        return {n.split("@")[0] for n in elf.get("undefined_symbols", []) + elf.get("undefined_weak_symbols", [])}
+    libgen_users = sorted({elf.get("soname") or Path(elf["name"]).name for elf in elfs
+                           if imports(elf) & {"dirname", "basename"}})
+    gnu_users = sorted({elf.get("soname") or Path(elf["name"]).name for elf in elfs
+                        if "__gnu_basename" in imports(elf)})
+    if libgen_users or gnu_users:
+        fixed = (loader or {}).get("libgen_bionic")
+        names = libgen_users or gnu_users
+        rows.append(_row(
+            "native-loading", "abi:libgen",
+            f"dirname and basename callers ({', '.join(names[:4])}" + (" ..." if len(names) > 4 else "") + ")",
+            oh_touchpoint="OH musl dirname/basename write a NUL into the path they are given; "
+                          "__gnu_basename is not defined",
+            verdict="supplied" if fixed else "missing", shim_class="C2", effort="verify" if fixed else "XS",
+            confidence=STATIC,
+            provider=("the bionic shim answers Android callers with Bionic's dirname and basename (a buffer of "
+                      "the thread's own, the path untouched) and defines __gnu_basename"
+                      if fixed else "musl's: the caller's path is cut short; __gnu_basename importers do not load"),
+            provider_source=fixed,
+            app_evidence=(f"{len(libgen_users)} APK libraries import dirname or basename"
+                          + (f", {len(gnu_users)} __gnu_basename ({', '.join(gnu_users[:3])})" if gnu_users else "")),
+            seen_blocking=["where winds meet (SEGV_ACCERR: dirname wrote into a string literal)",
+                           "kling ai, nordvpn, vivavideo (__gnu_basename)"],
+            shim="Bionic's libgen for Android callers; __gnu_basename",
         ))
     if not facts["extract_native_libs"] and packaged:
         rows.append(_row(

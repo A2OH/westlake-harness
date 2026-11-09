@@ -868,6 +868,31 @@ class AndroidRelocations(unittest.TestCase):
         self.assertEqual(scanner._android_relocation_tags(text), ["ANDROID_RELR"], "RELA and RELR are OH's own")
 
 
+class Libgen(unittest.TestCase):
+    def rows(self, elfs, loader=None) -> dict:
+        scan = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {"elfs": elfs}}
+        return {r["id"]: r for r in gapmap.native_loading_rows(
+            {"extract_native_libs": True}, scan, {"present": True}, [], loader=loader)}
+
+    def test_callers_listed_and_missing_without_the_shim(self) -> None:
+        elfs = [{"soname": "libreactnative.so", "name": "lib/arm64-v8a/libreactnative.so", "abi": "arm64-v8a",
+                 "undefined_symbols": ["dirname@LIBC", "malloc"]},
+                {"soname": "libkwai-unwind.so", "name": "lib/arm64-v8a/libkwai-unwind.so", "abi": "arm64-v8a",
+                 "undefined_symbols": ["__gnu_basename"]},
+                {"soname": "libplain.so", "name": "lib/arm64-v8a/libplain.so", "abi": "arm64-v8a",
+                 "undefined_symbols": ["malloc"]}]
+        row = self.rows(elfs)["abi:libgen"]
+        self.assertEqual(row["verdict"], "missing")
+        self.assertIn("libreactnative.so", row["item"])
+        self.assertNotIn("libplain.so", row["item"])
+        self.assertIn("1 __gnu_basename (libkwai-unwind.so)", row["app_evidence"])
+        supplied = self.rows(elfs, {"libgen_bionic": "framework/webview-shim/webview_bionic_shim.c:1"})["abi:libgen"]
+        self.assertEqual(supplied["verdict"], "supplied")
+
+    def test_no_row_without_callers(self) -> None:
+        elfs = [{"soname": "libplain.so", "name": "lib/arm64-v8a/libplain.so", "abi": "arm64-v8a",
+                 "undefined_symbols": ["malloc"]}]
+        self.assertNotIn("abi:libgen", self.rows(elfs))
 class LegacyInit(unittest.TestCase):
     ELFS = [{"soname": "libunity.so", "name": "lib/arm64-v8a/libunity.so", "abi": "arm64-v8a",
              "dt_init": {"init_array_entries": 0}},
