@@ -19,7 +19,7 @@ import re
 
 _MAP_LINE = re.compile(r"^([0-9a-f]+)-([0-9a-f]+) (\S+) ([0-9a-f]+) \S+ \d+\s*(.*)$")
 _FATAL = re.compile(r"Fatal signal (\d+) \((\w+)\)")
-_THREAD = re.compile(r'^Thread: \d+ "([^"]*)"', re.M)
+_THREAD = re.compile(r'^Thread: (\d+) "([^"]*)"', re.M)
 _REGISTER = re.compile(r"\b(pc|x30): (0x[0-9a-f]+)")
 
 
@@ -52,7 +52,7 @@ def crash_site(stderr: str, maps_text: str) -> dict | None:
     site = {"signal": fatal[2]}
     thread = _THREAD.search(block)
     if thread:
-        site["thread"] = thread[1]
+        site["thread"], site["tid"] = thread[2], int(thread[1])
     for name, key in (("pc", "pc"), ("x30", "caller")):
         if name in registers:
             placed = place(registers[name], maps)
@@ -477,6 +477,56 @@ def local_service_calls(stderr: str) -> list[str]:
     return seen
 
 
+_ABORT_FRAMES = re.compile(r"\[WESTLAKE-ABORT-FRAMES\] tid=0x[0-9a-f]+([^\n]*)")
+_ABORT_FRAME = re.compile(r" #(0x[0-9a-f]+) (\S+)\+(0x[0-9a-f]+)")
+#: The C and C++ runtime an abort passes through after the code that asked for it: libc++abi's
+#: terminate handler and __cxa_throw (in the app's libc++_shared.so), the shim's abort hook, musl.
+_ABORT_RUNTIME = ("libc++_shared.so", "libc++.so", "libwebview_bionic_shim.so", "ld-musl-aarch64.so.1", "libc.so")
+
+
+def abort_frames(stderr: str) -> list[dict]:
+    """The callers the bionic shim prints when a library sets its abort message, just before it calls
+    abort() ([WESTLAKE-ABORT-FRAMES], westlake #133): the frame-pointer chain up from the shim's
+    hook, each frame placed by library and file offset. The SIGABRT that follows lists no frames.
+    For an uncaught C++ exception the chain climbs through libc++abi's terminate handler and
+    __cxa_throw to the code that threw."""
+    match = _ABORT_FRAMES.search(stderr)
+    if match is None:
+        return []
+    return [{"depth": int(frame[1], 16), "library": frame[2].rsplit("/", 1)[-1], "path": frame[2], "offset": frame[3]}
+            for frame in _ABORT_FRAME.finditer(match[1])]
+
+
+_SIGNAL_FRAMES = re.compile(r"\[WESTLAKE-SIGNAL-FRAMES\] tid=(0x[0-9a-f]+)([^\n]*)")
+#: Code a fault passes through below the caller that handed it bad input: the C library, the C++
+#: runtime, the shim and ART; and the Java code ART runs (oat, odex, vdex and image files).
+RUNTIME_CODE = _ABORT_RUNTIME + ("libart.so",)
+_JAVA_CODE = (".oat", ".odex", ".vdex", ".art")
+
+
+def first_app_frame(frames: list[dict]) -> dict | None:
+    """The first frame outside the runtime and the Java it runs: the native code whose call faulted
+    inside the C library (musl's strlen on a pointer it was handed, its loader on a library it was
+    asked to open)."""
+    return next((frame for frame in frames
+                 if frame["library"] not in RUNTIME_CODE and not frame["library"].endswith(_JAVA_CODE)), None)
+
+
+def abort_origin(frames: list[dict]) -> dict | None:
+    """The code that asked for the abort: the first frame past the abort machinery, which the chain
+    starts with. That machinery is the C and C++ runtime, and also the library of the first frame:
+    a C++ runtime linked into the app's own library (Friday Night Funkin's liblime.so carries
+    libc++abi), or a crash reporter's terminate handler (Bugsnag's, ahead of OH's libc++ and
+    Hermes in Midland's chain). For an uncaught exception this is the caller of the function that
+    threw, or of the noexcept function it escaped. When every frame is in that first library (a
+    protector's own aborts), its first frame is the answer."""
+    if not frames:
+        return None
+    host = frames[0]["library"]
+    past = next((frame for frame in frames if frame["library"] not in _ABORT_RUNTIME and frame["library"] != host), None)
+    return past or next((frame for frame in frames if frame["library"] not in _ABORT_RUNTIME), None)
+
+
 _WITNESS = re.compile(r"\[WESTLAKE-SIGNAL-WITNESS\] signal=(0x[0-9a-f]+) code=(0x[0-9a-f]+) tid=(0x[0-9a-f]+) "
                       r"thread=(.*?) pc=(0x[0-9a-f]+) x30=(0x[0-9a-f]+)")
 
@@ -510,5 +560,9 @@ def signal_witnesses(stderr: str, maps_text: str | None = None) -> list[dict]:
         insn = _WITNESS_INSN.search(rest)
         if insn:
             event["insn"], event["next"] = insn[1], insn[2]
+        frames = _SIGNAL_FRAMES.search(stderr, line_end if line_end >= 0 else len(stderr))
+        if frames and int(frames[1], 16) == event["tid"] and frames.start() - line_end < 4096:
+            event["frames"] = [{"depth": int(f[1], 16), "library": f[2].rsplit("/", 1)[-1], "path": f[2], "offset": f[3]}
+                               for f in _ABORT_FRAME.finditer(frames[2])]
         found.append(event)
     return found

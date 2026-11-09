@@ -150,6 +150,51 @@ class FirstBlocker(unittest.TestCase):
             "[UNCAUGHT] thread='main' java.lang.IllegalStateException: Required value was null.\n"),
             ("app-framework", "uncaught on main: IllegalStateException: Required value was null."))
 
+    def test_a_name_ending_in_abort_is_not_an_abort(self) -> None:
+        """Boehm GC's GC_LOOP_ON_ABORT, in the shim's log of the environment variables an app asked for."""
+        from westlake_gap import lifecycle
+        asked = ("[WESTLAKE-WEBVIEW-BIONIC] getenv GC_LOOP_ON_ABORT: unset, asked by "
+                 "/data/local/tmp/asx/lib/arm64-v8a/libil2cpp.so\n")
+        self.assertEqual(lifecycle.first_blocker(asked), (None, None))
+        self.assertEqual(lifecycle.first_blocker("F libc: ABORT: something went wrong\n"),
+                         ("native-crash", "abort: something went wrong"))
+
+    def test_the_abort_message_is_the_blocker_and_its_frames_say_where(self) -> None:
+        """Friday Night Funkin': libc++abi's uncaught std::invalid_argument on SDLThread. ART's report of
+        the SIGABRT came after it, with no frames; the shim's frames climb past libc++abi."""
+        from westlake_gap import evidence, lifecycle
+        asx = "/data/local/tmp/asx/lib/arm64-v8a/"
+        text = ("kRegJNI loop done\n"
+                "[WESTLAKE-WEBVIEW-BIONIC] abort message: terminating due to uncaught exception of type "
+                "St16invalid_argument\n"
+                "[WESTLAKE-ABORT-FRAMES] tid=0x4886 #0x1 %slibc++_shared.so+0xc5f40 #0x2 %slibc++_shared.so+0xc5e10"
+                " #0x3 %slibc++_shared.so+0xc4f1c #0x4 %slibc++_shared.so+0x8a01c #0x5 %slibvlc.so+0x1005e88"
+                " #0x6 %slibvlc.so+0xf00a10\n" % ((asx,) * 6)
+                + "Fatal signal 6 (SIGABRT), code -6 (SI_TKILL)\nThread: 18554 \"SDLThread\"\n"
+                "Registers:\n    x30: 0x0000007fa6969560\n     sp: 0x0000007ed368a4a0     pc: 0x0000007fa69bd344\n")
+        self.assertEqual(lifecycle.first_blocker(text),
+                         ("native-crash", "abort: terminating due to uncaught exception of type St16invalid_argument"))
+        frames = evidence.abort_frames(text)
+        self.assertEqual([(f["depth"], f["library"]) for f in frames][3:5], [(4, "libc++_shared.so"), (5, "libvlc.so")])
+        self.assertEqual(evidence.abort_origin(frames)["offset"], "0x1005e88")
+        maps = "7fa6800000-7fa6b00000 r-xp 00000000 fd:00 1 /system/lib/ld-musl-aarch64.so.1\n"
+        s = lifecycle.score("fnf", text)
+        lifecycle.add_evidence(s, text, maps)
+        self.assertEqual(s.blocker, "abort: terminating due to uncaught exception of type St16invalid_argument "
+                                    "(from libvlc.so+0x1005e88)")
+        self.assertEqual(len(s.abort_frames), 6)
+        # A terminate handler or a C++ runtime inside an app library starts the chain: the origin is past it.
+        midland = [{"library": n, "offset": o} for n, o in (("libbugsnag-ndk.so", "0xf5fd0"), ("libbugsnag-ndk.so", "0xf5e94"),
+                                                            ("libc++.so", "0xae114"), ("libhermes.so", "0x173450"))]
+        self.assertEqual(evidence.abort_origin(midland)["library"], "libhermes.so")
+        pairip = [{"library": "libpairipcore.so", "offset": o} for o in ("0x1ccc8", "0x2ad2c")]
+        self.assertEqual(evidence.abort_origin(pairip)["offset"], "0x1ccc8")
+        # Without the frames (an older shim), the abort is still placed where its signal landed.
+        bare = text.replace(text[text.index("[WESTLAKE-ABORT-FRAMES]"):text.index("Fatal signal")], "")
+        s = lifecycle.score("fnf", bare)
+        lifecycle.add_evidence(s, bare, maps)
+        self.assertTrue(s.blocker.endswith("St16invalid_argument in ld-musl-aarch64.so.1+0x1bd344"), s.blocker)
+
     def test_an_activity_that_closed_itself_off_screen(self) -> None:
         from westlake_gap import evidence
         resumed = ("10-04 04:24:13.864 1 2 I C00f00/OH_ACCAdapter: activityResumed: OnDrawListener attached, FG "
@@ -193,6 +238,34 @@ class Evidence(unittest.TestCase):
         s = lifecycle.score("app", "kRegJNI loop done\n" + self.CRASH)
         lifecycle.add_evidence(s, "kRegJNI loop done\n" + self.CRASH, self.MAPS)
         self.assertEqual(s.blocker, "SIGSEGV on thread EGLThread in libGLES_mali.z.so+0x34de28")
+
+    def test_a_fault_in_the_runtime_is_named_by_its_caller(self) -> None:
+        """A SIGSEGV in musl's strlen says only that a pointer was bad. The shim's frame walk for the
+        same thread names the game library that passed it; ART and Java frames are passed over."""
+        from westlake_gap import evidence, lifecycle
+        asx = "/data/local/tmp/asx/"
+        witness = ("[WESTLAKE-SIGNAL-WITNESS] signal=0xb code=0x1 tid=0x72a0 thread=GameThread pc=0x7fab8d6c10 "
+                   "x30=0x7fab8d1850 at /system/lib/ld-musl-aarch64.so.1+0x97c10 insn=0xa9400c02 next=0xb200c3e8 "
+                   "from /system/lib/ld-musl-aarch64.so.1+0x92850 x0=0x1\n"
+                   "[WESTLAKE-SIGNAL-FRAMES] tid=0x72a0 #0x1 /system/lib/ld-musl-aarch64.so.1+0x8f3cc"
+                   " #0x2 %slibart.so+0xed49e4 #0x3 %sboot/boot.oat+0x212158 #0x4 %slib/arm64-v8a/libgame.so+0x1234\n"
+                   % (asx, asx, asx))
+        crash = ('Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR) fault addr 0x0\nThread: 29344 "GameThread"\n'
+                 "Registers:\n    x30: 0x0000007fab8d1850\n     sp: 0x0000007e9774ed20     pc: 0x0000007fab8d6c10\n")
+        maps = "7fab83f000-7fab900000 r-xp 00000000 fd:00 1 /system/lib/ld-musl-aarch64.so.1\n"
+        text = "kRegJNI loop done\n" + witness + crash
+        event = evidence.signal_witnesses(text, maps)[0]
+        self.assertEqual([f["library"] for f in event["frames"]],
+                         ["ld-musl-aarch64.so.1", "libart.so", "boot.oat", "libgame.so"])
+        self.assertEqual(evidence.first_app_frame(event["frames"])["offset"], "0x1234")
+        s = lifecycle.score("game", text)
+        lifecycle.add_evidence(s, text, maps)
+        self.assertEqual(s.blocker, "SIGSEGV on thread GameThread in ld-musl-aarch64.so.1+0x97c10 (from libgame.so+0x1234)")
+        # Nothing but the runtime and Java under it (a library load from Java): the blocker stays as it was.
+        java_only = text.replace(" #0x4 %slib/arm64-v8a/libgame.so+0x1234" % asx, "")
+        s = lifecycle.score("game", java_only)
+        lifecycle.add_evidence(s, java_only, maps)
+        self.assertEqual(s.blocker, "SIGSEGV on thread GameThread in ld-musl-aarch64.so.1+0x97c10")
 
     def test_stalled_main_thread_becomes_the_blocker(self) -> None:
         from westlake_gap import lifecycle

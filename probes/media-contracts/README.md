@@ -20,6 +20,7 @@ gap-map row it measures:
 | `media:decode-file` | the clip's video decoded through MediaExtractor and MediaCodec (no row of its own) |
 | `media:decode-hw` | the 320x240 clip decoded the same way, which reaches a hardware decoder where the device has one (no row of its own) |
 | `media:decode-surface` | the 320x240 decode rendered into a Surface over a SurfaceTexture, which must report a frame (no row of its own) |
+| `media:decode-audio` | the clip's AAC track decoded to PCM through ByteBuffers by the decoder `MediaCodecList.findDecoderForFormat` names for it, as ExoPlayer finds its decoders; reports the decoder, the PCM bytes and the output format's rate and channels (no row of its own; it runs last) |
 
 `probes/run_suite.py` records each line as a result of its own, and `gap-map --probe-results` applies
 it to the row it names. Build with `./build.sh`; the APK is pinned in the launcher's
