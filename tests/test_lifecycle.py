@@ -150,6 +150,15 @@ class FirstBlocker(unittest.TestCase):
             "[UNCAUGHT] thread='main' java.lang.IllegalStateException: Required value was null.\n"),
             ("app-framework", "uncaught on main: IllegalStateException: Required value was null."))
 
+    def test_a_name_ending_in_abort_is_not_an_abort(self) -> None:
+        """Boehm GC's GC_LOOP_ON_ABORT, in the shim's log of the environment variables an app asked for."""
+        from westlake_gap import lifecycle
+        asked = ("[WESTLAKE-WEBVIEW-BIONIC] getenv GC_LOOP_ON_ABORT: unset, asked by "
+                 "/data/local/tmp/asx/lib/arm64-v8a/libil2cpp.so\n")
+        self.assertEqual(lifecycle.first_blocker(asked), (None, None))
+        self.assertEqual(lifecycle.first_blocker("F libc: ABORT: something went wrong\n"),
+                         ("native-crash", "abort: something went wrong"))
+
     def test_an_activity_that_closed_itself_off_screen(self) -> None:
         from westlake_gap import evidence
         resumed = ("10-04 04:24:13.864 1 2 I C00f00/OH_ACCAdapter: activityResumed: OnDrawListener attached, FG "
