@@ -434,8 +434,13 @@ def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str 
             where = ""
             if witness and "library" in witness["pc"]:
                 where = " at %s+%s" % (witness["pc"]["library"], witness["pc"]["offset"])
-                if "library" in witness["caller"]:
-                    where += " (from %s+%s)" % (witness["caller"]["library"], witness["caller"]["offset"])
+                caller = witness["caller"] if "library" in witness["caller"] else None
+                # A fault inside the runtime (musl's strlen) is named by who called into it.
+                if witness["pc"]["library"] in evidence.RUNTIME_CODE \
+                        and (caller is None or caller["library"] in evidence.RUNTIME_CODE):
+                    caller = evidence.first_app_frame(witness.get("frames", [])) or caller
+                if caller:
+                    where += " (from %s+%s)" % (caller["library"], caller["offset"])
             s.blocker = "%s on %s%s (hilog only, no crash dump)%s" % (
                 signal["signal"], "thread " + (witness or signal).get("thread", "") if (witness or signal).get("thread")
                 else "tid %d" % signal["tid"], where,
@@ -454,6 +459,13 @@ def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str 
         if s.crash_site and s.blocker_category == "native-crash" and not (aborted and frames):
             pc = s.crash_site["pc"]
             s.blocker += " in %s+%s" % (pc["library"], pc["offset"])
+            # In the runtime, the shim's frame walk for the same thread names the caller.
+            if pc["library"] in evidence.RUNTIME_CODE and "tid" in s.crash_site:
+                walked = next((w for w in evidence.signal_witnesses(text, maps_text)
+                               if w["tid"] == s.crash_site["tid"] and w.get("frames")), None)
+                origin = evidence.first_app_frame(walked["frames"]) if walked else None
+                if origin:
+                    s.blocker += " (from %s+%s)" % (origin["library"], origin["offset"])
     thread = evidence.main_thread(text)
     if thread:
         s.main_thread = thread

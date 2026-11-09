@@ -239,6 +239,34 @@ class Evidence(unittest.TestCase):
         lifecycle.add_evidence(s, "kRegJNI loop done\n" + self.CRASH, self.MAPS)
         self.assertEqual(s.blocker, "SIGSEGV on thread EGLThread in libGLES_mali.z.so+0x34de28")
 
+    def test_a_fault_in_the_runtime_is_named_by_its_caller(self) -> None:
+        """A SIGSEGV in musl's strlen says only that a pointer was bad. The shim's frame walk for the
+        same thread names the game library that passed it; ART and Java frames are passed over."""
+        from westlake_gap import evidence, lifecycle
+        asx = "/data/local/tmp/asx/"
+        witness = ("[WESTLAKE-SIGNAL-WITNESS] signal=0xb code=0x1 tid=0x72a0 thread=GameThread pc=0x7fab8d6c10 "
+                   "x30=0x7fab8d1850 at /system/lib/ld-musl-aarch64.so.1+0x97c10 insn=0xa9400c02 next=0xb200c3e8 "
+                   "from /system/lib/ld-musl-aarch64.so.1+0x92850 x0=0x1\n"
+                   "[WESTLAKE-SIGNAL-FRAMES] tid=0x72a0 #0x1 /system/lib/ld-musl-aarch64.so.1+0x8f3cc"
+                   " #0x2 %slibart.so+0xed49e4 #0x3 %sboot/boot.oat+0x212158 #0x4 %slib/arm64-v8a/libgame.so+0x1234\n"
+                   % (asx, asx, asx))
+        crash = ('Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR) fault addr 0x0\nThread: 29344 "GameThread"\n'
+                 "Registers:\n    x30: 0x0000007fab8d1850\n     sp: 0x0000007e9774ed20     pc: 0x0000007fab8d6c10\n")
+        maps = "7fab83f000-7fab900000 r-xp 00000000 fd:00 1 /system/lib/ld-musl-aarch64.so.1\n"
+        text = "kRegJNI loop done\n" + witness + crash
+        event = evidence.signal_witnesses(text, maps)[0]
+        self.assertEqual([f["library"] for f in event["frames"]],
+                         ["ld-musl-aarch64.so.1", "libart.so", "boot.oat", "libgame.so"])
+        self.assertEqual(evidence.first_app_frame(event["frames"])["offset"], "0x1234")
+        s = lifecycle.score("game", text)
+        lifecycle.add_evidence(s, text, maps)
+        self.assertEqual(s.blocker, "SIGSEGV on thread GameThread in ld-musl-aarch64.so.1+0x97c10 (from libgame.so+0x1234)")
+        # Nothing but the runtime and Java under it (a library load from Java): the blocker stays as it was.
+        java_only = text.replace(" #0x4 %slib/arm64-v8a/libgame.so+0x1234" % asx, "")
+        s = lifecycle.score("game", java_only)
+        lifecycle.add_evidence(s, java_only, maps)
+        self.assertEqual(s.blocker, "SIGSEGV on thread GameThread in ld-musl-aarch64.so.1+0x97c10")
+
     def test_stalled_main_thread_becomes_the_blocker(self) -> None:
         from westlake_gap import lifecycle
         dump = ('DALVIK THREADS (2):\n"Thread-2" prio=5 tid=1 Blocked\n  | state=S schedstat=( 1 2 3 )\n'

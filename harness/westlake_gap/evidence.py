@@ -19,7 +19,7 @@ import re
 
 _MAP_LINE = re.compile(r"^([0-9a-f]+)-([0-9a-f]+) (\S+) ([0-9a-f]+) \S+ \d+\s*(.*)$")
 _FATAL = re.compile(r"Fatal signal (\d+) \((\w+)\)")
-_THREAD = re.compile(r'^Thread: \d+ "([^"]*)"', re.M)
+_THREAD = re.compile(r'^Thread: (\d+) "([^"]*)"', re.M)
 _REGISTER = re.compile(r"\b(pc|x30): (0x[0-9a-f]+)")
 
 
@@ -52,7 +52,7 @@ def crash_site(stderr: str, maps_text: str) -> dict | None:
     site = {"signal": fatal[2]}
     thread = _THREAD.search(block)
     if thread:
-        site["thread"] = thread[1]
+        site["thread"], site["tid"] = thread[2], int(thread[1])
     for name, key in (("pc", "pc"), ("x30", "caller")):
         if name in registers:
             placed = place(registers[name], maps)
@@ -497,6 +497,21 @@ def abort_frames(stderr: str) -> list[dict]:
             for frame in _ABORT_FRAME.finditer(match[1])]
 
 
+_SIGNAL_FRAMES = re.compile(r"\[WESTLAKE-SIGNAL-FRAMES\] tid=(0x[0-9a-f]+)([^\n]*)")
+#: Code a fault passes through below the caller that handed it bad input: the C library, the C++
+#: runtime, the shim and ART; and the Java code ART runs (oat, odex, vdex and image files).
+RUNTIME_CODE = _ABORT_RUNTIME + ("libart.so",)
+_JAVA_CODE = (".oat", ".odex", ".vdex", ".art")
+
+
+def first_app_frame(frames: list[dict]) -> dict | None:
+    """The first frame outside the runtime and the Java it runs: the native code whose call faulted
+    inside the C library (musl's strlen on a pointer it was handed, its loader on a library it was
+    asked to open)."""
+    return next((frame for frame in frames
+                 if frame["library"] not in RUNTIME_CODE and not frame["library"].endswith(_JAVA_CODE)), None)
+
+
 def abort_origin(frames: list[dict]) -> dict | None:
     """The code that asked for the abort: the first frame past the abort machinery, which the chain
     starts with. That machinery is the C and C++ runtime, and also the library of the first frame:
@@ -545,5 +560,9 @@ def signal_witnesses(stderr: str, maps_text: str | None = None) -> list[dict]:
         insn = _WITNESS_INSN.search(rest)
         if insn:
             event["insn"], event["next"] = insn[1], insn[2]
+        frames = _SIGNAL_FRAMES.search(stderr, line_end if line_end >= 0 else len(stderr))
+        if frames and int(frames[1], 16) == event["tid"] and frames.start() - line_end < 4096:
+            event["frames"] = [{"depth": int(f[1], 16), "library": f[2].rsplit("/", 1)[-1], "path": f[2], "offset": f[3]}
+                               for f in _ABORT_FRAME.finditer(frames[2])]
         found.append(event)
     return found
