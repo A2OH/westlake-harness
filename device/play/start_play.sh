@@ -12,7 +12,14 @@ python3 $DEVICE/prep_apps.py com.google.android.gms | tail -1
 kill_children
 PROBE_TIMEOUT=${PROBE_TIMEOUT:-300} EXTRA="--android-native-net-app-libraries $(override_args) --guest-build $V/out/$WL_PLAY_GUESTS --input-cache --runtime-env WESTLAKE_PLAY_SERVICES_SERVE=$PLAY_SOCKET --runtime-env WESTLAKE_NO_ACTIVITY=1" $DEVICE/launch.sh $app $tag-$app
 C=$(grep -o '"child": [0-9]*' $WL_SC/logs/$tag-$app.log | head -1 | grep -o '[0-9]*')
-[ -z "$C" ] && { echo "no child" | tee $OUT; exit 1; }
+if [ -z "$C" ]; then
+  # A refusal by the launcher itself is the same on every try: an app the lock file does not pin
+  # (a tools copy whose app-inputs.lock.json lacks the corpus entries), an output that exists. Say
+  # so; shared_round.sh then stops instead of having run_all.sh retry it for hours.
+  bad=$(grep -m1 -E "ValueError: Unknown application: |error: Use a new output" $WL_SC/logs/$tag-$app.log 2>/dev/null)
+  if [ -n "$bad" ]; then echo "launcher refused: $bad" | tee $OUT; touch $PLAY_DIR/config-error; exit 1; fi
+  echo "no child" | tee $OUT; exit 1
+fi
 echo $$ > $PLAY_DIR/play.pid; echo "child $C started $(date)" > $OUT
 start=$(date +%s); gone=0
 while [ $(( $(date +%s) - start )) -lt $(( ${PLAY_HOURS:-24} * 3600 )) ]; do

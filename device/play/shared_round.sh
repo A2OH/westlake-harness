@@ -4,13 +4,18 @@
 # then runs the round over LIST (default all of apps.csv). Stops at once if Play services dies, so a
 # bad run is never counted: exit 2 and $PLAY_DIR/dead. A watcher records, per app, how many FCM
 # registrations its token file holds (counts only: no token leaves the board) in play-tokens.log.
+# Exit 3: the launcher refused to start Play services for a reason a retry cannot change.
 . "$(dirname "$0")/../config.sh"
 PLAY_DIR=${PLAY_DIR:-$IN/play-runs}; PLAY_SOCKET=${PLAY_SOCKET:-wl.play.m1}; mkdir -p $PLAY_DIR
-A=$1; O=$PLAY_DIR/round.log; : > $O; rm -f $PLAY_DIR/dead
+A=$1; O=$PLAY_DIR/round.log; : > $O; rm -f $PLAY_DIR/dead $PLAY_DIR/config-error
 if [ -z "${RESUME:-}" ]; then
   rm -f $PLAY_DIR/play.log; nohup setsid $DEVICE/play/start_play.sh > $PLAY_DIR/start_play.out 2>&1 < /dev/null &
   for i in $(seq 1 60); do grep -q started $PLAY_DIR/play.log 2>/dev/null && break; sleep 5; done
-  grep -q started $PLAY_DIR/play.log 2>/dev/null || { echo "ABORT: Play services did not start: $(tail -1 $PLAY_DIR/play.log 2>/dev/null)" >> $O; exit 1; }
+  if ! grep -q started $PLAY_DIR/play.log 2>/dev/null; then
+    echo "ABORT: Play services did not start: $(tail -1 $PLAY_DIR/play.log 2>/dev/null)" >> $O
+    [ -e $PLAY_DIR/config-error ] && exit 3   # the launcher refused: no retry will differ
+    exit 1
+  fi
   sleep 240
 fi
 C=$(grep -o 'child [0-9]*' $PLAY_DIR/play.log | head -1 | grep -o '[0-9]*'); echo "play child $C" >> $O
