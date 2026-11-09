@@ -10,6 +10,7 @@ import android.media.AudioTrack;
 import android.media.Image;
 import android.media.ImageReader;
 import android.media.MediaCodec;
+import android.media.MediaCodecList;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.media.MediaMetadataRetriever;
@@ -40,8 +41,9 @@ import java.util.concurrent.TimeUnit;
  *
  * then "[WL-CONTRACT] done". The checks run off the main thread, as apps decode, and each is
  * independent: one failing does not stop the next. media:decode-file, a whole decode through
- * MediaExtractor and MediaCodec, and media:decode-surface, the same decode rendered into a Surface
- * (as every video player does), have no row of their own.
+ * MediaExtractor and MediaCodec, media:decode-surface, the same decode rendered into a Surface
+ * (as every video player does), and media:decode-audio, the AAC track decoded to PCM by the
+ * decoder MediaCodecList finds for it (as ExoPlayer finds its decoders), have no row of their own.
  */
 public class MainActivity extends Activity {
     private static final String TAG = "WL-CONTRACT";
@@ -162,7 +164,79 @@ public class MainActivity extends Activity {
                 track.release();
             }
         });
+        // Last, so that a decoder that takes the process down cannot cost the other rows a result.
+        check("media:decode-audio", () -> decodeAudio(path));
         line("done", "", "");
+    }
+
+    /**
+     * Decodes the clip's audio track (a 1 kHz AAC tone) to PCM through MediaCodec's input and
+     * output ByteBuffers, with the decoder MediaCodecList names for the track's format: the way
+     * ExoPlayer finds a decoder, which no app gets by asking for the type alone.
+     */
+    private static String decodeAudio(String path) throws Throwable {
+        MediaExtractor extractor = new MediaExtractor();
+        MediaCodec codec = null;
+        try {
+            extractor.setDataSource(path);
+            MediaFormat format = null;
+            for (int i = 0; i < extractor.getTrackCount(); i++) {
+                MediaFormat f = extractor.getTrackFormat(i);
+                if (f.getString(MediaFormat.KEY_MIME).startsWith("audio/")) {
+                    extractor.selectTrack(i);
+                    format = f;
+                    break;
+                }
+            }
+            if (format == null) throw new IllegalStateException("no audio track");
+            String name = new MediaCodecList(MediaCodecList.REGULAR_CODECS).findDecoderForFormat(format);
+            if (name == null) throw new IllegalStateException("MediaCodecList has no decoder for " + format);
+            codec = MediaCodec.createByCodecName(name);
+            codec.configure(format, null, null, 0);
+            codec.start();
+            MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
+            long pcm = 0;
+            boolean inputDone = false;
+            long deadline = System.currentTimeMillis() + 8000;
+            while (System.currentTimeMillis() < deadline) {
+                if (!inputDone) {
+                    int in = codec.dequeueInputBuffer(10000);
+                    if (in >= 0) {
+                        int size = extractor.readSampleData(codec.getInputBuffer(in), 0);
+                        if (size < 0) {
+                            codec.queueInputBuffer(in, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+                            inputDone = true;
+                        } else {
+                            codec.queueInputBuffer(in, 0, size, extractor.getSampleTime(), 0);
+                            extractor.advance();
+                        }
+                    }
+                }
+                int out = codec.dequeueOutputBuffer(info, 10000);
+                if (out >= 0) {
+                    ByteBuffer buffer = codec.getOutputBuffer(out);
+                    if (buffer != null && info.size > 0) {
+                        buffer.limit(info.offset + info.size);
+                        buffer.position(info.offset);
+                        pcm += buffer.remaining();
+                    }
+                    codec.releaseOutputBuffer(out, false);
+                    if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) break;
+                }
+            }
+            MediaFormat output = codec.getOutputFormat();
+            codec.stop();
+            if (pcm == 0) throw new IllegalStateException("decoder " + name + " produced no PCM in 8 s");
+            if (!output.containsKey(MediaFormat.KEY_SAMPLE_RATE) || !output.containsKey(MediaFormat.KEY_CHANNEL_COUNT)) {
+                throw new IllegalStateException("decoder " + name + " decoded " + pcm + " bytes but its output format is "
+                        + output);
+            }
+            return "decoder=" + name + " pcm=" + pcm + " " + output.getInteger(MediaFormat.KEY_SAMPLE_RATE) + " Hz "
+                    + output.getInteger(MediaFormat.KEY_CHANNEL_COUNT) + " ch";
+        } finally {
+            if (codec != null) codec.release();
+            extractor.release();
+        }
     }
 
     /**
