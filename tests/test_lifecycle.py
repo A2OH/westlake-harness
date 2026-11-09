@@ -183,6 +183,12 @@ class FirstBlocker(unittest.TestCase):
         self.assertEqual(s.blocker, "abort: terminating due to uncaught exception of type St16invalid_argument "
                                     "(from libvlc.so+0x1005e88)")
         self.assertEqual(len(s.abort_frames), 6)
+        # A terminate handler or a C++ runtime inside an app library starts the chain: the origin is past it.
+        midland = [{"library": n, "offset": o} for n, o in (("libbugsnag-ndk.so", "0xf5fd0"), ("libbugsnag-ndk.so", "0xf5e94"),
+                                                            ("libc++.so", "0xae114"), ("libhermes.so", "0x173450"))]
+        self.assertEqual(evidence.abort_origin(midland)["library"], "libhermes.so")
+        pairip = [{"library": "libpairipcore.so", "offset": o} for o in ("0x1ccc8", "0x2ad2c")]
+        self.assertEqual(evidence.abort_origin(pairip)["offset"], "0x1ccc8")
         # Without the frames (an older shim), the abort is still placed where its signal landed.
         bare = text.replace(text[text.index("[WESTLAKE-ABORT-FRAMES]"):text.index("Fatal signal")], "")
         s = lifecycle.score("fnf", bare)

@@ -498,9 +498,18 @@ def abort_frames(stderr: str) -> list[dict]:
 
 
 def abort_origin(frames: list[dict]) -> dict | None:
-    """The first frame outside the C and C++ runtime: the code that asked for the abort, or the
-    caller of the runtime function that threw (std::stoi's caller for its invalid_argument)."""
-    return next((frame for frame in frames if frame["library"] not in _ABORT_RUNTIME), None)
+    """The code that asked for the abort: the first frame past the abort machinery, which the chain
+    starts with. That machinery is the C and C++ runtime, and also the library of the first frame:
+    a C++ runtime linked into the app's own library (Friday Night Funkin's liblime.so carries
+    libc++abi), or a crash reporter's terminate handler (Bugsnag's, ahead of OH's libc++ and
+    Hermes in Midland's chain). For an uncaught exception this is the caller of the function that
+    threw, or of the noexcept function it escaped. When every frame is in that first library (a
+    protector's own aborts), its first frame is the answer."""
+    if not frames:
+        return None
+    host = frames[0]["library"]
+    past = next((frame for frame in frames if frame["library"] not in _ABORT_RUNTIME and frame["library"] != host), None)
+    return past or next((frame for frame in frames if frame["library"] not in _ABORT_RUNTIME), None)
 
 
 _WITNESS = re.compile(r"\[WESTLAKE-SIGNAL-WITNESS\] signal=(0x[0-9a-f]+) code=(0x[0-9a-f]+) tid=(0x[0-9a-f]+) "
