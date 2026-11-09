@@ -868,6 +868,54 @@ class AndroidRelocations(unittest.TestCase):
         self.assertEqual(scanner._android_relocation_tags(text), ["ANDROID_RELR"], "RELA and RELR are OH's own")
 
 
+class LegacyInit(unittest.TestCase):
+    ELFS = [{"soname": "libunity.so", "name": "lib/arm64-v8a/libunity.so", "abi": "arm64-v8a",
+             "dt_init": {"init_array_entries": 0}},
+            {"soname": "libnms.so", "name": "lib/arm64-v8a/libnms.so", "abi": "arm64-v8a",
+             "dt_init": {"init_array_entries": 1}},
+            {"soname": "libplain.so", "name": "lib/arm64-v8a/libplain.so", "abi": "arm64-v8a"}]
+
+    def rows(self, loader=None, elfs=None) -> dict:
+        scan = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {"elfs": elfs or self.ELFS}}
+        return {r["id"]: r for r in gapmap.native_loading_rows(
+            {"extract_native_libs": True}, scan, {"present": True}, [], loader=loader)}
+
+    def test_only_dt_init_is_missing_without_the_shim(self) -> None:
+        row = self.rows()["load:dt-init"]
+        self.assertEqual(row["verdict"], "missing")
+        self.assertIn("libunity.so", row["item"])
+        self.assertNotIn("libnms.so", row["item"])
+
+    def test_only_dt_init_is_supplied_by_the_shim(self) -> None:
+        row = self.rows({"dt_init_shim": "framework/webview-shim/webview_bionic_shim.c:1"})["load:dt-init"]
+        self.assertEqual(row["verdict"], "supplied")
+
+    def test_dt_init_beside_an_init_array_stays_open(self) -> None:
+        rows = self.rows({"dt_init_shim": "framework/webview-shim/webview_bionic_shim.c:1"})
+        self.assertEqual(rows["load:dt-init-order"]["verdict"], "missing")
+        self.assertIn("libnms.so", rows["load:dt-init-order"]["item"])
+        self.assertNotIn("libunity.so", rows["load:dt-init-order"]["item"])
+
+    def test_no_row_without_dt_init(self) -> None:
+        rows = self.rows(elfs=[self.ELFS[2]])
+        self.assertNotIn("load:dt-init", rows)
+        self.assertNotIn("load:dt-init-order", rows)
+
+    def test_scanner_reads_dt_init_and_the_array_size(self) -> None:
+        from harness.westlake_gap import scanner
+        packed = (" 0x0000000000000001 (NEEDED)             Shared library: [libu8t.so]\n"
+                  " 0x000000000000000c (INIT)               0x48bcf8\n"
+                  " 0x000000000000001a (FINI_ARRAY)         0x13a41a8\n")
+        both = (" 0x000000000000000c (INIT)               0x15640\n"
+                " 0x0000000000000019 (INIT_ARRAY)         0x2d588\n"
+                " 0x000000000000001b (INIT_ARRAYSZ)       8 (bytes)\n")
+        plain = (" 0x0000000000000019 (INIT_ARRAY)         0x2d588\n"
+                 " 0x000000000000001b (INIT_ARRAYSZ)       16 (bytes)\n")
+        self.assertEqual(scanner.legacy_init(packed), {"dt_init": {"init_array_entries": 0}})
+        self.assertEqual(scanner.legacy_init(both), {"dt_init": {"init_array_entries": 1}})
+        self.assertEqual(scanner.legacy_init(plain), {})
+
+
 class LaunchRemedies(unittest.TestCase):
     def test_network_abi_row_and_launch_args(self) -> None:
         scan = {"apk": {"target_abi": "arm64-v8a"}, "inventory": {"elfs": [

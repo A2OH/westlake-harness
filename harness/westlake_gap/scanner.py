@@ -351,6 +351,17 @@ def _android_relocation_tags(readelf_text: str) -> list[str]:
     return sorted(name for tag, name in ANDROID_RELOCATION_TAGS.items() if tag in found)
 
 
+def legacy_init(readelf_text: str) -> dict[str, Any]:
+    """DT_INIT, which bionic's linker calls before a library's .init_array and OH's musl never calls
+    (built for arm64 with NO_LEGACY_INITFINI), with the number of .init_array entries beside it: for
+    a library whose only start-up is DT_INIT (packed games' libunity.so, whose DT_INIT runs the
+    unpacker) the library never starts at all."""
+    if not re.search(r"^\s*0x0*c\s+\(INIT\)", readelf_text, re.M):
+        return {}
+    size = re.search(r"\(INIT_ARRAYSZ\)\s+(\d+)", readelf_text)
+    return {"dt_init": {"init_array_entries": int(size[1]) // 8 if size else 0}}
+
+
 _VERSIONED_IMPORT = re.compile(r"\sUND\s+([A-Za-z_][\w.$]*)@([A-Za-z_]\w*)")
 
 
@@ -826,6 +837,7 @@ def read_elf(
             "build_id": build_id,
             "needed": needed,
             "android_relocation_tags": _android_relocation_tags(text),
+            **legacy_init(text),
             "null_array_entries": null_array_entries(raw),
             **irelative_relocations(raw),
             **packed_init_entries(raw),
