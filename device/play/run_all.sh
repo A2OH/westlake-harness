@@ -3,7 +3,8 @@
 # when Play services dies or the board drops, and round.sh skips apps already captured, so each try
 # resumes. Before each try: stop leftover starters here and app processes on the board, and restart
 # the local hdc server if the board does not answer. Up to TRIES (40) tries; none after a launcher
-# refusal (shared_round.sh exit 3), which every try would repeat. Log: $PLAY_DIR/run_all.log.
+# refusal (shared_round.sh exit 3), which every try would repeat. Log: $PLAY_DIR/run_all.log, with the
+# board's uptime, load, available memory and free swap at each try.
 . "$(dirname "$0")/../config.sh"
 PLAY_DIR=${PLAY_DIR:-$IN/play-runs}; mkdir -p $PLAY_DIR; TAG=$1; L=$PLAY_DIR/run_all.log
 for try in $(seq 1 ${TRIES:-40}); do
@@ -11,6 +12,9 @@ for try in $(seq 1 ${TRIES:-40}); do
   hdc_heal || echo "$(date +%H:%M) hdc server restarted" >> $L
   kill_children
   echo "$(date +%H:%M) try $try" >> $L
+  # The board's state, to read the round's results against. After three days up, its swap was full and its WiFi
+  # chip in an interrupt storm (load ~12 from threads in D state) while apps that had drawn stopped drawing.
+  echo "$(date +%H:%M) board: $(timeout 20 $WHDC -t $T shell 'cat /proc/uptime /proc/loadavg; grep -E "^(MemAvailable|SwapFree):" /proc/meminfo' 2>/dev/null | tr -d '\r' | tr -s ' \n' ' ' | cut -c1-160)" >> $L
   $DEVICE/play/shared_round.sh $TAG > $PLAY_DIR/shared_round.out 2>&1; rc=$?
   cat $PLAY_DIR/round.log >> $L
   echo "$(date +%H:%M) rc=$rc captured=$(ls $IN/logs/$TAG/*.stderr 2>/dev/null | wc -l)" >> $L
