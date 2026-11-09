@@ -228,6 +228,37 @@ class HowAppsEnded(unittest.TestCase):
                          ("failed", "the GPU driver ended the context (base_jd_event_term, thread mali-cmar-backe)"))
         self.assertIn("base_jd_event_term", tells.cause_candidate(r, set()))
 
+    def test_keep_screen_on_is_a_tell_and_never_the_cause(self) -> None:
+        """YouTube Music asked for FLAG_KEEP_SCREEN_ON; the window policy's native did not load."""
+        r = self.app("hk-music", [CHILD.format(pid="5903"),
+                                  "[OH_WINDOW_POLICY] update failed java.lang.ExceptionInInitializerError",
+                                  "[OH_WINDOW_POLICY] session=4237 keepScreenOn=true rc=0",
+                                  "[UNCAUGHT] thread='main' java.lang.IllegalStateException: x"])
+        answers = [(t["contract"], t["answer"], t["fidelity"], t["detail"]) for t in r["tells"]
+                   if t["contract"] == "window:keep-screen-on"]
+        self.assertEqual(answers, [
+            ("window:keep-screen-on", "not applied", "stand-in", "java.lang.ExceptionInInitializerError"),
+            ("window:keep-screen-on", "applied", "android", "keepScreenOn=true rc=0")])
+        self.assertNotIn("keep-screen-on", tells.cause_candidate(r, set()))
+
+    def test_surfaceview_order_is_a_tell(self) -> None:
+        r = self.app("hk-casino", [CHILD.format(pid="12682"),
+                                   "[OH_WSA] SurfaceView 'SurfaceView[a/a.Boot]' 1200x1920 at 0,0 -> own sessionId=4244",
+                                   "[OH_WSA] SurfaceView 'SurfaceView[a/a.Boot]' 1280x1920 at -40,0 -> own "
+                                   "sessionId=4245, below its window (z-level -2, rc=0)",
+                                   "[OH_WSA] SurfaceView 'SurfaceView[a/a.Boot]' 1200x1920 at 0,0 -> own "
+                                   "sessionId=4246, on top",
+                                   "[OH_WSA] SurfaceView 'SurfaceView[a/a.Boot]' 1200x1920 at 0,0 -> own "
+                                   "sessionId=4247, below its window (z-level -1, rc=-2)"],
+                     died_at=None)
+        answers = [(t["answer"], t["fidelity"], t["detail"]) for t in r["tells"]
+                   if t["contract"] == "window:surfaceview-order"]
+        self.assertEqual(answers, [
+            ("on top", "unknown", "above its activity's window (a build before z-levels)"),
+            ("below", "android", "z-level -2"),
+            ("on top", "android", "the app put it on top (setZOrderOnTop), or the runtime was told to"),
+            ("failed", "unknown", "below its window (z-level -1, rc=-2)")])
+
     def test_libandroid_lookups_by_handle_are_tells(self) -> None:
         r = self.app("hk-browser", [CHILD.format(pid="109"),
                                     "[WESTLAKE-LOADER] libandroid.so by handle: ASharedMemory_create from the bionic shim",
