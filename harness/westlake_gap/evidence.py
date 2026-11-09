@@ -477,6 +477,32 @@ def local_service_calls(stderr: str) -> list[str]:
     return seen
 
 
+_ABORT_FRAMES = re.compile(r"\[WESTLAKE-ABORT-FRAMES\] tid=0x[0-9a-f]+([^\n]*)")
+_ABORT_FRAME = re.compile(r" #(0x[0-9a-f]+) (\S+)\+(0x[0-9a-f]+)")
+#: The C and C++ runtime an abort passes through after the code that asked for it: libc++abi's
+#: terminate handler and __cxa_throw (in the app's libc++_shared.so), the shim's abort hook, musl.
+_ABORT_RUNTIME = ("libc++_shared.so", "libc++.so", "libwebview_bionic_shim.so", "ld-musl-aarch64.so.1", "libc.so")
+
+
+def abort_frames(stderr: str) -> list[dict]:
+    """The callers the bionic shim prints when a library sets its abort message, just before it calls
+    abort() ([WESTLAKE-ABORT-FRAMES], westlake #133): the frame-pointer chain up from the shim's
+    hook, each frame placed by library and file offset. The SIGABRT that follows lists no frames.
+    For an uncaught C++ exception the chain climbs through libc++abi's terminate handler and
+    __cxa_throw to the code that threw."""
+    match = _ABORT_FRAMES.search(stderr)
+    if match is None:
+        return []
+    return [{"depth": int(frame[1], 16), "library": frame[2].rsplit("/", 1)[-1], "path": frame[2], "offset": frame[3]}
+            for frame in _ABORT_FRAME.finditer(match[1])]
+
+
+def abort_origin(frames: list[dict]) -> dict | None:
+    """The first frame outside the C and C++ runtime: the code that asked for the abort, or the
+    caller of the runtime function that threw (std::stoi's caller for its invalid_argument)."""
+    return next((frame for frame in frames if frame["library"] not in _ABORT_RUNTIME), None)
+
+
 _WITNESS = re.compile(r"\[WESTLAKE-SIGNAL-WITNESS\] signal=(0x[0-9a-f]+) code=(0x[0-9a-f]+) tid=(0x[0-9a-f]+) "
                       r"thread=(.*?) pc=(0x[0-9a-f]+) x30=(0x[0-9a-f]+)")
 

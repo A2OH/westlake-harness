@@ -159,6 +159,36 @@ class FirstBlocker(unittest.TestCase):
         self.assertEqual(lifecycle.first_blocker("F libc: ABORT: something went wrong\n"),
                          ("native-crash", "abort: something went wrong"))
 
+    def test_the_abort_message_is_the_blocker_and_its_frames_say_where(self) -> None:
+        """Friday Night Funkin': libc++abi's uncaught std::invalid_argument on SDLThread. ART's report of
+        the SIGABRT came after it, with no frames; the shim's frames climb past libc++abi."""
+        from westlake_gap import evidence, lifecycle
+        asx = "/data/local/tmp/asx/lib/arm64-v8a/"
+        text = ("kRegJNI loop done\n"
+                "[WESTLAKE-WEBVIEW-BIONIC] abort message: terminating due to uncaught exception of type "
+                "St16invalid_argument\n"
+                "[WESTLAKE-ABORT-FRAMES] tid=0x4886 #0x1 %slibc++_shared.so+0xc5f40 #0x2 %slibc++_shared.so+0xc5e10"
+                " #0x3 %slibc++_shared.so+0xc4f1c #0x4 %slibc++_shared.so+0x8a01c #0x5 %slibvlc.so+0x1005e88"
+                " #0x6 %slibvlc.so+0xf00a10\n" % ((asx,) * 6)
+                + "Fatal signal 6 (SIGABRT), code -6 (SI_TKILL)\nThread: 18554 \"SDLThread\"\n"
+                "Registers:\n    x30: 0x0000007fa6969560\n     sp: 0x0000007ed368a4a0     pc: 0x0000007fa69bd344\n")
+        self.assertEqual(lifecycle.first_blocker(text),
+                         ("native-crash", "abort: terminating due to uncaught exception of type St16invalid_argument"))
+        frames = evidence.abort_frames(text)
+        self.assertEqual([(f["depth"], f["library"]) for f in frames][3:5], [(4, "libc++_shared.so"), (5, "libvlc.so")])
+        self.assertEqual(evidence.abort_origin(frames)["offset"], "0x1005e88")
+        maps = "7fa6800000-7fa6b00000 r-xp 00000000 fd:00 1 /system/lib/ld-musl-aarch64.so.1\n"
+        s = lifecycle.score("fnf", text)
+        lifecycle.add_evidence(s, text, maps)
+        self.assertEqual(s.blocker, "abort: terminating due to uncaught exception of type St16invalid_argument "
+                                    "(from libvlc.so+0x1005e88)")
+        self.assertEqual(len(s.abort_frames), 6)
+        # Without the frames (an older shim), the abort is still placed where its signal landed.
+        bare = text.replace(text[text.index("[WESTLAKE-ABORT-FRAMES]"):text.index("Fatal signal")], "")
+        s = lifecycle.score("fnf", bare)
+        lifecycle.add_evidence(s, bare, maps)
+        self.assertTrue(s.blocker.endswith("St16invalid_argument in ld-musl-aarch64.so.1+0x1bd344"), s.blocker)
+
     def test_an_activity_that_closed_itself_off_screen(self) -> None:
         from westlake_gap import evidence
         resumed = ("10-04 04:24:13.864 1 2 I C00f00/OH_ACCAdapter: activityResumed: OnDrawListener attached, FG "

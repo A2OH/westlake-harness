@@ -94,6 +94,11 @@ _BLOCKERS = (
     # r77: 29 of 48 stopped apps matched none of the above although their logs say why.
     # ABORT as a word: a name that ends in it (Boehm GC's GC_LOOP_ON_ABORT, in a log of the environment
     # variables an app asked for) is not an abort.
+    # The message a library set just before it called abort(), as the bionic shim prints it: libc++abi's
+    # uncaught exception, "Pure virtual function called!", a -fno-exceptions length_error. It comes
+    # before the SIGABRT's report, whose frames are empty, and says what failed.
+    (re.compile(r"\[WESTLAKE-WEBVIEW-BIONIC\] abort message: ([^\n]{1,90})"),
+     "native-crash", "abort: {0}"),
     (re.compile(r"(?<!\w)ABORT: \S*/hwui/\S*?(\w+)\.cpp ([^\n]{0,70})"),
      "graphics", "hwui {0}: {1}"),
     (re.compile(r"(?<!\w)ABORT: ([^\n/][^\n]{0,79})"),
@@ -153,6 +158,7 @@ class Score:
     dlsym_failures: list | None = None
     service_refusals: list | None = None
     service_failures: list | None = None
+    abort_frames: list | None = None
 
     def as_dict(self) -> dict:
         return {k: v for k, v in self.__dict__.items()
@@ -434,9 +440,18 @@ def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str 
                 signal["signal"], "thread " + (witness or signal).get("thread", "") if (witness or signal).get("thread")
                 else "tid %d" % signal["tid"], where,
                 ", right after: " + signal["after"] if "after" in signal else "")
+    aborted = s.blocker_category == "native-crash" and (s.blocker or "").startswith("abort: ")
+    frames = evidence.abort_frames(text)
+    if frames:
+        s.abort_frames = frames
+        origin = evidence.abort_origin(frames)
+        # Where the abort was asked for, past libc++abi and the shim: musl's raise, where the
+        # SIGABRT itself lands, is the same for every abort.
+        if aborted and origin:
+            s.blocker += " (from %s+%s)" % (origin["library"], origin["offset"])
     if maps_text and s.fatal:
         s.crash_site = evidence.crash_site(text, maps_text)
-        if s.crash_site and s.blocker_category == "native-crash":
+        if s.crash_site and s.blocker_category == "native-crash" and not (aborted and frames):
             pc = s.crash_site["pc"]
             s.blocker += " in %s+%s" % (pc["library"], pc["offset"])
     thread = evidence.main_thread(text)
