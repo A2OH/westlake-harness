@@ -3015,6 +3015,7 @@ def bionic_loader_model(westlake_root: Path | None, manifest_root: Path | None =
             "android_relr_shim": find("framework/webview-shim/android_relocs.c", "wl_write_loadable_copy("),
             "null_entries_launcher": find("tools/probe_source_app.py", "def init_array_sanitized(", manifest_root),
             "funopen_unbuffered": find("framework/webview-shim/webview_bionic_shim.c", "setvbuf(file, NULL, _IONBF, 0)"),
+            "dt_init_shim": find("framework/webview-shim/webview_bionic_shim.c", "static void westlake_run_dt_inits("),
             "apk_member_redirect": find("framework/webview-shim/webview_bionic_shim.c", 'strstr(filename, ".apk!/lib/")'),
             "open_by_name": find("framework/webview-shim/webview_bionic_shim.c", "westlake_open_lib_by_name("),
             "written_shares_packaged": find("framework/webview-shim/webview_bionic_shim.c",
@@ -3328,6 +3329,43 @@ def native_loading_rows(facts: dict[str, Any], scan: dict[str, Any], launcher_ex
                            "unrelocated INIT_ARRAY entry)"],
             shim="renumber DT_ANDROID_RELR/RELRSZ/RELRENT to DT_RELR/RELRSZ/RELRENT (same encoding); "
                  "OH's musl applies DT_RELR and DT_ANDROID_RELA itself",
+        ))
+    # DT_INIT (scanner.legacy_init): OH's musl never calls it. A library whose only start-up it is never
+    # starts; one with an .init_array too runs that alone, in an order bionic never uses.
+    only_init = sorted({elf.get("soname") or Path(elf["name"]).name for elf in elfs
+                        if (elf.get("dt_init") or {}).get("init_array_entries") == 0})
+    init_and_array = sorted({elf.get("soname") or Path(elf["name"]).name for elf in elfs
+                             if (elf.get("dt_init") or {}).get("init_array_entries", 0) > 0})
+    if only_init:
+        shim_fix = loader.get("dt_init_shim")
+        rows.append(_row(
+            "native-loading", "load:dt-init",
+            f"Libraries whose only start-up is DT_INIT ({', '.join(only_init[:4])}"
+            + (" ..." if len(only_init) > 4 else "") + ")",
+            oh_touchpoint="OH musl dynamic linker: built for arm64 with NO_LEGACY_INITFINI, never calls DT_INIT",
+            verdict="supplied" if shim_fix else "missing", shim_class="C3", effort="verify" if shim_fix else "S",
+            confidence=STATIC,
+            provider=("the bionic shim calls DT_INIT after the load, before the handle is returned"
+                      if shim_fix else "none: the library's start-up never runs"),
+            provider_source=shim_fix,
+            app_evidence=f"{len(only_init)} APK libraries have DT_INIT and an empty .init_array",
+            seen_blocking=["stella sora, survivor.io, zen word (SIGILL in libunity.so: its DT_INIT runs "
+                           "libu8t.so's unpacker; the code stayed encrypted)",
+                           "garena aov (libBqCCS.so, the same shape over libanort.so)"],
+            shim="call DT_INIT after the load and before returning the handle: for a library with no "
+                 ".init_array that is bionic's order",
+        ))
+    if init_and_array:
+        rows.append(_row(
+            "native-loading", "load:dt-init-order",
+            f"Libraries with DT_INIT and an .init_array ({', '.join(init_and_array[:4])}"
+            + (" ..." if len(init_and_array) > 4 else "") + ")",
+            oh_touchpoint="OH musl dynamic linker: runs the .init_array, never DT_INIT (bionic: DT_INIT first)",
+            verdict="missing", shim_class="C3", effort="M", confidence=STATIC,
+            provider="none: DT_INIT never runs; calling it after the .init_array would be an order bionic never uses",
+            app_evidence=f"{len(init_and_array)} APK libraries have both",
+            shim="stage the library with its .init_array tags renamed so musl runs neither, then call DT_INIT "
+                 "and the array in bionic's order after the load",
         ))
     # R_AARCH64_IRELATIVE (scanner.irelative_relocations): OH's musl does not apply IFUNC relocations
     # and fails the load, where bionic calls each resolver and writes its answer.
