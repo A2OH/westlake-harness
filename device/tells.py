@@ -47,6 +47,26 @@ from pathlib import Path
 
 ENDS = ["java-exit", "self-signal", "uncaught", "explorer-back", "crash", "dump-timeout", "exit-no-stack", "silent"]
 
+
+def surfaceview_order(placed):
+    """Where a SurfaceView's own OH window sits, from the adapter's line (westlake #117 adds `placed`).
+    Android stacks a SurfaceView below its window unless the app asks for it on top."""
+    contract = "window:surfaceview-order"
+    if placed is None:
+        return (contract, "on top", "unknown", "above its activity's window (a build before z-levels)")
+    if placed == "on top":
+        return (contract, "on top", "android", "the app put it on top (setZOrderOnTop), or the runtime was told to")
+    if placed == "hidden":
+        return (contract, "hidden", "stand-in", "never shown (WESTLAKE_SURFACEVIEW_ORDER=hidden)")
+    m = re.match(r"below its window \(z-level (-?\d+), rc=(-?\d+)\)", placed)
+    if m and m[2] == "0":
+        return (contract, "below", "android", f"z-level {m[1]}")
+    return (contract, "failed", "unknown", placed)
+
+
+# Contracts the runtime answers and goes on from whatever the answer: never why an app ended.
+NEVER_FATAL = {"window:keep-screen-on", "window:surfaceview-order"}
+
 # Markers the runtime writes today, read as tells: (pattern, contract, answer, fidelity, detail).
 LEGACY = [
     (re.compile(r"\[WESTLAKE-LOADER\] (\S+) by name failed \((.*)\); opening the path"),
@@ -63,6 +83,18 @@ LEGACY = [
     # ended this way in the 1000-app round, before it created a window surface (Sushiro, EPD Green).
     (re.compile(r"\((mali-[\w-]+)\) BASE: .*\b(base_jd_event_\w+)"),
      lambda m: ("gpu:mali-context", "failed", "unknown", f"the GPU driver ended the context ({m[2]}, thread {m[1]})")),
+    # FLAG_KEEP_SCREEN_ON, set on the owning OH session (OhWindowPolicy). Until westlake #115 its native was
+    # loaded from a library the launcher never named: every app that asked for the flag (233 of 960 in the
+    # 1000-app round) logged the failure, and the screen timed out as usual.
+    (re.compile(r"\[OH_WINDOW_POLICY\] update failed (.*)"),
+     lambda m: ("window:keep-screen-on", "not applied", "stand-in", m[1].strip())),
+    (re.compile(r"\[OH_WINDOW_POLICY\] session=\d+ keepScreenOn=(true|false) rc=(-?\d+)"),
+     lambda m: ("window:keep-screen-on", "applied" if m[2] == "0" else "failed",
+                "android" if m[2] == "0" else "unknown", f"keepScreenOn={m[1]} rc={m[2]}")),
+    # A SurfaceView's own OH window: before westlake #117 always above its activity's, and 38 apps of the
+    # 1000-app round that stopped with one showed a pure black screen over their views.
+    (re.compile(r"\[OH_WSA\] SurfaceView '[^']*' \S+ at \S+ -> own sessionId=\d+(?:, (.*))?$"),
+     lambda m: surfaceview_order(m[1])),
     (re.compile(r'\[OHServiceManager\] getService\("([^"]+)"\) → null'),
      lambda m: ("svc:" + m[1], "null", "unknown", "")),
     (re.compile(r"^\[(Adapter\w+?)(?:-stub)?\] (\w+) \(no-op\)$"),
@@ -298,7 +330,7 @@ def cause_candidate(record: dict, wide: set) -> str:
     """The last failure or stand-in the app's stderr told before it ended, among tells not nearly every app gives."""
     at = record["end"]["line"]
     before = [t for t in record["tells"] if t["line"] >= 0 and (at < 0 or t["line"] <= at)
-              and (t["contract"], t["answer"]) not in wide
+              and (t["contract"], t["answer"]) not in wide and t["contract"] not in NEVER_FATAL
               and (t["answer"] in ("failed", "another", "refused") or t["fidelity"] == "stand-in")]
     if not before:
         return ""
