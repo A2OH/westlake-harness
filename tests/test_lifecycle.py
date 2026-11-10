@@ -587,5 +587,75 @@ class Evidence(unittest.TestCase):
         self.assertEqual(witness["caller"]["library"], "libstartup.so")
 
 
+    def test_a_witness_that_is_the_logs_last_word_names_the_death(self) -> None:
+        """1688 (com.alibaba.wireless): the log ends on the shim's witness of a SIGSEGV in musl's
+        loader, then its frame walk; no crash dump, no hilog report. NBA 2K: its audio thread's
+        witness, then other threads' lines, then that thread's frame walk as the last line."""
+        from westlake_gap import evidence, lifecycle
+        asx = "/data/local/tmp/asx/"
+        witness = ("[WESTLAKE-SIGNAL-WITNESS] signal=0xb code=0x1 tid=0x4cad thread=launcher-0 pc=0x7fa8758c10 "
+                   "x30=0x7fa8753850 at /system/lib/ld-musl-aarch64.so.1+0x97c10 insn=0xa9400c02 next=0xb200c3e8 "
+                   "from /system/lib/ld-musl-aarch64.so.1+0x92850 x0=0x768\n")
+        frames = ("[WESTLAKE-SIGNAL-FRAMES] tid=0x4cad #0x1 /system/lib/ld-musl-aarch64.so.1+0x8f3cc"
+                  " #0x2 %swebview-t-lib/libwebview_bionic_shim.so+0x14ad4 #0x3 %slibart.so+0xed49e4\n" % (asx, asx))
+        text = "kRegJNI loop done\n[SOURCE-NATIVE-LOAD] path=%slib/arm64-v8a/libx.so\n" % asx + witness + frames
+        self.assertEqual(evidence.final_witness(text)["thread"], "launcher-0")
+        s = lifecycle.score("wireless", text)
+        lifecycle.add_evidence(s, text, None)
+        self.assertEqual((s.blocker_category, s.blocker),
+                         ("native-crash", "SIGSEGV on thread launcher-0 at ld-musl-aarch64.so.1+0x97c10 "
+                                          "(from ld-musl-aarch64.so.1+0x92850) (the log's last words: no crash dump, "
+                                          "no hilog report)"))
+        # Other threads' lines between the witness and its frame walk: still the last word.
+        between = "".join("[WL-VULKAN] vkGetInstanceProcAddr(vkFn%d): no function\n" % i for i in range(20))
+        late = "kRegJNI loop done\n" + witness.replace("launcher-0", "VCAUDIO3") + between + frames
+        self.assertEqual(evidence.final_witness(late)["thread"], "VCAUDIO3")
+        # Survived: the app went on logging (a library probing the CPU catches its own SIGILL).
+        survived = text + "".join("[WESTLAKE-VSYNC] dispatchVsync #%d\n" % i for i in range(4))
+        self.assertIsNone(evidence.final_witness(survived))
+        s = lifecycle.score("wireless", survived)
+        lifecycle.add_evidence(s, survived, None)
+        self.assertNotEqual(s.blocker_category, "native-crash")
+        # A frame walk for another thread does not extend the witness.
+        other = text.replace("tid=0x4cad #0x1", "tid=0x1234 #0x1") + "a\nb\nc\n"
+        self.assertIsNone(evidence.final_witness(other))
+
+    def test_a_process_that_killed_itself(self) -> None:
+        """Didi: its privacy module's timer called Process.killProcess(myPid()); Westlake logs the
+        Java stack before the SIGKILL, and nothing else reports the death."""
+        from westlake_gap import evidence, lifecycle
+        stack = ("java.lang.Throwable: [WESTLAKE-KILL] the process sends itself signal 9\n"
+                 "\tat android.os.Process.sendSignal(Native Method)\n"
+                 "[WESTLAKE-WEBVIEW-BIONIC] property ro.product.model=X\n"
+                 "\tat android.os.Process.killProcess(Unknown Source:2)\n"
+                 "\tat com.didi.sdk.privacy.e.run(src:5)\n"
+                 "\tat java.util.TimerThread.mainLoop(Unknown Source:116)\n")
+        self.assertEqual(evidence.self_kill(stack),
+                         {"frames": ["android.os.Process.sendSignal(Native Method)",
+                                     "android.os.Process.killProcess(Unknown Source:2)",
+                                     "com.didi.sdk.privacy.e.run(src:5)",
+                                     "java.util.TimerThread.mainLoop(Unknown Source:116)"],
+                          "first_app_frame": "com.didi.sdk.privacy.e.run(src:5)"})
+        text = "kRegJNI loop done\n" + stack
+        s = lifecycle.score("didi", text)
+        lifecycle.add_evidence(s, text, None)
+        self.assertEqual((s.blocker_category, s.blocker),
+                         ("self-kill", "it killed its own process from com.didi.sdk.privacy.e.run(src:5)"))
+        # SIGQUIT to itself asks for a thread dump; the process lives on.
+        self.assertIsNone(evidence.self_kill(stack.replace("signal 9", "signal 3")))
+        # An activity that finished itself first is the better account (Unity kills in onDestroy).
+        hilog = ("10-05 08:30:20.900   942   942 I C00f00/AppSpawnX: Child process started, pid=1\n"
+                 "10-05 08:30:22.380   942   967 I C00f00/OH_ACCAdapter: activityResumed: OnDrawListener attached "
+                 "(token=android.os.Binder@1)\n"
+                 "10-05 08:30:22.500   942   967 I C00f00/OH_ACCAdapter: finishActivity: no OH ability; "
+                 "local destroy scheduled for android.os.Binder@1\n"
+                 "10-05 08:30:23.191   942   967 W C00f00/OH_ACCAdapter: activityResumed (first-frame timeout): no OH token mapping\n")
+        s = lifecycle.score("pokemon", text)
+        s.screen = "host"
+        lifecycle.add_evidence(s, text, None, None, hilog)
+        self.assertEqual(s.blocker_category, "self-finish")
+        self.assertIsNotNone(s.self_kill)
+
+
 if __name__ == "__main__":
     unittest.main()

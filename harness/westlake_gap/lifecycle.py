@@ -153,6 +153,8 @@ class Score:
     startup: dict | None = None
     root_cause: dict | None = None
     self_finish: dict | None = None
+    final_witness: dict | None = None
+    self_kill: dict | None = None
     buffer_requests: dict | None = None
     null_services: list | None = None
     dlsym_failures: list | None = None
@@ -344,6 +346,22 @@ def screen_state(image: Path, hosts: list[Path] | None = None) -> str | None:
     return _against(pixels, page)
 
 
+def _witness_where(witness: dict) -> str:
+    """Where a witnessed signal was raised: " at lib+offset", and " (from lib+offset)" for its caller.
+    A fault inside the runtime (musl's strlen) is named by who called into it."""
+    from . import evidence
+    if "library" not in witness["pc"]:
+        return ""
+    where = " at %s+%s" % (witness["pc"]["library"], witness["pc"]["offset"])
+    caller = witness["caller"] if "library" in witness["caller"] else None
+    if witness["pc"]["library"] in evidence.RUNTIME_CODE \
+            and (caller is None or caller["library"] in evidence.RUNTIME_CODE):
+        caller = evidence.first_app_frame(witness.get("frames", [])) or caller
+    if caller:
+        where += " (from %s+%s)" % (caller["library"], caller["offset"])
+    return where
+
+
 def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str | None = None,
                  hilog_text: str | None = None) -> None:
     """What a run left beside the log (see evidence.py): OH's crash dump of the process, a native
@@ -431,20 +449,20 @@ def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str 
             signal["witness"] = witness
         if s.blocker is None or s.blocker_category == "stall" or not s.blocking:
             s.blocker_category, s.blocking = "native-crash", True
-            where = ""
-            if witness and "library" in witness["pc"]:
-                where = " at %s+%s" % (witness["pc"]["library"], witness["pc"]["offset"])
-                caller = witness["caller"] if "library" in witness["caller"] else None
-                # A fault inside the runtime (musl's strlen) is named by who called into it.
-                if witness["pc"]["library"] in evidence.RUNTIME_CODE \
-                        and (caller is None or caller["library"] in evidence.RUNTIME_CODE):
-                    caller = evidence.first_app_frame(witness.get("frames", [])) or caller
-                if caller:
-                    where += " (from %s+%s)" % (caller["library"], caller["offset"])
             s.blocker = "%s on %s%s (hilog only, no crash dump)%s" % (
                 signal["signal"], "thread " + (witness or signal).get("thread", "") if (witness or signal).get("thread")
-                else "tid %d" % signal["tid"], where,
+                else "tid %d" % signal["tid"], _witness_where(witness) if witness else "",
                 ", right after: " + signal["after"] if "after" in signal else "")
+    # Neither a dump nor hilog reports the death, and the log ends on the shim's witness of a signal:
+    # that signal ended it (1688 in musl's loader while it loaded a library; NBA 2K's audio thread).
+    final = evidence.final_witness(text, maps_text) if not dump and not signal else None
+    if final:
+        s.final_witness = final
+        s.fatal = max(s.fatal, 1)
+        if s.blocker is None or s.blocker_category in ("stall", "no-frame") or not s.blocking:
+            s.blocker_category, s.blocking = "native-crash", True
+            s.blocker = "%s on thread %s%s (the log's last words: no crash dump, no hilog report)" % (
+                final["signal"], final["thread"], _witness_where(final))
     aborted = s.blocker_category == "native-crash" and (s.blocker or "").startswith("abort: ")
     frames = evidence.abort_frames(text)
     if frames:
@@ -485,6 +503,15 @@ def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str 
             s.blocker_category, s.blocking = "self-finish", True
             s.blocker = "its last activity finished itself%s after resuming, and nothing replaced it" % (
                 " %d ms" % finished["after_ms"] if "after_ms" in finished else "")
+    # It sent itself SIGKILL: no dump, no exit status, no finish the window manager saw. Who asked is
+    # what to explain (an activity finishing itself first is the better account, and comes first).
+    killed = evidence.self_kill(text)
+    if killed:
+        s.self_kill = killed
+        if s.blocker is None or s.blocker_category in ("stall", "no-frame") or not s.blocking:
+            s.blocker_category, s.blocking = "self-kill", True
+            s.blocker = "it killed its own process" + (
+                " from %s" % killed["first_app_frame"] if killed["first_app_frame"] else "")
 
 
 def score_paths(paths: list[Path]) -> list[Score]:
