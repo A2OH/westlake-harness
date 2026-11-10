@@ -12,6 +12,9 @@ in the rounds before it (the corpus's round-<tag>.log files, ordered by the time
     new          no earlier round ran it
 
     python3 -m westlake_gap.history <corpus-dir> <tag> [--window 4] [--json out.json]
+
+With --rates (no tag), each app's pass rate instead: the share of its last <window> rounds in which it
+drew, the figure to report where one latest verdict hides flakiness.
 """
 from __future__ import annotations
 
@@ -93,13 +96,45 @@ def compare(corpus: Path, tag: str, window: int = 4) -> list[dict]:
     return out
 
 
+def pass_rates(corpus: Path, window: int = 4) -> list[dict]:
+    """Each app's last <window> verdicts (newest first) and how many of them drew, apps that drew in
+    some but not all first."""
+    latest: dict[str, list[tuple[str, str]]] = {}
+    for tag, _, verdicts in reversed(rounds(corpus)):
+        for app, (rung, _) in verdicts.items():
+            seen = latest.setdefault(app, [])
+            if len(seen) < window:
+                seen.append((tag, rung))
+    out = [{"app": app, "runs": len(seen), "drew": sum(r == "drawing" for _, r in seen),
+            "rounds": [t + ":" + ("drew" if r == "drawing" else r) for t, r in seen]}
+           for app, seen in latest.items()]
+    return sorted(out, key=lambda r: (not (0 < r["drew"] < r["runs"]), r["drew"] / r["runs"], r["app"]))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("corpus", type=Path)
-    parser.add_argument("tag")
+    parser.add_argument("tag", nargs="?")
+    parser.add_argument("--rates", action="store_true", help="pass rate per app over its last rounds")
     parser.add_argument("--window", type=int, default=4, help="earlier rounds to compare with (default 4)")
     parser.add_argument("--json", type=Path)
     args = parser.parse_args()
+    if args.rates:
+        rates = pass_rates(args.corpus, args.window)
+        if args.json:
+            args.json.write_text(json.dumps(rates, indent=1))
+        buckets: dict[str, int] = {}
+        for row in rates:
+            key = "always" if row["drew"] == row["runs"] else ("never" if row["drew"] == 0 else "sometimes")
+            buckets[key] = buckets.get(key, 0) + 1
+        print("%d apps over their last %d rounds: %s" % (len(rates), args.window,
+                                                         ", ".join("%d %s" % (n, k) for k, n in sorted(buckets.items()))))
+        for row in rates:
+            if 0 < row["drew"] < row["runs"]:
+                print("%-45s %d/%d drew  (%s)" % (row["app"][:45], row["drew"], row["runs"], " ".join(row["rounds"])))
+        return
+    if not args.tag:
+        parser.error("a round tag, or --rates")
     rows = compare(args.corpus, args.tag, args.window)
     if args.json:
         args.json.write_text(json.dumps(rows, indent=1))

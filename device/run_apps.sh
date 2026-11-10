@@ -6,6 +6,8 @@
 # An app key hk-<package> takes its launch remedies (launch_args) from
 # $WL_CORPUS/${MAP:-map}/<package>/gap-map.json. RUN_EXTRA: launcher arguments for every app.
 # WAIT (30): the most seconds to wait; EARLY=1 (default) moves on sooner, see below.
+# WAITS=<file>: lines "<app> <seconds>" (app as hk-<package> or the package), a longer wait for apps
+# that need more than WAIT to get past their start (an online game's first downloads).
 # EXPLORE=<seconds>: then explore the app that long (Level 2, explore.py).
 . "$(dirname "$0")/config.sh"; cd $IN
 tag=$1; shift; mkdir -p logs/$tag
@@ -30,9 +32,14 @@ except Exception: pass" "$WL_CORPUS/${MAP:-map}/${app#hk-}/gap-map.json" 2>/dev/
   # host-screen check (screen_ok.py); at once if the process is gone. The first relayout alone came
   # ~10 s before the screen showed anything, and leaving before 20 s missed crashes a 60 s wait sees.
   # A fixed wait spent ~64% of each launch with the app idle.
+  W=${WAIT:-30}
+  if [ -n "${WAITS:-}" ] && [ -f "$WAITS" ]; then
+    w=$(while read -r name seconds _; do [ "$name" = "$app" ] || [ "hk-$name" = "$app" ] && echo "$seconds"; done < "$WAITS" | tail -1)
+    [ -n "$w" ] && W=$w
+  fi
   if [ "${EARLY:-1}" = 1 ] && [ -n "$C" ]; then
     t0=$(date +%s); drew=""; ok=0
-    while [ $(( $(date +%s) - t0 )) -lt ${WAIT:-30} ]; do
+    while [ $(( $(date +%s) - t0 )) -lt $W ]; do
       st=$(timeout 15 $WHDC -t $T shell "[ -d /proc/$C ] && echo A || echo D; grep -c OH_WSA-relayout /data/service/el1/public/appspawnx/adapter_child_$C.stderr 2>/dev/null" 2>/dev/null | tr -d '\r' | tr '\n' ' ')
       case "$st" in D*) echo "[run_apps] $app process gone after $(( $(date +%s) - t0 ))s" >&2; break ;; esac
       n=$(echo "$st" | awk '{print $2+0}')
@@ -46,7 +53,7 @@ except Exception: pass" "$WL_CORPUS/${MAP:-map}/${app#hk-}/gap-map.json" 2>/dev/
       sleep 2
     done
   else
-    sleep ${WAIT:-30}
+    sleep $W
   fi
   # Level 2 (EXPLORE=<seconds>): use the app like a curious user before the evidence is taken
   # (explore.py: taps unvisited views, scrolls, goes back); its steps land in <tag>/<app>.explore/.
