@@ -436,6 +436,9 @@ def dlsym_failures(*texts: str | None) -> list[dict]:
 
 _RESUMED = re.compile(r"activityResumed: OnDrawListener attached[^\n]*\(token=(\S+?)\)")
 _FINISHED = re.compile(r"finishActivity: [^\n]*? for (\S+)")
+#: A touch released on the app's window (MotionEvent ACTION_UP, which the adapter logs as it reads it).
+#: The board's screen forwards real touches to the app under test; an unattended round has none.
+_TOUCH_UP = re.compile(r"MotionEvent-aosp: \[DIAG\] nativeGetAction -> 1 ")
 
 
 def self_finish(hilog: str) -> dict | None:
@@ -446,7 +449,12 @@ def self_finish(hilog: str) -> dict | None:
     device without Bluetooth, a trampoline into another app. None when another activity took over."""
     resumed: list[tuple[float | None, str]] = []
     finished: dict[str, float | None] = {}
+    touch_before: dict[str, float | None] = {}
+    last_touch: float | None = None
     for line in hilog.splitlines():
+        if _TOUCH_UP.search(line):
+            last_touch = _seconds(line)
+            continue
         match = _RESUMED.search(line)
         if match:
             resumed.append((_seconds(line), match.group(1)))
@@ -454,6 +462,7 @@ def self_finish(hilog: str) -> dict | None:
         match = _FINISHED.search(line)
         if match and match.group(1) not in finished:
             finished[match.group(1)] = _seconds(line)
+            touch_before[match.group(1)] = last_touch
     if not resumed or resumed[-1][1] not in finished:
         return None
     at, token = resumed[-1]
@@ -461,6 +470,12 @@ def self_finish(hilog: str) -> dict | None:
     out = {"token": token}
     if at is not None and gone is not None:
         out["after_ms"] = max(0, round((gone - at) * 1000))
+    # A touch released on the screen just before: someone's tap closed it (the board forwards real
+    # touches), not the app. KeeTa, Gemini and Opera "finished" so, each right after a press near a
+    # corner of the screen where a toolbar's back or close button sits.
+    touched = touch_before.get(token)
+    if touched is not None and gone is not None and 0 <= (gone - touched) % 86400 <= 2:
+        out["touched_ms_before"] = round(((gone - touched) % 86400) * 1000)
     return out
 
 
