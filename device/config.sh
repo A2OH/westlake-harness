@@ -15,6 +15,8 @@
 #                dl/<package>@<version>.(apk|xapk), <map>/<package>/{scan,gap-map}.json
 #                (default $WL_SC/inputs/corpus-hk)
 #   WL_MANIFEST_TOOLS  launcher tools (default $WL_SC/workspace/manifest/tools)
+#   WL_WESTLAKE_SOURCE westlake tree whose native/ helpers the launcher compiles per launch
+#                (source_app_namespace, host_spawn, touchfwd; default $WL_SC/workspace/westlake)
 #   ANDROID_BUILD_TOOLS  holds apksigner (default ~/android-sdk/build-tools/34.0.0)
 DEVICE=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd); HARNESS=$(dirname "$DEVICE")
 [ -f "$HARNESS/env.sh" ] && . "$HARNESS/env.sh"
@@ -24,6 +26,7 @@ IN=$WL_SC/inputs; V=$WL_SC/verify; T=$HDC_TARGET; WHDC=$HDC
 # A Windows hdc (the board on USB under WSL) goes through hdc_wsl.sh, which finds an interop socket that works.
 case $HDC in *.exe) export HDC_EXE=$HDC; WHDC=$DEVICE/hdc_wsl.sh ;; esac
 export WL_SC HDC HDC_TARGET; export WL_CORPUS=${WL_CORPUS:-$IN/corpus-hk}; M=${WL_MANIFEST_TOOLS:-$WL_SC/workspace/manifest/tools}
+WS=${WL_WESTLAKE_SOURCE:-$WL_SC/workspace/westlake}
 RECV=$IN/.recv; mkdir -p "$RECV" "$IN/logs" "$WL_SC/logs"
 # From inside $RECV with a relative name, so a Windows hdc (the board on USB under WSL) works too.
 recv_to() { (cd "$RECV" && timeout "${3:-60}" $WHDC -t $T file recv "$1" "$2" >/dev/null 2>&1); }

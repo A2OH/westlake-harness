@@ -57,7 +57,7 @@ while [ -f $IN/LINK-GATE ]; do
 done
 probe() {
   rm -rf $V/out/$out
-  timeout ${PROBE_TIMEOUT:-600} python3 $M/probe_source_app.py --workspace $V --westlake-source $WL_SC/workspace/westlake \
+  timeout ${PROBE_TIMEOUT:-600} python3 $M/probe_source_app.py --workspace $V --westlake-source $WS \
     --framework-report $V/out/$fw/device-report.json \
     --app-input $IN/prep-$app --app $app --webview-input $IN/webview-input \
     --bionic-shim-build $V/out/$shim --touch-mode tap \
