@@ -41,6 +41,18 @@ class HistoryTest(unittest.TestCase):
         self.assertEqual(history.classify(True, [False, True, False])[0], "flaky")
         self.assertEqual(history.classify(True, []), ("new", None))
 
+    def test_pass_rates(self):
+        from westlake_gap import history
+        with tempfile.TemporaryDirectory() as d:
+            _round(d, "r1", "Mon Nov  9 10:00:00 PST 2026", [("a", "drawing", "-"), ("b", "view", "-")])
+            _round(d, "r2", "Tue Nov 10 10:00:00 PST 2026", [("a", "view", "-"), ("b", "view", "-")])
+            rates = {r["app"]: r for r in history.pass_rates(Path(d), 4)}
+            self.assertEqual((rates["a"]["drew"], rates["a"]["runs"]), (1, 2))
+            self.assertEqual(rates["a"]["rounds"], ["r2:view", "r1:drew"])
+            self.assertEqual(rates["b"]["drew"], 0)
+            # Apps that drew in some rounds but not all come first.
+            self.assertEqual(history.pass_rates(Path(d), 4)[0]["app"], "a")
+
     def test_last_row_counts(self):
         from westlake_gap import history
         with tempfile.TemporaryDirectory() as d:
