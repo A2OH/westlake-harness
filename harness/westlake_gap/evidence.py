@@ -536,6 +536,55 @@ _WITNESS_FROM = re.compile(r" from (\S+)\+(0x[0-9a-f]+)")
 _WITNESS_INSN = re.compile(r" insn=(0x[0-9a-f]+) next=(0x[0-9a-f]+)")
 
 
+def final_witness(stderr: str, maps_text: str | None = None) -> dict | None:
+    """The shim's witness of the signal that ended the process, for a death nothing else reports (no
+    crash dump, no hilog line): the last witness, when it, or the frame walk the shim prints after
+    it for the same thread, is among the log's last three lines. A witnessed signal that more of the
+    app's output follows was survived (a library probing the CPU catches its own SIGILL); one that
+    is the log's last word was not. Other threads' lines can come between a witness and its frame
+    walk (libnba2km's audio thread, under its render thread's Vulkan lookups)."""
+    matches = list(_WITNESS.finditer(stderr))
+    if not matches:
+        return None
+    last = matches[-1]
+    end = stderr.find("\n", last.end())
+    end = len(stderr) if end < 0 else end
+    frames = _SIGNAL_FRAMES.search(stderr, end)
+    if frames and int(frames[1], 16) == int(last[3], 16) and frames.start() - end < 4096:
+        end = max(end, frames.end())
+    if sum(1 for line in stderr[end:].split("\n") if line.strip()) > 3:
+        return None
+    return signal_witnesses(stderr[last.start():], maps_text)[0]
+
+
+_SELF_KILL = re.compile(r"\[WESTLAKE-KILL\] the process sends itself signal 9\b")
+_JAVA_AT = re.compile(r"^\s+at ([\w$.<>-]+\([^)\n]*\))")
+
+
+def self_kill(stderr: str) -> dict | None:
+    """The first SIGKILL the process sent itself (Process.killProcess(myPid())), with the Java stack
+    that Westlake's Process.sendSignal logs before it sends one. Nothing follows such a kill, neither
+    a crash dump nor an exit status, so this is all that says the app ended itself: Didi's privacy
+    timer, Unity's kill from its native render loop, ProcessPhoenix's restart activity (meant to run
+    in a process of its own, it killed the app's). The first frame outside the platform says who
+    asked. Other threads' lines can come between the stack's lines."""
+    match = _SELF_KILL.search(stderr)
+    if not match:
+        return None
+    frames = []
+    for line in stderr[match.end():].split("\n")[1:80]:
+        at = _JAVA_AT.match(line)
+        if at:
+            frames.append(at[1])
+            if len(frames) == 24:
+                break
+        elif line.startswith(("Caused by:", "java.lang.Throwable")):
+            break
+    app = next((f for f in frames if not f.startswith(("java.", "android.", "dalvik.", "sun.", "jdk.", "libcore.",
+                                                      "com.android."))), None)
+    return {"frames": frames[:8], "first_app_frame": app}
+
+
 def signal_witnesses(stderr: str, maps_text: str | None = None) -> list[dict]:
     """The bionic shim's signal witness lines (SIGILL, SIGTRAP, SIGBUS: the signals that can end a
     process without a crash dump). pc and x30 come placed by the shim itself (from /proc/self/maps
