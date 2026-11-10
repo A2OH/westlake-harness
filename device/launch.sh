@@ -60,7 +60,7 @@ probe() {
   timeout ${PROBE_TIMEOUT:-600} python3 $M/probe_source_app.py --workspace $V --westlake-source $WS \
     --framework-report $V/out/$fw/device-report.json \
     --app-input $IN/prep-$app --app $app --webview-input $IN/webview-input \
-    --bionic-shim-build $V/out/$shim --touch-mode tap \
+    --bionic-shim-build $V/out/$shim --touch-mode ${WL_TOUCH_MODE:-tap} \
     --hdc $WHDC --serial $T ${EXTRA:-} --out $V/out/$out > $WL_SC/logs/$out.log 2>&1
 }
 probe; rc=$?
