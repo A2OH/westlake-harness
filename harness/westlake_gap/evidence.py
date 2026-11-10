@@ -557,6 +557,31 @@ def final_witness(stderr: str, maps_text: str | None = None) -> dict | None:
     return signal_witnesses(stderr[last.start():], maps_text)[0]
 
 
+#: OH's own clean-up when a process calls exit(), from static destructors: the IPC process skeleton
+#: stopping its threads, the window manager's singleton going away. A process a signal ends runs
+#: neither -- a crash, or the harness ending each app at the close of its window.
+_EXIT_TEARDOWN = re.compile(r"ProcessSkeleton: NotifyChildThreadStop: waiting|~WindowManager: destroyed")
+_NATIVE_LOAD = re.compile(r"^\[SOURCE-NATIVE-LOAD\] path=(\S+)", re.M)
+
+
+def self_exit(hilog: str, stderr: str) -> dict | None:
+    """The process ending itself with exit(): OH's exit-time clean-up in the app's own hilog, within
+    its last two seconds of logging, with the seconds since the process started and the last native
+    library it loaded. Clash of Clans and Brawl Stars exited so half a second after starting, right
+    after their own libraries set handlers for SIGILL and SIGSYS; a bank app and an app with an
+    app-security library did the same within 2 s. Nothing else in either log says the app ended."""
+    lines = hilog.splitlines()
+    times = [t for t in map(_seconds, lines) if t is not None]
+    at = next((_seconds(line) for line in lines if _EXIT_TEARDOWN.search(line)), None)
+    if at is None or not times or (times[-1] - at) % 86400 > 2:
+        return None
+    out: dict = {"after_s": round((at - times[0]) % 86400, 1)}
+    loads = _NATIVE_LOAD.findall(stderr)
+    if loads:
+        out["last_library"] = loads[-1].rsplit("/", 1)[-1]
+    return out
+
+
 _SELF_KILL = re.compile(r"\[WESTLAKE-KILL\] the process sends itself signal 9\b")
 _JAVA_AT = re.compile(r"^\s+at ([\w$.<>-]+\([^)\n]*\))")
 

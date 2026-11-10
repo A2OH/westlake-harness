@@ -155,6 +155,7 @@ class Score:
     self_finish: dict | None = None
     final_witness: dict | None = None
     self_kill: dict | None = None
+    self_exit: dict | None = None
     buffer_requests: dict | None = None
     null_services: list | None = None
     dlsym_failures: list | None = None
@@ -512,6 +513,16 @@ def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str 
             s.blocker_category, s.blocking = "self-kill", True
             s.blocker = "it killed its own process" + (
                 " from %s" % killed["first_app_frame"] if killed["first_app_frame"] else "")
+    # It called exit(): OH's exit-time clean-up ran and no signal ended it. The library it loaded last
+    # is the lead (Clash of Clans: its own, which had just set its signal handlers).
+    exited = evidence.self_exit(hilog_text, text) if hilog_text and not dump and not signal and not final else None
+    if exited:
+        s.self_exit = exited
+        if s.blocker is None or s.blocker_category in ("stall", "no-frame") or not s.blocking:
+            s.blocker_category, s.blocking = "self-exit", True
+            s.blocker = "it exited by itself %.1f s after starting, with no crash%s" % (
+                exited["after_s"],
+                "; the last library it loaded was " + exited["last_library"] if "last_library" in exited else "")
 
 
 def score_paths(paths: list[Path]) -> list[Score]:
