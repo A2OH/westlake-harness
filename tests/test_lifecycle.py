@@ -657,5 +657,34 @@ class Evidence(unittest.TestCase):
         self.assertIsNotNone(s.self_kill)
 
 
+    def test_self_exit_names_the_last_library(self):
+        """A process that calls exit() runs OH's static destructors: the IPC skeleton stops its threads
+        and the window manager goes away, in the app's own hilog. Nothing else reports it."""
+        from westlake_gap import evidence, lifecycle
+        text = ("kRegJNI loop done\n"
+                "[SOURCE-NATIVE-LOAD] path=/data/local/tmp/asx/lib/arm64-v8a/libc++_shared.so search=x\n"
+                "[SOURCE-NATIVE-LOAD] path=/data/local/tmp/asx/lib/arm64-v8a/libgame.so search=x\n"
+                "[WESTLAKE-SIGNAL-INSTALL] oh signal=31 flags=0x1c000004 handler=0x1 caller=0x2\n")
+        hilog = ("11-11 01:41:45.827 25621 25621 I C00f00/AppSpawnX: Child process started, pid=25621\n"
+                 "11-11 01:41:46.365 25621 25641 I C04204/WMSScb: window_manager.cpp ~WindowManager: destroyed, "
+                 "userId: -1\n"
+                 "11-11 01:41:46.426 25621 25641 I C057c1/ProcessSkeleton: NotifyChildThreadStop: waiting 3 child "
+                 "threads to exit\n")
+        self.assertEqual(evidence.self_exit(hilog, text), {"after_s": 0.5, "last_library": "libgame.so"})
+        s = lifecycle.score("game", text)
+        lifecycle.add_evidence(s, text, None, None, hilog)
+        self.assertEqual((s.blocker_category, s.blocker),
+                         ("self-exit", "it exited by itself 0.5 s after starting, with no crash; "
+                                       "the last library it loaded was libgame.so"))
+        # A process the harness ends at the close of its window logs no clean-up.
+        quiet = hilog.split("\n")[0] + "\n11-11 01:42:20.000 25621 25621 I C00f00/X: still here\n"
+        self.assertIsNone(evidence.self_exit(quiet, text))
+        # Clean-up long before the log ends is not how the process ended.
+        later = hilog + "11-11 01:41:50.000 25621 25621 I C00f00/X: still here\n"
+        self.assertIsNone(evidence.self_exit(later, text))
+        # Across midnight.
+        wrapped = hilog.replace("01:41:45.827", "23:59:59.827").replace("01:41:46", "00:00:00")
+        self.assertEqual(evidence.self_exit(wrapped, text)["after_s"], 0.5)
+
 if __name__ == "__main__":
     unittest.main()
