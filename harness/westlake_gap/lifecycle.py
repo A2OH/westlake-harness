@@ -500,7 +500,13 @@ def add_evidence(s: Score, text: str, maps_text: str | None, cppcrash_text: str 
         s.self_finish = finished
         # An activity that finished itself drew nothing because it left: its first-frame report times
         # out too, so a no-frame reading gives way to what it did (Fossify Messages).
-        if s.blocker is None or s.blocker_category in ("stall", "no-frame") or not s.blocking:
+        if "touched_ms_before" in finished:
+            # Not the app: a touch on the board's screen closed it, so the run says nothing about it.
+            if s.blocker is None or s.blocker_category in ("stall", "no-frame") or not s.blocking:
+                s.blocker_category, s.blocking = "touched", False
+                s.blocker = ("a touch on the board's screen %d ms before its last activity finished closed it: "
+                             "the run was disturbed" % finished["touched_ms_before"])
+        elif s.blocker is None or s.blocker_category in ("stall", "no-frame") or not s.blocking:
             s.blocker_category, s.blocking = "self-finish", True
             s.blocker = "its last activity finished itself%s after resuming, and nothing replaced it" % (
                 " %d ms" % finished["after_ms"] if "after_ms" in finished else "")

@@ -686,5 +686,31 @@ class Evidence(unittest.TestCase):
         wrapped = hilog.replace("01:41:45.827", "23:59:59.827").replace("01:41:46", "00:00:00")
         self.assertEqual(evidence.self_exit(wrapped, text)["after_s"], 0.5)
 
+    def test_touch_before_finish_is_not_the_app(self):
+        """The board forwards real touches: a release just before the last activity finished means a tap
+        closed it, and the row is marked disturbed instead of the app finishing itself."""
+        from westlake_gap import evidence, lifecycle
+        text = "kRegJNI loop done\n"
+        hilog = ("11-10 15:08:07.000   942   942 I C00f00/AppSpawnX: Child process started, pid=1\n"
+                 "11-10 15:08:26.339   942   967 I C00f00/OH_ACCAdapter: activityResumed: OnDrawListener attached "
+                 "(token=adapter.core.ActivityToken@2)\n"
+                 "11-10 15:08:38.202   942   967 I C00f00/MotionEvent-aosp: [DIAG] nativeGetAction -> 1 (ptrs=1)\n"
+                 "11-10 15:08:38.204   942   967 I C00f00/OH_ACCAdapter: finishActivity: no OH ability; "
+                 "local destroy scheduled for adapter.core.ActivityToken@2\n")
+        finished = evidence.self_finish(hilog)
+        self.assertEqual(finished["touched_ms_before"], 2)
+        s = lifecycle.score("keeta", text)
+        s.screen = "host"
+        lifecycle.add_evidence(s, text, None, None, hilog)
+        self.assertEqual(s.blocker_category, "touched")
+        self.assertFalse(s.blocking)
+        # A touch long before the finish is not what closed it.
+        early = hilog.replace("15:08:38.202", "15:08:30.000")
+        self.assertNotIn("touched_ms_before", evidence.self_finish(early))
+        s = lifecycle.score("keeta", text)
+        s.screen = "host"
+        lifecycle.add_evidence(s, text, None, None, early)
+        self.assertEqual(s.blocker_category, "self-finish")
+
 if __name__ == "__main__":
     unittest.main()
