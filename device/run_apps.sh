@@ -17,7 +17,9 @@ except Exception: pass" "$WL_CORPUS/${MAP:-map}/${app#hk-}/gap-map.json" 2>/dev/
   # The process's own crash dump is newer than this mark (below).
   timeout 30 $WHDC -t $T shell "touch /data/local/tmp/ev-launch.mark" >/dev/null 2>&1
   timeout 20 $WHDC -t $T shell "power-shell wakeup >/dev/null; power-shell setmode 602 >/dev/null" >/dev/null 2>&1   # keep the screen on
-  LAUNCH_SETTLE=${LAUNCH_SETTLE:-2} EXTRA="$X ${RUN_EXTRA:-}" $DEVICE/launch.sh $app $tag-$app
+  # An unattended round forwards nothing from the board's screen: a touch there reached the app under
+  # test and closed it (lifecycle's "touched" rows). WL_TOUCH_MODE=tap keeps the forwarder.
+  WL_TOUCH_MODE=${WL_TOUCH_MODE:-off} LAUNCH_SETTLE=${LAUNCH_SETTLE:-2} EXTRA="$X ${RUN_EXTRA:-}" $DEVICE/launch.sh $app $tag-$app
   if [ $? -eq 3 ]; then echo "[run_apps] disk guard stopped the run before $app" >&2; break; fi
   L=$WL_SC/logs/$tag-$app.log
   C=$(grep -o '"child": [0-9]*' $L | head -1 | grep -o '[0-9]*')
