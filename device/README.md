@@ -25,6 +25,7 @@ apps, and Google's Play services for `play/`, come from your own corpus director
 | `explore.py oh\|android` | Level 2: use a running app like a curious user (unvisited views, scrolls, a tap grid for WebView/Compose/game surfaces, Back), same loop on the board and on a phone |
 | `android_round.sh <tag> <pkg...>` | Level 2 on the Android reference phone: install the same download, explore, keep the crash log, uninstall |
 | `compare_explore.py <W tag> <A tag>` | per app: died / blank / shallow / close / both-died |
+| `checks.py oh\|android` | scripted functional checks per app (`checks.json`): accept its consent notice, reach its first screen, one interaction, a screenshot per step; in a round, `CHECKS=<spec.json> round.sh ...` runs them after each app's launch |
 | `tells.py <tag>...` | what the runtime told about each app and how each app ended (Java exit, self-signal, uncaught, Back, crash, dump timed out, silent), with the candidate cause; `analysis/RUNTIME-TELLS.md` step T0 |
 | `play/start_play.sh` | start the shared Play services process (no activity) and watch it up to 24 h |
 | `play/client.sh <tag> <pkg>` | one app beside it |

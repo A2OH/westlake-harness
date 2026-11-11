@@ -9,6 +9,7 @@
 # WAITS=<file>: lines "<app> <seconds>" (app as hk-<package> or the package), a longer wait for apps
 # that need more than WAIT to get past their start (an online game's first downloads).
 # EXPLORE=<seconds>: then explore the app that long (Level 2, explore.py).
+# CHECKS=<spec.json>: then run the app's functional checks from that spec (checks.py), if it names the app.
 . "$(dirname "$0")/config.sh"; cd $IN
 tag=$1; shift; mkdir -p logs/$tag
 for app in "$@"; do
@@ -59,6 +60,13 @@ except Exception: pass" "$WL_CORPUS/${MAP:-map}/${app#hk-}/gap-map.json" 2>/dev/
   # (explore.py: taps unvisited views, scrolls, goes back); its steps land in <tag>/<app>.explore/.
   if [ "${EXPLORE:-0}" -gt 0 ] && [ -n "$C" ]; then
     python3 $DEVICE/explore.py oh --hdc $WHDC --serial $T --child $C --seconds $EXPLORE --out logs/$tag/$app.explore 2>&1 | tail -1 >&2
+  fi
+  # Functional checks (CHECKS=<spec.json>, checks.py): the app's scripted steps -- its consent notice, its first
+  # screen, one interaction -- launched as the round launches it, before the evidence is taken; a screenshot per
+  # step and checks.json land in <tag>/<app>.checks/. Apps the spec doesn't name are left alone.
+  if [ -n "${CHECKS:-}" ] && [ -n "$C" ]; then
+    python3 $DEVICE/checks.py oh --hdc $WHDC --serial $T --child $C --app ${app#hk-} --spec $CHECKS \
+      --out logs/$tag/$app.checks 2>&1 | tail -1 >&2
   fi
   timeout 30 $WHDC -t $T shell "power-shell wakeup >/dev/null; power-shell setmode 602 >/dev/null; snapshot_display -f /data/local/tmp/rg.jpeg >/dev/null" >/dev/null 2>&1
   rm -f $RECV/rg.jpeg; recv_to /data/local/tmp/rg.jpeg rg.jpeg

@@ -1,0 +1,9 @@
+{
+ "_comment": "First draft for the top Hong Kong apps: each runs to its first content or its login gate. Texts are unverified until a board run passes them. Spotify and Uber wait longer: 60 s after launch the board still showed their splash screens. WhatsApp shows its companion-device screen (a QR code to link it to a phone) where the device has no telephony, as the board doesn't: either gate passes. Uber's login screen says \"You consent to receive a verification code\": no consent step there, its Continue button would submit an empty number. Viber's start is its own button. Instagram's terms screen comes after its splash: it is waited for before the consent step. Uber's sign-in is a web page in its EmbeddedWebView, whose text neither the view dump nor the node dump carries: its check is that the native welcome or the web sign-in is on screen. Instagram's onboarding after its terms reads Join Instagram / Get started / I already have a profile.",
+ "com.google.android.youtube": [{"do": "consent"}, {"do": "wait", "text": "^(Home|Shorts|Subscriptions)$", "seconds": 30}, {"do": "tap", "text": "^Shorts$"}, {"do": "wait", "id": "reel|shorts", "seconds": 20}, {"do": "back"}],
+ "com.whatsapp": [{"do": "consent"}, {"do": "wait", "text": "phone number|Link as companion device", "seconds": 30}],
+ "com.instagram.android": [{"do": "wait", "text": "^(Continue|Log in|Create new account)$", "seconds": 60}, {"do": "consent"}, {"do": "wait", "text": "^(Log in|Create new account|Get started|I already have a profile)$", "seconds": 30}],
+ "com.spotify.music": [{"do": "consent"}, {"do": "wait", "text": "^(Sign up free|Log in)$", "seconds": 60}],
+ "com.ubercab": [{"do": "wait", "id": "^(welcome_screen_continue|embedded_web_view)$", "seconds": 150}],
+ "com.viber.voip": [{"do": "wait", "text": "^Start now$", "seconds": 30}, {"do": "tap", "text": "^Start now$"}, {"do": "wait", "text": "phone number|country", "seconds": 30}]
+}

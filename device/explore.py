@@ -84,6 +84,7 @@ class Board:
         self.log = f"/data/service/el1/public/appspawnx/adapter_child_{child}.stderr"
         self.width, self.height = 1200, 1920
         self.a11y = True   # until a request goes unanswered: a framework without the node dump
+        self.a11y_retry = 0.0  # an unanswered request is retried after this time (a splash may not answer)
 
     def shell(self, command: str, timeout: int = 30) -> str:
         try:
@@ -118,14 +119,14 @@ class Board:
         blocks = [b for b in text.split("VT ==== root[")[1:]] or [text]
         roots = [self.parse(b) for b in blocks]
         tappable = [r for r in roots if any(v.clickable for v in r)]
-        if not tappable and self.a11y:
+        if not tappable and (self.a11y or time.time() >= self.a11y_retry):
             # The node dump's windows come after the views', so a window with nodes to tap is taken.
             roots += self.node_roots()
             tappable = [r for r in roots if any(v.clickable for v in r)]
         return tappable[-1] if tappable else (roots[-1] if roots else [])
 
     def node_roots(self) -> list[list[View]]:
-        """The accessibility node dump's windows; none, and no more requests, when it goes unanswered."""
+        """The accessibility node dump's windows; none when it goes unanswered, and no more requests for 20 s."""
         size = self.shell(f"wc -c < {self.log}").strip()
         start = int(size) + 1 if size.isdigit() else 1
         self.send(self.A11Y_REQUEST)
@@ -137,7 +138,9 @@ class Board:
                 break
         else:
             self.a11y = False
+            self.a11y_retry = time.time() + 20
             return []
+        self.a11y = True
         text = text[:text.index(self.A11Y_END)]
         return [self.parse(b) for b in text.split("VT ==== root[")[1:]]
 
