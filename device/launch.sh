@@ -13,12 +13,29 @@ for try in 1 2 3 4 5 6 7 8 9 10; do
   [ -n "$FREE" ] && break
   hdc_heal; sleep 25; FREE=$(board_free)
 done
+# App data that outlives a stage, as /data/data/<package> survives an update on Android: the shared Play
+# services process's account, check-in values and guests (and the Play Store's, once it has a process). Before
+# old stages go, each one's app-data/<package> for these packages moves to $KEEP_DATA_DIR, oldest stage first
+# so the newest wins, on the same filesystem; the launcher moves it into the new stage (--carried-app-data).
+# PERSIST_DATA= (set, empty) gives a fresh data directory; delete $KEEP_DATA_DIR/<package> to forget one.
+PERSIST_DATA=${PERSIST_DATA-com.google.android.gms com.android.vending}
+HOST_FILES=/data/app/el2/100/base/org.westlake.imehost/files; KEEP_DATA_DIR=$HOST_FILES/a2hlab-data
+# keep_data <stage pattern to leave alone>: board shell code moving the persisted packages' data out
+# (tests/test_keep_data.py runs it on a local tree).
+keep_data() {
+  [ -n "$PERSIST_DATA" ] || return 0
+  echo "mkdir -p $KEEP_DATA_DIR; for d in \$(ls -dtr $HOST_FILES/a2hlab-source-* 2>/dev/null); do case \$d in *$1*) continue ;; esac; for p in $PERSIST_DATA; do if [ -d \$d/app-data/\$p ]; then rm -rf $KEEP_DATA_DIR/\$p && mv \$d/app-data/\$p $KEEP_DATA_DIR/\$p; fi; done; done;"
+}
 # One app at a time: drop old app stages and source runtimes (~290 MB each), or /data fills.
 if [ -n "${KEEP_RUNNING:-}" ]; then
-  timeout 120 $WHDC -t $T shell "for d in /data/local/tmp/a2hlab-app-* /data/app/el2/100/base/org.westlake.imehost/files/a2hlab-source-*; do case \$d in *${KEEP_STAGE:-@none@}*) ;; *) rm -rf \$d ;; esac; done" >/dev/null 2>&1
+  timeout 120 $WHDC -t $T shell "$(keep_data ${KEEP_STAGE:-@none@}) for d in /data/local/tmp/a2hlab-app-* /data/app/el2/100/base/org.westlake.imehost/files/a2hlab-source-*; do case \$d in *${KEEP_STAGE:-@none@}*) ;; *) rm -rf \$d ;; esac; done" >/dev/null 2>&1
 else
-  timeout 300 $WHDC -t $T shell 'P=$(pidof appspawn-x); [ -n "$P" ] && kill $P; for d in /data/local/tmp/a2hlab-app-* /data/app/el2/100/base/org.westlake.imehost/files/a2hlab-source-*; do [ -e "$d" ] && rm -rf "$d"; done' >/dev/null 2>&1; sleep 1
+  timeout 300 $WHDC -t $T shell 'P=$(pidof appspawn-x); [ -n "$P" ] && kill $P; sleep 1; '"$(keep_data @none@)"' for d in /data/local/tmp/a2hlab-app-* /data/app/el2/100/base/org.westlake.imehost/files/a2hlab-source-*; do [ -e "$d" ] && rm -rf "$d"; done' >/dev/null 2>&1; sleep 1
 fi
+# A launcher that knows the option moves the kept data in; an older one gets a fresh directory, and the kept
+# data waits for a launcher that does.
+CARRY=""
+[ -n "$PERSIST_DATA" ] && grep -q -- '--carried-app-data' $M/probe_source_app.py 2>/dev/null && CARRY="--carried-app-data $KEEP_DATA_DIR"
 # Disk guard: a launch needs ~2 GB on the board. Prune stale framework stages if low, and refuse to
 # launch (exit 3) rather than fill either disk. LOCAL_DISKS: local filesystems that must keep
 # MIN_LOCAL_GB free (under WSL add the Windows drive holding the virtual disk, e.g. /mnt/c).
@@ -61,7 +78,7 @@ probe() {
     --framework-report $V/out/$fw/device-report.json \
     --app-input $IN/prep-$app --app $app --webview-input $IN/webview-input \
     --bionic-shim-build $V/out/$shim --touch-mode ${WL_TOUCH_MODE:-tap} \
-    --hdc $WHDC --serial $T ${EXTRA:-} --out $V/out/$out > $WL_SC/logs/$out.log 2>&1
+    --hdc $WHDC --serial $T $CARRY ${EXTRA:-} --out $V/out/$out > $WL_SC/logs/$out.log 2>&1
 }
 probe; rc=$?
 # The board's hdc link drops under load: reconnect and launch again, twice at most.
