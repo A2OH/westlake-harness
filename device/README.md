@@ -29,7 +29,8 @@ apps, and Google's Play services for `play/`, come from your own corpus director
 | `play/start_play.sh` | start the shared Play services process (no activity) and watch it up to 24 h |
 | `play/client.sh <tag> <pkg>` | one app beside it |
 | `play/shared_round.sh <tag>` | a round with every app connected to it; stops at once if it dies |
-| `play/run_all.sh <tag>` | `shared_round.sh` with resume, for day-long runs |
+| `play/run_all.sh <tag>` | `shared_round.sh` with resume, for day-long runs; probes the board's network at the start and end (`NETPROBE=0` skips) |
+| `netprobe.sh <out.json>` | the board's network for the names in `netprobe/names.txt`, through the resolver apps use: lookup, TCP connect to 443, TLS hello with SNI, beside Google's DNS-over-HTTPS answers on the host |
 | `play/score_play.py <tag> [<microG tag>]` | rungs, connection status, error replies, missing services, token counts |
 
 ## Level 2
