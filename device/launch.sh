@@ -2,7 +2,8 @@
 # launch.sh <app> <outname>  -- one app (staged at $WL_SC/inputs/prep-<app>) on the board through the
 # launcher (probe_source_app.py). Prints the child pid; pulls its stderr to inputs/logs/<outname>.stderr.
 # EXTRA: more launcher arguments. KEEP_RUNNING=1 leaves other Westlake processes alone (a client beside
-# the shared Play services process); KEEP_STAGE names the app stage to keep then. Exit 3: disk guard.
+# the shared Play services process); KEEP_STAGE names the app stages to keep then, space-separated (the Play
+# services host's, and the Play Store host's beside it). Exit 3: disk guard.
 . "$(dirname "$0")/config.sh"; need WL_FW WL_SHIM
 app=$1; out=$2; fw=$WL_FW; shim=$WL_SHIM; cd $WL_SC
 # Free space on the board's /data in GB, empty when the board did not answer: hdc's error line is not
@@ -20,15 +21,18 @@ done
 # PERSIST_DATA= (set, empty) gives a fresh data directory; delete $KEEP_DATA_DIR/<package> to forget one.
 PERSIST_DATA=${PERSIST_DATA-com.google.android.gms com.android.vending}
 HOST_FILES=/data/app/el2/100/base/org.westlake.imehost/files; KEEP_DATA_DIR=$HOST_FILES/a2hlab-data
-# keep_data <stage pattern to leave alone>: board shell code moving the persisted packages' data out
+# The stages a KEEP_RUNNING launch leaves alone, as one case pattern (*<hash>*|*<hash>*); @none@ matches none.
+KEEP_PATTERN=$(for k in ${KEEP_STAGE:-}; do printf '*%s*|' "$k"; done); KEEP_PATTERN=${KEEP_PATTERN%|}
+[ -n "$KEEP_PATTERN" ] || KEEP_PATTERN=@none@
+# keep_data <case pattern of stages to leave alone>: board shell code moving the persisted packages' data out
 # (tests/test_keep_data.py runs it on a local tree).
 keep_data() {
   [ -n "$PERSIST_DATA" ] || return 0
-  echo "mkdir -p $KEEP_DATA_DIR; for d in \$(ls -dtr $HOST_FILES/a2hlab-source-* 2>/dev/null); do case \$d in *$1*) continue ;; esac; for p in $PERSIST_DATA; do if [ -d \$d/app-data/\$p ]; then rm -rf $KEEP_DATA_DIR/\$p && mv \$d/app-data/\$p $KEEP_DATA_DIR/\$p; fi; done; done;"
+  echo "mkdir -p $KEEP_DATA_DIR; for d in \$(ls -dtr $HOST_FILES/a2hlab-source-* 2>/dev/null); do case \$d in $1) continue ;; esac; for p in $PERSIST_DATA; do if [ -d \$d/app-data/\$p ]; then rm -rf $KEEP_DATA_DIR/\$p && mv \$d/app-data/\$p $KEEP_DATA_DIR/\$p; fi; done; done;"
 }
 # One app at a time: drop old app stages and source runtimes (~290 MB each), or /data fills.
 if [ -n "${KEEP_RUNNING:-}" ]; then
-  timeout 120 $WHDC -t $T shell "$(keep_data ${KEEP_STAGE:-@none@}) for d in /data/local/tmp/a2hlab-app-* /data/app/el2/100/base/org.westlake.imehost/files/a2hlab-source-*; do case \$d in *${KEEP_STAGE:-@none@}*) ;; *) rm -rf \$d ;; esac; done" >/dev/null 2>&1
+  timeout 120 $WHDC -t $T shell "$(keep_data "$KEEP_PATTERN") for d in /data/local/tmp/a2hlab-app-* /data/app/el2/100/base/org.westlake.imehost/files/a2hlab-source-*; do case \$d in $KEEP_PATTERN) ;; *) rm -rf \$d ;; esac; done" >/dev/null 2>&1
 else
   timeout 300 $WHDC -t $T shell 'P=$(pidof appspawn-x); [ -n "$P" ] && kill $P; sleep 1; '"$(keep_data @none@)"' for d in /data/local/tmp/a2hlab-app-* /data/app/el2/100/base/org.westlake.imehost/files/a2hlab-source-*; do [ -e "$d" ] && rm -rf "$d"; done' >/dev/null 2>&1; sleep 1
 fi
