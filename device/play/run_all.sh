@@ -4,7 +4,8 @@
 # resumes. Before each try: stop leftover starters here and app processes on the board, and restart
 # the local hdc server if the board does not answer. Up to TRIES (40) tries; none after a launcher
 # refusal (shared_round.sh exit 3), which every try would repeat. Log: $PLAY_DIR/run_all.log, with the
-# board's uptime, load, available memory and free swap at each try.
+# board's uptime, load, available memory and free swap at each try. When the round is done, each app is set
+# against its earlier rounds (history-<tag>.txt beside the round log).
 . "$(dirname "$0")/../config.sh"
 PLAY_DIR=${PLAY_DIR:-$IN/play-runs}; mkdir -p $PLAY_DIR; TAG=$1; L=$PLAY_DIR/run_all.log
 for try in $(seq 1 ${TRIES:-40}); do
@@ -23,3 +24,10 @@ for try in $(seq 1 ${TRIES:-40}); do
   sleep 120
 done
 echo "$(date +%H:%M) finished" >> $L
+# Each app against its own earlier rounds (westlake_gap.history): what regressed, what improved and what is
+# flaky, in $WL_CORPUS/history-<tag>.txt (and history.json beside the round's logs), its first line in the log.
+if tail -1 $WL_CORPUS/round-$TAG.log 2>/dev/null | grep -q "$TAG done"; then
+  (cd "$HARNESS" && PYTHONPATH=harness timeout 600 python3 -m westlake_gap.history $WL_CORPUS $TAG \
+    --json $IN/logs/$TAG/history.json) > $WL_CORPUS/history-$TAG.txt 2>&1
+  echo "$(date +%H:%M) history: $(head -1 $WL_CORPUS/history-$TAG.txt)" >> $L
+fi
