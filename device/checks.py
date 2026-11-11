@@ -63,7 +63,9 @@ def consent_control(views: list[View]) -> View | None:
     """The control that accepts a consent notice on this screen, or None when there is no notice."""
     if not any(CONSENT.search(v.text or "") for v in views):
         return None
-    for view in sorted(views, key=lambda v: (v.y, v.x)):
+    # A button's short label before a sentence: Viber's "By tapping "Start now" you agree to our Terms" is
+    # clickable (its links) and says "agree", and was tapped instead of the button.
+    for view in sorted(views, key=lambda v: (len(v.text or "") > 40, v.y, v.x)):
         text = view.text or ""
         if view.clickable and ACCEPT.search(text) and not DENY.search(text):
             return view

@@ -65,6 +65,17 @@ class ChecksTest(unittest.TestCase):
         self.assertTrue(result["steps"][0]["ok"])
         self.assertEqual(device.taps, [(450, 1895)])
 
+    def test_consent_prefers_the_button_to_the_sentence(self):
+        """Viber: the legal sentence is clickable (its links) and says "agree"; the button is what accepts."""
+        import checks
+        from explore import View
+        welcome = [View("TextView", "legal", 0, 1500, 1000, 60, True,
+                        'By tapping "Start now" you agree to our Terms & Policies'),
+                   View("Button", "start", 100, 1700, 1000, 80, True, "Agree and continue")]
+        device = FakeDevice([welcome])
+        checks.run(device, [{"do": "consent"}], Path("/nonexistent"), settle=0)
+        self.assertEqual(device.taps, [(600, 1740)])
+
 
 if __name__ == "__main__":
     unittest.main()
