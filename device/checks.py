@@ -85,7 +85,11 @@ def run(device, steps: list[dict], out: Path, settle: float = 1.5) -> dict:
     for index, step in enumerate(steps):
         action, started, ok, matched = step.get("do"), time.time(), False, None
         if action == "consent":
-            control = consent_control(device.views())
+            views = device.views()
+            control = consent_control(views)
+            # Instagram's terms screen names its notice and its Continue button only as accessibility nodes.
+            if control is None and hasattr(device, "node_roots"):
+                control = consent_control(views + [node for root in device.node_roots() for node in root])
             if control is not None:
                 device.tap(*control.centre())
                 matched = control.text

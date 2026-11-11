@@ -90,6 +90,21 @@ class ChecksTest(unittest.TestCase):
         self.assertTrue(result["steps"][0]["ok"])
         self.assertEqual(result["steps"][0]["matched"], "Continue")
 
+    def test_consent_reads_nodes_when_the_views_show_no_notice(self):
+        """Instagram: the terms text and its Continue button are accessibility nodes only."""
+        import checks
+        from explore import View
+
+        class NodeDevice(FakeDevice):
+            def node_roots(self):
+                return [[View("node", "", 0, 100, 1200, 80, False, "Meta Terms and Privacy Policy"),
+                         View("node", "", 0, 1800, 1200, 100, True, "Continue")]]
+
+        device = NodeDevice([[View("FrameLayout", "root", 0, 0, 1200, 1920, True, "")]])
+        result = checks.run(device, [{"do": "consent"}], Path("/nonexistent"), settle=0)
+        self.assertEqual(result["steps"][0]["matched"], "Continue")
+        self.assertEqual(device.taps, [(600, 1850)])
+
 
 if __name__ == "__main__":
     unittest.main()
