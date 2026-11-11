@@ -77,6 +77,12 @@ def consent_control(views: list[View]) -> View | None:
         text = view.text or ""
         if view.clickable and ACCEPT.search(text) and not DENY.search(text):
             return view
+    # A short accepting label inside a clickable parent that carries no text (Instagram's terms screen: its
+    # "Continue" node is not clickable, its button is): a finger on the label reaches the button.
+    for view in sorted(views, key=lambda v: (v.y, v.x)):
+        text = view.text or ""
+        if 0 < len(text) <= 40 and ACCEPT.search(text) and not DENY.search(text):
+            return view
     return None
 
 

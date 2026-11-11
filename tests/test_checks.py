@@ -98,7 +98,8 @@ class ChecksTest(unittest.TestCase):
         class NodeDevice(FakeDevice):
             def node_roots(self):
                 return [[View("node", "", 0, 100, 1200, 80, False, "Meta Terms and Privacy Policy"),
-                         View("node", "", 0, 1800, 1200, 100, True, "Continue")]]
+                         View("node", "", 600, 109, 200, 45, True, "Meta Terms"),
+                         View("node", "", 0, 1800, 1200, 100, False, "Continue")]]
 
         device = NodeDevice([[View("FrameLayout", "root", 0, 0, 1200, 1920, True, "")]])
         result = checks.run(device, [{"do": "consent"}], Path("/nonexistent"), settle=0)
