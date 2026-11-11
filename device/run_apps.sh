@@ -10,6 +10,7 @@
 # that need more than WAIT to get past their start (an online game's first downloads).
 # EXPLORE=<seconds>: then explore the app that long (Level 2, explore.py).
 # CHECKS=<spec.json>: then run the app's functional checks from that spec (checks.py), if it names the app.
+# APP_OAT_ROOT=<dir>: launch each app with its host-compiled code from <dir>/<app>/ (install-time dexopt).
 . "$(dirname "$0")/config.sh"; cd $IN
 tag=$1; shift; mkdir -p logs/$tag
 for app in "$@"; do
@@ -17,6 +18,9 @@ for app in "$@"; do
 import json,sys
 try: print(' '.join(json.load(open(sys.argv[1])).get('launch_args', [])))
 except Exception: pass" "$WL_CORPUS/${MAP:-map}/${app#hk-}/gap-map.json" 2>/dev/null) ;; esac
+  # APP_OAT_ROOT=<dir>: the app's code compiled on the host as Android's install-time dexopt leaves it
+  # (<dir>/<app>/<app>.odex and .vdex), staged beside its APK where ART looks first.
+  [ -n "${APP_OAT_ROOT:-}" ] && [ -s "$APP_OAT_ROOT/$app/$app.odex" ] && X="$X --app-oat-dir $APP_OAT_ROOT/$app"
   # The process's own crash dump is newer than this mark (below).
   timeout 30 $WHDC -t $T shell "touch /data/local/tmp/ev-launch.mark" >/dev/null 2>&1
   timeout 20 $WHDC -t $T shell "power-shell wakeup >/dev/null; power-shell setmode 602 >/dev/null" >/dev/null 2>&1   # keep the screen on
