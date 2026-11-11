@@ -76,6 +76,20 @@ class ChecksTest(unittest.TestCase):
         checks.run(device, [{"do": "consent"}], Path("/nonexistent"), settle=0)
         self.assertEqual(device.taps, [(600, 1740)])
 
+    def test_wait_reads_accessibility_nodes_when_views_do_not_name_it(self):
+        """Uber's Compose login: the view dump has a clickable root and no text; the Continue button is a node."""
+        import checks
+        from explore import View
+
+        class ComposeDevice(FakeDevice):
+            def node_roots(self):
+                return [[View("node", "", 0, 900, 1200, 100, True, "Continue")]]
+
+        device = ComposeDevice([[View("AndroidComposeView", "compose", 0, 0, 1200, 1920, True, "")]])
+        result = checks.run(device, [{"do": "wait", "text": "^Continue$", "seconds": 1}], Path("/nonexistent"), settle=0)
+        self.assertTrue(result["steps"][0]["ok"])
+        self.assertEqual(result["steps"][0]["matched"], "Continue")
+
 
 if __name__ == "__main__":
     unittest.main()
