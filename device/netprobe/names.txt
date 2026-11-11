@@ -1,0 +1,36 @@
+# Names netprobe.sh resolves and connects to from the board, one per line. Google and Play services
+# endpoints first, then services corpus apps start with, then local and Chinese-network controls.
+android.googleapis.com
+android.clients.google.com
+play.googleapis.com
+play-fe.googleapis.com
+www.googleapis.com
+firebaseinstallations.googleapis.com
+fcm.googleapis.com
+mtalk.google.com
+play-lh.googleusercontent.com
+app-measurement.com
+firebase-settings.crashlytics.com
+www.google.com
+www.youtube.com
+i.ytimg.com
+graph.facebook.com
+www.instagram.com
+web.whatsapp.com
+www.reddit.com
+api.x.com
+discord.com
+www.tiktok.com
+api.telegram.org
+open.spotify.com
+www.netflix.com
+sentry.io
+api.amplitude.com
+api2.branch.io
+cdn.jsdelivr.net
+www.mtr.com.hk
+www.openrice.com
+www.hsbc.com.hk
+www.gov.hk
+www.baidu.com
+www.qq.com
