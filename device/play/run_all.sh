@@ -14,7 +14,7 @@ PLAY_DIR=${PLAY_DIR:-$IN/play-runs}; mkdir -p $PLAY_DIR; TAG=$1; L=$PLAY_DIR/run
 netprobe() { [ "${NETPROBE:-1}" = 0 ] && return 0; mkdir -p $IN/logs/$TAG
   echo "$(date +%H:%M) $1 $($DEVICE/netprobe.sh $IN/logs/$TAG/netprobe-$1.json 2>&1 | tail -1)" >> $L; }
 for try in $(seq 1 ${TRIES:-40}); do
-  for p in $(pgrep -fx "/bin/bash $DEVICE/play/start_play.sh"); do pkill -P $p; kill $p; done 2>/dev/null
+  for p in $(pgrep -fx "/bin/bash $DEVICE/play/start_play.sh") $(pgrep -fx "/bin/bash $DEVICE/play/start_store.sh"); do pkill -P $p; kill $p; done 2>/dev/null
   hdc_heal || echo "$(date +%H:%M) hdc server restarted" >> $L
   kill_children
   echo "$(date +%H:%M) try $try" >> $L

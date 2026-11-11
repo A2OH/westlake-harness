@@ -42,6 +42,9 @@ kill_children() { local u=${1:-$(host_uid)}; [ -n "$u" ] || return 0
   timeout 30 $WHDC -t $T shell "for p in \$(ps -ef | grep '^$u ' | grep -v org.westlake.imehost | grep -v grep | sed 's/  */ /g' | cut -d' ' -f2); do kill -9 \$p; done" >/dev/null 2>&1; }
 # launcher arguments for the runtime-library override every launch uses
 # WL_RUNTIME_ADD: libraries of the override build the framework stage lacks, added for this launch,
-# space-separated (e.g. the platform Cronet library, libmainlinecronet.<version>.so, which the
-# framework's HttpEngine loads). Needs a manifest tools copy with --runtime-library-add.
-override_args() { echo "--runtime-library-build $V/out/$WL_OVERRIDE --runtime-library libandroid_native_network_compat.so --runtime-library libwl_missing_natives.so --runtime-library libart.so$(for l in ${WL_RUNTIME_ADD:-}; do printf ' --runtime-library-add %s' "$l"; done)"; }
+# space-separated. Unset, it is the platform Cronet library (libmainlinecronet.<version>.so, which the
+# framework's HttpEngine loads) when the override build has one: that build's natives report the S
+# extension level that promises HttpEngine, so every app gets its library. Set empty for none. Needs a
+# manifest tools copy with --runtime-library-add.
+override_args() { local add=${WL_RUNTIME_ADD-$(ls $V/out/$WL_OVERRIDE/lib 2>/dev/null | grep -E '^libmainlinecronet\..*\.so$')}
+  echo "--runtime-library-build $V/out/$WL_OVERRIDE --runtime-library libandroid_native_network_compat.so --runtime-library libwl_missing_natives.so --runtime-library libart.so$(for l in $add; do printf ' --runtime-library-add %s' "$l"; done)"; }
