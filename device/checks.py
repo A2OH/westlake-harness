@@ -12,7 +12,8 @@ each package to its steps (default: checks.json beside this file):
     {"com.whatsapp": [{"do": "consent"}, {"do": "wait", "text": "phone number", "seconds": 20}]}
 
     consent  when a consent notice is on screen, tap the control that accepts it (passes when none is)
-    tap      tap the first clickable view, top to bottom, whose text or id matches "text" / "id"
+    tap      tap the first clickable view, top to bottom, whose text or id matches "text" / "id", or
+             else the first such view at all (a label whose clickable parent carries no text)
              (case-insensitive regular expressions)
     wait     wait up to "seconds" (default 20) for a view whose text or id matches
     scroll   scroll the screen once
@@ -80,7 +81,12 @@ def run(device, steps: list[dict], out: Path, settle: float = 1.5) -> dict:
                 matched = control.text
             ok = True
         elif action == "tap":
-            view = find(device.views(), step.get("text"), step.get("id"), clickable=True)
+            views = device.views()
+            view = find(views, step.get("text"), step.get("id"), clickable=True)
+            # A label inside a clickable parent (YouTube's bottom bar: the tab is clickable, its
+            # "Shorts" text is not): a finger on the label reaches the tab, so tap the label.
+            if view is None:
+                view = find(views, step.get("text"), step.get("id"), clickable=False)
             if view is not None:
                 device.tap(*view.centre())
                 ok, matched = True, view.text or view.vid

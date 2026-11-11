@@ -53,6 +53,18 @@ class ChecksTest(unittest.TestCase):
         self.assertTrue(result["steps"][0]["ok"])
         self.assertEqual(device.taps, [])
 
+    def test_tap_reaches_a_label_inside_a_clickable_tab(self):
+        """YouTube's bottom bar: the tab is clickable and carries no text, its "Shorts" label is not clickable.
+        The tap lands on the label, as a finger would."""
+        import checks
+        from explore import View
+        bar = [View("FrameLayout", "pivot_bar_item", 300, 1820, 300, 100, True, ""),
+               View("TextView", "text", 400, 1880, 100, 30, False, "Shorts")]
+        device = FakeDevice([bar])
+        result = checks.run(device, [{"do": "tap", "text": "^Shorts$"}], Path("/nonexistent"), settle=0)
+        self.assertTrue(result["steps"][0]["ok"])
+        self.assertEqual(device.taps, [(450, 1895)])
+
 
 if __name__ == "__main__":
     unittest.main()
