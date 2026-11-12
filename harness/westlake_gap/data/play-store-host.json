@@ -2,7 +2,7 @@
   "_comment": "What Westlake's Play Store host answers, per Google Play service family an app's client library binds (scanner PLAY_STORE_DESCRIPTORS). Measured on the board: apps beside the shared Play services process and Google's Play Store app (com.android.vending 53.5.48) in a process of its own, as GrapheneOS runs it. Read by gapmap.play_store_host_model when the Westlake checkout has the store host (PlayServicesChannel serves WESTLAKE_PLAY_STORE_SERVE).",
   "provider": "Westlake's Play Store host: Google's Play Store app in a process of its own beside the shared Play services process",
   "measured": "two-host HK round l7n on framework build 213: 330 of the 338 HK corpus apps that bound a Play Store service in an earlier round",
-  "background_process": "The Play Store builds a different Dagger component per process, chosen by its process name. Westlake runs all of the store's processes as one named com.android.vending (ADR-0001), so a component declared for the store's :background process gets the main process's component, its injection throws ClassCastException, and it is never created: 21 of its 42 :background components look up an injector the main component lacks, among them DownloadService, the PackageInstaller result receiver, the install queue, background licensing, Age Signals and Engage.",
+  "background_process": "The Play Store builds a different Dagger component per process, chosen by its process name. Westlake runs all of the store's processes as one named com.android.vending (ADR-0001), so a component declared for the store's :background process gets the main process's component, its injection throws ClassCastException, and it is never created: 21 of its 42 :background components look up an injector the main component lacks, among them DownloadService, the PackageInstaller result receiver, the install queue, background licensing, Age Signals and Engage. The main process needs one of them itself: its canary-id lookup binds MultiUserCoordinatorService and waits for it while holding a lock, so from the store's start one worker thread waits forever, its auto-update context blocks behind it, and every later device-information build adds a thread that waits too.",
   "families": {
     "in-app-review": {
       "item": "in-app review (Play Core)",
@@ -22,7 +22,7 @@
       "item": "Play Asset Delivery (Play Core)",
       "verdict": "partial",
       "effort": "L",
-      "provider": "pack states and sessions are answered (38 of 56 apps); the packs themselves download in the store's :background process (DownloadService), which the host cannot run. Seven apps' pinned versions are older than Play's, whose packs Play reports unavailable (-2)",
+      "provider": "pack states and sessions are answered (38 of 56 apps); the packs themselves download in the store's :background process (DownloadService), which the host cannot run. Seven apps' pinned versions are older than Play's, whose packs Play reports unavailable (-2). In a retest on a later build, 4 of 4 apps got their pack states, and one download started (onStartDownload); the download itself is the :background process's work",
       "shim": "run the store's :background process as a second host process and route its components there; keep corpus pins at Play's current version"
     },
     "split-install": {
@@ -36,15 +36,15 @@
       "item": "Play Integrity standard requests",
       "verdict": "partial",
       "effort": "verify",
-      "provider": "54 of 170 apps got an answer; the rest waited without one: the store's bind of a Play services API service timed out because the Play services host called a chimera service's onBind again on each bind, which it refuses (fixed: onBind once per intent, as ActivityManager does; not yet measured)",
-      "shim": "measure again with onBind once per intent"
+      "provider": "in round l7n, 54 of 170 apps got an answer and the rest waited: the store's bind of a Play services API service timed out, because the Play services host called a chimera service's onBind again on each bind, which it refuses. With onBind once per intent, as ActivityManager does, 8 of 9 of those apps got their callback in a retest. Whether a callback carries a token or an error code is not logged",
+      "shim": "a round with onBind once per intent; then tell tokens from error codes in the answers"
     },
     "express-integrity": {
       "item": "Play Integrity express requests",
       "verdict": "partial",
       "effort": "verify",
       "provider": "warm-up is answered (9 apps); token requests share the standard path's wait",
-      "shim": "measure again with onBind once per intent"
+      "shim": "a round with onBind once per intent"
     },
     "age-signals": {
       "item": "Play Age Signals",
