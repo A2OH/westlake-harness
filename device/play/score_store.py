@@ -5,6 +5,8 @@ Play Core (asset delivery, split install, in-app updates and review) and Play In
 Store service and each callback, as "PID: [<pid>] <Service> : <message>", in the app's hilog. The harness captures
 that per app ($WL_SC/inputs/logs/<tag>/hk-<package>.hilog). Per service this prints:
 - how many apps called it, and how many got a callback ("on..."), by callback;
+- how many started binding the service and never connected to it ("Initiate binding to the service" and no
+  "linkToDeath" after it): the Play Store host never answered the bind;
 - the error codes they got (onError(<code>), or "<call> failed: <code>");
 - with --apps, the apps per callback and error.
 Only counts, callback names and package names are printed: requests carry nonces and tokens, which never leave
@@ -30,6 +32,9 @@ def family(name):
     return name
 
 
+# Play Core's in-app review logs its callback under the in-app update callback's class name
+# (OnRequestInstallCallback); the callback's own name says which service answered.
+CALLBACK_FAMILIES = {'onGetLaunchReviewFlowInfo': 'in-app review'}
 CALLBACK = re.compile(r'^(on[A-Z]\w*)')
 ERROR = re.compile(r'onError\((-?\d+)\)|failed: (-?\d+)')
 
@@ -38,6 +43,8 @@ def score(logs, only=None):
     calls = collections.defaultdict(set)          # service -> apps that logged anything for it
     callbacks = collections.defaultdict(lambda: collections.defaultdict(set))
     errors = collections.defaultdict(lambda: collections.defaultdict(set))
+    binding = collections.defaultdict(set)        # service -> apps that started a bind
+    connected = collections.defaultdict(set)      # service -> apps whose bind connected
     for path in sorted(Path(logs).glob('hk-*.hilog')):
         app = path.name[len('hk-'):-len('.hilog')]
         if only is not None and app not in only:
@@ -49,15 +56,22 @@ def score(logs, only=None):
             if not m:
                 continue
             service, message = family(m.group(1)), m.group(2).strip()
+            c = CALLBACK.match(message)
+            if c and c.group(1) in CALLBACK_FAMILIES:
+                service = CALLBACK_FAMILIES[c.group(1)]
             calls[service].add(app)
+            if message.startswith('Initiate binding to the service'):
+                binding[service].add(app)
+            elif message.startswith('linkToDeath'):
+                connected[service].add(app)
             e = ERROR.search(message)
             if e:
                 errors[service][e.group(1) or e.group(2)].add(app)
                 continue
-            c = CALLBACK.match(message)
             if c and c.group(1) not in ('onServiceConnected', 'onServiceDisconnected', 'onBindingDied'):
                 callbacks[service][c.group(1)].add(app)
-    return calls, callbacks, errors
+    unconnected = {service: apps - connected[service] for service, apps in binding.items() if apps - connected[service]}
+    return calls, callbacks, errors, unconnected
 
 
 def main():
@@ -67,10 +81,13 @@ def main():
     only = None
     if os.environ.get('LIST'):
         only = {x.strip() for x in open(os.environ['LIST']) if x.strip()}
-    calls, callbacks, errors = score(logs, only)
+    calls, callbacks, errors, unconnected = score(logs, only)
     for service in sorted(calls, key=lambda s: -len(calls[s])):
         answered = set().union(*callbacks[service].values()) if callbacks[service] else set()
         print(f'{service}: {len(calls[service])} apps, {len(answered)} with a callback')
+        if service in unconnected:
+            apps = unconnected[service]
+            print(f'  never connected: {len(apps)}' + (f'  {" ".join(sorted(apps))}' if show_apps else ''))
         for name, apps in sorted(callbacks[service].items(), key=lambda kv: -len(kv[1])):
             print(f'  {name}: {len(apps)}' + (f'  {" ".join(sorted(apps))}' if show_apps else ''))
         for code, apps in sorted(errors[service].items(), key=lambda kv: -len(kv[1])):

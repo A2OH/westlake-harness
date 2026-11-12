@@ -38,7 +38,7 @@ class ScoreStoreTest(unittest.TestCase):
         self.app('b.integrity', line(20, 'IntegrityService', 'requestIntegrityToken(IntegrityTokenRequest{nonce=x})'),
                  line(20, 'OnRequestIntegrityTokenCallback', 'onRequestIntegrityToken'),
                  line(20, 'IntegrityService', 'ServiceConnectionImpl.onServiceConnected(ComponentInfo{x/y})'))
-        calls, callbacks, errors = self.score.score(self.logs)
+        calls, callbacks, errors, _ = self.score.score(self.logs)
         self.assertEqual(calls['in-app update'], {'a.update'})
         self.assertEqual(dict(callbacks['in-app update']), {'onRequestInfo': {'a.update'}})
         # A service connection is not an answer.
@@ -52,16 +52,32 @@ class ScoreStoreTest(unittest.TestCase):
                  line(40, 'SplitInstallService', 'onStartInstall(1)'),
                  'unrelated line without the tag')
         self.app('e.express', line(50, 'ExpressIntegrityService', 'warmUpIntegrityToken failed: -12'))
-        calls, callbacks, errors = self.score.score(self.logs)
+        calls, callbacks, errors, _ = self.score.score(self.logs)
         self.assertEqual(dict(errors['asset delivery']), {'-2': {'c.assets'}})
         self.assertEqual(dict(callbacks['split install']), {'onStartInstall': {'d.split'}})
         self.assertEqual(dict(errors['express integrity']), {'-12': {'e.express'}})
         self.assertNotIn('integrity', calls)
 
+    def test_review_callback_counts_for_review(self):
+        # Play Core's review callback logs under the in-app update callback's class name.
+        self.app('h.review', line(80, 'ReviewService', 'requestInAppReview (h.review)'),
+                 line(80, 'OnRequestInstallCallback', 'onGetLaunchReviewFlowInfo'))
+        calls, callbacks, _, _ = self.score.score(self.logs)
+        self.assertEqual(dict(callbacks['in-app review']), {'onGetLaunchReviewFlowInfo': {'h.review'}})
+        self.assertNotIn('in-app update', calls)
+
+    def test_binds_that_never_connect(self):
+        self.app('i.age', line(90, 'AgeSignalsService', 'Initiate binding to the service.'))
+        self.app('j.update', line(91, 'AppUpdateService', 'requestUpdateInfo(j.update)'),
+                 line(91, 'AppUpdateService', 'Initiate binding to the service.'),
+                 line(91, 'AppUpdateService', 'linkToDeath'))
+        _, _, _, unconnected = self.score.score(self.logs)
+        self.assertEqual(unconnected, {'AgeSignalsService': {'i.age'}})
+
     def test_list_limits_the_apps(self):
         self.app('f.one', line(60, 'ReviewService', 'requestInAppReview (f.one)'))
         self.app('g.two', line(70, 'ReviewService', 'requestInAppReview (g.two)'))
-        calls, _, _ = self.score.score(self.logs, only={'g.two'})
+        calls, _, _, _ = self.score.score(self.logs, only={'g.two'})
         self.assertEqual(calls['in-app review'], {'g.two'})
 
 
