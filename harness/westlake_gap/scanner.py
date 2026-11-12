@@ -1118,6 +1118,8 @@ PLAY_STORE_DESCRIPTORS = {
     "com.google.android.play.agesignals.protocol.IAgeSignalsService": "age-signals",
     "com.google.android.engage.protocol.IAppEngageService": "engage",
     "com.google.android.play.engage.protocol.IAppEngageService": "engage",
+    # PairIP's code encryption: its KeyImportActivity, the app's first activity, binds this for the app's key.
+    "com.android.vending.securedatatransfer.IAntiTamperKeyTransferService": "anti-tamper-key-transfer",
 }
 
 

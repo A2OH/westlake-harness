@@ -3448,8 +3448,9 @@ class PlayStoreHost(unittest.TestCase):
         self.assertEqual(play_store_clients([
             "com.google.android.play.core.splitinstall.protocol.ISplitInstallService",
             "com.google.android.play.agesignals.protocol.IAgeSignalsService",
-            "com.google.android.play.engage.protocol.IAppEngageService", "com.example.IOther"]),
-            {"split-install", "age-signals", "engage"})
+            "com.google.android.play.engage.protocol.IAppEngageService",
+            "com.android.vending.securedatatransfer.IAntiTamperKeyTransferService", "com.example.IOther"]),
+            {"split-install", "age-signals", "engage", "anti-tamper-key-transfer"})
         self.assertEqual(play_store_clients(["com.google.android.play.core.splitinstall"]), set(),
                          "a package name is not a descriptor")
 

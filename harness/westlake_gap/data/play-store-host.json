@@ -80,6 +80,13 @@
       "effort": "none",
       "provider": "the store's GetInstallReferrerService takes every bind and answers OK (response code 0 where apps log it); apps the store did not install have no referrer to report, as on Android for an app installed from elsewhere",
       "shim": "nothing to build"
+    },
+    "anti-tamper-key-transfer": {
+      "item": "Play's key transfer for PairIP-encrypted code",
+      "verdict": "absent",
+      "effort": "L",
+      "provider": "an app whose code PairIP encrypts starts in PairIP's KeyImportActivity, which binds the store's AntiTamperKeyTransferService for its key. The service is declared for the store's :background process; in the host's single process its injection fails, so the bind never connects and the app draws nothing (5 of 5 apps in round l7n; 6 of the 982 HK corpus apps use PairIP code encryption). Without a store host, Westlake answers that there is no such service, and these apps drew behind PairIP's \"check that Google Play is enabled\" dialog",
+      "shim": "run the store's :background process as a second host process and route its components there; whether the store then hands a key to an app it did not install is not yet measured"
     }
   }
 }
