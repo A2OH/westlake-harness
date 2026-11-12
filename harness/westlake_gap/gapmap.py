@@ -3570,6 +3570,38 @@ _PROTECTED_SDKS = [
 ]
 
 
+PLAY_STORE_HOST = Path(__file__).parent / "data" / "play-store-host.json"
+
+
+def play_store_host_model(westlake_root: Path, data: Path = PLAY_STORE_HOST) -> dict[str, Any] | None:
+    """What the Play Store host answers per service family, when the Westlake checkout has the host
+    (PlayServicesChannel serves WESTLAKE_PLAY_STORE_SERVE): measured on the board, in data/."""
+    channel = westlake_root / "framework/activity/java/PlayServicesChannel.java"
+    if not channel.exists() or "WESTLAKE_PLAY_STORE_SERVE" not in channel.read_text(errors="replace"):
+        return None
+    return json.loads(data.read_text())
+
+
+def play_store_rows(scan: dict[str, Any], store_host: dict[str, Any] | None) -> list[dict[str, Any]]:
+    """One row per Google Play service family the app's client libraries bind (Play Core, Play Integrity,
+    Billing, Age Signals, Engage: scanner.play_store_clients), with what the Play Store host answers.
+    The license check has its row already (dep:store-license-check)."""
+    if not store_host:
+        return []
+    rows = []
+    for family in scan["inventory"].get("play_store_clients") or []:
+        entry = store_host["families"].get(family)
+        if not entry or family == "licensing":
+            continue
+        rows.append(_row(
+            "external-deps", f"play:{family}", entry["item"],
+            oh_touchpoint=store_host["provider"], verdict=entry["verdict"], shim_class="C5", effort=entry["effort"],
+            confidence=OBSERVED, app_evidence=f"binds the store's {entry['item']} service",
+            provider=entry["provider"], provider_source="data/play-store-host.json", shim=entry["shim"],
+        ))
+    return rows
+
+
 def refused_libraries(westlake_root: Path) -> dict[str, str]:
     """Libraries the Westlake loader deliberately refuses to load, with where that is decided."""
     shim = westlake_root / "framework/webview-shim/webview_bionic_shim.c"
@@ -3583,12 +3615,26 @@ def refused_libraries(westlake_root: Path) -> dict[str, str]:
     return {name: f"framework/webview-shim/webview_bionic_shim.c:{line}" for name in re.findall(r'"([^"]+)"', match.group(1))}
 
 
-def external_rows(facts: dict[str, Any], scan: dict[str, Any], refused: dict[str, str] | None = None) -> list[dict[str, Any]]:
+def external_rows(facts: dict[str, Any], scan: dict[str, Any], refused: dict[str, str] | None = None,
+                  store_host: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     rows = []
+    hosted_license = (store_host or {}).get("families", {}).get("licensing")
     for dep in contracts.external_dependencies(facts, set(scan["inventory"].get("platform_method_names", {}))):
         firebase = dep["dependency"].startswith("Firebase")
         licensing = dep["dependency"] == "Store license check"
         suffix = dep["evidence"].split()[0].rsplit(".", 1)[-1] if firebase else ""
+        if licensing and hosted_license:
+            # With the Play Store host the genuine store takes the bind: the row reports what it answers.
+            rows.append(_row(
+                "external-deps", "dep:store-license-check", dep["dependency"],
+                oh_touchpoint=store_host["provider"], verdict=hosted_license["verdict"], shim_class="C5",
+                effort=hosted_license["effort"], confidence=OBSERVED, app_evidence=dep["evidence"],
+                provider=hosted_license["provider"], provider_source="data/play-store-host.json",
+                seen_blocking=["grok, allbrowser, crushie, transitnow, quickdoc (hk top 100 on build 120, before any "
+                               "store answered: the check retried and the app never drew)"],
+                shim=hosted_license["shim"],
+            ))
+            continue
         rows.append(_row(
             "external-deps", "dep:" + dep["dependency"].lower().replace(" ", "-") + (f":{suffix}" if suffix else ""),
             dep["dependency"] + (f" ({suffix})" if suffix else ""),
@@ -4440,7 +4486,9 @@ def build_map(
             + silent_load_rows(scan, native_load_short_circuit(westlake_root.parent / "art-build"),
                                runtime_libraries)
             + stub_native_rows(scan, stub_native_model(westlake_root.parent / "art-build", westlake_root))
-            + sandbox_rows(scan, policy) + process_policy_rows(scan, policy) + external_rows(facts, scan, refused_libraries(westlake_root)))
+            + sandbox_rows(scan, policy) + process_policy_rows(scan, policy)
+            + external_rows(facts, scan, refused_libraries(westlake_root), play_store_host_model(westlake_root))
+            + play_store_rows(scan, play_store_host_model(westlake_root)))
     # The interposition row's routing first: the libraries it routes meet the Android namespace's
     # libandroid.so too, which android_namespace_rows checks.
     rows += interposition_rows(scan, runtime_index, rows, launcher_namespace_option(manifest_root))

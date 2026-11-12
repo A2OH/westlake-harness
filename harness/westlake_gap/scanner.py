@@ -1062,6 +1062,8 @@ class DexInventory:
     sql_collations: set[str] = field(default_factory=set)
     # Classes defining one of AFTER_START_CALLBACKS, with which ones.
     after_start_callbacks: dict[str, set[str]] = field(default_factory=dict)
+    # The Play Store service families the app's client libraries bind (play_store_clients).
+    play_store_clients: set[str] = field(default_factory=set)
 
 
 _SQL_COLLATION = re.compile(r"\bCOLLATE\s+(UNICODE|LOCALIZED|PHONEBOOK)\b", re.I)
@@ -1098,6 +1100,30 @@ def external_intent_families(strings: Iterable[str]) -> set[str]:
     if any(t.startswith("android.settings.") for t in texts):
         found.add("system-screen")
     return found
+
+
+# The Google Play Store services an app's client libraries bind, by the binder descriptor each library
+# names. Descriptors survive obfuscation (the store's binders check them), where the libraries' own
+# classes are renamed. What the store host answers per family: data/play-store-host.json.
+PLAY_STORE_DESCRIPTORS = {
+    "com.android.vending.billing.IInAppBillingService": "billing",
+    "com.android.vending.licensing.ILicensingService": "licensing",
+    "com.google.android.finsky.externalreferrer.IGetInstallReferrerService": "install-referrer",
+    "com.google.android.play.core.appupdate.protocol.IAppUpdateService": "in-app-update",
+    "com.google.android.play.core.inappreview.protocol.IInAppReviewService": "in-app-review",
+    "com.google.android.play.core.assetpacks.protocol.IAssetModuleService": "asset-delivery",
+    "com.google.android.play.core.splitinstall.protocol.ISplitInstallService": "split-install",
+    "com.google.android.play.core.integrity.protocol.IIntegrityService": "integrity",
+    "com.google.android.play.core.integrity.protocol.IExpressIntegrityService": "express-integrity",
+    "com.google.android.play.agesignals.protocol.IAgeSignalsService": "age-signals",
+    "com.google.android.engage.protocol.IAppEngageService": "engage",
+    "com.google.android.play.engage.protocol.IAppEngageService": "engage",
+}
+
+
+def play_store_clients(strings: Iterable[str]) -> set[str]:
+    """Which Play Store service families (PLAY_STORE_DESCRIPTORS) the app's code can bind."""
+    return {PLAY_STORE_DESCRIPTORS[text] for text in strings if text in PLAY_STORE_DESCRIPTORS}
 
 
 def named_filter_targets(strings: Iterable[str], targets: dict[str, list[str]]) -> set[str]:
@@ -1176,6 +1202,7 @@ def inventory_dex(path: Path, filter_targets: dict[str, list[str]] | None = None
             result.own_intent_names |= named_filter_targets(strings, filter_targets)
         result.sql_collations |= sql_collations(strings)
         result.external_intents |= external_intent_families(strings)
+        result.play_store_clients |= play_store_clients(strings)
         for c in dex.get_classes():
             result.defined_classes.add(str(c.get_name()))
             # Kept for the activity hierarchy: which engine base class a launch activity extends.
@@ -2389,6 +2416,7 @@ def scan_apk(
                                        | ({"system-screen"} if any(owner == "Landroid/net/VpnService;" and name == "prepare"
                                                                   for owner, name, _ in inventory.method_refs) else set())),
             "sql_collations": sorted(inventory.sql_collations),
+            "play_store_clients": sorted(inventory.play_store_clients),
             "after_start_overrides": after_start_overrides(identity.get("activity_names") or [],
                                                            inventory.superclasses, inventory.after_start_callbacks),
             "native_upcalls": native_upcalls if platform_members is not None else None,

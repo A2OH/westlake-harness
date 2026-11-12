@@ -1,0 +1,85 @@
+{
+  "_comment": "What Westlake's Play Store host answers, per Google Play service family an app's client library binds (scanner PLAY_STORE_DESCRIPTORS). Measured on the board: apps beside the shared Play services process and Google's Play Store app (com.android.vending 53.5.48) in a process of its own, as GrapheneOS runs it. Read by gapmap.play_store_host_model when the Westlake checkout has the store host (PlayServicesChannel serves WESTLAKE_PLAY_STORE_SERVE).",
+  "provider": "Westlake's Play Store host: Google's Play Store app in a process of its own beside the shared Play services process",
+  "measured": "two-host HK round l7n on framework build 213: 330 of the 338 HK corpus apps that bound a Play Store service in an earlier round",
+  "background_process": "The Play Store builds a different Dagger component per process, chosen by its process name. Westlake runs all of the store's processes as one named com.android.vending (ADR-0001), so a component declared for the store's :background process gets the main process's component, its injection throws ClassCastException, and it is never created: 21 of its 42 :background components look up an injector the main component lacks, among them DownloadService, the PackageInstaller result receiver, the install queue, background licensing, Age Signals and Engage.",
+  "families": {
+    "in-app-review": {
+      "item": "in-app review (Play Core)",
+      "verdict": "supplied",
+      "effort": "none",
+      "provider": "the store's InAppReviewService answers: 14 of 14 apps that asked got the review flow (onGetLaunchReviewFlowInfo)",
+      "shim": "nothing to build"
+    },
+    "in-app-update": {
+      "item": "in-app updates (Play Core)",
+      "verdict": "partial",
+      "effort": "L",
+      "provider": "requestUpdateInfo is answered (42 of 50 apps), but an update itself downloads in the store's :background process, which the host cannot run",
+      "shim": "run the store's :background process as a second host process (process name com.android.vending:background) and route its components there; then the install pipeline (PackageInstaller sessions into Westlake's app registry)"
+    },
+    "asset-delivery": {
+      "item": "Play Asset Delivery (Play Core)",
+      "verdict": "partial",
+      "effort": "L",
+      "provider": "pack states and sessions are answered (38 of 56 apps); the packs themselves download in the store's :background process (DownloadService), which the host cannot run. Seven apps' pinned versions are older than Play's, whose packs Play reports unavailable (-2)",
+      "shim": "run the store's :background process as a second host process and route its components there; keep corpus pins at Play's current version"
+    },
+    "split-install": {
+      "item": "on-demand split install (Play Core feature delivery)",
+      "verdict": "inert",
+      "effort": "L",
+      "provider": "of 17 apps, 4 had startInstall open a session that never downloads (DownloadService runs in the store's :background process); 5 got -15 APP_NOT_OWNED from deferredInstall, since the store needs the app in the account's Play library or an install record of its own",
+      "shim": "the store's :background process as a second host process, then the install pipeline: apps acquired and installed through the store own their installs"
+    },
+    "integrity": {
+      "item": "Play Integrity standard requests",
+      "verdict": "partial",
+      "effort": "verify",
+      "provider": "54 of 170 apps got an answer; the rest waited without one: the store's bind of a Play services API service timed out because the Play services host called a chimera service's onBind again on each bind, which it refuses (fixed: onBind once per intent, as ActivityManager does; not yet measured)",
+      "shim": "measure again with onBind once per intent"
+    },
+    "express-integrity": {
+      "item": "Play Integrity express requests",
+      "verdict": "partial",
+      "effort": "verify",
+      "provider": "warm-up is answered (9 apps); token requests share the standard path's wait",
+      "shim": "measure again with onBind once per intent"
+    },
+    "age-signals": {
+      "item": "Play Age Signals",
+      "verdict": "absent",
+      "effort": "L",
+      "provider": "the store's AgeSignalsService is declared for its :background process; in the host's single process its injection fails (ClassCastException), so the bind never connects (21 of 21 apps waited)",
+      "shim": "run the store's :background process as a second host process and route its components there"
+    },
+    "engage": {
+      "item": "Engage SDK",
+      "verdict": "absent",
+      "effort": "L",
+      "provider": "the store's AppEngageService is declared for its :background process; in the host's single process its injection fails, so the bind never connects (3 of 3 apps)",
+      "shim": "run the store's :background process as a second host process and route its components there"
+    },
+    "licensing": {
+      "item": "store license check",
+      "verdict": "inert",
+      "effort": "L",
+      "provider": "LVL's bind (ILicensingService) reaches the store's LicensingService, but 3 of 4 license checks timed out without an answer; the newer check's bind (IBackgroundLicensingService, 29 apps) reaches BackgroundLicensingService, declared for the store's :background process, whose injection fails in the host's single process (ClassCastException), so it never connects. Those apps still drew (26 of 28)",
+      "shim": "run the store's :background process as a second host process; then check that the store licenses apps the test account owns"
+    },
+    "billing": {
+      "item": "Play Billing",
+      "verdict": "partial",
+      "effort": "verify",
+      "provider": "the store's InAppBillingService takes every bind, and every app that logs a billing result got response code 0 (setup and purchase queries, 6 apps); the purchase flow itself, the store's own purchase screen, is untested",
+      "shim": "run a purchase flow on a test product"
+    },
+    "install-referrer": {
+      "item": "Play install referrer",
+      "verdict": "supplied",
+      "effort": "none",
+      "provider": "the store's GetInstallReferrerService takes every bind and answers OK (response code 0 where apps log it); apps the store did not install have no referrer to report, as on Android for an app installed from elsewhere",
+      "shim": "nothing to build"
+    }
+  }
+}

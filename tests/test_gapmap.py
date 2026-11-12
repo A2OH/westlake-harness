@@ -3425,6 +3425,63 @@ class RecreateRows(unittest.TestCase):
         self.assertEqual(gapmap.recreate_rows(scan, {"relaunched": None}), [])
 
 
+class PlayStoreHost(unittest.TestCase):
+    """Google Play services an app's client libraries bind in the Play Store (Play Core, Play Integrity,
+    Billing, Age Signals, Engage), found by binder descriptor, with what Westlake's Play Store host
+    answers for each: measured on the board, read from data/play-store-host.json."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.westlake = Path(self.tmp.name)
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def with_store_host(self, served: bool) -> Path:
+        channel = self.westlake / "framework/activity/java/PlayServicesChannel.java"
+        channel.parent.mkdir(parents=True, exist_ok=True)
+        channel.write_text('private static final String STORE_SERVE = "WESTLAKE_PLAY_STORE_SERVE";' if served else "class X {}")
+        return self.westlake
+
+    def test_families_are_found_by_binder_descriptor(self) -> None:
+        from westlake_gap.scanner import play_store_clients
+        self.assertEqual(play_store_clients([
+            "com.google.android.play.core.splitinstall.protocol.ISplitInstallService",
+            "com.google.android.play.agesignals.protocol.IAgeSignalsService",
+            "com.google.android.play.engage.protocol.IAppEngageService", "com.example.IOther"]),
+            {"split-install", "age-signals", "engage"})
+        self.assertEqual(play_store_clients(["com.google.android.play.core.splitinstall"]), set(),
+                         "a package name is not a descriptor")
+
+    def test_the_model_needs_a_westlake_with_the_store_host(self) -> None:
+        self.assertIsNone(gapmap.play_store_host_model(self.with_store_host(False)))
+        model = gapmap.play_store_host_model(self.with_store_host(True))
+        self.assertIn("split-install", model["families"])
+        for family, entry in model["families"].items():
+            self.assertIn(entry["effort"], gapmap.EFFORT, family)
+            self.assertTrue(entry["provider"] and entry["shim"] and entry["item"], family)
+
+    def test_one_row_per_family_with_what_the_host_answers(self) -> None:
+        model = gapmap.play_store_host_model(self.with_store_host(True))
+        scan = {"inventory": {"play_store_clients": ["age-signals", "in-app-review", "licensing", "unknown"]}}
+        rows = {r["id"]: r for r in gapmap.play_store_rows(scan, model)}
+        self.assertEqual(set(rows), {"play:age-signals", "play:in-app-review"},
+                         "the license check keeps its own row; unknown families get none")
+        self.assertEqual((rows["play:age-signals"]["verdict"], rows["play:age-signals"]["confidence"]), ("absent", gapmap.OBSERVED))
+        self.assertIn(":background", rows["play:age-signals"]["provider"])
+        self.assertEqual(rows["play:in-app-review"]["verdict"], "supplied")
+        self.assertEqual(gapmap.play_store_rows(scan, None), [], "no store host, no rows")
+        self.assertEqual(gapmap.play_store_rows({"inventory": {}}, model), [], "a scan from before the field")
+
+    def test_the_license_check_row_reports_the_host(self) -> None:
+        model = gapmap.play_store_host_model(self.with_store_host(True))
+        scan = {"inventory": {"platform_method_names": {}}, "elfs": []}
+        facts = StoreLicenseCheck.facts("com.pairip.licensecheck3.LicenseActivity")
+        row = next(r for r in gapmap.external_rows(facts, scan, store_host=model) if r["id"] == "dep:store-license-check")
+        self.assertEqual((row["verdict"], row["confidence"]), (model["families"]["licensing"]["verdict"], gapmap.OBSERVED))
+        self.assertEqual(row["provider"], model["families"]["licensing"]["provider"])
+
+
 class StoreLicenseCheck(unittest.TestCase):
     """The license check the store answers: a component Play adds to a protected app
     (com.pairip.licensecheck), or the licensing library a developer adds themselves. It is its own
